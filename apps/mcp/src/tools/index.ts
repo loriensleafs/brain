@@ -1,0 +1,480 @@
+/**
+ * Tool registration and discovery
+ *
+ * Auto-discovers wrapper tools from subdirectories and proxies basic-memory tools.
+ * Each wrapper tool lives in its own folder with schema.ts and index.ts.
+ */
+
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import {
+  ListToolsRequestSchema,
+  CallToolRequestSchema,
+  type Tool,
+  type CallToolResult,
+} from "@modelcontextprotocol/sdk/types.js";
+import { getBasicMemoryClient } from "../proxy/client";
+import { resolveProject } from "../project/resolve";
+import { logger } from "../utils/internal/logger";
+import { config } from "../config";
+import {
+  checkForDuplicates,
+  formatGuardError,
+} from "../utils/security/searchGuard";
+import { invalidateCache as invalidateBootstrapCache } from "./bootstrap-context/sessionCache";
+import { triggerEmbedding } from "../services/embedding/triggerEmbedding";
+
+// Import wrapper tool modules
+import * as setProject from "./set-project";
+import * as getProject from "./get-project";
+import * as clearProject from "./clear-project";
+import * as configureCodePath from "./configure-code-path";
+import * as session from "./session";
+import * as bootstrapContext from "./bootstrap-context";
+import * as listFeaturesByPriority from "./list-features-by-priority";
+import * as analyzeProject from "./analyze-project";
+import * as migrateCluster from "./migrate-cluster";
+import * as validateImport from "./validate-import";
+import * as consolidateNotes from "./consolidate-notes";
+import * as maintainKnowledgeGraph from "./maintain-knowledge-graph";
+import * as findDuplicates from "./find-duplicates";
+import * as manageBacklog from "./manage-backlog";
+import * as search from "./search";
+import * as embed from "./embed";
+import * as workflow from "./workflow";
+
+/**
+ * Wrapper tool registry - maps tool name to handler and definition
+ */
+interface WrapperTool {
+  definition: Tool;
+  handler: (args: Record<string, unknown>) => Promise<CallToolResult>;
+}
+
+const WRAPPER_TOOLS: Map<string, WrapperTool> = new Map([
+  [
+    "set_project",
+    {
+      definition: setProject.toolDefinition,
+      handler: setProject.handler as (
+        args: Record<string, unknown>
+      ) => Promise<CallToolResult>,
+    },
+  ],
+  [
+    "get_project",
+    {
+      definition: getProject.toolDefinition,
+      handler: getProject.handler as (
+        args: Record<string, unknown>
+      ) => Promise<CallToolResult>,
+    },
+  ],
+  [
+    "clear_project",
+    {
+      definition: clearProject.toolDefinition,
+      handler: clearProject.handler as (
+        args: Record<string, unknown>
+      ) => Promise<CallToolResult>,
+    },
+  ],
+  [
+    "configure_code_path",
+    {
+      definition: configureCodePath.toolDefinition,
+      handler: configureCodePath.handler as (
+        args: Record<string, unknown>
+      ) => Promise<CallToolResult>,
+    },
+  ],
+  [
+    "session",
+    {
+      definition: session.toolDefinition,
+      handler: session.handler as (
+        args: Record<string, unknown>
+      ) => Promise<CallToolResult>,
+    },
+  ],
+  [
+    "bootstrap_context",
+    {
+      definition: bootstrapContext.toolDefinition,
+      handler: bootstrapContext.handler as (
+        args: Record<string, unknown>
+      ) => Promise<CallToolResult>,
+    },
+  ],
+  [
+    "list_features_by_priority",
+    {
+      definition: listFeaturesByPriority.toolDefinition,
+      handler: listFeaturesByPriority.handler as (
+        args: Record<string, unknown>
+      ) => Promise<CallToolResult>,
+    },
+  ],
+  [
+    "analyze_project",
+    {
+      definition: analyzeProject.toolDefinition,
+      handler: analyzeProject.handler as (
+        args: Record<string, unknown>
+      ) => Promise<CallToolResult>,
+    },
+  ],
+  [
+    "migrate_cluster",
+    {
+      definition: migrateCluster.toolDefinition,
+      handler: migrateCluster.handler as (
+        args: Record<string, unknown>
+      ) => Promise<CallToolResult>,
+    },
+  ],
+  [
+    "validate_import",
+    {
+      definition: validateImport.toolDefinition,
+      handler: validateImport.handler as (
+        args: Record<string, unknown>
+      ) => Promise<CallToolResult>,
+    },
+  ],
+  [
+    "consolidate_notes",
+    {
+      definition: consolidateNotes.toolDefinition,
+      handler: consolidateNotes.handler as (
+        args: Record<string, unknown>
+      ) => Promise<CallToolResult>,
+    },
+  ],
+  [
+    "maintain_knowledge_graph",
+    {
+      definition: maintainKnowledgeGraph.toolDefinition,
+      handler: maintainKnowledgeGraph.handler as (
+        args: Record<string, unknown>
+      ) => Promise<CallToolResult>,
+    },
+  ],
+  [
+    "find_duplicates",
+    {
+      definition: findDuplicates.toolDefinition,
+      handler: findDuplicates.handler as (
+        args: Record<string, unknown>
+      ) => Promise<CallToolResult>,
+    },
+  ],
+  [
+    "manage_backlog",
+    {
+      definition: manageBacklog.toolDefinition,
+      handler: manageBacklog.handler as (
+        args: Record<string, unknown>
+      ) => Promise<CallToolResult>,
+    },
+  ],
+  [
+    "search",
+    {
+      definition: search.toolDefinition,
+      handler: search.handler as (
+        args: Record<string, unknown>
+      ) => Promise<CallToolResult>,
+    },
+  ],
+  [
+    "generate_embeddings",
+    {
+      definition: embed.toolDefinition,
+      handler: embed.handler as (
+        args: Record<string, unknown>
+      ) => Promise<CallToolResult>,
+    },
+  ],
+  // Workflow tools
+  [
+    "list_workflows",
+    {
+      definition: workflow.listWorkflowsToolDefinition,
+      handler: workflow.listWorkflowsHandler as (
+        args: Record<string, unknown>
+      ) => Promise<CallToolResult>,
+    },
+  ],
+  [
+    "send_workflow_event",
+    {
+      definition: workflow.sendWorkflowEventToolDefinition,
+      handler: workflow.sendWorkflowEventHandler as (
+        args: Record<string, unknown>
+      ) => Promise<CallToolResult>,
+    },
+  ],
+  [
+    "get_workflow",
+    {
+      definition: workflow.getWorkflowToolDefinition,
+      handler: workflow.getWorkflowHandler as (
+        args: Record<string, unknown>
+      ) => Promise<CallToolResult>,
+    },
+  ],
+]);
+
+/**
+ * Tools that accept a 'project' parameter and need automatic injection
+ */
+const PROJECT_TOOLS = new Set([
+  "write_note",
+  "read_note",
+  "read_content",
+  "view_note",
+  "edit_note",
+  "move_note",
+  "delete_note",
+  "build_context",
+  "recent_activity",
+  "list_directory",
+  "canvas",
+  "create_memory_project",
+  "delete_project",
+  "search",
+]);
+
+/**
+ * Enhanced descriptions for key tools to reinforce proactive memory behavior.
+ * These are prefixed onto the basic-memory descriptions.
+ */
+const ENHANCED_DESCRIPTIONS: Record<string, string> = {
+  write_note: `Create a new note in the knowledge base.
+
+⚠️ MANDATORY: ALWAYS call search BEFORE write_note!
+Check if a note on this topic already exists. If so, use edit_note instead.
+
+The ratio should be 80% edit_note, 20% write_note. If you're creating many
+new notes, you're probably fragmenting the knowledge graph.
+
+Requirements for every note:
+- Clear, descriptive title
+- 3-5 observations minimum with [category] tags
+- 2-3 relations minimum using exact entity titles
+- Search for exact entity titles before writing relations
+
+Use edit_note to append to existing notes rather than creating duplicates.`,
+
+  edit_note: `Edit an existing note incrementally without rewriting entire content.
+
+✓ PREFERRED over write_note for adding information to existing topics.
+
+Operations:
+- append: Add to end (most common - use for new observations/relations)
+- prepend: Add to beginning (for urgent updates)
+- find_replace: Replace specific text
+- replace_section: Replace markdown section by heading
+
+Progressive knowledge building pattern:
+1. Search for existing note on topic
+2. Use append to add new observations
+3. Only create new note if topic is truly distinct`,
+};
+
+/**
+ * Tools to hide from clients but keep available internally.
+ * These are proxied basic-memory tools that we don't want exposed.
+ * Example: search_notes is replaced by the unified 'search' tool.
+ */
+const HIDDEN_TOOLS = new Set(["search_notes"]);
+
+// Store discovered tools for the list handler
+let discoveredTools: Tool[] = [];
+
+/**
+ * Discover all tools from basic-memory and register handlers on our server.
+ * Uses low-level handlers for ALL tools (wrapper + proxied).
+ */
+export async function discoverAndRegisterTools(
+  server: McpServer
+): Promise<void> {
+  const client = await getBasicMemoryClient();
+  const { tools } = await client.listTools();
+
+  logger.info({ count: tools.length }, "Discovered basic-memory tools");
+
+  // Filter out tools we handle ourselves and hidden tools, store for listing
+  const wrapperNames = new Set(WRAPPER_TOOLS.keys());
+  discoveredTools = tools.filter(
+    (tool) => !wrapperNames.has(tool.name) && !HIDDEN_TOOLS.has(tool.name)
+  );
+
+  // Register tools/list handler with enhanced descriptions
+  server.server.setRequestHandler(ListToolsRequestSchema, async () => {
+    // Apply enhanced descriptions to discovered tools (prefix our guidance, keep original)
+    const enhancedTools = discoveredTools.map((tool) => {
+      if (ENHANCED_DESCRIPTIONS[tool.name]) {
+        return {
+          ...tool,
+          description: `${ENHANCED_DESCRIPTIONS[tool.name]}\n\n---\n\n${
+            tool.description
+          }`,
+        };
+      }
+      return tool;
+    });
+
+    // Get wrapper tool definitions
+    const wrapperDefinitions = Array.from(WRAPPER_TOOLS.values()).map(
+      (t) => t.definition
+    );
+
+    return {
+      tools: [...wrapperDefinitions, ...enhancedTools],
+    };
+  });
+
+  // Register tools/call handler - handles ALL tools
+  server.server.setRequestHandler(CallToolRequestSchema, async (request) => {
+    const { name, arguments: args = {} } = request.params;
+
+    // Handle wrapper tools directly
+    const wrapperTool = WRAPPER_TOOLS.get(name);
+    if (wrapperTool) {
+      return wrapperTool.handler(args as Record<string, unknown>);
+    }
+
+    // Proxy other tools to basic-memory
+    return callProxiedTool(name, args as Record<string, unknown>);
+  });
+
+  logger.debug(
+    { wrapper: WRAPPER_TOOLS.size, proxied: discoveredTools.length },
+    "Registered tool handlers"
+  );
+}
+
+/**
+ * Call a proxied tool with project injection if needed
+ */
+async function callProxiedTool(
+  name: string,
+  args: Record<string, unknown>
+): Promise<CallToolResult> {
+  const client = await getBasicMemoryClient();
+
+  try {
+    // Inject resolved project if this tool needs it
+    const resolvedArgs = PROJECT_TOOLS.has(name)
+      ? await injectProject(args)
+      : args;
+
+    // Search guard: check for duplicates before write_note
+    if (name === "write_note" && config.searchGuardEnabled) {
+      const guardResult = await checkForDuplicates(client, resolvedArgs);
+
+      if (!guardResult.allowed) {
+        // Enforce mode: block the write
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: formatGuardError(guardResult),
+            },
+          ],
+          isError: true,
+        };
+      }
+
+      // Warn mode: include warning in response (will be added after success)
+      if (guardResult.warning) {
+        logger.info({ warning: guardResult.warning }, "Search guard warning");
+      }
+    }
+
+    logger.debug({ tool: name, args: resolvedArgs }, "Calling proxied tool");
+
+    const result = await client.callTool({
+      name,
+      arguments: resolvedArgs,
+    });
+
+    // Invalidate bootstrap_context cache on write operations
+    if (name === "write_note" || name === "edit_note") {
+      const project = resolvedArgs.project as string | undefined;
+      invalidateBootstrapCache(project);
+      logger.debug(
+        { tool: name, project },
+        "Invalidated bootstrap_context cache after write operation"
+      );
+
+      // Trigger embedding generation (fire-and-forget)
+      // For write_note: use title + folder as permalink, content from args
+      // For edit_note: use identifier as permalink, need to fetch content
+      if (name === "write_note") {
+        const title = resolvedArgs.title as string | undefined;
+        const folder = resolvedArgs.folder as string | undefined;
+        const content = resolvedArgs.content as string | undefined;
+        if (title && content) {
+          const permalink = folder ? `${folder}/${title}` : title;
+          triggerEmbedding(permalink, content);
+          logger.debug({ permalink }, "Triggered embedding for new note");
+        }
+      } else if (name === "edit_note") {
+        // For edit_note, we'd need to fetch the full content after edit
+        // For now, skip - batch embed can catch up
+        logger.debug("Skipping embedding trigger for edit_note");
+      }
+    }
+
+    // Ensure result has content array
+    if (!result.content) {
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: JSON.stringify(result),
+          },
+        ],
+      };
+    }
+
+    return result as CallToolResult;
+  } catch (error) {
+    logger.error({ tool: name, error }, "Proxied tool call failed");
+    return {
+      content: [
+        {
+          type: "text" as const,
+          text: `🧠 Error calling ${name}: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        },
+      ],
+      isError: true,
+    };
+  }
+}
+
+/**
+ * Inject resolved project into tool arguments if not already specified
+ */
+async function injectProject(
+  args: Record<string, unknown>
+): Promise<Record<string, unknown>> {
+  if (args.project) {
+    return args;
+  }
+
+  const cwd = (args.cwd as string | undefined) || process.cwd();
+  const resolved = resolveProject(undefined, cwd);
+
+  if (!resolved) {
+    logger.debug("No project resolved, passing through to basic-memory");
+    return args;
+  }
+
+  logger.debug({ project: resolved }, "Injected resolved project");
+  return { ...args, project: resolved };
+}

@@ -1,0 +1,9 @@
+{
+  "name": "brain",
+  "version": "1.0.0",
+  "description": "Brain knowledge graph + workflow mode management",
+  "author": {
+    "name": "Peter Kloss"
+  },
+  "mcpServers": "./mcp.json"
+}

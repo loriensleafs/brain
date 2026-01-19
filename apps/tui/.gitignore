@@ -1,0 +1,9 @@
+# Go binaries
+tui
+brain-tui
+
+# Build artifacts
+*.exe
+*.dll
+*.so
+*.dylib

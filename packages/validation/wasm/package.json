@@ -1,0 +1,25 @@
+{
+  "name": "@brain/validation",
+  "version": "0.1.0",
+  "description": "Brain validation package - TinyGo WASM build with TypeScript wrapper",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build:wasm": "tinygo build -o dist/validation.wasm -target wasm ./main.go",
+    "build:js": "tsc && cp src/wasm_exec.js dist/",
+    "build": "yarn build:wasm && yarn build:js",
+    "clean": "rm -rf dist",
+    "prepublish": "yarn build"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "license": "MIT"
+}

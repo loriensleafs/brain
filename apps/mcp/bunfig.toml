@@ -1,0 +1,11 @@
+[install]
+# Use exact versions for reproducibility
+exact = true
+
+[run]
+# Silence experimental warnings
+silent = true
+
+[test]
+# Preload test setup before running tests
+preload = ["./src/__tests__/setup.ts"]
