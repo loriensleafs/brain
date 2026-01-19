@@ -3,11 +3,13 @@
  *
  * Provides semantic context for conversation initialization by querying
  * active features, recent decisions, open bugs, and related notes.
+ * Now includes session state enrichment for task/feature context.
  */
 
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { resolveProject } from "../../project/resolve";
 import { logger } from "../../utils/internal/logger";
+import { getSession, createDefaultSessionState } from "../../services/session";
 
 import type { BootstrapContextArgs } from "./schema";
 import {
@@ -24,6 +26,7 @@ import {
   setCachedContext,
   type CacheOptions,
 } from "./sessionCache";
+import { buildSessionEnrichment } from "./sessionEnrichment";
 
 export async function handler(
   args: BootstrapContextArgs
@@ -44,12 +47,14 @@ export async function handler(
 
   const timeframe = args.timeframe || "5d";
   const includeReferenced = args.include_referenced ?? true;
+  const fullContent = args.full_context ?? false;
 
   // Check cache first
   const cacheOptions: CacheOptions = {
     project,
     timeframe,
     includeReferenced,
+    fullContent,
   };
 
   const cached = getCachedContext(cacheOptions);
@@ -71,14 +76,27 @@ export async function handler(
   );
 
   try {
-    // Query all sections in parallel
-    const [recentActivity, activeFeatures, recentDecisions, openBugs] =
-      await Promise.all([
-        queryRecentActivity({ project, timeframe }),
-        queryActiveFeatures({ project, timeframe }),
-        queryRecentDecisions({ project, timeframe: "3d" }),
-        queryOpenBugs({ project, timeframe }),
-      ]);
+    // Load session state (create default if none exists)
+    let sessionState = await getSession();
+    if (!sessionState) {
+      sessionState = createDefaultSessionState();
+      logger.info({ project }, "No session found, using default state");
+    }
+
+    // Query all sections in parallel, including session enrichment
+    const [
+      recentActivity,
+      activeFeatures,
+      recentDecisions,
+      openBugs,
+      sessionEnrichment,
+    ] = await Promise.all([
+      queryRecentActivity({ project, timeframe }),
+      queryActiveFeatures({ project, timeframe }),
+      queryRecentDecisions({ project, timeframe: "3d" }),
+      queryOpenBugs({ project, timeframe }),
+      buildSessionEnrichment({ project, sessionState }),
+    ]);
 
     // Follow relations if requested
     let referencedNotes: Awaited<ReturnType<typeof followRelations>> = [];
@@ -87,7 +105,7 @@ export async function handler(
       referencedNotes = await followRelations(allNotes, { project });
     }
 
-    // Build structured output
+    // Build structured output with session enrichment
     const structuredContent = buildStructuredOutput({
       project,
       timeframe,
@@ -96,20 +114,26 @@ export async function handler(
       openBugs,
       recentActivity,
       referencedNotes,
+      sessionEnrichment,
     });
 
     // Cache the result
     setCachedContext(cacheOptions, structuredContent);
 
-    // Build formatted output
-    const formattedOutput = buildFormattedOutputWithLimits({
-      project,
-      activeFeatures,
-      recentDecisions,
-      openBugs,
-      recentActivity,
-      referencedNotes,
-    });
+    // Build formatted output with session enrichment
+    const formattedOutput = buildFormattedOutputWithLimits(
+      {
+        project,
+        activeFeatures,
+        recentDecisions,
+        openBugs,
+        recentActivity,
+        referencedNotes,
+        sessionEnrichment,
+      },
+      {}, // default limits
+      fullContent
+    );
 
     logger.info(
       {
@@ -120,8 +144,12 @@ export async function handler(
         bugs: openBugs.length,
         activity: recentActivity.length,
         referenced: referencedNotes.length,
+        sessionMode: sessionState.currentMode,
+        hasActiveTask: !!sessionState.activeTask,
+        hasActiveFeature: !!sessionState.activeFeature,
+        hasWorkflow: !!sessionState.orchestratorWorkflow,
       },
-      "Bootstrap context built successfully"
+      "Bootstrap context built successfully with session enrichment"
     );
 
     return {
