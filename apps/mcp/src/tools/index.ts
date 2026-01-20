@@ -448,11 +448,11 @@ async function callProxiedTool(
             arguments: { identifier, project: resolvedArgs.project }
           }).then((readResult) => {
             // Extract content from read_note response
-            const result = readResult as CallToolResult;
+            // Cast to expected structure (MCP SDK returns union type)
+            const result = readResult as { content?: Array<{ type: string; text?: string }> };
             const firstContent = result.content?.[0];
-            if (firstContent?.type === "text") {
-              const content = firstContent.text;
-              triggerEmbedding(identifier, content);
+            if (firstContent?.type === "text" && firstContent.text) {
+              triggerEmbedding(identifier, firstContent.text);
               logger.debug({ identifier }, "Triggered embedding for edited note");
             }
           }).catch((error: Error) => {

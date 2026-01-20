@@ -42,8 +42,12 @@ describe("edit_note embedding trigger integration", () => {
       const content = "Updated content for test note";
 
       // Simulate the flow: edit_note -> read_note -> triggerEmbedding
+      type MockCallToolResult = {
+        content: Array<{ type: "text"; text: string }>;
+      };
+
       const mockClient = {
-        callTool: mock(() => {
+        callTool: mock((): Promise<MockCallToolResult> => {
           return Promise.resolve({
             content: [{ type: "text" as const, text: content }]
           });
@@ -51,7 +55,7 @@ describe("edit_note embedding trigger integration", () => {
       };
 
       // Simulate the edit_note flow
-      const editNotePromise = mockClient.callTool().then((readResult: any) => {
+      const editNotePromise = mockClient.callTool().then((readResult: MockCallToolResult) => {
         const firstContent = readResult.content?.[0];
         if (firstContent?.type === "text") {
           const fetchedContent = firstContent.text;
@@ -76,8 +80,12 @@ describe("edit_note embedding trigger integration", () => {
       const identifier = "test-note-async";
       const startTime = Date.now();
 
+      type MockCallToolResult = {
+        content: Array<{ type: "text"; text: string }>;
+      };
+
       const mockClient = {
-        callTool: mock(() => {
+        callTool: mock((): Promise<MockCallToolResult> => {
           // Simulate slow read_note (50ms)
           return new Promise((resolve) => {
             setTimeout(() => {
@@ -90,7 +98,7 @@ describe("edit_note embedding trigger integration", () => {
       };
 
       // Start the async flow (fire-and-forget)
-      mockClient.callTool().then((readResult: any) => {
+      mockClient.callTool().then((readResult: MockCallToolResult) => {
         const firstContent = readResult.content?.[0];
         if (firstContent?.type === "text") {
           triggerModule.triggerEmbedding(identifier, firstContent.text);
@@ -115,7 +123,7 @@ describe("edit_note embedding trigger integration", () => {
       const identifier = "failing-note";
 
       const mockClient = {
-        callTool: mock(() => Promise.reject(new Error("Read failed")))
+        callTool: mock((): Promise<never> => Promise.reject(new Error("Read failed")))
       };
 
       // Simulate the error path
@@ -150,18 +158,22 @@ describe("edit_note embedding trigger integration", () => {
     test("handles non-text content gracefully", async () => {
       const identifier = "image-note";
 
+      type MockCallToolResult = {
+        content: Array<{ type: string; resource?: { uri: string; mimeType: string }; text?: string }>;
+      };
+
       const mockClient = {
-        callTool: mock(() => Promise.resolve({
-          content: [{ type: "resource" as const, resource: { uri: "file://image.png", mimeType: "image/png" } }]
+        callTool: mock((): Promise<MockCallToolResult> => Promise.resolve({
+          content: [{ type: "resource", resource: { uri: "file://image.png", mimeType: "image/png" } }]
         }))
       };
 
       // Simulate the flow with non-text content
-      const readResult: any = await mockClient.callTool();
+      const readResult: MockCallToolResult = await mockClient.callTool();
 
       const firstContent = readResult.content?.[0];
-      if (firstContent?.type === "text") {
-        // This branch should not execute
+      if (firstContent?.type === "text" && firstContent.text) {
+        // This branch should not execute (content type is "resource")
         triggerModule.triggerEmbedding(identifier, firstContent.text);
       }
 
