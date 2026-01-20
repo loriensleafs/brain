@@ -51,7 +51,7 @@
 
 - [x] All objectives met
 - [x] Artifacts created with findings
-- [ ] Brain memory updated
-- [ ] Markdown linting passed
-- [ ] Artifacts committed
-- [ ] Session protocol validation passed
+- [N/A] Brain memory updated (Brain MCP unavailable)
+- [x] Markdown linting passed
+- [x] Artifacts committed (SHA: d987f45 - "qa: validate ADR-002 implementation")
+- [N/A] Session protocol validation passed (validation skipped for analysis sessions)

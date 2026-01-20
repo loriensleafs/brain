@@ -1,5 +1,5 @@
 ---
-status: proposed
+status: accepted
 date: 2026-01-19
 decision-makers: [architect]
 consulted: [analyst, implementer]
