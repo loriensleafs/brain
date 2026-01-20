@@ -18,6 +18,7 @@
 ## Objective
 
 Conduct comprehensive DevOps review of `scripts/Invoke-PRMaintenance.ps1` with focus on:
+
 1. Scheduling (cron vs Task Scheduler vs systemd)
 2. CI/CD integration via GitHub Actions
 3. Monitoring and alerting
@@ -58,6 +59,7 @@ Design GitHub Actions workflow for hourly runs.
 **Script Quality**: Production-ready with solid error handling, logging, and dry-run capability.
 
 **Critical Recommendations** (P0):
+
 1. Implement concurrency control (GitHub Actions `concurrency` group)
 2. Add pre-flight rate limit check (prevent API exhaustion)
 3. Deploy GitHub Actions workflow for hourly automation
@@ -69,6 +71,7 @@ Design GitHub Actions workflow for hourly runs.
 7. Add worktree path validation (security)
 
 **Performance Targets**:
+
 - Workflow duration: <2min for 20 PRs
 - API consumption: <200 requests/run (18% of hourly limit)
 - Success rate: >95%

@@ -76,6 +76,7 @@ The Analyst agent identified the core issue:
 ```
 
 Merge resolution message:
+
 ```
 - Take main's pr-comment-responder-skills.md (has newer skills from PR #94, #162, #212)
 - Take main's pr-comment-responder.md (has more current reviewer stats)
@@ -86,11 +87,13 @@ Merge resolution message:
 Original commit 536ccce added:
 
 **Phase 0: Memory Initialization (BLOCKING)**
+
 - Load pr-comment-responder-skills memory
 - Load reviewer-specific memories
 - Prevents stale signal quality data
 
 **Phase 9: Memory Storage (BLOCKING)**
+
 - Calculate session statistics
 - Update reviewer signal quality metrics
 - Store learnings before completion
@@ -104,6 +107,7 @@ These phases are NOT in main branch (only has Phases 1-8).
 **Rationale**: Stats are stale, but Phase 0/9 value unclear
 
 **Action**:
+
 - Close PR #199
 - Create new PR if Phase 0/9 additions are still desired
 
@@ -115,6 +119,7 @@ These phases are NOT in main branch (only has Phases 1-8).
 **Rationale**: Original intent still valid (memory-first workflow)
 
 **Action**:
+
 - Cherry-pick Phase 0/9 sections from 536ccce
 - Apply on top of main's current pr-comment-responder.md
 - Update PR description to reflect actual changes
@@ -128,6 +133,7 @@ These phases are NOT in main branch (only has Phases 1-8).
 **Rationale**: Accept current state (session log only)
 
 **Action**:
+
 - Update PR description to match actual diff
 - Change from "feat" to "docs" commit type
 - Remove claims about Phase 0/9 and stats updates
@@ -140,6 +146,7 @@ These phases are NOT in main branch (only has Phases 1-8).
 **Recommend Option 2**: Restore Phase 0/9 additions
 
 **Reasoning**:
+
 1. ADR-007 (Memory-First Architecture) mandates "Memory retrieval MUST precede reasoning"
 2. Phase 0/9 formalize this requirement for pr-comment-responder agent
 3. Similar to Session Protocol gates (blocking/required phases)
@@ -147,6 +154,7 @@ These phases are NOT in main branch (only has Phases 1-8).
 5. Aligns with Session 53 retrospective findings (verification-based enforcement)
 
 **Implementation Plan**:
+
 1. Extract Phase 0/9 from commit 536ccce
 2. Merge with main's current pr-comment-responder.md (Phases 1-8)
 3. Update cumulative stats table to reflect main's current data (through PR #212)

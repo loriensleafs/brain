@@ -48,6 +48,7 @@ Quick triage of all review comments on PR #60 following the pr-comment-responder
 ### Key Finding: Stale Reviews
 
 **10 comments** reference `.github/scripts/ai-review-common.sh` - a bash file that **no longer exists**:
+
 - Deleted in commit `3e85005`
 - Replaced with PowerShell (`AIReviewCommon.psm1`)
 - Part of Phase 1 security hardening

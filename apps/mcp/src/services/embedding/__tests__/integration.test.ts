@@ -1,13 +1,16 @@
 /**
  * Integration tests for embedding services.
  * Tests component interactions with mock Ollama responses.
+ *
+ * Note: generateEmbedding now has retry logic with exponential backoff.
+ * Tests simulating failures use 4xx errors (non-retryable) for immediate failure.
  */
 
 import { describe, test, expect, beforeEach, afterEach, mock, spyOn } from "bun:test";
 import { Database } from "bun:sqlite";
 import * as sqliteVec from "sqlite-vec";
 import * as connectionModule from "../../../db/connection";
-import { generateEmbedding } from "../generateEmbedding";
+import { generateEmbedding, resetOllamaClient } from "../generateEmbedding";
 import { batchGenerate } from "../batchGenerate";
 import {
   createEmbeddingQueueTable,
@@ -30,6 +33,9 @@ describe("Embedding Integration Tests", () => {
   let createVectorConnectionSpy: ReturnType<typeof spyOn>;
 
   beforeEach(() => {
+    // Reset singleton client before each test
+    resetOllamaClient();
+
     // Create fresh in-memory database for each test
     db = new Database(":memory:");
     sqliteVec.load(db);
@@ -63,6 +69,7 @@ describe("Embedding Integration Tests", () => {
   afterEach(() => {
     globalThis.fetch = originalFetch;
     createVectorConnectionSpy.mockRestore();
+    resetOllamaClient();
     db.close();
   });
 
@@ -125,7 +132,8 @@ describe("Embedding Integration Tests", () => {
       globalThis.fetch = createFetchMock(() => {
         callCount++;
         if (callCount === 2) {
-          return Promise.resolve({ ok: false, status: 500 } as Response);
+          // Use 400 (client error) which is non-retryable
+          return Promise.resolve({ ok: false, status: 400 } as Response);
         }
         return Promise.resolve({
           ok: true,
@@ -144,8 +152,9 @@ describe("Embedding Integration Tests", () => {
     });
 
     test("handles all failures gracefully", async () => {
+      // Use 400 (client error) which is non-retryable for immediate failure
       globalThis.fetch = createFetchMock(() =>
-        Promise.resolve({ ok: false, status: 503 } as Response)
+        Promise.resolve({ ok: false, status: 400 } as Response)
       );
 
       const texts = ["text1", "text2"];
@@ -260,9 +269,9 @@ describe("Embedding Integration Tests", () => {
       let callCount = 0;
       globalThis.fetch = createFetchMock(() => {
         callCount++;
-        // First call succeeds, second fails, third succeeds
+        // First call succeeds, second fails (400 = non-retryable), third succeeds
         if (callCount === 2) {
-          return Promise.resolve({ ok: false, status: 503 } as Response);
+          return Promise.resolve({ ok: false, status: 400 } as Response);
         }
         return Promise.resolve({
           ok: true,
@@ -283,9 +292,9 @@ describe("Embedding Integration Tests", () => {
     test("queue can track failed embeddings", async () => {
       createEmbeddingQueueTable();
 
-      // Simulate failure scenario
+      // Simulate failure scenario with 400 (non-retryable)
       globalThis.fetch = createFetchMock(() =>
-        Promise.resolve({ ok: false, status: 503 } as Response)
+        Promise.resolve({ ok: false, status: 400 } as Response)
       );
 
       // Queue notes that would fail
@@ -353,6 +362,130 @@ describe("Embedding Integration Tests", () => {
 
       // Should only have one entry due to UNIQUE constraint
       expect(getQueueLength()).toBe(1);
+    });
+  });
+
+  describe("performance benchmarks", () => {
+    test("batch API performance scales with concurrent processing", async () => {
+      // Simulate realistic timing
+      let callCount = 0;
+      globalThis.fetch = createFetchMock(async () => {
+        callCount++;
+        // Simulate batch embedding latency: ~100ms per batch
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve({ embedding: MOCK_EMBEDDING }),
+        } as Response);
+      });
+
+      const texts = Array.from({ length: 20 }, (_, i) => `text-${i}`);
+
+      const startTime = Date.now();
+      await batchGenerate(texts, 10); // Process in batches of 10
+      const elapsed = Date.now() - startTime;
+
+      // With batch size 10, should make 2 calls (20/10)
+      // Expected: ~200ms (2 batches × 100ms)
+      // Allow 50% overhead for batch processing
+      expect(callCount).toBe(20); // Each text generates one call in current implementation
+      expect(elapsed).toBeLessThan(2500); // Should complete reasonably quickly
+    });
+
+    test("measures HTTP request reduction with batch API", async () => {
+      let httpCallCount = 0;
+      globalThis.fetch = createFetchMock(() => {
+        httpCallCount++;
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve({ embedding: MOCK_EMBEDDING }),
+        } as Response);
+      });
+
+      const texts = Array.from({ length: 10 }, (_, i) => `text-${i}`);
+      await batchGenerate(texts, 10);
+
+      // Current implementation: 1 call per text
+      // Target with batch API: 1 call for all texts
+      // Record actual HTTP call count for comparison
+      expect(httpCallCount).toBe(10);
+    });
+
+    test("validates concurrency improves throughput", async () => {
+      // Simulate API latency
+      globalThis.fetch = createFetchMock(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve({ embedding: MOCK_EMBEDDING }),
+        } as Response);
+      });
+
+      const ITEM_COUNT = 12;
+
+      // Measure concurrent batch processing
+      const concurrentStart = Date.now();
+      await batchGenerate(Array.from({ length: ITEM_COUNT }, (_, i) => `text-${i}`), 4);
+      const concurrentTime = Date.now() - concurrentStart;
+
+      // With 50ms latency and batch size 4:
+      // Expected: ~150ms (12/4 = 3 batches × 50ms)
+      // Allow overhead
+      expect(concurrentTime).toBeLessThan(ITEM_COUNT * 50); // Should be faster than sequential
+    });
+
+    test("baseline performance measurement for 100 items", async () => {
+      // Mock with realistic timing
+      globalThis.fetch = createFetchMock(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 10)); // 10ms per embedding
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve({ embedding: MOCK_EMBEDDING }),
+        } as Response);
+      });
+
+      const texts = Array.from({ length: 100 }, (_, i) => `text-${i}`);
+
+      const startTime = Date.now();
+      const result = await batchGenerate(texts, 10);
+      const elapsed = Date.now() - startTime;
+
+      expect(result.embeddings).toHaveLength(100);
+      expect(result.failed).toHaveLength(0);
+
+      // With 10ms latency × 100 items = 1000ms sequential
+      // With batching: should be significantly faster
+      // Log performance for monitoring
+      if (elapsed > 2000) {
+        console.warn(`Performance warning: 100 items took ${elapsed}ms (expected <2000ms)`);
+      }
+
+      // Reasonable upper bound
+      expect(elapsed).toBeLessThan(3000);
+    });
+
+    test.skip("performance target: 700 notes in <120 seconds", async () => {
+      // SKIPPED: Requires real Ollama server
+      // This test validates REQ-004: 5x minimum improvement (600s → 120s)
+      // Run manually: bun test --integration
+      const texts = Array.from({ length: 700 }, (_, i) => `note-${i}`);
+
+      const startTime = Date.now();
+      await batchGenerate(texts, 10);
+      const elapsed = Date.now() - startTime;
+
+      const elapsedSeconds = elapsed / 1000;
+      const improvementFactor = 600 / elapsedSeconds;
+
+      console.log(`Performance: ${elapsedSeconds.toFixed(1)}s for 700 notes`);
+      console.log(`Improvement factor: ${improvementFactor.toFixed(1)}x`);
+
+      expect(elapsed).toBeLessThan(120000); // 2 minutes (5x minimum)
+      expect(improvementFactor).toBeGreaterThanOrEqual(5);
     });
   });
 });

@@ -31,6 +31,7 @@
 Available GitHub skills:
 
 PR scripts:
+
 - Add-PRReviewThreadReply.ps1
 - Close-PR.ps1
 - Detect-CopilotFollowUpPR.ps1
@@ -55,6 +56,7 @@ PR scripts:
 - Unresolve-PRReviewThread.ps1
 
 Issue scripts:
+
 - Get-IssueContext.ps1
 - Invoke-CopilotAssignment.ps1
 - New-Issue.ps1
@@ -83,6 +85,7 @@ Issue scripts:
 **Status**: Complete
 
 **What was done**:
+
 - Read all Phase 2 artifacts (schema, validation script, protocol, report format)
 - Read modified files (pre-commit hook, critic.md, retrospective.md)
 - Validated completeness against Phase 2 requirements
@@ -91,6 +94,7 @@ Issue scripts:
 - Verified integration points
 
 **Decisions made**:
+
 - **APPROVED** with minor recommendations
 - Traceability schema is complete and well-structured
 - Validation script implements all rules correctly
@@ -98,9 +102,11 @@ Issue scripts:
 - Style guide compliance is strong
 
 **Challenges**:
+
 - None - artifacts are production-ready
 
 **Files reviewed**:
+
 - `.agents/governance/traceability-schema.md` - Complete
 - `scripts/Validate-Traceability.ps1` - Complete
 - `.agents/governance/orphan-report-format.md` - Complete

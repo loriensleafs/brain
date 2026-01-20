@@ -54,6 +54,7 @@ Reviewed 11 comments across 5 categories:
 ### Won't Fix (Historical Artifacts)
 
 Session logs (sessions 80, 81, 82) are historical records:
+
 - Checklist items accurately reflect session state at time of writing
 - HANDOFF.md is read-only per ADR-014 (not a violation)
 - Pipe escaping in tables is a display limitation
@@ -70,6 +71,7 @@ Created analysis document at:
 `.agents/pr-comments/PR-296/analysis.md`
 
 Contains:
+
 - Comment-by-comment triage with classification
 - Implementation plan with priority ordering
 - Specific change proposals with before/after

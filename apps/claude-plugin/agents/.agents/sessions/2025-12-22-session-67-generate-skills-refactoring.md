@@ -47,6 +47,7 @@ Refactor [build/Generate-Skills.ps1](../../build/Generate-Skills.ps1) to achieve
 ### Problem
 
 The script violates single responsibility principle:
+
 - YAML parsing is a common component that could be reused by other scripts
 - Frontmatter parsing is domain logic unrelated to skill generation
 - High coupling between parsing and generation logic
@@ -55,6 +56,7 @@ The script violates single responsibility principle:
 ### Proposed Solution
 
 Extract common components into reusable PowerShell modules:
+
 1. Create a YAML parser module (`.psm1`)
 2. Create a markdown frontmatter module (`.psm1`)
 3. Update Generate-Skills.ps1 to use these modules
@@ -73,6 +75,7 @@ Per [PROJECT-CONSTRAINTS.md](../../.agents/governance/PROJECT-CONSTRAINTS.md):
 ## Delegation
 
 This task requires:
+
 - Architectural decisions (module structure, API design)
 - Implementation (module creation, refactoring)
 - Testing (Pester tests for new modules)
@@ -140,6 +143,7 @@ This task requires:
 **Observation**: The best refactoring is often deletion, not extraction. Instead of extracting 112 lines of custom YAML parser into a reusable module, we deleted it and used a battle-tested community module.
 
 **Impact**:
+
 - Zero maintenance burden for YAML parsing
 - Community-tested edge cases
 - Standard tool developers recognize
@@ -154,6 +158,7 @@ This task requires:
 **Fix**: Use `New-Object System.Text.UTF8Encoding $false` for UTF-8 without BOM.
 
 **Pattern**:
+
 ```powershell
 # WRONG - Includes BOM
 [System.IO.File]::WriteAllText($path, $text, [System.Text.Encoding]::UTF8)
@@ -174,6 +179,7 @@ $utf8NoBom = New-Object System.Text.UTF8Encoding $false
 ### L4: Community Modules Save Time
 
 **Evidence**: Instead of writing/testing/maintaining 112 lines of YAML parser:
+
 - Installed `powershell-yaml` from PSGallery
 - Added 2 lines to CI workflow
 - Reduced script by 20%
@@ -187,7 +193,6 @@ $utf8NoBom = New-Object System.Text.UTF8Encoding $false
 - [.agents/governance/PROJECT-CONSTRAINTS.md](../../.agents/governance/PROJECT-CONSTRAINTS.md)
 - [.agents/architecture/ADR-006-thin-workflows-testable-modules.md](../../.agents/architecture/ADR-006-thin-workflows-testable-modules.md)
 
-
 ## Session End Checklist
 
 | Requirement | Status | Evidence |
@@ -198,4 +203,3 @@ $utf8NoBom = New-Object System.Text.UTF8Encoding $false
 | MUST: Markdown Lint | ✅ | Clean |
 | MUST: All Changes Committed | ✅ | Refactoring complete |
 | MUST NOT: HANDOFF.md Modified | ✅ | Not modified |
-

@@ -26,12 +26,14 @@ PR #235 adds `-IncludeIssueComments` switch to `Get-PRReviewComments.ps1`. Durin
 **Request**: Correct description of template system
 
 **Action Taken**:
+
 - ✅ Eyes reaction added (already done in 6717d9c)
 - ✅ Reply posted (already done in 6717d9c)
 - ✅ Changes ported between `src/claude` and `templates/agents` (already done in 6717d9c)
 - ✅ Devops review document updated with correct dual-maintenance description (this session)
 
 **Updated Content**:
+
 - Clarified that `src/claude/**/*.md` is maintained independently (not generated)
 - Documented dual-flow pattern: changes in either location must be ported to the other
 - Added context about tri-template migration period
@@ -43,11 +45,13 @@ PR #235 adds `-IncludeIssueComments` switch to `Get-PRReviewComments.ps1`. Durin
 **Request**: Write ADR for design decision to always include `IssueCommentCount` field
 
 **Action Taken**:
+
 - ✅ Eyes reaction added (already done in 6717d9c)
 - ✅ Reply posted (already done in 6717d9c)
 - ✅ ADR-017 created (already done in 6717d9c)
 
 **ADR Summary**:
+
 - Documents PowerShell convention: consistent schemas over conditional properties
 - Rationale: Schema stability, pipeline safety, simpler consumption
 - Trade-off: Minor verbosity for significant robustness improvement

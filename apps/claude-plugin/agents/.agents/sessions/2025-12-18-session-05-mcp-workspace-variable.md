@@ -26,6 +26,7 @@ Fix the Sync-McpConfig.ps1 script to properly handle the `${workspaceFolder}` va
 ## Context
 
 The user encountered a Serena MCP startup error because multiple projects share the name "ai-agents":
+
 - `D:/src/GitHub/rjmurillo-bot/ai-agents`
 - `D:/src/GitHub/rjmurillo/ai-agents`
 

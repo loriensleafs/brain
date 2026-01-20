@@ -41,6 +41,7 @@ Validate test coverage and quality for PR #402 implementation:
 | Copilot PR with no other bot comments | [PASS] | 220ms | Validates edge case - no synthesis when no comments |
 
 **Coverage Summary**:
+
 - Tests Run: 6
 - Passed: 6
 - Failed: 0
@@ -58,12 +59,14 @@ Validate test coverage and quality for PR #402 implementation:
 | No duplicate PRs | [FAIL] | 113ms | PropertyNotFoundException: 'number' |
 
 **Root Cause**: Integration test line 14-15 has a bug:
+
 ```powershell
 $openPRs = gh pr list --repo "$Owner/$Repo" --state open --json number 2>$null | ConvertFrom-Json
 $script:OpenPRNumbers = @($openPRs.number)  # BUG: $openPRs is already an array of objects
 ```
 
 Should be:
+
 ```powershell
 $script:OpenPRNumbers = @($openPRs | ForEach-Object { $_.number })
 ```
@@ -126,11 +129,13 @@ $script:OpenPRNumbers = @($openPRs | ForEach-Object { $_.number })
 ### Mock Quality
 
 **Strengths**:
+
 - All external dependencies properly mocked (gh, Write-Log)
 - Mock return values use proper PowerShell array syntax (comma operator)
 - Parameter filters used correctly for Get-BotAuthorInfo
 
 **Weaknesses**:
+
 - No verification that mocked functions are actually called
 - Mock data doesn't reflect real API response structure (simplified)
 - No negative test cases (what if Get-OpenPRs returns malformed data?)
@@ -138,11 +143,13 @@ $script:OpenPRNumbers = @($openPRs | ForEach-Object { $_.number })
 ### Assertion Quality
 
 **Strengths**:
+
 - Clear assertions with `-Because` parameter for context
 - Tests validate both presence AND absence (ActionRequired vs Blocked)
 - Specific field validation (Reason, Action, Category)
 
 **Weaknesses**:
+
 - No assertions on function call counts (Should -Invoke -Times)
 - No assertions on mock parameter values (verify correct data passed)
 - Limited validation of nested properties (e.g., CommentsToSynthesize value)
@@ -165,27 +172,27 @@ $script:OpenPRNumbers = @($openPRs | ForEach-Object { $_.number })
 
 ### Short-term (P1)
 
-4. **Add bot category coverage tests**
+1. **Add bot category coverage tests**
    - Test unknown-bot category behavior
    - Test non-responsive bot category behavior
    - Test command-triggered bot behavior
 
-5. **Add synthesis edge case tests**
+2. **Add synthesis edge case tests**
    - Test with large number of comments (50+)
    - Test synthesis post failure handling
 
-6. **Add function call verification**
+3. **Add function call verification**
    - Verify Add-CommentReaction called correct number of times
    - Verify Resolve-PRConflicts called with correct parameters
 
 ### Medium-term (P2)
 
-7. **Add derivative PR workflow tests**
+1. **Add derivative PR workflow tests**
    - Unit tests for Get-DerivativePRs
    - Unit tests for Get-PRsWithPendingDerivatives
    - Integration test for parent PR warning
 
-8. **Add error resilience tests**
+2. **Add error resilience tests**
    - Test partial failure scenario (one PR errors, others process)
    - Test graceful degradation (API failure, continue with remaining)
 
@@ -215,13 +222,14 @@ $script:OpenPRNumbers = @($openPRs | ForEach-Object { $_.number })
 
 ### Non-Blocking Gaps (P1)
 
-4. Bot category coverage: 3 of 6 categories untested
-5. Synthesis edge cases: Large comment counts, failure handling
-6. Mock verification: No Should -Invoke assertions
+1. Bot category coverage: 3 of 6 categories untested
+2. Synthesis edge cases: Large comment counts, failure handling
+3. Mock verification: No Should -Invoke assertions
 
 ### Recommendation
 
 Fix P0 issues before merge:
+
 1. Integration test bug fix (1-line change)
 2. Add multi-PR deduplication test
 3. Add conflict + CHANGES_REQUESTED interaction test

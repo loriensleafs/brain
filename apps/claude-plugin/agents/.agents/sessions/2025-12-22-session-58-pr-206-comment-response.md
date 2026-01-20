@@ -114,11 +114,13 @@ The Session Protocol Compliance Report shows 16 MUST requirement failures across
 - `2025-12-20-session-39.md` - 3 failures
 
 **Common Failures**:
+
 - HANDOFF.md not updated
 - Markdown lint not run
 - Changes not committed
 
 **Decision**: These are historical session debt from Sessions 36-39. This PR is a cleanup PR for Sessions 40-41. The Session Protocol failures are pre-existing technical debt that:
+
 1. Cannot be fixed by modifying committed session logs (would falsify historical records)
 2. Are documented in HANDOFF.md under "Session 53 Key Learnings"
 3. Have remediation already implemented via `scripts/Validate-SessionEnd.ps1` and pre-commit hook

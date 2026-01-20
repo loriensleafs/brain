@@ -18,6 +18,7 @@
 ## Context
 
 PR #310 is tracking the ADR-017 work completed in Session 90:
+
 - ADR-017 split into architecture + governance documents
 - ADR-018 meta-ADR created
 - All commits pushed to docs/adr-017 branch
@@ -51,6 +52,7 @@ PR #310 is tracking the ADR-017 work completed in Session 90:
 **Content**: AI Quality Gate CRITICAL_FAIL verdict
 
 **Agent Results**:
+
 - Security: PASS ✅
 - QA: PASS ✅
 - Analyst: WARN ⚠️
@@ -63,6 +65,7 @@ PR #310 is tracking the ADR-017 work completed in Session 90:
 **Classification**: Infrastructure false positive (Issue #164: Failure Categorization)
 
 **Action**:
+
 1. Eyes reaction added
 2. Reply posted (comment 3688634732) explaining:
    - Root cause: Missing Copilot access for bot account
@@ -94,6 +97,7 @@ PR #310 is tracking the ADR-017 work completed in Session 90:
 ## Actions Taken
 
 ### Phase 1-2: Context Gathering and Acknowledgment
+
 - ✅ Consulted memories (skills-pr-review, pr-comment-responder-skills)
 - ✅ Fetched PR metadata (PR #310 OPEN, 19 files changed)
 - ✅ Enumerated reviewers (4 total: 3 bots, 1 human)
@@ -103,11 +107,13 @@ PR #310 is tracking the ADR-017 work completed in Session 90:
 - ✅ Verified reactions via API (4/4 confirmed)
 
 ### Phase 5: Immediate Replies
+
 - ✅ Replied to comment 3688196991 (AI Quality Gate) explaining infrastructure limitation
 - ✅ Reply ID: 3688634732
 - ✅ Updated comment map with resolution status
 
 ### Phase 8: Completion Verification
+
 - ✅ All 4 comments acknowledged (eyes reactions verified)
 - ✅ 1 actionable comment replied to (infrastructure explanation)
 - ✅ 3 informational comments documented (no action required)
@@ -121,6 +127,7 @@ PR #310 is tracking the ADR-017 work completed in Session 90:
 **Question**: Does this PR require code changes based on review comments?
 
 **Analysis**:
+
 - 0 review comments on specific lines of code
 - 4 issue-level comments: 3 informational, 1 infrastructure false positive
 - No bugs reported, no style issues, no security concerns
@@ -134,6 +141,7 @@ PR #310 is tracking the ADR-017 work completed in Session 90:
 **Question**: Should we reply with infrastructure explanation or mark as "won't fix"?
 
 **Analysis**:
+
 - CRITICAL_FAIL verdict might alarm PR author
 - Root cause is external (bot account access limitations)
 - Issue #164 tracks this infrastructure noise
@@ -152,6 +160,7 @@ PR #310 is tracking the ADR-017 work completed in Session 90:
 - **Informational**: 3 (no action required)
 
 **Next Steps**:
+
 1. Commit session artifacts (comment map, session log)
 2. PR #310 ready for human review and merge
 3. Monitor for any additional reviewer comments

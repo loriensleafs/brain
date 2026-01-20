@@ -50,6 +50,7 @@
 ## Context
 
 Validating Phase 2 Traceability system implementation. This includes:
+
 - Validation script that finds specs and validates chains
 - Three output format options
 - Pre-commit hook integration

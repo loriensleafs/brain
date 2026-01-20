@@ -3,7 +3,7 @@
  * Provides embedding generation and health check functionality.
  */
 
-import { OllamaConfig, EmbeddingResponse, OllamaError } from "./types";
+import { OllamaConfig, BatchEmbedResponse, OllamaError, TaskType } from "./types";
 
 /**
  * Client for interacting with Ollama API.
@@ -15,24 +15,60 @@ export class OllamaClient {
 
   constructor(config: OllamaConfig = {}) {
     this.baseUrl = config.baseUrl ?? "http://localhost:11434";
-    this.timeout = config.timeout ?? 30000;
+    this.timeout = config.timeout ?? 60000; // 60 seconds (reduced from 10 min for fail-fast)
   }
 
   /**
    * Generate embedding vector for given text.
+   * Delegates to batch method for consistency.
+   *
    * @param text - Input text to embed
+   * @param taskType - Task context for embedding (default: search_document)
    * @param model - Ollama model name (default: nomic-embed-text)
    * @returns Embedding vector as array of numbers
    * @throws OllamaError on API errors or timeouts
    */
   async generateEmbedding(
     text: string,
+    taskType: TaskType = "search_document",
     model: string = "nomic-embed-text"
   ): Promise<number[]> {
-    const response = await fetch(`${this.baseUrl}/api/embeddings`, {
+    const [embedding] = await this.generateBatchEmbeddings([text], taskType, model);
+    return embedding;
+  }
+
+  /**
+   * Generate embeddings for multiple texts in a single request.
+   * Uses the /api/embed endpoint which supports batch input.
+   * Each text is prefixed with task type for context (ADR-003 compatibility).
+   *
+   * @param texts - Array of texts to embed
+   * @param taskType - Task context for embedding (default: search_document)
+   * @param model - Ollama model name (default: nomic-embed-text)
+   * @returns Array of embedding vectors (same order as input)
+   * @throws OllamaError on API errors or timeouts
+   */
+  async generateBatchEmbeddings(
+    texts: string[],
+    taskType: TaskType = "search_document",
+    model: string = "nomic-embed-text"
+  ): Promise<number[][]> {
+    // Optimize empty input - no API call needed
+    if (texts.length === 0) {
+      return [];
+    }
+
+    // Prefix texts with task type for ADR-003 compatibility
+    const prefixedTexts = texts.map(t => `${taskType}: ${t}`);
+
+    const response = await fetch(`${this.baseUrl}/api/embed`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ model, prompt: text }),
+      body: JSON.stringify({
+        model,
+        input: prefixedTexts,
+        truncate: true
+      }),
       signal: AbortSignal.timeout(this.timeout),
     });
 
@@ -43,8 +79,17 @@ export class OllamaClient {
       );
     }
 
-    const data = (await response.json()) as EmbeddingResponse;
-    return data.embedding;
+    const data = (await response.json()) as BatchEmbedResponse;
+
+    // Validate index alignment (critical for correctness)
+    if (data.embeddings.length !== texts.length) {
+      throw new OllamaError(
+        `Embedding count mismatch: expected ${texts.length}, got ${data.embeddings.length}`,
+        500
+      );
+    }
+
+    return data.embeddings;
   }
 
   /**

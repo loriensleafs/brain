@@ -67,6 +67,7 @@ Respond to PR review comments for all open PRs using `--parallel --cleanup` mode
 ## Processing Strategy
 
 Using parallel agent execution to process PRs efficiently. Each agent will:
+
 1. Check if PR is merged (via Test-PRMerged.ps1)
 2. Get review threads and unaddressed comments
 3. Address any pending feedback

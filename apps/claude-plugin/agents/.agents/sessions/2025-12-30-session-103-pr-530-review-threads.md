@@ -52,17 +52,20 @@ All threads are from gemini-code-assist[bot], which has shown 100% actionability
 ### Code Changes
 
 **Files Modified:**
+
 - `.claude/skills/github/scripts/pr/Test-PRMergeReady.ps1` - Migrated 1 GraphQL call
 - `.claude/skills/github/scripts/pr/Set-PRAutoMerge.ps1` - Migrated 3 GraphQL calls
 - `.claude/skills/github/scripts/pr/Add-PRReviewThreadReply.ps1` - Migrated 2 GraphQL calls
 
 **Files Moved:**
+
 - `.claude/skills/github/tests/Add-PRReviewThreadReply.Tests.ps1` → `tests/`
 - `.claude/skills/github/tests/Set-PRAutoMerge.Tests.ps1` → `tests/`
 
 **Migration Pattern:**
 
 Before:
+
 ```powershell
 $result = gh api graphql -f query=$query -f owner="$Owner" -f repo="$Repo" -F number=$PullRequest 2>&1
 if ($LASTEXITCODE -ne 0) {
@@ -81,6 +84,7 @@ $pr = $parsed.data.repository.pullRequest
 ```
 
 After:
+
 ```powershell
 try {
     $prData = Invoke-GhGraphQL -Query $query -Variables @{ owner = $Owner; repo = $Repo; number = $PullRequest }

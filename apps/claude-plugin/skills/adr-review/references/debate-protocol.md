@@ -21,13 +21,13 @@ Key topics: [Extract 3-5 keywords from ADR]
    gh issue list --state open --search "[keywords]" --json number,title,labels
    ```
 
-2. **Search open PRs** for in-progress work:
+1. **Search open PRs** for in-progress work:
 
    ```bash
    gh pr list --state open --search "[keywords]" --json number,title,headRefName
    ```
 
-3. **Search closed Issues** for prior decisions:
+2. **Search closed Issues** for prior decisions:
 
    ```bash
    gh issue list --state closed --search "[keywords]" --limit 10 --json number,title,labels
@@ -54,6 +54,7 @@ Key topics: [Extract 3-5 keywords from ADR]
 - [Should any issues be linked?]
 - [Are any PRs already implementing this?]
 """)
+
 ```
 
 Include related work findings in each Phase 1 agent prompt as context.

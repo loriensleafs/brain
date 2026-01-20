@@ -14,12 +14,28 @@ export interface OllamaConfig {
 }
 
 /**
- * Response structure from Ollama embeddings API
+ * Response structure from Ollama embeddings API (single-text)
  */
 export interface EmbeddingResponse {
   /** The embedding vector as an array of numbers */
   embedding: number[];
 }
+
+/**
+ * Response structure from Ollama batch embed API
+ */
+export interface BatchEmbedResponse {
+  /** Model used for embedding */
+  model: string;
+  /** Array of embedding vectors, one per input text */
+  embeddings: number[][];
+}
+
+/**
+ * Task type for embedding context (ADR-003 compatibility).
+ * Prefixes are prepended to text for task-specific embeddings.
+ */
+export type TaskType = "search_document" | "search_query";
 
 /**
  * Custom error class for Ollama API errors.

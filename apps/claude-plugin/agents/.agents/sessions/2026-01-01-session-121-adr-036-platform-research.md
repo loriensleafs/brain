@@ -8,6 +8,7 @@
 ## Objective
 
 Research current capabilities of AI coding platforms for ADR-036 Platform Capability Matrix:
+
 - Claude Code (MCP-based agent system)
 - GitHub Copilot CLI
 - VS Code Copilot
@@ -16,6 +17,7 @@ Research current capabilities of AI coding platforms for ADR-036 Platform Capabi
 ## Context
 
 ADR-036 proposes a Platform Capability Matrix comparing these platforms. User notes that platform capabilities change nearly daily, so:
+
 1. Prior documentation/history is likely outdated
 2. Research method must be documented for repeatability
 
@@ -57,6 +59,7 @@ ADR-036 proposes a Platform Capability Matrix comparing these platforms. User no
 ### Phase 1: Claude Code Capabilities
 
 Verified via codebase analysis:
+
 - 19 specialized agents (AGENT-SYSTEM.md)
 - Task tool with subagent_type parameter
 - Full MCP support (Serena, cloudmcp-manager, deepwiki)
@@ -66,6 +69,7 @@ Verified via codebase analysis:
 ### Phase 2: Copilot CLI Capabilities
 
 Verified via codebase + web research:
+
 - 18 agents (template-generated)
 - @agent syntax for delegation
 - tools array in frontmatter
@@ -75,6 +79,7 @@ Verified via codebase + web research:
 ### Phase 3: VS Code Copilot Capabilities
 
 Verified via codebase + web research:
+
 - 18 agents (template-generated)
 - #runSubagent command for invocation
 - Agent Sessions view for multi-agent orchestration
@@ -84,6 +89,7 @@ Verified via codebase + web research:
 ### Phase 4: GitHub Copilot (Web) Capabilities
 
 Verified via official documentation:
+
 - Custom agent support via .github/agents
 - Delegation to third-party agents (Claude, Codex)
 - Architectural constraints:
@@ -95,6 +101,7 @@ Verified via official documentation:
 ### Phase 5: Analysis Document Creation
 
 Created comprehensive analysis:
+
 - `.agents/analysis/122-adr-036-platform-capability-matrix-research.md`
 - Updated Platform Capability Matrix with verified data
 - Documented research methodology for repeatability

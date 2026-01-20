@@ -62,7 +62,7 @@ All MUST requirements above are marked complete.
   1. **skillcreator** (v3.2): Meta-skill for creating production-ready Claude Code skills
   2. **programming-advisor**: Build vs buy decision advisor
 - Created PR using `.claude/skills/github/scripts/pr/New-PR.ps1` skill
-- PR #608 created: https://github.com/rjmurillo/ai-agents/pull/608
+- PR #608 created: <https://github.com/rjmurillo/ai-agents/pull/608>
 
 **Files in PR**:
 
@@ -83,11 +83,13 @@ All MUST requirements above are marked complete.
 4. **Documentation** (04adaa4, 27f8052): Added lgtm annotations and SECURITY.md
 
 **Why CodeQL Still Reports**:
+
 - CodeQL Advanced Security cannot recognize custom sanitization functions
 - No inline suppression mechanism (lgtm comments are for LGTM.dev, not GitHub)
 - Would require custom CodeQL query pack to model `sanitize_path()` as sanitizer
 
 **Security Mitigations Documented**:
+
 - Added `SECURITY.md` explaining defense-in-depth approach
 - Documents why alerts are false positives
 - Notes ADR-005 exception for third-party Python skills
@@ -99,6 +101,7 @@ All MUST requirements above are marked complete.
 **Suggestion**: Add warning when fallback YAML parser is used (PyYAML not installed)
 
 **Implementation** (04adaa4):
+
 - Added stderr warning about parser limitations
 - Recommends `pip install pyyaml` for full validation
 - Applied to both `quick_validate.py` and `validate-skill.py`
@@ -144,7 +147,7 @@ Clean (working tree clean after commit)
 
 ## Notes for Next Session
 
-- PR #608 created for skills: https://github.com/rjmurillo/ai-agents/pull/608
+- PR #608 created for skills: <https://github.com/rjmurillo/ai-agents/pull/608>
 - Skills added: skillcreator (v3.2), programming-advisor
 - CodeQL alerts remain due to GitHub Advanced Security limitation (cannot recognize custom sanitizers)
 - Security review documented in `.claude/skills/skillcreator/SECURITY.md`

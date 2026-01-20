@@ -1,0 +1,163 @@
+	github.com/peterkloss/brain/packages/validation		coverage: 0.0% of statements
+=== RUN   TestCheckSkillExists_ValidSkill
+--- PASS: TestCheckSkillExists_ValidSkill (0.00s)
+=== RUN   TestCheckSkillExists_SkillNotFound
+--- PASS: TestCheckSkillExists_SkillNotFound (0.00s)
+=== RUN   TestCheckSkillExists_EmptySkillName
+--- PASS: TestCheckSkillExists_EmptySkillName (0.00s)
+=== RUN   TestCheckSkillExists_NoFrontmatter
+--- PASS: TestCheckSkillExists_NoFrontmatter (0.00s)
+=== RUN   TestCheckSkillExists_MissingName
+--- PASS: TestCheckSkillExists_MissingName (0.00s)
+=== RUN   TestCheckSkillExists_MissingDescription
+--- PASS: TestCheckSkillExists_MissingDescription (0.00s)
+=== RUN   TestCheckSkillExists_QuotedValues
+=== RUN   TestCheckSkillExists_QuotedValues/double_quotes
+=== RUN   TestCheckSkillExists_QuotedValues/single_quotes
+=== RUN   TestCheckSkillExists_QuotedValues/mixed_quotes
+--- PASS: TestCheckSkillExists_QuotedValues (0.01s)
+    --- PASS: TestCheckSkillExists_QuotedValues/double_quotes (0.00s)
+    --- PASS: TestCheckSkillExists_QuotedValues/single_quotes (0.00s)
+    --- PASS: TestCheckSkillExists_QuotedValues/mixed_quotes (0.00s)
+=== RUN   TestCheckSkillExists_UnclosedFrontmatter
+--- PASS: TestCheckSkillExists_UnclosedFrontmatter (0.00s)
+=== RUN   TestListSkills
+--- PASS: TestListSkills (0.00s)
+=== RUN   TestListSkills_NoSkillsDirectory
+--- PASS: TestListSkills_NoSkillsDirectory (0.00s)
+=== RUN   TestValidateAllSkills
+--- PASS: TestValidateAllSkills (0.00s)
+=== RUN   TestCheckSkillScript_Found
+--- PASS: TestCheckSkillScript_Found (0.00s)
+=== RUN   TestCheckSkillScript_NotFound
+--- PASS: TestCheckSkillScript_NotFound (0.00s)
+=== RUN   TestCheckSkillScript_InvalidOperation
+--- PASS: TestCheckSkillScript_InvalidOperation (0.00s)
+=== RUN   TestCheckSkillScript_EmptyAction
+--- PASS: TestCheckSkillScript_EmptyAction (0.00s)
+=== RUN   TestCheckSkillScript_CaseInsensitive
+--- PASS: TestCheckSkillScript_CaseInsensitive (0.00s)
+=== RUN   TestCheckSkillScript_AllOperations
+=== RUN   TestCheckSkillScript_AllOperations/pr
+=== RUN   TestCheckSkillScript_AllOperations/issue
+=== RUN   TestCheckSkillScript_AllOperations/reactions
+=== RUN   TestCheckSkillScript_AllOperations/label
+=== RUN   TestCheckSkillScript_AllOperations/milestone
+--- PASS: TestCheckSkillScript_AllOperations (0.01s)
+    --- PASS: TestCheckSkillScript_AllOperations/pr (0.00s)
+    --- PASS: TestCheckSkillScript_AllOperations/issue (0.00s)
+    --- PASS: TestCheckSkillScript_AllOperations/reactions (0.00s)
+    --- PASS: TestCheckSkillScript_AllOperations/label (0.00s)
+    --- PASS: TestCheckSkillScript_AllOperations/milestone (0.00s)
+=== RUN   TestListSkillScripts
+--- PASS: TestListSkillScripts (0.00s)
+=== RUN   TestListSkillScripts_NoDirectory
+--- PASS: TestListSkillScripts_NoDirectory (0.00s)
+=== RUN   TestListAllSkillScripts
+--- PASS: TestListAllSkillScripts (0.00s)
+=== RUN   TestCheckSkillExists_SkillPathInResult
+--- PASS: TestCheckSkillExists_SkillPathInResult (0.00s)
+=== RUN   TestCheckSkillExists_SkillPathOnNotFound
+--- PASS: TestCheckSkillExists_SkillPathOnNotFound (0.00s)
+=== RUN   TestGhCommandPatterns_PRCommands
+=== RUN   TestGhCommandPatterns_PRCommands/pr_create
+=== RUN   TestGhCommandPatterns_PRCommands/pr_merge
+=== RUN   TestGhCommandPatterns_PRCommands/pr_close
+=== RUN   TestGhCommandPatterns_PRCommands/pr_view
+=== RUN   TestGhCommandPatterns_PRCommands/pr_list
+=== RUN   TestGhCommandPatterns_PRCommands/pr_diff
+=== RUN   TestGhCommandPatterns_PRCommands/pr_checkout_not_matched
+=== RUN   TestGhCommandPatterns_PRCommands/no_match
+--- PASS: TestGhCommandPatterns_PRCommands (0.00s)
+    --- PASS: TestGhCommandPatterns_PRCommands/pr_create (0.00s)
+    --- PASS: TestGhCommandPatterns_PRCommands/pr_merge (0.00s)
+    --- PASS: TestGhCommandPatterns_PRCommands/pr_close (0.00s)
+    --- PASS: TestGhCommandPatterns_PRCommands/pr_view (0.00s)
+    --- PASS: TestGhCommandPatterns_PRCommands/pr_list (0.00s)
+    --- PASS: TestGhCommandPatterns_PRCommands/pr_diff (0.00s)
+    --- PASS: TestGhCommandPatterns_PRCommands/pr_checkout_not_matched (0.00s)
+    --- PASS: TestGhCommandPatterns_PRCommands/no_match (0.00s)
+=== RUN   TestGhCommandPatterns_IssueCommands
+=== RUN   TestGhCommandPatterns_IssueCommands/issue_create
+=== RUN   TestGhCommandPatterns_IssueCommands/issue_close
+=== RUN   TestGhCommandPatterns_IssueCommands/issue_view
+=== RUN   TestGhCommandPatterns_IssueCommands/issue_list
+=== RUN   TestGhCommandPatterns_IssueCommands/issue_edit_not_matched
+=== RUN   TestGhCommandPatterns_IssueCommands/no_match
+--- PASS: TestGhCommandPatterns_IssueCommands (0.00s)
+    --- PASS: TestGhCommandPatterns_IssueCommands/issue_create (0.00s)
+    --- PASS: TestGhCommandPatterns_IssueCommands/issue_close (0.00s)
+    --- PASS: TestGhCommandPatterns_IssueCommands/issue_view (0.00s)
+    --- PASS: TestGhCommandPatterns_IssueCommands/issue_list (0.00s)
+    --- PASS: TestGhCommandPatterns_IssueCommands/issue_edit_not_matched (0.00s)
+    --- PASS: TestGhCommandPatterns_IssueCommands/no_match (0.00s)
+=== RUN   TestGhCommandPatterns_APICommands
+=== RUN   TestGhCommandPatterns_APICommands/api_repos
+=== RUN   TestGhCommandPatterns_APICommands/api_graphql
+=== RUN   TestGhCommandPatterns_APICommands/api_with_flags
+=== RUN   TestGhCommandPatterns_APICommands/no_match
+--- PASS: TestGhCommandPatterns_APICommands (0.00s)
+    --- PASS: TestGhCommandPatterns_APICommands/api_repos (0.00s)
+    --- PASS: TestGhCommandPatterns_APICommands/api_graphql (0.00s)
+    --- PASS: TestGhCommandPatterns_APICommands/api_with_flags (0.00s)
+    --- PASS: TestGhCommandPatterns_APICommands/no_match (0.00s)
+=== RUN   TestGhCommandPatterns_RepoCommands
+=== RUN   TestGhCommandPatterns_RepoCommands/repo_clone
+=== RUN   TestGhCommandPatterns_RepoCommands/repo_create
+=== RUN   TestGhCommandPatterns_RepoCommands/repo_view
+=== RUN   TestGhCommandPatterns_RepoCommands/no_match
+--- PASS: TestGhCommandPatterns_RepoCommands (0.00s)
+    --- PASS: TestGhCommandPatterns_RepoCommands/repo_clone (0.00s)
+    --- PASS: TestGhCommandPatterns_RepoCommands/repo_create (0.00s)
+    --- PASS: TestGhCommandPatterns_RepoCommands/repo_view (0.00s)
+    --- PASS: TestGhCommandPatterns_RepoCommands/no_match (0.00s)
+=== RUN   TestDetectSkillViolationsFromContent_NoViolations
+--- PASS: TestDetectSkillViolationsFromContent_NoViolations (0.00s)
+=== RUN   TestDetectSkillViolationsFromContent_WithViolations
+--- PASS: TestDetectSkillViolationsFromContent_WithViolations (0.00s)
+=== RUN   TestDetectSkillViolationsFromContent_MultipleViolations
+--- PASS: TestDetectSkillViolationsFromContent_MultipleViolations (0.00s)
+=== RUN   TestDetectSkillViolationsFromContent_OnlyFirstViolationPerLine
+--- PASS: TestDetectSkillViolationsFromContent_OnlyFirstViolationPerLine (0.00s)
+=== RUN   TestDetectSkillViolationsFromContent_EmptyContent
+--- PASS: TestDetectSkillViolationsFromContent_EmptyContent (0.00s)
+=== RUN   TestScanFileForViolations_ValidFile
+--- PASS: TestScanFileForViolations_ValidFile (0.00s)
+=== RUN   TestScanFileForViolations_NoViolations
+--- PASS: TestScanFileForViolations_NoViolations (0.00s)
+=== RUN   TestScanFileForViolations_NonexistentFile
+--- PASS: TestScanFileForViolations_NonexistentFile (0.00s)
+=== RUN   TestSkillViolationResult_HasSkillViolations
+--- PASS: TestSkillViolationResult_HasSkillViolations (0.00s)
+=== RUN   TestSkillViolationResult_ViolationCount
+--- PASS: TestSkillViolationResult_ViolationCount (0.00s)
+=== RUN   TestDetectSkillViolations_NoSkillsDir
+    detect-skill-violation_test.go:358: Expected validation to pass, got: Could not find git repository root from: /var/folders/hh/39t9cbpx7zg20lbxtc4166g40000gp/T/TestDetectSkillViolations_NoSkillsDir1154835338/001
+    detect-skill-violation_test.go:361: Expected SkillsDir to be set
+--- FAIL: TestDetectSkillViolations_NoSkillsDir (0.01s)
+=== RUN   TestDetectSkillViolations_WithSkillsDirNoViolations
+    detect-skill-violation_test.go:387: Expected validation to pass, got: Could not find git repository root from: /var/folders/hh/39t9cbpx7zg20lbxtc4166g40000gp/T/TestDetectSkillViolations_WithSkillsDirNoViolations1177085017/001
+    detect-skill-violation_test.go:393: Expected at least 1 file checked
+--- FAIL: TestDetectSkillViolations_WithSkillsDirNoViolations (0.02s)
+=== RUN   TestDetectSkillViolations_WithViolations
+    detect-skill-violation_test.go:426: Expected validation to pass (warnings only), got: Could not find git repository root from: /var/folders/hh/39t9cbpx7zg20lbxtc4166g40000gp/T/TestDetectSkillViolations_WithViolations3791023111/001
+    detect-skill-violation_test.go:429: Expected 1 violation, got 0
+    detect-skill-violation_test.go:432: Expected 1 capability gap, got 0
+--- FAIL: TestDetectSkillViolations_WithViolations (0.01s)
+panic: runtime error: index out of range [0] with length 0 [recovered, repanicked]
+
+goroutine 6 [running]:
+testing.tRunner.func1.2({0x1045ceee0, 0x140003aa000})
+	/opt/homebrew/Cellar/go/1.25.5/libexec/src/testing/testing.go:1872 +0x190
+testing.tRunner.func1()
+	/opt/homebrew/Cellar/go/1.25.5/libexec/src/testing/testing.go:1875 +0x31c
+panic({0x1045ceee0?, 0x140003aa000?})
+	/opt/homebrew/Cellar/go/1.25.5/libexec/src/runtime/panic.go:783 +0x120
+github.com/peterkloss/brain/packages/validation/tests.TestDetectSkillViolations_WithViolations(0x14000003880)
+	/Users/peter.kloss/Dev/brain/packages/validation/tests/detect-skill-violation_test.go:434 +0x3d0
+testing.tRunner(0x14000003880, 0x1045e1e30)
+	/opt/homebrew/Cellar/go/1.25.5/libexec/src/testing/testing.go:1934 +0xc8
+created by testing.(*T).Run in goroutine 1
+	/opt/homebrew/Cellar/go/1.25.5/libexec/src/testing/testing.go:1997 +0x364
+FAIL	github.com/peterkloss/brain/packages/validation/tests	0.505s
+FAIL

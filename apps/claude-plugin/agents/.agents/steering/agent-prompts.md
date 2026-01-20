@@ -12,7 +12,8 @@ status: placeholder
 
 ## Scope
 
-**Applies to**: 
+**Applies to**:
+
 - `src/claude/**/*.md` - Agent prompt files
 
 ## Purpose
@@ -22,6 +23,7 @@ This steering file will provide guidelines for writing agent prompts.
 ## Planned Content (Phase 4)
 
 ### Guidelines
+
 - Prompt structure consistency
 - Clear role definition
 - Explicit responsibilities
@@ -29,6 +31,7 @@ This steering file will provide guidelines for writing agent prompts.
 - Handoff format standards
 
 ### Patterns
+
 - Front matter metadata
 - Section organization
 - Delegation instructions
@@ -36,12 +39,14 @@ This steering file will provide guidelines for writing agent prompts.
 - Quality gates
 
 ### Anti-Patterns
+
 - Ambiguous instructions
 - Missing delegation logic
 - Unclear success criteria
 - Inconsistent terminology
 
 ### Examples
+
 - Well-structured agent prompts
 - Effective delegation patterns
 - Clear handoff protocols

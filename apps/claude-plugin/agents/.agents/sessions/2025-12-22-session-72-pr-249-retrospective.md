@@ -63,11 +63,13 @@ All 7 MISSES were identified by cursor[bot]. Each represents a quality gate fail
 **Issues**: P0-1 (hardcoded main), P0-3 (CI environment), P1-1 (GH_TOKEN)
 
 **Root Cause**: Implementation focused on happy path without validating:
+
 - Environment variations (CI vs local)
 - Branch variations (non-main targets)
 - Variable propagation across workflow steps
 
 **Prevention**: Pre-PR checklist should include:
+
 - Tested in CI environment (not just local)
 - Tested with non-main target branches
 - Validated all workflow steps have required secrets/env vars
@@ -77,10 +79,12 @@ All 7 MISSES were identified by cursor[bot]. Each represents a quality gate fail
 **Issues**: P0-2 (DryRun bypass), P1-4 (exit code ignored)
 
 **Root Cause**: Implemented fail-open patterns where fail-safe required:
+
 - Empty `inputs.dry_run` defaulted to false (unsafe)
 - Git push failure didn't check LASTEXITCODE
 
 **Prevention**: ADR-015 should have explicit fail-safe requirement checklist:
+
 - All safety modes default to ON when input empty/missing
 - All external command exit codes explicitly checked
 
@@ -199,6 +203,7 @@ All 7 MISSES were identified by cursor[bot]. Each represents a quality gate fail
 **Atomicity**: 96%
 
 **Pattern**:
+
 ```yaml
 - name: Set DryRun Mode
   run: |
@@ -221,6 +226,7 @@ All 7 MISSES were identified by cursor[bot]. Each represents a quality gate fail
 **Atomicity**: 94%
 
 **Pattern**:
+
 ```powershell
 git push origin $BranchName 2>&1 | Write-Verbose
 if ($LASTEXITCODE -ne 0) {
@@ -239,6 +245,7 @@ if ($LASTEXITCODE -ne 0) {
 **Atomicity**: 92%
 
 **Pattern**:
+
 ```powershell
 if ($env:GITHUB_ACTIONS -eq 'true') {
     Write-Verbose "Running in CI environment - allowing operation"
@@ -257,6 +264,7 @@ if ($env:GITHUB_ACTIONS -eq 'true') {
 **Atomicity**: 95%
 
 **Pattern**:
+
 ```yaml
 - name: Generate Summary
   env:
@@ -276,6 +284,7 @@ if ($env:GITHUB_ACTIONS -eq 'true') {
 **Atomicity**: 97%
 
 **Pattern**:
+
 ```powershell
 param(
     [string]$TargetBranch = $pr.baseRefName
@@ -352,8 +361,6 @@ param(
 - Document 5 new skills from PR #249
 - Add pre-PR checklist template
 
-
-
 ## Next Steps
 
 1. Route to skillbook agent with 5 extracted skills
@@ -378,4 +385,3 @@ param(
 | SHOULD | Update PROJECT-PLAN.md | [N/A] | Not applicable |
 | SHOULD | Invoke retrospective (significant sessions) | [N/A] | Not applicable |
 | SHOULD | Verify clean git status | [x] | Clean |
-

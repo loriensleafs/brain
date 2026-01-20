@@ -6,12 +6,14 @@ import (
 	"os"
 
 	"github.com/peterkloss/brain-tui/client"
+	"github.com/peterkloss/brain/packages/validation"
 	"github.com/spf13/cobra"
 )
 
 var (
-	embedForce bool
-	embedLimit int
+	embedForce   bool
+	embedLimit   int
+	embedProject string
 )
 
 // EmbedResult represents the result of batch embedding generation.
@@ -37,6 +39,14 @@ Examples:
   brain embed --limit 0          # Generate all missing embeddings
   brain embed --force            # Regenerate all embeddings
   brain embed --limit 500        # Process up to 500 notes
+  brain embed --project brain    # Generate for specific project
+
+Project Resolution:
+  If --project is not specified, the project is auto-resolved from:
+  1. BM_PROJECT environment variable
+  2. BM_ACTIVE_PROJECT environment variable (legacy)
+  3. BRAIN_PROJECT environment variable
+  4. Current working directory match against configured code_paths
 
 Requirements:
   - Ollama must be running with nomic-embed-text model available
@@ -48,15 +58,24 @@ func init() {
 	rootCmd.AddCommand(embedCmd)
 	embedCmd.Flags().BoolVarP(&embedForce, "force", "f", false, "Regenerate all embeddings (not just missing)")
 	embedCmd.Flags().IntVarP(&embedLimit, "limit", "l", 100, "Max notes to process (0 for all)")
+	embedCmd.Flags().StringVarP(&embedProject, "project", "p", "", "Project to embed (auto-resolved from CWD if not specified)")
 }
 
 func runEmbed(cmd *cobra.Command, args []string) error {
+	// Resolve project using hierarchy: explicit flag > env vars > CWD match
+	project := validation.ResolveProject(embedProject, "")
+	if project == "" {
+		fmt.Fprintf(os.Stderr, "Error: No project specified and none could be resolved from CWD.\n")
+		fmt.Fprintf(os.Stderr, "Use --project flag or run from a configured project directory.\n")
+		os.Exit(1)
+	}
+
 	brainClient, err := client.EnsureServerRunning()
 	if err != nil {
 		return fmt.Errorf("failed to connect to Brain MCP: %w", err)
 	}
 
-	fmt.Println("🧠 Generating embeddings...")
+	fmt.Printf("Generating embeddings for project: %s\n", project)
 	if embedForce {
 		fmt.Println("   Mode: regenerate all")
 	} else {
@@ -73,6 +92,10 @@ func runEmbed(cmd *cobra.Command, args []string) error {
 	toolArgs := map[string]any{
 		"force": embedForce,
 		"limit": embedLimit,
+	}
+	// Only include project if explicitly set or auto-resolved
+	if project != "" {
+		toolArgs["project"] = project
 	}
 
 	// Call the generate_embeddings tool

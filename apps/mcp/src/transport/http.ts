@@ -174,6 +174,7 @@ export async function startHttpTransport(server: McpServer): Promise<void> {
     port: config.httpPort,
     hostname: config.httpHost,
     fetch: app.fetch,
+    idleTimeout: 0, // Disable timeout for long-running MCP tool calls (embed takes 47+ seconds)
   });
 
   logger.info(

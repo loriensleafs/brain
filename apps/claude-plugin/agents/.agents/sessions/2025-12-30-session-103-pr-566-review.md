@@ -87,6 +87,7 @@ This is a **security-critical** finding that must be addressed:
 | 9e3c1bb | fix(security): prevent command injection in PR creation example |
 
 **Changes**:
+
 - Added security warning comment explaining CWE-78 command injection risk
 - Replaced hardcoded PR title with secure `read -r` pattern
 - Demonstrated safe handling of untrusted external input (issue titles)
@@ -114,6 +115,7 @@ Documentation for autonomous agents requires higher security standards than typi
 **Performance**: 100% actionable (2/2 comments across PR #488 and #505, now 3/3 with #566)
 
 **Characteristics**:
+
 - Provides detailed security rationale with CWE references
 - References repository style guides
 - Suggests specific secure patterns (not just "fix this")

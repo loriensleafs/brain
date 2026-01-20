@@ -162,7 +162,7 @@ Multiple workflows blocked by infrastructure gaps:
 
 **Non-Critical (Workarounds Exist)**:
 
-4. **PR #298 Branch Protection**
+1. **PR #298 Branch Protection**
    - Issue: All CI passes but merge blocked by branch protection
    - Impact: PR ready but waiting for manual merge
    - Owner Action: Review and merge when ready
@@ -706,7 +706,7 @@ None. All approaches were successful or identified as needing modification.
 
 - **Statement**: PowerShell here-string terminators must start at column 0 with no whitespace
 - **Atomicity Score**: 96%
-- **Evidence**: PR #224 - Syntax error from indented terminator `    '@` fixed by moving to column 0
+- **Evidence**: PR #224 - Syntax error from indented terminator `'@` fixed by moving to column 0
 - **Skill Operation**: ADD
 - **Target Skill ID**: Skill-PowerShell-007
 
@@ -1244,6 +1244,7 @@ High-quality learnings extracted from autonomous monitoring across two cycles. S
 **Skills to persist**: 3 candidates (atomicity 87-91%)
 
 **Memory files touched**:
+
 - skills-governance.md (1 new skill)
 - skills-ci-infrastructure.md (1 new skill)
 - skills-architecture.md (1 new skill)
@@ -1254,11 +1255,13 @@ High-quality learnings extracted from autonomous monitoring across two cycles. S
 ### +/Delta for Iteration 5
 
 **+ Keep**:
+
 - Pattern recognition across legacy sessions
 - Direct fixes without over-engineering
 - Context-aware conflict resolution
 
 **Delta Change**:
+
 - Could validate session logs for ADR compliance proactively
 - Consider updating Session Protocol to handle path-filtered required checks
 
@@ -1267,6 +1270,7 @@ High-quality learnings extracted from autonomous monitoring across two cycles. S
 **Score**: 3/4 (High return)
 
 **Benefits**:
+
 - 3 novel skills extracted
 - 100% PR success rate
 - Pattern recognition across different problem types
@@ -1304,6 +1308,7 @@ High-quality learnings extracted from autonomous monitoring across two cycles. S
 **User Steering Required**:
 
 The user had to point out:
+
 - "rjmurillo-bot is used for MANY operations"
 - "MUST not exceed 80%, SHOULD not exceed 50%"
 - "Goal is to give it to standalone instance"
@@ -1328,6 +1333,7 @@ For operational prompts/documentation, verify:
 **Previous**: Retrospectives evaluated *execution* (fixes applied, skills extracted)
 
 **New**: Retrospectives MUST also evaluate *artifacts produced*:
+
 1. Did we create any documents, prompts, or configurations?
 2. Are they self-contained and sustainable?
 3. Would a different agent succeed using them?

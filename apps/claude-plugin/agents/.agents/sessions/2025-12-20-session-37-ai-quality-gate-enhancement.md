@@ -87,9 +87,10 @@ In the "Post PR Comment" step of the Aggregate Results job (`.github/workflows/a
 
 ## Outcome
 
-Issue #152 created successfully: https://github.com/rjmurillo/ai-agents/issues/152
+Issue #152 created successfully: <https://github.com/rjmurillo/ai-agents/issues/152>
 
 **Issue Details**:
+
 - Title: "Enhance AI Quality Gate to notify PR authors when action required"
 - Label: enhancement
 - References: PR #121, pr-comment-responder skill, ai-pr-quality-gate.yml workflow

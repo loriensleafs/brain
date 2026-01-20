@@ -21,7 +21,7 @@
 
 ## Research Source
 
-**URL**: https://www.claude.com/blog/how-anthropic-uses-claude-legal
+**URL**: <https://www.claude.com/blog/how-anthropic-uses-claude-legal>
 
 ## Key Findings
 

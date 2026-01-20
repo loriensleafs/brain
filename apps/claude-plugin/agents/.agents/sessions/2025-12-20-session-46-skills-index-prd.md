@@ -44,16 +44,19 @@ Create PRD for Skills Index Registry to address:
 ## Evidence Gathered
 
 **File Counts:**
+
 - Total skill-related files: 65
 - Atomic skill files: ~45 (pattern: `skill-{domain}-{number}-{name}.md`)
 - Collection skill files: ~20 (pattern: `skills-{domain}.md`)
 
 **Naming Patterns Observed:**
+
 1. `skill-{domain}-{number}-{name}.md` (e.g., `skill-analysis-001-comprehensive-analysis-standard.md`)
 2. `skills-{domain}.md` (e.g., `skills-analysis.md`, `skills-documentation.md`)
 3. Collisions detected: `skill-analysis-001` exists in both atomic and collection formats
 
 **Current Discovery Process:**
+
 1. Call `mcp__plugin_brain_brain__list_directory` → Returns 100+ items
 2. Identify relevant memories from names only
 3. Call `mcp__plugin_brain_brain__read_note` for each candidate

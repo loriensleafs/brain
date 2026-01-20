@@ -38,6 +38,7 @@
 ### Skill Inventory
 
 Available GitHub skills (not used in this session):
+
 - `.claude/skills/github/scripts/` directory exists
 - Various PR, issue, and GitHub CLI automation scripts available
 

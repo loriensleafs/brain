@@ -38,6 +38,7 @@ Extracted **6 atomic skills** from our experience with `actions/labeler@v5` acro
 **When to Apply**: When excluding paths with `!` prefix in actions/labeler configuration
 
 **Evidence**:
+
 - PR #226: Used `all-globs-to-all-files` with mixed patterns - [FAIL]
 - PR #229 (c4799c9): Changed to `any-glob-to-any-file` - [FAIL]
 - PR #229 (dae9db1): Isolated in `all-globs-to-all-files` within `all:` - [PASS]
@@ -85,6 +86,7 @@ documentation:
 **When to Apply**: When labeling based on at least one file matching (most common use case)
 
 **Evidence**:
+
 - Current working config uses this for all simple area labels
 - actions/labeler docs: "ANY glob must match against ANY changed file"
 - Most permissive matching strategy
@@ -114,6 +116,7 @@ area-workflows:
 **When to Apply**: When label should only apply if every changed file meets criteria
 
 **Evidence**:
+
 - actions/labeler docs: "ANY glob must match against ALL changed files"
 - Use case: Ensure all files in PR meet quality criteria
 
@@ -142,6 +145,7 @@ tests-only:
 **When to Apply**: When label requires multiple pattern types to be present
 
 **Evidence**:
+
 - actions/labeler docs: "ALL globs must match against ANY changed file"
 - Example: Label when both `.ts` AND `.test.ts` files changed
 
@@ -255,6 +259,7 @@ documentation:
 ### PR #226: Initial Implementation
 
 **Failures**:
+
 1. Regex anchors only match combined content start (not individual title/body)
 2. Negation patterns with `all-globs-to-all-files` mixed with inclusion patterns
 3. Actions not pinned to commit SHAs
@@ -264,10 +269,12 @@ documentation:
 ### PR #229: Hotfix Evolution
 
 **Attempt 1** (c4799c9):
+
 - Changed to `any-glob-to-any-file` with negation patterns
 - **Result**: [FAIL] - Negations still ignored
 
 **Attempt 2** (dae9db1):
+
 - Used `all:` block with separate matchers
 - Inclusion: `any-glob-to-any-file`
 - Exclusion: `all-globs-to-all-files`

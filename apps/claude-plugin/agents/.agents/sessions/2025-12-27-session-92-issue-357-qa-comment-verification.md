@@ -31,6 +31,7 @@ Test and verify the AI Quality Gate comment update behavior to determine if comm
 ### Scope
 
 Verify AI Quality Gate comment behavior when:
+
 1. PR receives CRITICAL_FAIL verdict
 2. Fixes are pushed to PR
 3. New review runs with different verdict
@@ -102,6 +103,7 @@ if ($Marker) {
 4. No `-Update` or `-Force` parameter available
 
 **Impact**:
+
 - First run: Comment posted ✅
 - Second run: Comment skipped (marker exists) ❌
 - Result: Stale comment remains on PR
@@ -133,6 +135,7 @@ if ($Marker) {
 **File**: `.github/workflows/ai-pr-quality-gate.yml`
 
 **Line 509**: Static marker usage
+
 ```yaml
 -Marker "AI-PR-QUALITY-GATE"
 ```
@@ -165,11 +168,13 @@ if ($Marker) {
 ### Priority 2: Verify Artifact-Comment Sync
 
 **Test Required**: Compare verdict in:
+
 1. Workflow step summary
 2. PR comment
 3. Artifact files
 
 **Commands**:
+
 ```bash
 # Download artifacts from recent run
 gh run download <run-id> -n review-security
@@ -184,6 +189,7 @@ gh pr view <pr-number> --comments
 **Enhancement**: Check if existing comment is from current run
 
 **Logic**:
+
 ```powershell
 # Get comment creation timestamp
 # If > 5 minutes old, update instead of skip
@@ -254,6 +260,7 @@ Describe "Post-IssueComment Marker Behavior" {
 ### Code Analysis [COMPLETE]
 
 **Files Analyzed**: 2
+
 - `.claude/skills/github/scripts/issue/Post-IssueComment.ps1` - Root cause identified
 - `.github/workflows/ai-pr-quality-gate.yml` - Invocation pattern confirmed
 
@@ -264,6 +271,7 @@ Describe "Post-IssueComment Marker Behavior" {
 **Issue**: Comment update mechanism missing
 
 **Evidence**:
+
 - Lines 60-78: Script exits when marker found (no update path)
 - No `-Update` parameter defined
 - Only POST endpoint used (PATCH endpoint available but unused)
@@ -321,12 +329,14 @@ Clean after commit 075a313
 ## Next Actions
 
 **Immediate** (Return to orchestrator):
+
 1. Route to **implementer** to add update capability to `Post-IssueComment.ps1`
    - Implement PATCH logic when marker exists
    - Add `-Update` parameter (optional)
    - Preserve idempotency (single comment per marker)
 
 **Follow-up** (After implementation):
+
 1. Route to **qa** to verify fix with live test using reproduction steps
 2. Add Pester tests for update behavior
 3. Verify artifact-comment verdict sync
@@ -341,6 +351,7 @@ Clean after commit 075a313
 **Deliverable**: Test report with reproduction steps and implementation recommendations
 
 **Files Created**:
+
 - `.agents/qa/357-ai-quality-gate-comment-behavior-test-report.md`
 - `.agents/sessions/2025-12-27-session-92-issue-357-qa-comment-verification.md`
 

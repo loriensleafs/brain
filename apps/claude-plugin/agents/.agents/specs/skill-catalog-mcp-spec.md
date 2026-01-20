@@ -92,6 +92,7 @@ interface SearchSkillsResult {
 ```
 
 **Algorithm:**
+
 1. Tokenize query into search terms
 2. Filter by category/type if specified
 3. Score each skill by token overlap + field weights

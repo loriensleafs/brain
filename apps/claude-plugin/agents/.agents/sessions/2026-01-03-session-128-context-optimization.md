@@ -100,6 +100,7 @@ All MUST requirements above are marked complete.
 **WARNING - Content Dropped (Restored)**:
 
 Initially dropped important content from skillcreator:
+
 - `ultimate skill` trigger for maximum quality
 - `SkillCreator --quick {goal}` command
 - Validation & Packaging section
@@ -150,30 +151,33 @@ If quality issues arise, revert specific agents:
 ### High-Risk Downgrades (Monitor Closely)
 
 1. **orchestrator** (opus → sonnet): If complex task coordination fails
+
    ```bash
    git show d81f237^:.claude/agents/orchestrator.md > .claude/agents/orchestrator.md
    # Or manually change model: sonnet → opus
    ```
 
 2. **architect** (opus → sonnet): If ADR quality degrades
+
    ```bash
    git show d81f237^:.claude/agents/architect.md > .claude/agents/architect.md
    ```
 
 3. **security** (opus → sonnet): If security reviews miss issues
+
    ```bash
    git show d81f237^:.claude/agents/security.md > .claude/agents/security.md
    ```
 
 ### Medium-Risk Downgrades
 
-4. **independent-thinker** (opus → sonnet): If critique quality drops
-5. **roadmap** (opus → sonnet): If strategic planning suffers
+1. **independent-thinker** (opus → sonnet): If critique quality drops
+2. **roadmap** (opus → sonnet): If strategic planning suffers
 
 ### Low-Risk Downgrades
 
-6. **memory** (sonnet → haiku): Unlikely to cause issues
-7. **skillbook** (sonnet → haiku): Unlikely to cause issues
+1. **memory** (sonnet → haiku): Unlikely to cause issues
+2. **skillbook** (sonnet → haiku): Unlikely to cause issues
 
 ### Skill Refactoring Reversion
 

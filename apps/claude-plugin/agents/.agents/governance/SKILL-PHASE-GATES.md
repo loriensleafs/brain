@@ -180,6 +180,7 @@ GATE_STATUS:
 ```
 
 This format is validated by downstream consumers.
+
 ```
 
 **Pros**: Balance of flexibility and enforcement

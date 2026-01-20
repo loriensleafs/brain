@@ -133,7 +133,7 @@ nothing to commit, working tree clean
 
 ## Notes for Next Session
 
-- Upstream issue #19 (https://github.com/ScottRBK/forgetful/issues/19) has been fixed
+- Upstream issue #19 (<https://github.com/ScottRBK/forgetful/issues/19>) has been fixed
 - Removed 964 lines of HTTP-specific code
 - Simplified setup: uvx now handles Forgetful lifecycle automatically
 - After creating the branch from commit d10dc633, I added a separate HTTP cleanup commit, so PR #768 now has 2 commits total (MCP config + HTTP cleanup)

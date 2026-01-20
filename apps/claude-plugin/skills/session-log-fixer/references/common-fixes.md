@@ -118,22 +118,22 @@ Add evidence text based on requirement type:
 
 ---
 
-### 6. HANDOFF.md Modified
+### 6. Missing Brain Note Update
 
 **CI Output:**
 
 ```text
-HANDOFF.md was modified in this session (MUST NOT)
+Cross-session context not persisted to Brain notes
 ```
 
 **Fix:**
 
-1. Revert HANDOFF.md changes: `git checkout origin/main -- .agents/HANDOFF.md`
-2. Move content to session log instead
-3. Use Serena memory for cross-session context
+1. Use Brain MCP to persist session context: `mcp__plugin_brain_brain__write_note`
+2. Include key decisions and next steps
+3. Update Session End table with confirmation
 
 **Why:**
-HANDOFF.md is read-only per ADR-014. Session context goes to session logs.
+Brain notes provide cross-session context per ADR-016.
 
 ---
 

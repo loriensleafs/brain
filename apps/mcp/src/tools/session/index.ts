@@ -7,17 +7,14 @@ import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import {
   getSession,
   setSession,
-  getCurrentSessionId,
   MODE_DESCRIPTIONS,
   getRecentModeHistory,
 } from "../../services/session";
 import type { SessionArgs } from "./schema";
 
 export async function handler(args: SessionArgs): Promise<CallToolResult> {
-  const sessionId = getCurrentSessionId();
-
   if (args.operation === "get") {
-    const state = getSession();
+    const state = await getSession();
 
     if (!state) {
       return {
@@ -34,7 +31,6 @@ export async function handler(args: SessionArgs): Promise<CallToolResult> {
     const recentHistory = getRecentModeHistory(state, 5);
 
     const response = {
-      sessionId: state.sessionId,
       mode: state.currentMode,
       modeDescription: MODE_DESCRIPTIONS[state.currentMode],
       task: state.activeTask,
@@ -54,17 +50,6 @@ export async function handler(args: SessionArgs): Promise<CallToolResult> {
   }
 
   // operation === "set"
-  if (!sessionId) {
-    return {
-      content: [
-        {
-          type: "text" as const,
-          text: "Session not initialized. Cannot update session state.",
-        },
-      ],
-      isError: true,
-    };
-  }
 
   // Build updates from provided args
   const updates: { mode?: typeof args.mode; task?: string; feature?: string } =
@@ -93,7 +78,7 @@ export async function handler(args: SessionArgs): Promise<CallToolResult> {
     };
   }
 
-  const state = setSession(updates);
+  const state = await setSession(updates);
 
   if (!state) {
     return {

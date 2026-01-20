@@ -18,6 +18,7 @@ Brain stores knowledge as an interconnected graph: notes link to other notes via
 ## When to Explore
 
 Explore the knowledge graph when:
+
 - Starting complex work that spans multiple topics
 - User asks "what do you know about X"
 - Planning requires understanding existing decisions/patterns
@@ -29,6 +30,7 @@ Explore the knowledge graph when:
 Track visited notes to prevent cycles. Execute phases sequentially.
 
 ### Phase 1: Semantic Entry Point
+
 ```python
 # Brain MCP - search for related notes
 mcp__plugin_brain_brain__search_notes({
@@ -40,7 +42,9 @@ mcp__plugin_brain_brain__search_notes({
 Collect: matching notes with their titles and permalinks.
 
 ### Phase 2: Expand Note Details
+
 For key notes, get full content:
+
 ```python
 # Brain MCP - read note details
 mcp__plugin_brain_brain__read_note({
@@ -51,7 +55,9 @@ mcp__plugin_brain_brain__read_note({
 Extract: observations, relations, `[[wiki-links]]` to other notes.
 
 ### Phase 3: Follow Relations
+
 For notes with relations, traverse the graph:
+
 ```python
 # Read each related note
 mcp__plugin_brain_brain__read_note({
@@ -62,7 +68,9 @@ mcp__plugin_brain_brain__read_note({
 Relation types: depends_on, implements, relates_to, supersedes, etc.
 
 ### Phase 4: Folder-Based Discovery
+
 Search within specific knowledge folders:
+
 ```python
 # Search within a folder
 mcp__plugin_brain_brain__search_notes({
@@ -72,7 +80,9 @@ mcp__plugin_brain_brain__search_notes({
 ```
 
 ### Phase 5: Entity-Linked Notes (If Forgetful MCP Available)
+
 For richer entity management, use Forgetful if available:
+
 ```python
 # Optional: If Forgetful MCP available
 # execute_forgetful_tool("get_entity_memories", {"entity_id": <id>})

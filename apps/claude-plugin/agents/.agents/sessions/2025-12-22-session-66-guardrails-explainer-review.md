@@ -18,6 +18,7 @@
 Review `.agents/specs/SPEC-local-guardrails.md` and `.agents/planning/PLAN-local-guardrails.md` for clarity and junior developer accessibility.
 
 **Review Lens**: Explainer agent's pedagogical standards
+
 - Grade 9 reading level
 - No unexplained jargon
 - Unambiguous requirements

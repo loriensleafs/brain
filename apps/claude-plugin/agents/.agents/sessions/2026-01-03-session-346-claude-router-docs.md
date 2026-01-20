@@ -56,7 +56,7 @@ The user installed the claude-router plugin via the plugin marketplace and reque
 ## Pull Request
 
 - **PR**: #759 - docs: add claude-router plugin documentation
-- **URL**: https://github.com/rjmurillo/ai-agents/pull/759
+- **URL**: <https://github.com/rjmurillo/ai-agents/pull/759>
 - **Status**: Auto-merge enabled (squash)
 - **Checks**: In progress (11 workflows running)
 

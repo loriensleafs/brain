@@ -38,11 +38,13 @@ The workflow run 20469129997 executed against **main branch at commit d491a12**,
    - Blocked status (likely requires maintainer approval)
 
 2. **Workflow Condition on Main (d491a12)**:
+
    ```yaml
    if: steps.synthesize.outputs.verdict == 'PASS'  # TOO STRICT
    ```
 
 3. **Workflow Condition in Fix Branch**:
+
    ```yaml
    if: steps.synthesize.outputs.verdict == 'PASS' || (steps.synthesize.outputs.findings != '' && steps.synthesize.outputs['copilot-exit-code'] == '0')
    ```

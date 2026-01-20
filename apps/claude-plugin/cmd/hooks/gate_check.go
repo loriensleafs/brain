@@ -3,18 +3,47 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
+	"os/exec"
 	"slices"
 )
 
-// SessionState represents the cached session state from brain MCP
+// SessionState represents the session state from Brain CLI.
+// Matches the SessionState type in apps/tui/cmd/session.go.
 type SessionState struct {
+	SessionID             string             `json:"sessionId"`
+	CurrentMode           string             `json:"currentMode"`
+	ModeHistory           []ModeHistoryEntry `json:"modeHistory,omitempty"`
+	ProtocolStartComplete bool               `json:"protocolStartComplete,omitempty"`
+	ProtocolEndComplete   bool               `json:"protocolEndComplete,omitempty"`
+	ProtocolStartEvidence map[string]string  `json:"protocolStartEvidence,omitempty"`
+	ProtocolEndEvidence   map[string]string  `json:"protocolEndEvidence,omitempty"`
+	ActiveFeature         string             `json:"activeFeature,omitempty"`
+	ActiveTask            string             `json:"activeTask,omitempty"`
+	Version               int                `json:"version,omitempty"`
+	CreatedAt             string             `json:"createdAt,omitempty"`
+	UpdatedAt             string             `json:"updatedAt,omitempty"`
+}
+
+// ModeHistoryEntry tracks each mode transition with timestamp.
+type ModeHistoryEntry struct {
 	Mode      string `json:"mode"`
-	Task      string `json:"task,omitempty"`
-	Feature   string `json:"feature,omitempty"`
-	SessionID string `json:"sessionId,omitempty"`
-	UpdatedAt string `json:"updatedAt,omitempty"`
+	Timestamp string `json:"timestamp"`
+}
+
+// ReadOnlyTools lists tools that are safe to execute when session state is unavailable.
+// These tools only read data and cannot modify the codebase.
+var ReadOnlyTools = map[string]bool{
+	"Read":      true,
+	"Glob":      true,
+	"Grep":      true,
+	"LSP":       true,
+	"WebFetch":  true,
+	"WebSearch": true,
+}
+
+// isReadOnlyTool returns true if the tool is in the read-only whitelist.
+func isReadOnlyTool(tool string) bool {
+	return ReadOnlyTools[tool]
 }
 
 // GateCheckResult represents the result of a gate check
@@ -25,54 +54,40 @@ type GateCheckResult struct {
 	Message string `json:"message,omitempty"`
 }
 
-// modeBlockedTools defines which tools are blocked in each mode
-var modeBlockedTools = map[string][]string{
+// ModeBlockedTools defines which tools are blocked in each mode
+var ModeBlockedTools = map[string][]string{
 	"analysis": {"Edit", "Write", "Bash", "NotebookEdit"},
 	"planning": {"Edit", "Write", "NotebookEdit"},
 	"coding":   {},
 	"disabled": {},
 }
 
-// getSessionStatePath returns the path to the session state file
-func getSessionStatePath() string {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		return ""
-	}
-	return filepath.Join(homeDir, ".local", "state", "brain", "session.json")
-}
+// ExecCommandGate is a variable holding the exec.Command function.
+// This allows tests to override the command execution.
+var ExecCommandGate = exec.Command
 
-// ReadSessionState reads the session state from the cache file
-func ReadSessionState() (*SessionState, error) {
-	statePath := getSessionStatePath()
-	if statePath == "" {
-		return nil, fmt.Errorf("could not determine session state path")
-	}
-
-	data, err := os.ReadFile(statePath)
+// getBrainSessionState calls the Brain CLI to get the current session state.
+// Returns error if CLI unavailable, command fails, or output invalid.
+func getBrainSessionState() (*SessionState, error) {
+	cmd := ExecCommandGate("brain", "session", "get-state")
+	output, err := cmd.Output()
 	if err != nil {
-		if os.IsNotExist(err) {
-			// No session state file - return disabled mode
-			return &SessionState{Mode: "disabled"}, nil
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			return nil, fmt.Errorf("brain CLI failed (exit %d): %s", exitErr.ExitCode(), string(exitErr.Stderr))
 		}
-		return nil, fmt.Errorf("failed to read session state: %w", err)
+		return nil, fmt.Errorf("brain CLI unavailable: %w", err)
 	}
 
 	var state SessionState
-	if err := json.Unmarshal(data, &state); err != nil {
+	if err := json.Unmarshal(output, &state); err != nil {
 		return nil, fmt.Errorf("failed to parse session state: %w", err)
-	}
-
-	// Default to disabled if mode is empty
-	if state.Mode == "" {
-		state.Mode = "disabled"
 	}
 
 	return &state, nil
 }
 
-// CheckToolBlocked checks if a tool is blocked for the current mode
-func CheckToolBlocked(tool string, mode string) *GateCheckResult {
+// checkToolBlocked checks if a tool is blocked for the current mode
+func checkToolBlocked(tool string, mode string) *GateCheckResult {
 	result := &GateCheckResult{
 		Allowed: true,
 		Mode:    mode,
@@ -85,7 +100,7 @@ func CheckToolBlocked(tool string, mode string) *GateCheckResult {
 	}
 
 	// Get blocked tools for this mode
-	blockedTools, ok := modeBlockedTools[mode]
+	blockedTools, ok := ModeBlockedTools[mode]
 	if !ok {
 		// Unknown mode - allow by default
 		return result
@@ -118,18 +133,42 @@ func formatBlockMessage(tool string, mode string) string {
 	)
 }
 
-// PerformGateCheck reads session state and checks if a tool is allowed
-func PerformGateCheck(tool string) *GateCheckResult {
-	state, err := ReadSessionState()
+// performGateCheck reads session state from Brain CLI and checks if a tool is allowed.
+// Implements FAIL-CLOSED behavior per ADR-016 Resolution 4:
+// - If state unavailable and tool is read-only: ALLOW
+// - If state unavailable and tool is destructive: BLOCK
+// - If mode is "disabled": ALLOW (explicit bypass)
+// - Otherwise: Check mode-based blocking
+func performGateCheck(tool string) *GateCheckResult {
+	state, err := getBrainSessionState()
+
+	// FAIL CLOSED: If state unavailable, block destructive tools
 	if err != nil {
-		// On error reading state, allow the tool (fail open)
+		if isReadOnlyTool(tool) {
+			return &GateCheckResult{
+				Allowed: true,
+				Mode:    "unknown",
+				Tool:    tool,
+				Message: fmt.Sprintf("Session state unavailable (%v). Read-only tool allowed.", err),
+			}
+		}
 		return &GateCheckResult{
-			Allowed: true,
+			Allowed: false,
 			Mode:    "unknown",
 			Tool:    tool,
-			Message: fmt.Sprintf("Warning: could not read session state: %v", err),
+			Message: fmt.Sprintf("[BLOCKED] Session state unavailable. Cannot verify mode for destructive tool '%s'. Start a session or use read-only tools only.", tool),
 		}
 	}
 
-	return CheckToolBlocked(tool, state.Mode)
+	// EXPLICIT DISABLED: Only disabled mode bypasses all gates
+	if state.CurrentMode == "disabled" {
+		return &GateCheckResult{
+			Allowed: true,
+			Mode:    "disabled",
+			Tool:    tool,
+		}
+	}
+
+	// Normal mode-based checking
+	return checkToolBlocked(tool, state.CurrentMode)
 }

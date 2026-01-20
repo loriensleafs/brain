@@ -1,14 +1,101 @@
+// Package main provides unit tests for the gate check functions.
+// Tests cover:
+// - isReadOnlyTool whitelist function
+// - checkToolBlocked mode-based blocking
+// - performGateCheck integration with Brain CLI
+// - GateCheckResult JSON serialization
 package main
 
 import (
 	"encoding/json"
 	"os"
-	"path/filepath"
+	"os/exec"
 	"slices"
 	"testing"
 )
 
-// TestCheckToolBlocked verifies tool blocking logic for each mode
+// mockExecCommand creates a mock exec.Command that returns the provided JSON output.
+func mockExecCommand(output string) func(string, ...string) *exec.Cmd {
+	return func(name string, args ...string) *exec.Cmd {
+		// Use TestHelperProcess pattern for mocking exec
+		cmd := exec.Command(os.Args[0], "-test.run=TestHelperProcess", "--")
+		cmd.Env = append(os.Environ(), "GO_WANT_HELPER_PROCESS=1", "MOCK_OUTPUT="+output)
+		return cmd
+	}
+}
+
+// mockExecCommandError creates a mock exec.Command that simulates an error.
+func mockExecCommandError(exitCode int, stderr string) func(string, ...string) *exec.Cmd {
+	return func(name string, args ...string) *exec.Cmd {
+		cmd := exec.Command(os.Args[0], "-test.run=TestHelperProcess", "--")
+		cmd.Env = append(os.Environ(),
+			"GO_WANT_HELPER_PROCESS=1",
+			"MOCK_ERROR=1",
+			"MOCK_EXIT_CODE="+string(rune('0'+exitCode)),
+			"MOCK_STDERR="+stderr,
+		)
+		return cmd
+	}
+}
+
+// TestHelperProcess is used to mock exec.Command calls.
+// It's invoked via the -test.run flag when we need to simulate external commands.
+func TestHelperProcess(t *testing.T) {
+	if os.Getenv("GO_WANT_HELPER_PROCESS") != "1" {
+		return
+	}
+
+	if os.Getenv("MOCK_ERROR") == "1" {
+		os.Stderr.WriteString(os.Getenv("MOCK_STDERR"))
+		exitCode := os.Getenv("MOCK_EXIT_CODE")
+		if exitCode != "" && exitCode[0] != '0' {
+			os.Exit(int(exitCode[0] - '0'))
+		}
+		os.Exit(1)
+	}
+
+	output := os.Getenv("MOCK_OUTPUT")
+	os.Stdout.WriteString(output)
+	os.Exit(0)
+}
+
+// === Unit Tests for isReadOnlyTool ===
+
+func TestIsReadOnlyTool(t *testing.T) {
+	tests := []struct {
+		name     string
+		tool     string
+		expected bool
+	}{
+		// Read-only tools (should return true)
+		{"Read is read-only", "Read", true},
+		{"Glob is read-only", "Glob", true},
+		{"Grep is read-only", "Grep", true},
+		{"LSP is read-only", "LSP", true},
+		{"WebFetch is read-only", "WebFetch", true},
+		{"WebSearch is read-only", "WebSearch", true},
+
+		// Destructive tools (should return false)
+		{"Edit is NOT read-only", "Edit", false},
+		{"Write is NOT read-only", "Write", false},
+		{"Bash is NOT read-only", "Bash", false},
+		{"NotebookEdit is NOT read-only", "NotebookEdit", false},
+		{"Task is NOT read-only", "Task", false},
+		{"Unknown tool is NOT read-only", "SomeTool", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := isReadOnlyTool(tt.tool)
+			if result != tt.expected {
+				t.Errorf("isReadOnlyTool(%q) = %v, want %v", tt.tool, result, tt.expected)
+			}
+		})
+	}
+}
+
+// === Unit Tests for checkToolBlocked ===
+
 func TestCheckToolBlocked(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -58,39 +145,207 @@ func TestCheckToolBlocked(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := CheckToolBlocked(tt.tool, tt.mode)
+			result := checkToolBlocked(tt.tool, tt.mode)
 
 			if result.Allowed != tt.wantAllowed {
-				t.Errorf("CheckToolBlocked(%q, %q).Allowed = %v, want %v",
+				t.Errorf("checkToolBlocked(%q, %q).Allowed = %v, want %v",
 					tt.tool, tt.mode, result.Allowed, tt.wantAllowed)
 			}
 
 			if result.Tool != tt.tool {
-				t.Errorf("CheckToolBlocked(%q, %q).Tool = %q, want %q",
+				t.Errorf("checkToolBlocked(%q, %q).Tool = %q, want %q",
 					tt.tool, tt.mode, result.Tool, tt.tool)
 			}
 
 			if result.Mode != tt.mode {
-				t.Errorf("CheckToolBlocked(%q, %q).Mode = %q, want %q",
+				t.Errorf("checkToolBlocked(%q, %q).Mode = %q, want %q",
 					tt.tool, tt.mode, result.Mode, tt.mode)
 			}
 
 			hasMessage := result.Message != ""
 			if hasMessage != tt.wantMessage {
-				t.Errorf("CheckToolBlocked(%q, %q).Message empty = %v, want %v",
+				t.Errorf("checkToolBlocked(%q, %q).Message empty = %v, want %v",
 					tt.tool, tt.mode, !hasMessage, !tt.wantMessage)
 			}
 		})
 	}
 }
 
-// TestFormatBlockMessage verifies block message formatting
+// === Integration Tests for performGateCheck with fail-closed behavior ===
+
+func TestPerformGateCheck_FailClosed_DestructiveTool(t *testing.T) {
+	// Save and restore original ExecCommandGate
+	origExecCommand := ExecCommandGate
+	defer func() { ExecCommandGate = origExecCommand }()
+
+	// Mock Brain CLI failure (unavailable)
+	ExecCommandGate = mockExecCommandError(1, "Error: brain CLI not available")
+
+	destructiveTools := []string{"Edit", "Write", "Bash", "NotebookEdit", "Task"}
+	for _, tool := range destructiveTools {
+		t.Run("blocks "+tool+" when state unavailable", func(t *testing.T) {
+			result := performGateCheck(tool)
+
+			if result.Allowed {
+				t.Errorf("performGateCheck(%q) should BLOCK when state unavailable (fail-closed)", tool)
+			}
+			if result.Mode != "unknown" {
+				t.Errorf("performGateCheck(%q).Mode = %q, want %q", tool, result.Mode, "unknown")
+			}
+			if result.Message == "" {
+				t.Errorf("performGateCheck(%q) should have a block message", tool)
+			}
+		})
+	}
+}
+
+func TestPerformGateCheck_FailClosed_ReadOnlyTool(t *testing.T) {
+	// Save and restore original ExecCommandGate
+	origExecCommand := ExecCommandGate
+	defer func() { ExecCommandGate = origExecCommand }()
+
+	// Mock Brain CLI failure (unavailable)
+	ExecCommandGate = mockExecCommandError(1, "Error: brain CLI not available")
+
+	readOnlyToolsList := []string{"Read", "Glob", "Grep", "LSP", "WebFetch", "WebSearch"}
+	for _, tool := range readOnlyToolsList {
+		t.Run("allows "+tool+" when state unavailable", func(t *testing.T) {
+			result := performGateCheck(tool)
+
+			if !result.Allowed {
+				t.Errorf("performGateCheck(%q) should ALLOW read-only tool when state unavailable", tool)
+			}
+			if result.Mode != "unknown" {
+				t.Errorf("performGateCheck(%q).Mode = %q, want %q", tool, result.Mode, "unknown")
+			}
+		})
+	}
+}
+
+func TestPerformGateCheck_DisabledMode_AllowsAll(t *testing.T) {
+	// Save and restore original ExecCommandGate
+	origExecCommand := ExecCommandGate
+	defer func() { ExecCommandGate = origExecCommand }()
+
+	// Mock successful Brain CLI response with disabled mode
+	state := SessionState{
+		SessionID:   "test-session",
+		CurrentMode: "disabled",
+	}
+	stateJSON, _ := json.Marshal(state)
+	ExecCommandGate = mockExecCommand(string(stateJSON))
+
+	tools := []string{"Edit", "Write", "Bash", "Read", "Grep", "NotebookEdit"}
+	for _, tool := range tools {
+		t.Run("allows "+tool+" in disabled mode", func(t *testing.T) {
+			result := performGateCheck(tool)
+
+			if !result.Allowed {
+				t.Errorf("performGateCheck(%q) should ALLOW in disabled mode", tool)
+			}
+			if result.Mode != "disabled" {
+				t.Errorf("performGateCheck(%q).Mode = %q, want %q", tool, result.Mode, "disabled")
+			}
+		})
+	}
+}
+
+func TestPerformGateCheck_AnalysisMode_BlocksDestructive(t *testing.T) {
+	// Save and restore original ExecCommandGate
+	origExecCommand := ExecCommandGate
+	defer func() { ExecCommandGate = origExecCommand }()
+
+	// Mock successful Brain CLI response with analysis mode
+	state := SessionState{
+		SessionID:   "test-session",
+		CurrentMode: "analysis",
+	}
+	stateJSON, _ := json.Marshal(state)
+	ExecCommandGate = mockExecCommand(string(stateJSON))
+
+	blockedTools := []string{"Edit", "Write", "Bash", "NotebookEdit"}
+	for _, tool := range blockedTools {
+		t.Run("blocks "+tool+" in analysis mode", func(t *testing.T) {
+			result := performGateCheck(tool)
+
+			if result.Allowed {
+				t.Errorf("performGateCheck(%q) should BLOCK in analysis mode", tool)
+			}
+			if result.Mode != "analysis" {
+				t.Errorf("performGateCheck(%q).Mode = %q, want %q", tool, result.Mode, "analysis")
+			}
+		})
+	}
+
+	allowedTools := []string{"Read", "Grep", "Glob", "Task"}
+	for _, tool := range allowedTools {
+		t.Run("allows "+tool+" in analysis mode", func(t *testing.T) {
+			result := performGateCheck(tool)
+
+			if !result.Allowed {
+				t.Errorf("performGateCheck(%q) should ALLOW in analysis mode", tool)
+			}
+		})
+	}
+}
+
+func TestPerformGateCheck_CodingMode_AllowsAll(t *testing.T) {
+	// Save and restore original ExecCommandGate
+	origExecCommand := ExecCommandGate
+	defer func() { ExecCommandGate = origExecCommand }()
+
+	// Mock successful Brain CLI response with coding mode
+	state := SessionState{
+		SessionID:   "test-session",
+		CurrentMode: "coding",
+	}
+	stateJSON, _ := json.Marshal(state)
+	ExecCommandGate = mockExecCommand(string(stateJSON))
+
+	tools := []string{"Edit", "Write", "Bash", "Read", "Grep", "NotebookEdit"}
+	for _, tool := range tools {
+		t.Run("allows "+tool+" in coding mode", func(t *testing.T) {
+			result := performGateCheck(tool)
+
+			if !result.Allowed {
+				t.Errorf("performGateCheck(%q) should ALLOW in coding mode", tool)
+			}
+			if result.Mode != "coding" {
+				t.Errorf("performGateCheck(%q).Mode = %q, want %q", tool, result.Mode, "coding")
+			}
+		})
+	}
+}
+
+func TestPerformGateCheck_SignatureVerificationFailure(t *testing.T) {
+	// Save and restore original ExecCommandGate
+	origExecCommand := ExecCommandGate
+	defer func() { ExecCommandGate = origExecCommand }()
+
+	// Mock Brain CLI failure with signature error (exit code 1)
+	// The Brain CLI exits non-zero when signature is invalid
+	ExecCommandGate = mockExecCommandError(1, "Error: Session state signature invalid - possible tampering")
+
+	t.Run("blocks destructive tool on signature failure", func(t *testing.T) {
+		result := performGateCheck("Edit")
+
+		if result.Allowed {
+			t.Error("performGateCheck should BLOCK when signature verification fails")
+		}
+		if result.Mode != "unknown" {
+			t.Errorf("Mode = %q, want %q", result.Mode, "unknown")
+		}
+	})
+}
+
+// === Tests for formatBlockMessage ===
+
 func TestFormatBlockMessage(t *testing.T) {
 	tests := []struct {
-		name    string
-		tool    string
-		mode    string
-		wantIn  []string // Strings that should be in the message
+		name   string
+		tool   string
+		mode   string
+		wantIn []string // Strings that should be in the message
 	}{
 		{
 			name:   "analysis mode message",
@@ -134,196 +389,8 @@ func containsSubstring(s, substr string) bool {
 	return false
 }
 
-// TestReadSessionState tests reading session state from file
-func TestReadSessionState(t *testing.T) {
-	// Create temp directory for test
-	tmpDir := t.TempDir()
-	stateDir := filepath.Join(tmpDir, ".local", "state", "brain")
-	if err := os.MkdirAll(stateDir, 0755); err != nil {
-		t.Fatalf("Failed to create state dir: %v", err)
-	}
+// === Tests for GateCheckResult JSON serialization ===
 
-	// Override home directory for test
-	origHome := os.Getenv("HOME")
-	os.Setenv("HOME", tmpDir)
-	defer os.Setenv("HOME", origHome)
-
-	t.Run("returns disabled when file does not exist", func(t *testing.T) {
-		// Ensure no session.json exists
-		sessionPath := filepath.Join(stateDir, "session.json")
-		os.Remove(sessionPath)
-
-		state, err := ReadSessionState()
-
-		if err != nil {
-			t.Fatalf("ReadSessionState() error = %v, want nil", err)
-		}
-		if state.Mode != "disabled" {
-			t.Errorf("ReadSessionState().Mode = %q, want %q", state.Mode, "disabled")
-		}
-	})
-
-	t.Run("reads valid session state", func(t *testing.T) {
-		sessionData := SessionState{
-			Mode:      "coding",
-			Task:      "Implementing tests",
-			Feature:   "session-tests",
-			SessionID: "test-session-123",
-			UpdatedAt: "2024-01-15T10:00:00Z",
-		}
-
-		sessionPath := filepath.Join(stateDir, "session.json")
-		data, _ := json.Marshal(sessionData)
-		if err := os.WriteFile(sessionPath, data, 0644); err != nil {
-			t.Fatalf("Failed to write session file: %v", err)
-		}
-
-		state, err := ReadSessionState()
-
-		if err != nil {
-			t.Fatalf("ReadSessionState() error = %v, want nil", err)
-		}
-		if state.Mode != "coding" {
-			t.Errorf("ReadSessionState().Mode = %q, want %q", state.Mode, "coding")
-		}
-		if state.Task != "Implementing tests" {
-			t.Errorf("ReadSessionState().Task = %q, want %q", state.Task, "Implementing tests")
-		}
-		if state.Feature != "session-tests" {
-			t.Errorf("ReadSessionState().Feature = %q, want %q", state.Feature, "session-tests")
-		}
-	})
-
-	t.Run("defaults to disabled for empty mode", func(t *testing.T) {
-		sessionData := SessionState{
-			Mode:      "", // Empty mode
-			SessionID: "test-session-456",
-		}
-
-		sessionPath := filepath.Join(stateDir, "session.json")
-		data, _ := json.Marshal(sessionData)
-		if err := os.WriteFile(sessionPath, data, 0644); err != nil {
-			t.Fatalf("Failed to write session file: %v", err)
-		}
-
-		state, err := ReadSessionState()
-
-		if err != nil {
-			t.Fatalf("ReadSessionState() error = %v, want nil", err)
-		}
-		if state.Mode != "disabled" {
-			t.Errorf("ReadSessionState().Mode = %q, want %q", state.Mode, "disabled")
-		}
-	})
-
-	t.Run("returns error for invalid JSON", func(t *testing.T) {
-		sessionPath := filepath.Join(stateDir, "session.json")
-		if err := os.WriteFile(sessionPath, []byte("not valid json"), 0644); err != nil {
-			t.Fatalf("Failed to write session file: %v", err)
-		}
-
-		_, err := ReadSessionState()
-
-		if err == nil {
-			t.Error("ReadSessionState() error = nil, want error for invalid JSON")
-		}
-	})
-}
-
-// TestPerformGateCheck tests the integration of session state reading and tool checking
-func TestPerformGateCheck(t *testing.T) {
-	// Create temp directory for test
-	tmpDir := t.TempDir()
-	stateDir := filepath.Join(tmpDir, ".local", "state", "brain")
-	if err := os.MkdirAll(stateDir, 0755); err != nil {
-		t.Fatalf("Failed to create state dir: %v", err)
-	}
-
-	// Override home directory for test
-	origHome := os.Getenv("HOME")
-	os.Setenv("HOME", tmpDir)
-	defer os.Setenv("HOME", origHome)
-
-	t.Run("blocks Edit in analysis mode from file", func(t *testing.T) {
-		sessionData := SessionState{
-			Mode:      "analysis",
-			SessionID: "test-session",
-		}
-
-		sessionPath := filepath.Join(stateDir, "session.json")
-		data, _ := json.Marshal(sessionData)
-		if err := os.WriteFile(sessionPath, data, 0644); err != nil {
-			t.Fatalf("Failed to write session file: %v", err)
-		}
-
-		result := PerformGateCheck("Edit")
-
-		if result.Allowed {
-			t.Error("PerformGateCheck(Edit) in analysis mode should not be allowed")
-		}
-		if result.Mode != "analysis" {
-			t.Errorf("PerformGateCheck(Edit).Mode = %q, want %q", result.Mode, "analysis")
-		}
-		if result.Message == "" {
-			t.Error("PerformGateCheck(Edit) should have a block message")
-		}
-	})
-
-	t.Run("allows Edit in coding mode from file", func(t *testing.T) {
-		sessionData := SessionState{
-			Mode:      "coding",
-			SessionID: "test-session",
-		}
-
-		sessionPath := filepath.Join(stateDir, "session.json")
-		data, _ := json.Marshal(sessionData)
-		if err := os.WriteFile(sessionPath, data, 0644); err != nil {
-			t.Fatalf("Failed to write session file: %v", err)
-		}
-
-		result := PerformGateCheck("Edit")
-
-		if !result.Allowed {
-			t.Error("PerformGateCheck(Edit) in coding mode should be allowed")
-		}
-		if result.Mode != "coding" {
-			t.Errorf("PerformGateCheck(Edit).Mode = %q, want %q", result.Mode, "coding")
-		}
-	})
-
-	t.Run("allows tool when no session file (fail-open on missing file)", func(t *testing.T) {
-		// Remove session file
-		sessionPath := filepath.Join(stateDir, "session.json")
-		os.Remove(sessionPath)
-
-		result := PerformGateCheck("Edit")
-
-		if !result.Allowed {
-			t.Error("PerformGateCheck should allow when no session file (disabled mode)")
-		}
-		if result.Mode != "disabled" {
-			t.Errorf("PerformGateCheck.Mode = %q, want %q", result.Mode, "disabled")
-		}
-	})
-
-	t.Run("allows tool on file read error (fail-open)", func(t *testing.T) {
-		sessionPath := filepath.Join(stateDir, "session.json")
-		if err := os.WriteFile(sessionPath, []byte("invalid json"), 0644); err != nil {
-			t.Fatalf("Failed to write session file: %v", err)
-		}
-
-		result := PerformGateCheck("Edit")
-
-		if !result.Allowed {
-			t.Error("PerformGateCheck should allow on file read error (fail-open)")
-		}
-		if result.Mode != "unknown" {
-			t.Errorf("PerformGateCheck.Mode = %q, want %q for error case", result.Mode, "unknown")
-		}
-	})
-}
-
-// TestGateCheckResult verifies the GateCheckResult struct serialization
 func TestGateCheckResult(t *testing.T) {
 	t.Run("serializes to expected JSON format", func(t *testing.T) {
 		result := &GateCheckResult{
@@ -382,10 +449,11 @@ func TestGateCheckResult(t *testing.T) {
 	})
 }
 
-// TestModeBlockedTools verifies the mode-tool blocking configuration
+// === Tests for ModeBlockedTools configuration ===
+
 func TestModeBlockedTools(t *testing.T) {
 	t.Run("analysis mode has correct blocked tools", func(t *testing.T) {
-		blocked := modeBlockedTools["analysis"]
+		blocked := ModeBlockedTools["analysis"]
 		expected := []string{"Edit", "Write", "Bash", "NotebookEdit"}
 
 		if len(blocked) != len(expected) {
@@ -400,7 +468,7 @@ func TestModeBlockedTools(t *testing.T) {
 	})
 
 	t.Run("planning mode has correct blocked tools", func(t *testing.T) {
-		blocked := modeBlockedTools["planning"]
+		blocked := ModeBlockedTools["planning"]
 		expected := []string{"Edit", "Write", "NotebookEdit"}
 
 		if len(blocked) != len(expected) {
@@ -420,28 +488,31 @@ func TestModeBlockedTools(t *testing.T) {
 	})
 
 	t.Run("coding mode has no blocked tools", func(t *testing.T) {
-		blocked := modeBlockedTools["coding"]
+		blocked := ModeBlockedTools["coding"]
 		if len(blocked) != 0 {
 			t.Errorf("coding mode should have no blocked tools, got %v", blocked)
 		}
 	})
 
 	t.Run("disabled mode has no blocked tools", func(t *testing.T) {
-		blocked := modeBlockedTools["disabled"]
+		blocked := ModeBlockedTools["disabled"]
 		if len(blocked) != 0 {
 			t.Errorf("disabled mode should have no blocked tools, got %v", blocked)
 		}
 	})
 }
 
-// TestSessionState verifies the SessionState struct
+// === Tests for SessionState JSON serialization ===
+
 func TestSessionState(t *testing.T) {
 	t.Run("JSON unmarshaling works correctly", func(t *testing.T) {
 		jsonData := `{
-			"mode": "planning",
-			"task": "Design session system",
-			"feature": "session-mode",
 			"sessionId": "abc-123",
+			"currentMode": "planning",
+			"activeTask": "Design session system",
+			"activeFeature": "session-mode",
+			"version": 5,
+			"createdAt": "2024-01-15T10:00:00Z",
 			"updatedAt": "2024-01-15T12:00:00Z"
 		}`
 
@@ -450,14 +521,14 @@ func TestSessionState(t *testing.T) {
 			t.Fatalf("Failed to unmarshal SessionState: %v", err)
 		}
 
-		if state.Mode != "planning" {
-			t.Errorf("Mode = %q, want %q", state.Mode, "planning")
+		if state.CurrentMode != "planning" {
+			t.Errorf("CurrentMode = %q, want %q", state.CurrentMode, "planning")
 		}
-		if state.Task != "Design session system" {
-			t.Errorf("Task = %q, want %q", state.Task, "Design session system")
+		if state.ActiveTask != "Design session system" {
+			t.Errorf("ActiveTask = %q, want %q", state.ActiveTask, "Design session system")
 		}
-		if state.Feature != "session-mode" {
-			t.Errorf("Feature = %q, want %q", state.Feature, "session-mode")
+		if state.ActiveFeature != "session-mode" {
+			t.Errorf("ActiveFeature = %q, want %q", state.ActiveFeature, "session-mode")
 		}
 		if state.SessionID != "abc-123" {
 			t.Errorf("SessionID = %q, want %q", state.SessionID, "abc-123")
@@ -468,42 +539,126 @@ func TestSessionState(t *testing.T) {
 	})
 
 	t.Run("JSON unmarshaling handles missing optional fields", func(t *testing.T) {
-		jsonData := `{"mode": "analysis"}`
+		jsonData := `{"sessionId": "test-123", "currentMode": "analysis"}`
 
 		var state SessionState
 		if err := json.Unmarshal([]byte(jsonData), &state); err != nil {
 			t.Fatalf("Failed to unmarshal SessionState: %v", err)
 		}
 
-		if state.Mode != "analysis" {
-			t.Errorf("Mode = %q, want %q", state.Mode, "analysis")
+		if state.CurrentMode != "analysis" {
+			t.Errorf("CurrentMode = %q, want %q", state.CurrentMode, "analysis")
 		}
-		if state.Task != "" {
-			t.Errorf("Task = %q, want empty", state.Task)
+		if state.ActiveTask != "" {
+			t.Errorf("ActiveTask = %q, want empty", state.ActiveTask)
 		}
-		if state.Feature != "" {
-			t.Errorf("Feature = %q, want empty", state.Feature)
+		if state.ActiveFeature != "" {
+			t.Errorf("ActiveFeature = %q, want empty", state.ActiveFeature)
 		}
 	})
 }
 
-// Benchmarks
+// === Tests for getBrainSessionState ===
+
+func TestGetBrainSessionState_Success(t *testing.T) {
+	// Save and restore original ExecCommandGate
+	origExecCommand := ExecCommandGate
+	defer func() { ExecCommandGate = origExecCommand }()
+
+	// Mock successful Brain CLI response
+	expectedState := SessionState{
+		SessionID:             "test-session-123",
+		CurrentMode:           "coding",
+		ActiveTask:            "Implement feature",
+		ActiveFeature:         "session-protocol",
+		ProtocolStartComplete: true,
+		Version:               3,
+	}
+	stateJSON, _ := json.Marshal(expectedState)
+	ExecCommandGate = mockExecCommand(string(stateJSON))
+
+	state, err := getBrainSessionState()
+
+	if err != nil {
+		t.Fatalf("getBrainSessionState() returned error: %v", err)
+	}
+
+	if state.SessionID != expectedState.SessionID {
+		t.Errorf("SessionID = %q, want %q", state.SessionID, expectedState.SessionID)
+	}
+	if state.CurrentMode != expectedState.CurrentMode {
+		t.Errorf("CurrentMode = %q, want %q", state.CurrentMode, expectedState.CurrentMode)
+	}
+	if state.ActiveTask != expectedState.ActiveTask {
+		t.Errorf("ActiveTask = %q, want %q", state.ActiveTask, expectedState.ActiveTask)
+	}
+	if state.ProtocolStartComplete != expectedState.ProtocolStartComplete {
+		t.Errorf("ProtocolStartComplete = %v, want %v", state.ProtocolStartComplete, expectedState.ProtocolStartComplete)
+	}
+}
+
+func TestGetBrainSessionState_CLIError(t *testing.T) {
+	// Save and restore original ExecCommandGate
+	origExecCommand := ExecCommandGate
+	defer func() { ExecCommandGate = origExecCommand }()
+
+	// Mock Brain CLI failure
+	ExecCommandGate = mockExecCommandError(1, "Error: MCP server not running")
+
+	_, err := getBrainSessionState()
+
+	if err == nil {
+		t.Error("getBrainSessionState() should return error when CLI fails")
+	}
+}
+
+func TestGetBrainSessionState_InvalidJSON(t *testing.T) {
+	// Save and restore original ExecCommandGate
+	origExecCommand := ExecCommandGate
+	defer func() { ExecCommandGate = origExecCommand }()
+
+	// Mock Brain CLI returning invalid JSON
+	ExecCommandGate = mockExecCommand("not valid json")
+
+	_, err := getBrainSessionState()
+
+	if err == nil {
+		t.Error("getBrainSessionState() should return error for invalid JSON")
+	}
+}
+
+// === Benchmarks ===
+
 func BenchmarkCheckToolBlocked(b *testing.B) {
 	b.Run("blocked tool", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			CheckToolBlocked("Edit", "analysis")
+			checkToolBlocked("Edit", "analysis")
 		}
 	})
 
 	b.Run("allowed tool", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			CheckToolBlocked("Read", "analysis")
+			checkToolBlocked("Read", "analysis")
 		}
 	})
 
 	b.Run("disabled mode", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			CheckToolBlocked("Edit", "disabled")
+			checkToolBlocked("Edit", "disabled")
+		}
+	})
+}
+
+func BenchmarkIsReadOnlyTool(b *testing.B) {
+	b.Run("read-only tool", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			isReadOnlyTool("Read")
+		}
+	})
+
+	b.Run("destructive tool", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			isReadOnlyTool("Edit")
 		}
 	})
 }

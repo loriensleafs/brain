@@ -1,15 +1,49 @@
 /**
  * Fire-and-forget embedding trigger for note create/update.
  * Generates and stores embedding asynchronously without blocking.
+ *
+ * Uses chunked embeddings for content that exceeds model token limits.
  */
 
 import { generateEmbedding } from "./generateEmbedding";
-import { storeEmbedding } from "../../db/vectors";
+import { chunkText } from "./chunking";
+import { storeChunkedEmbeddings, type ChunkEmbeddingInput } from "../../db/vectors";
 import { createVectorConnection } from "../../db/connection";
+import { ensureEmbeddingTables } from "../../db/schema";
 import { logger } from "../../utils/internal/logger";
 
 // Import will be added when queue is implemented (TASK-2-6)
 // For now, just log failed embeddings
+
+/**
+ * Generate embeddings for all chunks of content.
+ * @param content - Full content to chunk and embed
+ * @returns Array of chunk embeddings or null if any chunk fails
+ */
+async function generateChunkedEmbeddings(
+  content: string
+): Promise<ChunkEmbeddingInput[] | null> {
+  const chunks = chunkText(content);
+  const results: ChunkEmbeddingInput[] = [];
+
+  for (const chunk of chunks) {
+    const embedding = await generateEmbedding(chunk.text);
+    if (!embedding) {
+      return null;
+    }
+
+    results.push({
+      chunkIndex: chunk.chunkIndex,
+      totalChunks: chunk.totalChunks,
+      chunkStart: chunk.start,
+      chunkEnd: chunk.end,
+      chunkText: chunk.text,
+      embedding,
+    });
+  }
+
+  return results;
+}
 
 /**
  * Trigger embedding generation for a note (fire-and-forget).
@@ -21,13 +55,14 @@ export function triggerEmbedding(noteId: string, content: string): void {
   // Check if embedding is enabled (will be implemented in TASK-2-4)
   // For now, always attempt
 
-  generateEmbedding(content)
-    .then((embedding) => {
-      if (embedding) {
+  generateChunkedEmbeddings(content)
+    .then((chunkEmbeddings) => {
+      if (chunkEmbeddings && chunkEmbeddings.length > 0) {
         const db = createVectorConnection();
         try {
-          storeEmbedding(db, noteId, embedding);
-          logger.debug(`Embedding stored for note: ${noteId}`);
+          ensureEmbeddingTables(db);
+          storeChunkedEmbeddings(db, noteId, chunkEmbeddings);
+          logger.debug(`Embedding stored for note: ${noteId} (${chunkEmbeddings.length} chunks)`);
         } finally {
           db.close();
         }

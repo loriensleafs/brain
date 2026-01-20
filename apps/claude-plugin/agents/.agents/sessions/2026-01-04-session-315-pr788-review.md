@@ -32,6 +32,7 @@ Review and respond to comments on PR #788.
 ### Skill Inventory
 
 Available GitHub skills (used in this session):
+
 - Get-PRContext.ps1
 - Get-PRChecks.ps1
 - Get-UnresolvedReviewThreads.ps1

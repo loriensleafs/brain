@@ -43,8 +43,8 @@ All MUST requirements above are marked complete.
 
 **Evidence**:
 
-- Run: https://github.com/rjmurillo/ai-agents/actions/runs/20335879976
-- PR comment: https://github.com/rjmurillo/ai-agents/pull/60#issuecomment-3669908423
+- Run: <https://github.com/rjmurillo/ai-agents/actions/runs/20335879976>
+- PR comment: <https://github.com/rjmurillo/ai-agents/pull/60#issuecomment-3669908423>
 
 **Root Causes Found**:
 

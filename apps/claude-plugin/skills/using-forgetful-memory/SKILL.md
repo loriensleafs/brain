@@ -24,6 +24,7 @@ Brain is a semantic knowledge graph built from markdown files using Zettelkasten
 ## When to Query Memory
 
 Query memory proactively when:
+
 - Starting work on a project (check for existing context)
 - User references past work, decisions, or discussions
 - Encountering a problem that may have been solved before
@@ -31,6 +32,7 @@ Query memory proactively when:
 - Needing context about preferences or approaches
 
 Use `mcp__plugin_brain_brain__search_notes` with:
+
 - `query`: Natural language search terms
 - Optional filters: `category`, `tags`, `project`
 
@@ -46,6 +48,7 @@ mcp__plugin_brain_brain__list_notes({
 ```
 
 This is useful when:
+
 - Starting a session on a project you haven't worked on recently
 - Reviewing what was captured in previous conversations
 - Getting a quick overview of project knowledge
@@ -53,6 +56,7 @@ This is useful when:
 ## When to Create Notes
 
 Create notes for knowledge worth preserving:
+
 - Important decisions with rationale
 - Technical patterns or approaches
 - Architectural choices
@@ -62,6 +66,7 @@ Create notes for knowledge worth preserving:
 - Bug investigations and root causes
 
 Do NOT create notes for:
+
 - Temporary context (current file paths, transient issues)
 - Common knowledge available elsewhere
 - Trivial or throwaway information
@@ -70,6 +75,7 @@ Do NOT create notes for:
 ## Atomic Note Principles
 
 Each note must pass the atomicity test:
+
 1. Can you understand it at first glance?
 2. Can you title it in 5-50 words?
 3. Does it represent ONE concept/fact/decision?
@@ -88,11 +94,13 @@ Each note must pass the atomicity test:
 ### Observations
 
 Observations are atomic facts within a note. Each observation should:
+
 - State ONE fact, insight, or finding
 - Be self-contained and understandable
 - Use clear, specific language
 
 Example observations:
+
 ```
 - "Uses JWT with httponly cookies for session management"
 - "Performance degrades above 1000 concurrent connections"
@@ -102,6 +110,7 @@ Example observations:
 ### Relations
 
 Relations connect notes semantically:
+
 - `relates_to`: General connection between topics
 - `depends_on`: Technical or logical dependency
 - `implements`: Implementation of a design/spec
@@ -119,6 +128,7 @@ mcp__plugin_brain_brain__search_notes({
 ```
 
 If similar note exists:
+
 - Use `edit_note` with `append` operation to add new observations
 - Or create new note with `supersedes` relation if replacing
 - Or add `relates_to` relation for connected topics
@@ -133,6 +143,7 @@ Build knowledge incrementally:
 4. **Link** related notes via relations
 
 Use `mcp__plugin_brain_brain__edit_note` with operations:
+
 - `append`: Add to end (most common for new observations)
 - `prepend`: Add to beginning (for urgent updates)
 - `find_replace`: Replace specific text
@@ -141,6 +152,7 @@ Use `mcp__plugin_brain_brain__edit_note` with operations:
 ## Announcing Memory Operations
 
 When creating a note, announce:
+
 ```
 Saved to memory: "[title]"
    Category: [category]
@@ -149,6 +161,7 @@ Saved to memory: "[title]"
 ```
 
 When querying, summarize:
+
 ```
 Found X notes about [topic]:
 - [Note 1]: [brief insight]
@@ -158,11 +171,13 @@ Found X notes about [topic]:
 ## Content Organization
 
 Notes are organized by:
+
 - **Category**: analysis, research, decision, feature, bug, pattern, spec, etc.
 - **Project**: Optional project scope
 - **Tags**: Cross-cutting categorization
 
 Example directory structure:
+
 ```
 notes/
 ├── analysis/
@@ -182,6 +197,7 @@ notes/
 ## Tool Quick Reference
 
 ### Note Tools
+
 | Tool | Purpose |
 |------|---------|
 | `mcp__plugin_brain_brain__search_notes` | Semantic search across notes |

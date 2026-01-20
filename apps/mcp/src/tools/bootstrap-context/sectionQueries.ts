@@ -7,10 +7,13 @@
  * - Recent decisions
  * - Open bugs
  *
- * All queries use note type detection and status parsing.
+ * All queries use SearchService for semantic search with
+ * note type detection and status parsing for filtering.
+ *
+ * @see ADR-001: Search Service Abstraction
  */
 
-import { getBasicMemoryClient } from "../../proxy/client";
+import { getSearchService, type SearchResult } from "../../services/search";
 import { detectNoteType, type NoteType } from "./noteType";
 import { parseStatus, isOpenStatus, type NoteStatus } from "./statusParser";
 
@@ -36,50 +39,32 @@ export interface QueryOptions {
 }
 
 /**
- * Result from basic-memory search/activity tools
+ * Get the shared SearchService instance.
  */
-interface BasicMemoryNote {
-  title?: string;
-  permalink?: string;
-  entity?: string;
-  file_path?: string;
-  content?: string;
-  type?: string; // basic-memory type: "entity", "relation", "observation"
-  metadata?: {
-    entity_type?: string;
-    [key: string]: unknown;
-  };
-}
-
-interface BasicMemoryResult {
-  result?: {
-    results?: BasicMemoryNote[];
-  };
-  content?: Array<{ type: string; text: string }>;
+function getSearch() {
+  return getSearchService();
 }
 
 /**
  * Query recent activity (notes updated within timeframe)
- * Uses search_notes with after_date filter since recent_activity returns markdown
+ * Uses semantic search for better relevance of recent notes.
  */
 export async function queryRecentActivity(
   options: QueryOptions
 ): Promise<ContextNote[]> {
   const { project, timeframe = "5d" } = options;
-  const client = await getBasicMemoryClient();
+  const search = getSearch();
 
-  // Use search_notes with after_date instead of recent_activity (which returns markdown)
-  const result = (await client.callTool({
-    name: "search_notes",
-    arguments: {
-      project,
-      query: "*",
-      after_date: getDateFromTimeframe(timeframe),
-      page_size: 50,
-    },
-  })) as BasicMemoryResult;
+  // Search for recent activity using semantic search with broad query
+  const response = await search.search("recent changes updates activity", {
+    project,
+    limit: 50,
+    mode: "auto",
+    afterDate: getDateFromTimeframe(timeframe),
+    fullContent: true,
+  });
 
-  const notes = parseAndEnrichNotes(result);
+  const notes = convertSearchResultsToContextNotes(response.results);
 
   // Filter to entity types only (exclude relations, observations)
   const filtered = notes.filter((note) => note.title && note.permalink);
@@ -88,39 +73,33 @@ export async function queryRecentActivity(
 
 /**
  * Query active features, phases, and tasks
+ * Uses semantic search for feature-related content.
  * (type=feature/phase/task, status IN NOT_STARTED/IN_PROGRESS)
  */
 export async function queryActiveFeatures(
   options: QueryOptions
 ): Promise<ContextNote[]> {
   const { project, timeframe = "30d" } = options;
-  const client = await getBasicMemoryClient();
+  const search = getSearch();
 
-  // Search for feature/phase/task notes by type
-  const result = (await client.callTool({
-    name: "search_notes",
-    arguments: {
-      project,
-      query: "Status",
-      types: ["feature", "phase", "task"],
-      after_date: getDateFromTimeframe(timeframe),
-    },
-  })) as BasicMemoryResult;
+  // Search for feature/phase/task notes using semantic search
+  const response = await search.search("feature phase task status in progress active", {
+    project,
+    limit: 50,
+    mode: "auto",
+    folders: ["features/"],
+    afterDate: getDateFromTimeframe(timeframe),
+    fullContent: true,
+  });
 
-  const notes = parseAndEnrichNotes(result);
+  const notes = convertSearchResultsToContextNotes(response.results);
 
-  // Filter to only notes in features/ folder with feature-related types and active statuses
+  // Filter to only notes with feature-related types and active statuses
   const featureTypes: NoteType[] = ["feature", "phase", "task"];
   const activeStatuses: NoteStatus[] = ["not_started", "in_progress", "active"];
 
   const filtered = notes.filter((note) => {
-    // Must be in features/ folder (check both file_path and permalink)
-    const inFeaturesFolder =
-      note.file_path?.startsWith("features/") ||
-      note.permalink.startsWith("features/");
-
     return (
-      inFeaturesFolder &&
       featureTypes.includes(note.type) &&
       activeStatuses.includes(note.status)
     );
@@ -131,66 +110,57 @@ export async function queryActiveFeatures(
 
 /**
  * Query recent decisions (type=decision, updated in timeframe)
+ * Uses semantic search for decision-related content.
  */
 export async function queryRecentDecisions(
   options: QueryOptions
 ): Promise<ContextNote[]> {
   const { project, timeframe = "3d" } = options;
-  const client = await getBasicMemoryClient();
+  const search = getSearch();
 
-  // Search for decision notes
-  const result = (await client.callTool({
-    name: "search_notes",
-    arguments: {
-      project,
-      query: "decision",
-      types: ["decision"],
-      after_date: getDateFromTimeframe(timeframe),
-    },
-  })) as BasicMemoryResult;
-
-  const notes = parseAndEnrichNotes(result);
-
-  // Filter to decision type only, in decisions/ folder
-  const filtered = notes.filter((note) => {
-    const inDecisionsFolder =
-      note.file_path?.startsWith("decisions/") ||
-      note.permalink.startsWith("decisions/");
-
-    return inDecisionsFolder && note.type === "decision";
+  // Search for decision notes using semantic search
+  const response = await search.search("decision architecture ADR technical choice rationale", {
+    project,
+    limit: 30,
+    mode: "auto",
+    folders: ["decisions/"],
+    afterDate: getDateFromTimeframe(timeframe),
+    fullContent: true,
   });
+
+  const notes = convertSearchResultsToContextNotes(response.results);
+
+  // Filter to decision type only
+  const filtered = notes.filter((note) => note.type === "decision");
 
   return dedupeByPermalink(filtered);
 }
 
 /**
  * Query open bugs (type=bug, status != CLOSED, updated in timeframe)
+ * Uses semantic search for bug-related content.
  */
 export async function queryOpenBugs(
   options: QueryOptions
 ): Promise<ContextNote[]> {
   const { project, timeframe = "7d" } = options;
-  const client = await getBasicMemoryClient();
+  const search = getSearch();
 
-  // Search for bug notes
-  const result = (await client.callTool({
-    name: "search_notes",
-    arguments: {
-      project,
-      query: "bug",
-      types: ["bug"],
-      after_date: getDateFromTimeframe(timeframe),
-    },
-  })) as BasicMemoryResult;
+  // Search for bug notes using semantic search
+  const response = await search.search("bug issue defect error problem fix", {
+    project,
+    limit: 30,
+    mode: "auto",
+    folders: ["bugs/"],
+    afterDate: getDateFromTimeframe(timeframe),
+    fullContent: true,
+  });
 
-  const notes = parseAndEnrichNotes(result);
+  const notes = convertSearchResultsToContextNotes(response.results);
 
-  // Filter to bug type with open status, in bugs/ folder
+  // Filter to bug type with open status
   const filtered = notes.filter((note) => {
-    const inBugsFolder =
-      note.file_path?.startsWith("bugs/") || note.permalink.startsWith("bugs/");
-
-    return inBugsFolder && note.type === "bug" && isOpenStatus(note.status);
+    return note.type === "bug" && isOpenStatus(note.status);
   });
 
   return dedupeByPermalink(filtered);
@@ -209,59 +179,31 @@ function dedupeByPermalink(notes: ContextNote[]): ContextNote[] {
 }
 
 /**
- * Parse basic-memory results and enrich with type/status detection
+ * Convert SearchService results to ContextNote format with type/status enrichment.
+ * Uses fullContent when available, falling back to snippet.
  */
-function parseAndEnrichNotes(result: BasicMemoryResult): ContextNote[] {
-  // Handle different response formats from basic-memory
-  let rawNotes: BasicMemoryNote[] = [];
+function convertSearchResultsToContextNotes(results: SearchResult[]): ContextNote[] {
+  return results
+    .filter((result) => result.title && result.permalink)
+    .map((result) => {
+      const folder = result.permalink.split("/")[0] || "";
 
-  if (result.result?.results) {
-    rawNotes = result.result.results;
-  } else if (result.content?.[0]?.text) {
-    // Try to parse JSON from text content
-    try {
-      const parsed = JSON.parse(result.content[0].text);
-      if (parsed.results) {
-        // Direct results array (basic-memory format)
-        rawNotes = parsed.results;
-      } else if (parsed.result?.results) {
-        // Nested under result (legacy format)
-        rawNotes = parsed.result.results;
-      } else if (Array.isArray(parsed)) {
-        rawNotes = parsed;
-      }
-    } catch {
-      // Not JSON, skip
-    }
-  }
+      // Detect type from folder or title (no frontmatter available from search)
+      const type = detectNoteType(undefined, folder, result.title);
 
-  return (
-    rawNotes
-      // Only include entity results (not relations or observations)
-      .filter(
-        (note) => note.type === "entity" && (note.title || note.permalink)
-      )
-      .map((note) => {
-        const title = note.title || note.permalink || "";
-        const permalink = note.permalink || note.entity || "";
-        const folder = permalink.split("/")[0] || "";
+      // Parse status from full content or snippet
+      const contentForParsing = result.fullContent || result.snippet;
+      const status = parseStatus(contentForParsing, result.title);
 
-        // Detect type from frontmatter, folder, or title
-        const type = detectNoteType(note.metadata?.entity_type, folder, title);
-
-        // Parse status from content
-        const status = parseStatus(note.content, title);
-
-        return {
-          title,
-          permalink,
-          type,
-          status,
-          content: note.content,
-          file_path: note.file_path,
-        };
-      })
-  );
+      return {
+        title: result.title,
+        permalink: result.permalink,
+        type,
+        status,
+        content: result.fullContent || result.snippet,
+        file_path: result.permalink,
+      };
+    });
 }
 
 /**

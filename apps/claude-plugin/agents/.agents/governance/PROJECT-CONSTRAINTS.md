@@ -111,6 +111,27 @@ Single source of truth for project constraints. Index-style document pointing to
 
 ---
 
+## Content Attribution Constraints
+
+| Constraint | Source | Verification |
+|------------|--------|--------------|
+| MUST NOT add "Generated with" footers to PRs | user-preference | Code review |
+| MUST NOT add AI tool attribution to commits | user-preference | Code review |
+| MUST NOT reference session numbers in PR descriptions | user-preference | Code review |
+| MUST NOT add tool signatures to user-facing content | user-preference | Code review |
+
+**Rationale Summary**: PRs and commits should focus on technical changes only, not tool attribution. Session references are internal context not relevant to external readers.
+
+**Examples of prohibited content**:
+- "Generated with [Claude Code]" footers
+- "Session 17 orchestration" in PR descriptions
+- Tool attribution signatures in commit messages
+- Session references in issue comments
+
+**Allowed**: Technical documentation of tools used in development workflow (e.g., mentioning Claude Code in README as a development tool).
+
+---
+
 ## Validation Checklist
 
 Use this checklist during session start:

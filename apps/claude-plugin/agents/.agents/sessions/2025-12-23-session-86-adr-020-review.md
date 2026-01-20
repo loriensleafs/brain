@@ -3,6 +3,7 @@
 **Date**: 2025-12-23
 **Branch**: `docs/feature-request-review-workflow`
 **Focus**: ADR-020 multi-agent review using adr-review skill
+
 - **Starting Commit**: `9294ea0`
 
 ## Protocol Compliance
@@ -44,12 +45,14 @@
 ### Phase 2: Consolidation (COMPLETE)
 
 **Consensus Points**:
+
 - Parsing functions don't exist (all agree)
 - Implementation follows ADR-005/ADR-006 patterns (all agree)
 - Prompt file already exists (170 lines)
 - Security validation required
 
 **Conflicts Resolved**:
+
 1. Agent choice → Use analyst (has Feature Request Review capability)
 2. Proceed vs Defer → PROCEED with conditions
 3. Priority → 4 P0, 5 P1, 3 P2 issues
@@ -59,6 +62,7 @@
 **Verdict**: NEEDS REVISION (proceed after addressing P0/P1 issues)
 
 **P0 Required Changes**:
+
 1. Switch to analyst agent (or expand critic role via separate ADR)
 2. Update MCP tool claims (currently incorrect)
 3. Change prompt output format for parsing

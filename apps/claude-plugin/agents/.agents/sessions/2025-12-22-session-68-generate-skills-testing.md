@@ -190,6 +190,7 @@ Duration: ~1.4s
 **Achieved: 69.72%**
 
 Coverage breakdown:
+
 - Normalize-Newlines: 100%
 - Get-ContentUtf8/Set-ContentUtf8: 100%
 - Compute-Sha256Hex: 100%
@@ -241,6 +242,7 @@ PowerShell's `[Parameter(Mandatory)]` attribute doesn't accept empty strings (`"
 ### L3: Test Coverage Pragmatism
 
 Perfect 100% code coverage is often not achievable or worthwhile:
+
 - Some code paths (verbose logging, edge case error handling) have diminishing returns
 - Focus on critical paths and realistic scenarios
 - 70% coverage with good test quality > 90% coverage with brittle tests
@@ -314,12 +316,14 @@ All coverage thresholds met
 ### Files Created/Modified
 
 **New Files:**
+
 - `.baseline/coverage-thresholds.json` (coverage thresholds configuration)
 - `.baseline/coverage-thresholds.schema.json` (JSON schema for validation)
 - `.serena/memories/skill-testing-003-script-execution-isolation.md` (Serena memory)
 - `.serena/memories/skill-testing-004-coverage-pragmatism.md` (Serena memory)
 
 **Modified Files:**
+
 - `build/scripts/Invoke-PesterTests.ps1` (added coverage and threshold checking)
 - `.github/workflows/pester-tests.yml` (enabled coverage in CI)
 
@@ -335,12 +339,14 @@ All coverage thresholds met
 Updated `.github/workflows/pester-tests.yml` to enable coverage in CI:
 
 **Changes:**
+
 - Added `-EnableCodeCoverage -CheckCoverageThreshold` to test invocation
 - Upload coverage.xml as CI artifact (30 days retention)
 - Added `.baseline/**` to testable paths filter
 - Updated documentation with coverage information
 
 **CI Behavior:**
+
 - Generates JaCoCo code coverage reports for all tests
 - Checks coverage against `.baseline/coverage-thresholds.json`
 - Fails build if coverage drops below threshold

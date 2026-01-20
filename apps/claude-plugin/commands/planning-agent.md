@@ -85,6 +85,7 @@ comprehensive implementation plans in the memory knowledge graph.
 6. Report summary to user
 
 ## CRITICAL RULES
+
 - ALWAYS search before creating ANY note
 - Update existing plans rather than creating duplicates
 - Every note needs 3-5 observations, 2-3 relations

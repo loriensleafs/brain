@@ -165,7 +165,7 @@ When orchestrator routes back to security after implementation:
 - [ ] Test coverage includes security test cases
 ```
 
-3. **CI Environment Security Testing**
+1. **CI Environment Security Testing**
 
 Reproduce CI environment locally to catch security issues before PR:
 
@@ -199,7 +199,7 @@ Get-ChildItem -Recurse -Include *.ps1 |
     ForEach-Object { Write-Warning "[REVIEW] Hardcoded env var: $($_.Path):$($_.LineNumber)" }
 ```
 
-4. **PIV Report Template**
+1. **PIV Report Template**
 
 Save to: `.agents/security/PIV-[feature].md`
 

@@ -10,10 +10,12 @@
 Addressing feedback on PR #310 requesting renumbering of ADR files to avoid duplicate numbering.
 
 **Original Request**:
+
 - Comment 2648838368: Rename ADR-019-model-routing-strategy.md to ADR-021
 - Comment 2648838566: Rename ADR-020-architecture-governance-split-criteria.md to ADR-021
 
 **Clarification Provided**:
+
 - User clarified to rename to unused numbers at the end of the current range
 
 ## Objective
@@ -23,11 +25,13 @@ Rename ADR-019 and ADR-020 to ADR-021 and ADR-022 respectively, along with all a
 ## Actions Taken
 
 ### 1. Analysis Phase
+
 - Identified current ADR numbering (001-020 with duplicates)
 - Confirmed ADR-021 and ADR-022 are unused
 - Located all files and references needing updates
 
 ### 2. File Renames
+
 - `ADR-019-model-routing-strategy.md` → `ADR-021-model-routing-strategy.md`
 - `ADR-020-architecture-governance-split-criteria.md` → `ADR-022-architecture-governance-split-criteria.md`
 - `ADR-019-debate-log.md` → `ADR-021-debate-log.md`
@@ -35,7 +39,9 @@ Rename ADR-019 and ADR-020 to ADR-021 and ADR-022 respectively, along with all a
 - `adr-019-quantitative-analysis.md` → `adr-021-quantitative-analysis.md`
 
 ### 3. Content Updates
+
 Updated headers and references in:
+
 - `.agents/architecture/ADR-021-model-routing-strategy.md` - Title header
 - `.agents/architecture/ADR-022-architecture-governance-split-criteria.md` - Title header and internal ADR-019 references
 - `.agents/critique/ADR-021-debate-log.md` - Title and cross-references

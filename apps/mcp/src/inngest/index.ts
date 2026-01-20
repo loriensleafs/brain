@@ -10,13 +10,22 @@ export {
 } from "./client";
 export type {
   InngestEvents,
-  FeatureCompletionRequestedEvent,
-  ApprovalRequestedEvent,
-  ApprovalGrantedEvent,
-  ApprovalDeniedEvent,
+  // Session Protocol Events (ADR-016)
+  SessionProtocolStartEvent,
+  SessionProtocolEndEvent,
   SessionStateUpdateEvent,
   SessionStateQueryEvent,
   SessionModeChangedEvent,
+  // Orchestrator Events (ADR-016)
+  OrchestratorAgentInvokedEvent,
+  OrchestratorAgentCompletedEvent,
+  AgentInvocationOutputData,
+  // Feature Completion Events
+  FeatureCompletionRequestedEvent,
+  // Approval Events (HITL)
+  ApprovalRequestedEvent,
+  ApprovalGrantedEvent,
+  ApprovalDeniedEvent,
 } from "./events";
 export { featureCompletionWorkflow } from "./workflows/featureCompletion";
 export {
@@ -32,3 +41,27 @@ export {
   getActiveSessionIds,
   clearSessionState,
 } from "./workflows/sessionState";
+export {
+  sessionProtocolEndWorkflow,
+  validateSessionProtocolEnd,
+  type SessionProtocolEndResult,
+  type StepResult,
+} from "./workflows/sessionProtocolEnd";
+export {
+  sessionProtocolStartWorkflow,
+  getSessionProtocolContext,
+  isProtocolStartComplete,
+  type ProtocolStartEvidence,
+  type SessionProtocolContext,
+  type SessionProtocolStartResult,
+} from "./workflows/sessionProtocolStart";
+export {
+  orchestratorAgentInvokedWorkflow,
+  type AgentInvokedResult,
+} from "./workflows/orchestratorAgentInvoked";
+export {
+  orchestratorAgentCompletedWorkflow,
+  getCompactionHistory,
+  getTotalInvocationCount,
+  type AgentCompletedResult,
+} from "./workflows/orchestratorAgentCompleted";

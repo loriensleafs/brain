@@ -25,6 +25,7 @@
 ### Skill Inventory
 
 Available GitHub skills:
+
 - PR operations: `.claude/skills/github/scripts/pr/`
 - Issue operations: `.claude/skills/github/scripts/issue/`
 - Reactions: `.claude/skills/github/scripts/reactions/`
@@ -42,6 +43,7 @@ All MUST requirements above are marked complete.
 ## Objective
 
 Execute continuous development loop:
+
 1. Discover and prioritize GitHub issues
 2. Implement solutions through multi-agent workflow
 3. Complete recursive review cycles (critic, QA, security)

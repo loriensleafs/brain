@@ -271,8 +271,8 @@ If specialists do NOT have unanimous agreement:
 **Recommendation**: Route to high-level-advisor for resolution
 ```
 
-4. **Block approval** until orchestrator escalates and gets guidance
-5. **Document conflict** in critique for orchestrator to route to retrospective
+1. **Block approval** until orchestrator escalates and gets guidance
+2. **Document conflict** in critique for orchestrator to route to retrospective
 
 ## Escalation Prompt Completeness Requirements
 

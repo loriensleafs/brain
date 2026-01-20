@@ -124,7 +124,7 @@ When ANY trigger matches:
 **Recommendation**: Route to security agent for PIV before merge.
 ```
 
-2. **Document in Implementation Notes**: Add to `.agents/planning/implementation-notes-[feature].md`
+1. **Document in Implementation Notes**: Add to `.agents/planning/implementation-notes-[feature].md`
 
 ```markdown
 ## Security Flagging

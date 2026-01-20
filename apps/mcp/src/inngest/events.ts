@@ -3,9 +3,121 @@
  *
  * All events are typed for compile-time safety.
  * Event names follow the pattern: "domain/action.verb"
+ *
+ * Session Protocol Events (ADR-016):
+ * - session/protocol.start: Triggered at session start for protocol enforcement
+ * - session/protocol.end: Triggered at session end for cleanup validation
+ * - session/state.update: Updates session state (mode, feature, task)
+ * - session/state.query: Retrieves current session state
+ * - session/mode.changed: Emitted when workflow mode changes
+ *
+ * Orchestrator Events (ADR-016):
+ * - orchestrator/agent.invoked: Agent routing events
+ * - orchestrator/agent.completed: Agent completion events
  */
 
-import type { WorkflowMode } from "../services/session";
+import type { WorkflowMode, AgentType } from "../services/session";
+
+// ============================================================================
+// Session Protocol Events (ADR-016)
+// ============================================================================
+
+/**
+ * Session protocol start event.
+ * Triggered at session start to enforce protocol requirements.
+ *
+ * @see ADR-016: Automatic Session Protocol Enforcement
+ */
+export type SessionProtocolStartEvent = {
+  name: "session/protocol.start";
+  data: {
+    /** Working directory for this session */
+    workingDirectory: string;
+    /** ISO timestamp when session started */
+    timestamp: string;
+  };
+};
+
+/**
+ * Session protocol end event.
+ * Triggered at session end to validate protocol completion.
+ *
+ * @see ADR-016: Automatic Session Protocol Enforcement
+ */
+export type SessionProtocolEndEvent = {
+  name: "session/protocol.end";
+  data: {
+    /** ISO timestamp when session end was triggered */
+    timestamp: string;
+  };
+};
+
+// ============================================================================
+// Orchestrator Events (ADR-016)
+// ============================================================================
+
+/**
+ * Agent invocation output structure.
+ * Matches the AgentInvocationOutput interface from session types.
+ */
+export interface AgentInvocationOutputData {
+  /** Artifact paths created or modified by the agent */
+  artifacts: string[];
+  /** Summary of work performed */
+  summary: string;
+  /** Recommendations for next steps */
+  recommendations: string[];
+  /** Blockers preventing completion */
+  blockers: string[];
+}
+
+/**
+ * Orchestrator agent invoked event.
+ * Triggered when orchestrator routes to a specialist agent.
+ *
+ * @see ADR-016: Automatic Session Protocol Enforcement
+ */
+export type OrchestratorAgentInvokedEvent = {
+  name: "orchestrator/agent.invoked";
+  data: {
+    /** Agent type that was invoked */
+    agent: AgentType;
+    /** Prompt or instruction given to the agent */
+    prompt: string;
+    /** Additional context passed to the agent */
+    context: Record<string, unknown>;
+    /** Agent that handed off (null if orchestrator-initiated) */
+    handoffFrom: AgentType | null;
+    /** ISO timestamp when agent was invoked */
+    timestamp: string;
+  };
+};
+
+/**
+ * Orchestrator agent completed event.
+ * Triggered when a specialist agent completes execution.
+ *
+ * @see ADR-016: Automatic Session Protocol Enforcement
+ */
+export type OrchestratorAgentCompletedEvent = {
+  name: "orchestrator/agent.completed";
+  data: {
+    /** Agent type that completed */
+    agent: AgentType;
+    /** Output from the agent execution */
+    output: AgentInvocationOutputData;
+    /** Next agent to hand off to (null if returning to orchestrator) */
+    handoffTo: AgentType | null;
+    /** Reason for handoff or completion */
+    handoffReason: string;
+    /** ISO timestamp when agent completed */
+    timestamp: string;
+  };
+};
+
+// ============================================================================
+// Feature Completion Events
+// ============================================================================
 
 /**
  * Feature completion requested event.
@@ -78,8 +190,6 @@ export type ApprovalDeniedEvent = {
 export type SessionStateUpdateEvent = {
   name: "session/state.update";
   data: {
-    /** Session ID to update */
-    sessionId: string;
     /** Type of update being applied */
     updateType: "mode" | "feature" | "task" | "init";
     /** New mode value (for mode updates) */
@@ -97,10 +207,7 @@ export type SessionStateUpdateEvent = {
  */
 export type SessionStateQueryEvent = {
   name: "session/state.query";
-  data: {
-    /** Session ID to query */
-    sessionId: string;
-  };
+  data: Record<string, never>;
 };
 
 /**
@@ -111,8 +218,6 @@ export type SessionStateQueryEvent = {
 export type SessionModeChangedEvent = {
   name: "session/mode.changed";
   data: {
-    /** Session ID that changed modes */
-    sessionId: string;
     /** Previous workflow mode */
     previousMode: WorkflowMode;
     /** New workflow mode */
@@ -126,16 +231,37 @@ export type SessionModeChangedEvent = {
   };
 };
 
+// ============================================================================
+// Event Type Union
+// ============================================================================
+
 /**
  * Union of all Inngest events for type safety.
  * Add new event types here as they are defined.
+ *
+ * Events grouped by domain:
+ * - session/*: Session lifecycle and protocol events
+ * - orchestrator/*: Agent routing and coordination events
+ * - feature/*: Feature completion workflow events
+ * - approval/*: Human-in-the-loop approval events
  */
 export type InngestEvents = {
-  "feature/completion.requested": FeatureCompletionRequestedEvent;
-  "approval/requested": ApprovalRequestedEvent;
-  "approval/granted": ApprovalGrantedEvent;
-  "approval/denied": ApprovalDeniedEvent;
+  // Session Protocol Events (ADR-016)
+  "session/protocol.start": SessionProtocolStartEvent;
+  "session/protocol.end": SessionProtocolEndEvent;
   "session/state.update": SessionStateUpdateEvent;
   "session/state.query": SessionStateQueryEvent;
   "session/mode.changed": SessionModeChangedEvent;
+
+  // Orchestrator Events (ADR-016)
+  "orchestrator/agent.invoked": OrchestratorAgentInvokedEvent;
+  "orchestrator/agent.completed": OrchestratorAgentCompletedEvent;
+
+  // Feature Completion Events
+  "feature/completion.requested": FeatureCompletionRequestedEvent;
+
+  // Approval Events (HITL)
+  "approval/requested": ApprovalRequestedEvent;
+  "approval/granted": ApprovalGrantedEvent;
+  "approval/denied": ApprovalDeniedEvent;
 };

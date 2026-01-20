@@ -66,6 +66,7 @@ TASK-001 → (none)     (VIOLATION: untraced task)
 ### Rule 3: Complete Chain
 
 Every DESIGN must have both:
+
 - At least one REQ reference (backward)
 - At least one TASK reference (forward)
 

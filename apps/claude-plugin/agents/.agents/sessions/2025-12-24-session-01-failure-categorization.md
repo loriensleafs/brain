@@ -33,12 +33,14 @@ Implement failure categorization to distinguish INFRASTRUCTURE failures from COD
 Research document `.agents/analysis/002-ai-quality-gate-failure-patterns.md` identified clear patterns:
 
 **Infrastructure Patterns** (should NOT block PR):
+
 - Timeout (exit code 124)
 - Rate limiting (429, "rate limit")
 - Network errors (502, 503, connection timeout/refused/reset)
 - CLI access issues ("no output", "missing Copilot access")
 
 **Code Quality Patterns** (SHOULD block PR):
+
 - Security vulnerabilities (SQL injection, XSS)
 - Missing tests / no test coverage
 - Code smells / anti-patterns
@@ -155,6 +157,7 @@ None. Pre-existing markdown lint errors in `.claude/skills/adr-review/agent-prom
 **Next Steps**: Test workflow on next PR to verify categorization works correctly.
 
 **Key Deliverables**:
+
 - `Get-FailureCategory` function in AIReviewCommon.psm1
 - Workflow categorization logic in ai-pr-quality-gate.yml
 - Category column in PR comment table

@@ -54,9 +54,9 @@ func runValidateSession(cmd *cobra.Command, args []string) error {
 		logPath = args[0]
 	}
 
-	// If session log path provided, validate it
+	// If session log path provided, validate it using comprehensive protocol validation
 	if logPath != "" {
-		result := validation.ValidateSessionLog(logPath)
+		result := validation.ValidateSessionProtocol(logPath)
 		output, _ := json.MarshalIndent(result, "", "  ")
 		fmt.Println(string(output))
 
@@ -74,18 +74,36 @@ func runValidateSession(cmd *cobra.Command, args []string) error {
 	}
 
 	// Get session state from brain session
-	var state *validation.WorkflowState
 	sessionResult, err := brainClient.CallTool("session", map[string]any{
 		"operation": "get",
 	})
-	if err == nil {
-		var sessionData validation.WorkflowState
-		if json.Unmarshal([]byte(sessionResult.GetText()), &sessionData) == nil {
-			state = &sessionData
-		}
+	if err != nil {
+		outputError("Failed to get session state: " + err.Error())
+		return err
 	}
 
-	// Validate session state
+	// Try to parse as full SessionState first (new format)
+	var sessionState validation.SessionState
+	if json.Unmarshal([]byte(sessionResult.GetText()), &sessionState) == nil && sessionState.CurrentMode != "" {
+		// Use new ValidateSessionState for full validation
+		result := validation.ValidateSessionState(&sessionState)
+		output, _ := json.MarshalIndent(result, "", "  ")
+		fmt.Println(string(output))
+
+		if !result.Valid {
+			os.Exit(1)
+		}
+		return nil
+	}
+
+	// Fall back to legacy WorkflowState parsing
+	var state *validation.WorkflowState
+	var workflowData validation.WorkflowState
+	if json.Unmarshal([]byte(sessionResult.GetText()), &workflowData) == nil {
+		state = &workflowData
+	}
+
+	// Validate session state using legacy function
 	result := validation.ValidateSession(state)
 
 	output, _ := json.MarshalIndent(result, "", "  ")

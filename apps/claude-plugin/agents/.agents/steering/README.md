@@ -16,6 +16,7 @@ The steering system uses a **single source of truth** approach:
 - **Copilot Entry Points**: `.github/instructions/` - Lightweight pointers with quick reference
 
 This design avoids content duplication while supporting both Claude-based agents (via orchestrator injection) and GitHub Copilot (via `applyTo:` directive). The `.github/instructions/` files contain:
+
 1. Front matter with `applyTo:` glob patterns
 2. Links to authoritative `.agents/steering/` content  
 3. Quick reference snippets for immediate context
@@ -94,6 +95,7 @@ status: [placeholder | draft | published]
 ```
 
 **Notes**:
+
 - `applyTo` uses the same glob pattern format as GitHub Copilot's custom instructions for consistency.
 - `excludeFrom` is optional and specifies patterns to exclude from matching (e.g., exclude test files from production patterns).
 
@@ -127,10 +129,13 @@ status: [placeholder | draft | published]
 ## Examples
 
 ### Good
+
 [Positive example]
 
 ### Bad
+
 [Negative example]
+
 ```
 
 ## Glob Pattern Reference
@@ -175,6 +180,7 @@ Context from steering:
 ### Token Usage Comparison
 
 **Without steering scoping** (all files):
+
 - agent-prompts.md: 1,800 tokens
 - testing-approach.md: 2,200 tokens  
 - security-practices.md: 3,000 tokens
@@ -182,6 +188,7 @@ Context from steering:
 - **Total**: 8,500 tokens
 
 **With steering scoping** (matched only):
+
 - testing-approach.md: 2,200 tokens
 - **Total**: 2,200 tokens
 - **Savings**: 74%

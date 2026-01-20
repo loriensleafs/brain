@@ -38,6 +38,7 @@ Per Anthropic Claude Code specification:
 ### Excellent Examples
 
 **session-log-fixer**:
+
 ```yaml
 description: Fix session protocol validation failures in GitHub Actions. Use when
   a PR fails with "Session protocol validation failed", "MUST requirement(s) not
@@ -49,6 +50,7 @@ description: Fix session protocol validation failures in GitHub Actions. Use whe
 - Outcome: implied (passing validation)
 
 **research-and-incorporate**:
+
 ```yaml
 description: Research external topics, create comprehensive analysis, determine
   project applicability, and incorporate learnings into Serena and Forgetful
@@ -215,6 +217,7 @@ The SkillForge validator (`.claude/skills/SkillForge/scripts/validate-skill.py`)
 Trigger phrases MUST use character whitelist: `[a-zA-Z0-9 \-:,.'"]`
 
 Operation paths in trigger tables MUST:
+
 - Be relative paths only (no `..`)
 - Reference scripts in skill directory
 - Not execute arbitrary commands
@@ -244,6 +247,7 @@ Before marking skill complete:
 **Description pattern**: `Collect/Detect + [data] + Use when [condition] + [outcome]`
 
 **Body must have**:
+
 - Trigger phrases for metric types
 - Decision tree (when to use this vs manual)
 - Verification checklist (validate output format)
@@ -253,6 +257,7 @@ Before marking skill complete:
 **Description pattern**: `[Workflow verb] + [multi-step process] + Use when [starting condition] + [outcome]`
 
 **Body must have**:
+
 - Trigger table mapping phrases to workflow stages
 - Decision tree (when full workflow vs shortcuts)
 - Anti-patterns (common workflow mistakes)
@@ -262,6 +267,7 @@ Before marking skill complete:
 **Description pattern**: `Detect/Analyze + [problems] + Use when [symptoms] + [outcome]`
 
 **Body must have**:
+
 - Trigger phrases for symptoms
 - Decision tree (what to analyze vs ignore)
 - Verification checklist (validate findings)

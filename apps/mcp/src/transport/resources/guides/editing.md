@@ -12,6 +12,7 @@ priority: 0.9
 ## Edit Operations
 
 **Available operations**:
+
 - `append`: Add to end of note
 - `prepend`: Add to beginning
 - `find_replace`: Replace specific text

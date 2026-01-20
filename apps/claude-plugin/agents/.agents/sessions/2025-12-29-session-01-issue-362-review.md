@@ -8,6 +8,7 @@
 ## Context
 
 Reviewing commit threshold monitoring fix for issue #362. Implementation adds thresholds to `.github/workflows/pr-validation.yml`:
+
 - 10 commits: Warning (add `needs-split` label)
 - 15 commits: Alert (add `needs-split` label)
 - 20 commits: Block (require `commit-limit-bypass` label)
@@ -56,12 +57,12 @@ Reviewing commit threshold monitoring fix for issue #362. Implementation adds th
 
 ### Medium Priority (Optional)
 
-3. Add commit count to PR validation report
-4. Add comments explaining error suppression
+1. Add commit count to PR validation report
+2. Add comments explaining error suppression
 
 ### Low Priority (Follow-up)
 
-5. Extract threshold logic to module for local testing
+1. Extract threshold logic to module for local testing
 
 ## Verdict
 

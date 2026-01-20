@@ -111,18 +111,21 @@ src/claude/*.md → load agent-prompts.md steering
 ## Session Protocol Summary
 
 **Start**:
+
 1. Read context files (AGENT-SYSTEM, AGENT-INSTRUCTIONS, HANDOFF, PROJECT-PLAN)
 2. Create session log
 3. Identify current phase/task
 4. Delegate to orchestrator
 
 **Execute**:
+
 1. Work incrementally
 2. Commit frequently (conventional commits)
 3. Update session log
 4. Check off tasks
 
 **End**:
+
 1. Run retrospective agent
 2. Update HANDOFF.md
 3. Commit all documentation

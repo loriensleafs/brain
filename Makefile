@@ -109,12 +109,12 @@ clean-plugin-cache:
 	@echo "Plugin cache cleared"
 
 # Complete fresh reinstall: clean everything, rebuild, and reinstall (symlinks only)
-reinstall-plugin: uninstall-plugin clean-plugin-cache clean mcp build-all install-plugin
+reinstall-plugin: uninstall-plugin clean-plugin-cache clean mcp build-all install-tui install-plugin
 	@echo "Plugin completely reinstalled from scratch"
 	@echo "Restart Claude Code to load the fresh plugin"
 
 # Complete rebuild and reinstall (symlinks + cache)
-reinstall-plugin-full: uninstall-plugin clean-plugin-cache clean build-all install-plugin install-plugin-cache
+reinstall-plugin-full: uninstall-plugin clean-plugin-cache clean build-all install-tui install-plugin install-plugin-cache
 	@echo "Plugin completely reinstalled from scratch (symlinks + cache)"
 	@echo "Restart Claude Code to load the fresh plugin"
 

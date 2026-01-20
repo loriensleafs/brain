@@ -22,6 +22,7 @@ Conduct comprehensive strategic analysis of Claude Code's PowerShell performance
 ### Problem Statement
 
 Every `pwsh` invocation from Claude Code's Bash tool suffers from process spawn overhead:
+
 - Without -NoProfile: 1,044ms per call
 - With -NoProfile: 183ms per call (82.4% faster, but still significant)
 - Issue #283 (batching) papers over the problem
@@ -49,18 +50,22 @@ Every `pwsh` invocation from Claude Code's Bash tool suffers from process spawn 
 ## Key Context From Memories
 
 ### Skill-Perf-001 (from skills-powershell)
+
 - Statement: ALWAYS use `pwsh -NoProfile` for non-interactive scripts
 - Evidence: 1,044ms -> 183ms per spawn (82.4% reduction) [Updated in Session 82]
 - Atomicity: 98%
 - Already implemented in PR #285
 
 ### User Preference (from user-preference-no-bash-python)
+
 - PowerShell is the standard for this project
 - No bash or Python scripts allowed
 - All GitHub skills are in PowerShell
 
 ### Skills Affected (from codebase structure)
+
 20 PowerShell scripts in `.claude/skills/github/scripts/`:
+
 - PR operations (Get-PRContext, Get-PRReviewComments, etc.)
 - Issue operations (Get-IssueContext, Set-IssueLabels, etc.)
 - Reaction operations (Add-CommentReaction)

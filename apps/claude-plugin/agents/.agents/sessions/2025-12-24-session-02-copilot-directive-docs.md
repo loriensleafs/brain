@@ -65,10 +65,12 @@ Issue #327 is part of Epic #324 (10x Velocity Improvement). In PR #249, 41 of 42
 [COMPLETE] Documentation added to AGENTS.md and GitHub skill
 
 **Files Modified**:
+
 - AGENTS.md: Added "Copilot Directive Best Practices" section (lines 308-351)
 - .claude/skills/github/SKILL.md: Added "Copilot Directive Placement" subsection (lines 169-181)
 
 **Impact**:
+
 - Team guidance: Use issue comments for @copilot directives
 - Expected reduction: 98% fewer review comment noise (based on PR #249 data)
 - Cross-referenced in multiple locations for discoverability

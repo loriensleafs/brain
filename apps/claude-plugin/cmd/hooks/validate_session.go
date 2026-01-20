@@ -75,4 +75,3 @@ func RunValidateSession() error {
 
 	return nil
 }
-

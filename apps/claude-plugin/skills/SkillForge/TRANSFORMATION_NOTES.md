@@ -49,6 +49,7 @@ All deep dive content moved from main SKILL.md to references/ for progressive di
 ### Replaced Content
 
 **Original** (lines 357-817):
+
 ```markdown
 <details>
 <summary><strong>Deep Dive: Phase 1 - Analysis</strong></summary>
@@ -57,6 +58,7 @@ All deep dive content moved from main SKILL.md to references/ for progressive di
 ```
 
 **Replacement** (lines 357-367):
+
 ```markdown
 ## Deep Dives
 
@@ -78,14 +80,17 @@ For detailed implementation guides, see:
 When updating from upstream:
 
 1. **Delete prohibited files** (if they return):
+
    ```bash
    rm README.md LICENSE SESSION_HANDOFF.md
    ```
 
 2. **Check line count**:
+
    ```bash
    wc -l SKILL.md
    ```
+
    If >500 lines, proceed with extraction.
 
 3. **Extract details sections** (if present):
@@ -98,6 +103,7 @@ When updating from upstream:
    - Add "Deep Dives" section with links to references/
 
 5. **Verify compliance**:
+
    ```bash
    wc -l SKILL.md  # Should be <500
    ls -la          # Should only have SKILL.md, references/, scripts/, assets/
@@ -163,6 +169,7 @@ ls -la references/*.md
 ```
 
 Expected results:
+
 - SKILL.md: ~396 lines
 - references/: 14 files (7 new + 7 existing)
 - No README.md, LICENSE, or SESSION_HANDOFF.md

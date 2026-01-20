@@ -18,6 +18,7 @@ Task documents break designs into small, implementable units with:
 Pattern: `TASK-NNN-[kebab-case-name].md`
 
 Examples:
+
 - `TASK-001-implement-token-endpoint.md`
 - `TASK-002-add-pkce-validation.md`
 - `TASK-003-create-refresh-logic.md`

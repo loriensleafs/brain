@@ -18,6 +18,7 @@ Review PR #310 changes and update the PR description using the PR template to pr
 ## PR Analysis
 
 ### Changes
+
 - **Files Added**: 1 (`.agents/architecture/ADR-017-model-routing-low-false-pass.md`)
 - **Lines**: +196/-0
 - **Type**: Documentation (ADR)
@@ -61,6 +62,7 @@ Orchestrated rigorous multi-agent debate on ADR-017 per user request.
 ### Consensus Achieved in 2 Rounds
 
 **Final Agent Positions**:
+
 - architect: **Accept**
 - critic: **Accept**
 - independent-thinker: **Disagree-and-Commit** (documented dissent)
@@ -85,6 +87,7 @@ Orchestrated rigorous multi-agent debate on ADR-017 per user request.
 ### Independent-Thinker Dissent (Documented)
 
 Maintains skepticism that evidence sufficiency is primary lever over infrastructure noise (Issue #164), but supports execution because:
+
 - Policy is falsifiable via post-deployment audit
 - Baseline measurement prerequisite blocks premature implementation
 - Security hardening controls are defensible on their own merits
@@ -100,12 +103,14 @@ Maintains skepticism that evidence sufficiency is primary lever over infrastruct
 Successfully reviewed and documented PR #310, then conducted multi-agent debate to achieve consensus on ADR-017:
 
 **Initial Review**:
+
 - Clear summary of ADR-017's purpose
 - Proper specification references
 - Detailed changes list
 - Decision context and consequences
 
 **Post-Debate Status**:
+
 - ADR-017 remains **Proposed** until Prerequisites satisfied
 - 4 Accept + 1 Disagree-and-Commit = consensus achieved
 - PR ready for review with significantly strengthened ADR
@@ -115,26 +120,31 @@ Successfully reviewed and documented PR #310, then conducted multi-agent debate 
 All prerequisites completed and ADR-017 status changed to **Accepted**:
 
 ### P0-1: Baseline False PASS Measurement ✅
+
 - **Rate**: 3/20 PRs = 15% false PASS
 - **Cases**: PRs #226, #268, #249 (all workflow/automation issues)
 - **Target**: Reduce to ≤7.5% (50% reduction) within 30 days
 
 ### P0-2: Model Availability Verification ✅
+
 - **All 6 models verified available** via Copilot CLI
 - Fallback chains documented
 - Evidence: workflow run 20475138392 + action.yml inspection
 
 ### P0-3: Governance Guardrail Status ✅
+
 - **Gap identified**: Only 1/4 workflows specifies copilot-model
 - Implementation plan documented in ADR
 - Follow-up PR required
 
 ### P1-4: Cost Impact Analysis ✅
+
 - **Current**: 100% opus (most expensive)
 - **Projected**: 35% opus, 50% sonnet/codex, 15% mini/haiku
 - **Net Impact**: 20-30% COST REDUCTION (not increase!)
 
 ### ADR Status Change
+
 - **Proposed** → **Accepted** (2025-12-23)
 - Commit: `729b9b5`
 

@@ -28,11 +28,13 @@ N/A - Skillbook agent does not require skill inventory
 ## Task Context
 
 User reported violation:
+
 - Used `git commit --no-verify` to bypass pre-commit session log requirement
 - Created unnecessary PR churn
 - Violated SESSION-PROTOCOL Phase 3 blocking gate
 
 Anti-pattern:
+
 - Did not create session log at start of work
 - Bypassed validation instead of fixing root cause
 - Misunderstood that ALL agent sessions require session logs
@@ -46,6 +48,7 @@ Anti-pattern:
 ### Similarity Search
 
 Searched memories:
+
 - `skill-logging-002-session-log-early`: Focus on WHEN to create session log (early), not bypassing hooks
 - `skill-git-001-pre-commit-branch-validation`: Focus on branch validation, not bypass prevention
 - `protocol-blocking-gates`: Focus on gate design, not enforcement during commits
@@ -56,6 +59,7 @@ Searched memories:
 **Skill-Logging-002**: "Create session log with checklist template before any work"
 
 **Similarity**: 40% - Related but orthogonal
+
 - Skill-Logging-002: WHEN to create session log (timing)
 - Proposed skill: HOW to respond to pre-commit hook failures (never bypass)
 
@@ -68,6 +72,7 @@ Searched memories:
 ### Justification
 
 This is a new atomic concept about **enforcement response behavior**:
+
 - Existing skills cover WHAT protocol requires (session logs)
 - Existing skills cover WHEN to do it (early)
 - No skill covers HOW to respond when pre-commit hooks fail
@@ -95,11 +100,13 @@ This is a new atomic concept about **enforcement response behavior**:
 **Atomicity Score**: 92%
 
 **Atomicity Calculation**:
+
 - Base: 100%
 - One compound statement ("Fix... NEVER..."): -8%
 - Final: 92%
 
 **Justification for 92%**:
+
 - Compound statement necessary to capture both positive (fix) and negative (never bypass) guidance
 - Single atomic concept: enforcement response discipline
 - Actionable and specific
@@ -166,6 +173,7 @@ This addresses a gap: **enforcement response behavior** - agents need guidance o
 ## Notes for Next Session
 
 This skill addresses a critical gap in enforcement response discipline. Agents now have explicit guidance:
+
 1. Pre-commit hooks enforce protocol requirements
 2. Fix the root cause (create session log, fix linting, etc.)
 3. NEVER use `--no-verify` to bypass checks

@@ -90,8 +90,6 @@ All 121 tests pass (0 failures, 1 skipped for integration test placeholder).
 - `7e1f031` fix(pr-249): resolve Get-SimilarPRs similarity logic and test assertion
 - `05504c1` fix(tests): mock Test-IsGitHubRunner for worktree tests
 
-
-
 ## Learnings
 
 ### Skill-Test-Assertion-001: Pester Mock Empty Array Behavior
@@ -101,6 +99,7 @@ All 121 tests pass (0 failures, 1 skipped for integration test placeholder).
 **Context**: Pester mocks don't perfectly replicate native command output handling; PowerShell's array unwrapping affects return values differently in mock vs real scenarios.
 
 **Pattern**:
+
 ```powershell
 # FRAGILE: Assumes specific return type
 $result | Should -BeOfType [System.Array]
@@ -116,6 +115,7 @@ $result | Should -BeOfType [System.Array]
 **Context**: "feat: add X" does NOT contain "feat: add X v2" - containment checks are asymmetric.
 
 **Pattern**:
+
 ```powershell
 # Extract description after colon
 $desc1 = ($title1 -split ':')[1].Trim()
@@ -133,6 +133,7 @@ $desc1.Substring(0, $compareLen) -eq $desc2.Substring(0, $compareLen)
 **Context**: Tests that exercise worktree logic locally may fail in CI because the environment detection returns different values. The function takes a different code path entirely, so variables expected by the test are never set.
 
 **Pattern**:
+
 ```powershell
 # FRAGILE: Assumes local execution path
 It "Creates worktree with correct path" {
@@ -165,4 +166,3 @@ It "Creates worktree with correct path" {
 | SHOULD | Update PROJECT-PLAN.md | [N/A] | Not applicable |
 | SHOULD | Invoke retrospective (significant sessions) | [N/A] | Not applicable |
 | SHOULD | Verify clean git status | [x] | Clean |
-

@@ -18,6 +18,7 @@ User requested rigorous critique of "Semantic Slug" protocol proposal that chall
 ### Proposal Summary
 
 Replace numeric skill IDs with semantic slugs:
+
 - `Skill-PowerShell-001` → `skill-powershell-null-safety-contains-operator.md`
 - Create `000-memory-index.md` as master index
 - Consolidate 65+ files into 15-20 domain libraries
@@ -30,17 +31,20 @@ Replace numeric skill IDs with semantic slugs:
 ### 1. Premise Validation
 
 **Research**:
+
 - Reviewed Serena MCP memory system design
 - Analyzed how agents discover skills (list_memories → read_memory)
 - Examined PRD FR-2 Quick Reference Table design
 
 **Finding**: **PREMISE IS FALSE**
+
 - Serena MCP abstracts file names from agents
 - Agents read memories via `memory_file_name` parameter (key, not path)
 - Current file names ALREADY semantic: `skill-analysis-001-comprehensive-analysis-standard`
 - PRD solves discovery with Statement column (10-20 word summaries), not file names
 
 **Evidence**:
+
 ```python
 # Agent call (current)
 mcp__plugin_brain_brain__read_note(memory_file_name="skill-analysis-001-comprehensive-analysis-standard")
@@ -56,10 +60,12 @@ File names NOT visible during retrieval process.
 ### 2. Cross-Reference Impact Analysis
 
 **Data Collection**:
+
 - Grep search: `Skill-[A-Z][a-z]+-[0-9]{3}` across `.serena/memories/skill-*.md`
 - Result: 67 occurrences across 23 files
 
 **Example Cross-Reference** (skill-analysis-001):
+
 ```markdown
 ## Related Skills
 
@@ -68,6 +74,7 @@ File names NOT visible during retrieval process.
 ```
 
 **Migration Impact**:
+
 - 67 references must be updated
 - Session logs (48 files) reference skill IDs
 - HANDOFF.md skill extraction sections use IDs
@@ -78,12 +85,14 @@ File names NOT visible during retrieval process.
 ### 3. Consolidation Performance Analysis
 
 **Current with PRD Index** (Session 46, FR-2):
+
 ```text
 Lookup: O(1) table scan
 Memory reads: 2 (index + skill file)
 ```
 
 **Proposed Consolidation**:
+
 ```text
 Lookup: O(n) library search
 Memory reads: 2-6+ (index + multiple libraries if skill not found)
@@ -96,20 +105,24 @@ Memory reads: 2-6+ (index + multiple libraries if skill not found)
 ### 4. Gap Identification
 
 **Slug Collision Detection**: UNDEFINED
+
 - Scenario: `skill-testing-test-first-development` vs. `skill-testing-test-driven-development`
 - PRD solution: Sequential numbering (001, 002) guarantees uniqueness
 
 **Max Slug Length**: UNDEFINED
+
 - Example slug: 47 characters
 - File system limits: 260 chars (Windows), 255 chars (Linux)
 - Git on Windows: 260 char path limit
 
 **Migration Rollback**: UNDEFINED
+
 - No backwards compatibility
 - No symlink strategy
 - No deprecation period
 
 **Validation Tooling**: NONE proposed
+
 - How to detect broken references?
 - How to verify slug uniqueness?
 
@@ -147,8 +160,8 @@ Memory reads: 2-6+ (index + multiple libraries if skill not found)
 
 ### Long-Term
 
-4. Consider prefix taxonomy as Phase 2 (after Skills Index implemented)
-5. Add validation tooling to PRD (duplicate detection, broken reference checking)
+1. Consider prefix taxonomy as Phase 2 (after Skills Index implemented)
+2. Add validation tooling to PRD (duplicate detection, broken reference checking)
 
 ## Artifacts Created
 
@@ -194,6 +207,7 @@ Memory reads: 2-6+ (index + multiple libraries if skill not found)
 > 3. Migration BREAKS 67 cross-references - no rollback or validation defined
 >
 > Recommend:
+>
 > - REJECT semantic slug proposal
 > - APPROVE PRD-Skills-Index-Registry (Session 46) for implementation
 > - EXTRACT prefix taxonomy idea for separate initiative (non-skill memories only)

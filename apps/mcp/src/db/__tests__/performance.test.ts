@@ -2,7 +2,7 @@ import { describe, test, expect, beforeAll, afterAll } from "bun:test";
 import { Database } from "bun:sqlite";
 import * as sqliteVec from "sqlite-vec";
 import { createEmbeddingsTable } from "../schema";
-import { storeEmbedding } from "../vectors";
+import { storeChunkedEmbeddings, type ChunkEmbeddingInput } from "../vectors";
 
 // Note: Custom SQLite is configured in test preload (src/__tests__/setup.ts)
 
@@ -35,7 +35,17 @@ describe("Vector Search Performance", () => {
 
     for (let i = 0; i < VECTOR_COUNT; i++) {
       const embedding = generateRandomVector(VECTOR_DIM);
-      storeEmbedding(db, `entity-${i}`, embedding);
+      const chunks: ChunkEmbeddingInput[] = [
+        {
+          chunkIndex: 0,
+          totalChunks: 1,
+          chunkStart: 0,
+          chunkEnd: 100,
+          chunkText: `Entity ${i} content`,
+          embedding,
+        },
+      ];
+      storeChunkedEmbeddings(db, `entity-${i}`, chunks);
     }
 
     console.log(`Generation took ${(performance.now() - startGen).toFixed(0)}ms`);

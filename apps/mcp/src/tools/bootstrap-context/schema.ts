@@ -34,9 +34,11 @@ Returns structured context including:
 - Active features with phases and tasks (status parsed)
 - Recent decisions (3 days)
 - Open bugs (status != CLOSED)
-- First-level referenced notes
+- First-level referenced notes (with full content)
+- Session state and enrichment
 
-Use this when starting a session or after compaction to restore context.`,
+Use this when starting a session or after compaction to restore context.
+Always includes full note content for rich context injection.`,
   inputSchema: {
     type: "object" as const,
     properties: {

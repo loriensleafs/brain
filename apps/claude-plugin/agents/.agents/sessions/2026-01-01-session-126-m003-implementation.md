@@ -59,10 +59,10 @@ Created unified memory access layer per ADR-037:
 
 **Private Functions**:
 
-4. `Get-ContentHash` - SHA-256 for deduplication
-5. `Invoke-SerenaSearch` - Lexical file search
-6. `Invoke-ForgetfulSearch` - JSON-RPC 2.0 to Forgetful
-7. `Merge-MemoryResults` - Cross-source deduplication
+1. `Get-ContentHash` - SHA-256 for deduplication
+2. `Invoke-SerenaSearch` - Lexical file search
+3. `Invoke-ForgetfulSearch` - JSON-RPC 2.0 to Forgetful
+4. `Merge-MemoryResults` - Cross-source deduplication
 
 ### Phase 4: Performance Validation
 

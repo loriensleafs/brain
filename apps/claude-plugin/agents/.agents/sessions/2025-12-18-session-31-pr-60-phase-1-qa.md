@@ -32,6 +32,7 @@ Verify test quality and coverage for PR #60 Phase 1 remediation before security 
 - [x] `.agents/governance/PROJECT-CONSTRAINTS.md` readable
 
 **Skill Inventory**:
+
 - GitHub skill scripts present (via Serena MCP)
 - PowerShell + Pester testing patterns documented
 - PROJECT-CONSTRAINTS.md: PowerShell-only, thin workflows, atomic commits
@@ -44,18 +45,21 @@ Verify test quality and coverage for PR #60 Phase 1 remediation before security 
 ## Context
 
 **Implementation Summary** (from user):
+
 - **Task 1.1**: Command injection fix + test file creation ✅ COMPLETE
 - **Task 1.2**: Exit code checks ✅ COMPLETE
 - **Task 1.3**: Remove silent failures ✅ COMPLETE
 - **Task 1.4**: Exit/throw conversion ✅ COMPLETE
 
 **Test Results**:
+
 - ai-issue-triage.Tests.ps1: 36/36 PASS
 - AIReviewCommon.Tests.ps1: 91/91 PASS
 - GitHubHelpers.Tests.ps1: 43/43 PASS
 - **TOTAL: 170/170 PASS (exit code 0)**
 
 **Key Files to Review**:
+
 1. `.github/workflows/tests/ai-issue-triage.Tests.ps1` (36 tests)
 2. `.github/scripts/AIReviewCommon.psm1` (Get-LabelsFromAIOutput, Get-MilestoneFromAIOutput)
 3. `.claude/skills/github/modules/GitHubHelpers.psm1` (Write-ErrorAndExit)
@@ -117,6 +121,7 @@ Verify test quality and coverage for PR #60 Phase 1 remediation before security 
 ⚠️ **CONDITIONAL PASS** - Ready for security review with tracked gaps
 
 **Summary**:
+
 - ✅ All 170 automated tests PASS (exit code 0)
 - ✅ Injection prevention tests comprehensive and realistic
 - ✅ Test quality excellent (specific, fast, clear)
@@ -125,6 +130,7 @@ Verify test quality and coverage for PR #60 Phase 1 remediation before security 
 - ⚠️ Manual verification not performed
 
 **Recommendation**:
+
 1. **APPROVE** for security agent review (injection tests comprehensive)
 2. **DEFER** Write-ErrorAndExit tests to Phase 2 (Issue QA-PR60-001)
 3. **DEFER** workflow PowerShell conversion to Phase 2 (Issue QA-PR60-002)
@@ -145,6 +151,7 @@ Verify test quality and coverage for PR #60 Phase 1 remediation before security 
 ### Finding 1: Injection Prevention - EXCELLENT ✅
 
 **Evidence**: 18 injection attack tests, all passing with realistic payloads
+
 - Semicolon: `bug; rm -rf /`
 - Backtick: `` bug`whoami` ``
 - Dollar-paren: `bug$(whoami)`
@@ -152,6 +159,7 @@ Verify test quality and coverage for PR #60 Phase 1 remediation before security 
 - Newline: `bug\ninjected`
 
 **Test Output**:
+
 ```
 WARNING: Skipped invalid label (potential injection attempt): bug; rm -rf /
 WARNING: Skipped invalid label (potential injection attempt): bug`whoami`
@@ -163,6 +171,7 @@ WARNING: Skipped invalid label (potential injection attempt): bug`whoami`
 **Actual**: 0 tests (only module export verified)
 
 **Missing Tests**:
+
 1. Script invocation (should exit)
 2. Module invocation (should throw)
 3. No exit when invoked from module context
@@ -176,6 +185,7 @@ WARNING: Skipped invalid label (potential injection attempt): bug`whoami`
 **Actual**: Workflow uses bash grep/sed/tr parsing
 
 **Impact**:
+
 - PowerShell functions are tested but NOT used
 - Bash parsing security not verified
 - Test coverage metrics misleading

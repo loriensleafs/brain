@@ -19,7 +19,7 @@ Before ending, complete ALL mandatory steps:
   - Files created/changed with commit references
   - Metrics (if applicable): token usage, time spent
 
-- [ ] `.agents/HANDOFF.md` updated with:
+- [ ] Brain notes updated with:
   - Current phase and task status
   - What was completed this session
   - What's next for following session
@@ -106,16 +106,17 @@ git push origin [branch-name]
 ## 6. Verification
 
 - [ ] All new files are committed
-- [ ] HANDOFF.md accurately reflects current state
-- [ ] Next session can start from HANDOFF.md alone
+- [ ] Brain notes accurately reflect current state
+- [ ] Next session can start from Brain notes alone
 - [ ] No sensitive data or absolute paths in committed files
 
 ## Critical Reminder
 
-**The next session has ZERO context except checked-in documentation.**
+**The next session has ZERO context except checked-in documentation and Brain notes.**
 
 Ensure documentation is complete enough for any agent to continue:
-- HANDOFF.md is the single source of session state
+
+- Brain notes provide cross-session context
 - PROJECT-PLAN.md tracks overall progress
 - Session logs preserve decision history
 - Retrospective captures reusable patterns

@@ -19,6 +19,7 @@ SO THAT [rationale/value]
 Pattern: `REQ-NNN-[kebab-case-name].md`
 
 Examples:
+
 - `REQ-001-user-authentication.md`
 - `REQ-002-token-refresh.md`
 - `REQ-003-password-reset.md`

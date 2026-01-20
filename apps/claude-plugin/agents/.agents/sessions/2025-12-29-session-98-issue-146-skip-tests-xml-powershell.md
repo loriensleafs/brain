@@ -123,6 +123,6 @@ Both used `cat > file << 'EOF'` pattern which violates ADR-005 (PowerShell only)
 
 ## PR
 
-- **URL**: https://github.com/rjmurillo/ai-agents/pull/531
+- **URL**: <https://github.com/rjmurillo/ai-agents/pull/531>
 - **Status**: Open
 - **Target**: main

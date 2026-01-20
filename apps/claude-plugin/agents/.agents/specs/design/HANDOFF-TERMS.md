@@ -193,4 +193,3 @@ Always use the exact terms from this specification. Do not use synonyms:
 | ERROR | FAIL |
 | GOOD | APPROVED |
 | BAD | REJECTED |
-

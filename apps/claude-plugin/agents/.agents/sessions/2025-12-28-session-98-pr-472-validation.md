@@ -22,22 +22,26 @@ Validate Get-PRChecks.ps1 implementation against acceptance criteria and project
 ## Validation Checklist
 
 ### Completeness
+
 - [ ] All acceptance criteria addressed
 - [ ] Dependencies documented
 - [ ] Error handling complete
 
 ### Feasibility
+
 - [ ] Technical approach sound
 - [ ] PowerShell-only constraint met
 - [ ] GraphQL query correct
 
 ### Alignment
+
 - [ ] Follows ADR-005 (PowerShell-only)
 - [ ] Follows ADR-006 (testable modules)
 - [ ] Matches skill patterns
 - [ ] Documentation complete
 
 ### Testability
+
 - [ ] Pester tests comprehensive
 - [ ] Test coverage adequate
 - [ ] Edge cases covered

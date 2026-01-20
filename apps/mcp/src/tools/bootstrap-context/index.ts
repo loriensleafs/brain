@@ -3,11 +3,13 @@
  *
  * Provides semantic context for conversation initialization by querying
  * active features, recent decisions, open bugs, and related notes.
+ * Now includes session state enrichment for task/feature context.
  */
 
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { resolveProject } from "../../project/resolve";
 import { logger } from "../../utils/internal/logger";
+import { getSession, createDefaultSessionState } from "../../services/session";
 
 import type { BootstrapContextArgs } from "./schema";
 import {
@@ -24,6 +26,8 @@ import {
   setCachedContext,
   type CacheOptions,
 } from "./sessionCache";
+import { buildSessionEnrichment } from "./sessionEnrichment";
+import { triggerCatchupEmbedding } from "./catchupTrigger";
 
 export async function handler(
   args: BootstrapContextArgs
@@ -71,14 +75,27 @@ export async function handler(
   );
 
   try {
-    // Query all sections in parallel
-    const [recentActivity, activeFeatures, recentDecisions, openBugs] =
-      await Promise.all([
-        queryRecentActivity({ project, timeframe }),
-        queryActiveFeatures({ project, timeframe }),
-        queryRecentDecisions({ project, timeframe: "3d" }),
-        queryOpenBugs({ project, timeframe }),
-      ]);
+    // Load session state (create default if none exists)
+    let sessionState = await getSession();
+    if (!sessionState) {
+      sessionState = createDefaultSessionState();
+      logger.info({ project }, "No session found, using default state");
+    }
+
+    // Query all sections in parallel, including session enrichment
+    const [
+      recentActivity,
+      activeFeatures,
+      recentDecisions,
+      openBugs,
+      sessionEnrichment,
+    ] = await Promise.all([
+      queryRecentActivity({ project, timeframe }),
+      queryActiveFeatures({ project, timeframe }),
+      queryRecentDecisions({ project, timeframe: "3d" }),
+      queryOpenBugs({ project, timeframe }),
+      buildSessionEnrichment({ project, sessionState }),
+    ]);
 
     // Follow relations if requested
     let referencedNotes: Awaited<ReturnType<typeof followRelations>> = [];
@@ -87,7 +104,7 @@ export async function handler(
       referencedNotes = await followRelations(allNotes, { project });
     }
 
-    // Build structured output
+    // Build structured output with session enrichment
     const structuredContent = buildStructuredOutput({
       project,
       timeframe,
@@ -96,20 +113,27 @@ export async function handler(
       openBugs,
       recentActivity,
       referencedNotes,
+      sessionEnrichment,
     });
 
     // Cache the result
     setCachedContext(cacheOptions, structuredContent);
 
-    // Build formatted output
-    const formattedOutput = buildFormattedOutputWithLimits({
-      project,
-      activeFeatures,
-      recentDecisions,
-      openBugs,
-      recentActivity,
-      referencedNotes,
-    });
+    // Build formatted output with session enrichment
+    // Always use full content for rich context injection
+    const formattedOutput = buildFormattedOutputWithLimits(
+      {
+        project,
+        activeFeatures,
+        recentDecisions,
+        openBugs,
+        recentActivity,
+        referencedNotes,
+        sessionEnrichment,
+      },
+      {}, // default limits
+      true // Always include full content
+    );
 
     logger.info(
       {
@@ -120,9 +144,19 @@ export async function handler(
         bugs: openBugs.length,
         activity: recentActivity.length,
         referenced: referencedNotes.length,
+        sessionMode: sessionState.currentMode,
+        hasActiveTask: !!sessionState.activeTask,
+        hasActiveFeature: !!sessionState.activeFeature,
+        hasWorkflow: !!sessionState.orchestratorWorkflow,
       },
-      "Bootstrap context built successfully"
+      "Bootstrap context built successfully with session enrichment"
     );
+
+    // Trigger catch-up embedding asynchronously (non-blocking)
+    // Per strategic verdict 038: run on every bootstrap_context call
+    triggerCatchupEmbedding(project).catch((error) => {
+      logger.error({ project, error }, "Catch-up embedding trigger failed");
+    });
 
     return {
       content: [

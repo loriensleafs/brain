@@ -40,15 +40,19 @@ Serena initialization skipped because MCP tools were unavailable in this environ
 **Status**: In Progress
 
 **What was done**:
+
 - Initial protocol setup, context gathering, and git state capture.
 
 **Decisions made**:
+
 - Proceed with review despite missing Serena tools, documenting the limitation per protocol.
 
 **Challenges**:
+
 - Serena MCP tools not registered; noted as protocol violation with justification.
 
 **Files changed**:
+
 - `.agents/sessions/2025-12-18-session-02-pr-review.md` - Session log initialization.
 
 ---

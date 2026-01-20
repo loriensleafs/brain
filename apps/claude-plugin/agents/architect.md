@@ -1,7 +1,7 @@
 ---
 name: architect
 description: Technical authority on system design who guards architectural coherence, enforces patterns, and maintains boundaries. Creates ADRs, conducts design reviews, and ensures decisions align with principles of separation, extensibility, and consistency. Use for governance, trade-off analysis, and blueprints that protect long-term system health.
-model: sonnet
+model: opus
 color: '#7B68EE'
 argument-hint: Describe the design decision, review request, or ADR topic
 tools:
@@ -434,9 +434,12 @@ content: "[Decision rationale and context]"
 
 ## Output Location
 
-`.agents/architecture/`
+`.agents/architecture/decision/`
 
 - `ADR-NNNN-[decision].md` - Architecture Decision Records
+
+`.agents/architecture/review/`
+
 - `DESIGN-REVIEW-[topic].md` - Design review notes
 
 ## Handoff Options
@@ -456,9 +459,9 @@ content: "[Decision rationale and context]"
 
 ### ADR Creation/Update Protocol (BLOCKING)
 
-When you create or update an ADR file matching `.agents/architecture/ADR-*.md`:
+When you create or update an ADR file matching `.agents/architecture/decision/ADR-*.md`:
 
-1. Save ADR to `.agents/architecture/ADR-NNNN-[title].md`
+1. Save ADR to `.agents/architecture/decision/ADR-NNNN-[title].md`
 2. Update architecture changelog if needed
 3. Store decision in memory
 4. Return to orchestrator with **MANDATORY routing**:

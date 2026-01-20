@@ -21,6 +21,7 @@ git branch --show-current
 ### PR Status Check
 
 Checking:
+
 - [x] PR merge state (not merged) - OPEN, not merged
 - [x] Review comments (unaddressed) - 5 threads found, all resolved
 - [x] PR comments (unacknowledged) - None found
@@ -45,6 +46,7 @@ Checking:
 ### PR Evolution Context
 
 PR #783 evolved through multiple iterations:
+
 - Original: `f54d4ff` added id-token:write for OIDC (CORRECT)
 - Security review identified concerns about external triggers
 - `3490732` incorrectly removed id-token:write
@@ -60,6 +62,7 @@ The security memory `security-011-workflow-least-privilege` was WRONG about id-t
 > "`id-token: write` is essential for OIDC authentication. It enables the action to obtain an OIDC token, which is then used to exchange for an app token."
 
 **Final correct configuration:**
+
 - `id-token: write` - REQUIRED (for OIDC GitHub token exchange)
 - `contents: write` - REQUIRED (for branch/commit operations)
 - `issues: write` - REQUIRED (for issue operations)
@@ -102,4 +105,3 @@ The security memory `security-011-workflow-least-privilege` was WRONG about id-t
 | SHOULD | Update PROJECT-PLAN.md | [x] | Skipped (not a planned task) |
 | SHOULD | Invoke retrospective (significant sessions) | [x] | Skipped (simple PR review) |
 | SHOULD | Verify clean git status | [x] | Clean after commit |
-

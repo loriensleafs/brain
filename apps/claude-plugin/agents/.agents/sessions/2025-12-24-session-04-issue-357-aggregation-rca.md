@@ -89,6 +89,7 @@ Based on analysis, the "aggregation failures" are actually:
 ### Q1: What is the exact logic in the aggregation step that's failing?
 
 **A1**: The aggregation logic is NOT failing. It correctly:
+
 1. Loads verdicts from each agent's artifact files
 2. Categorizes failures as INFRASTRUCTURE or CODE_QUALITY
 3. Merges verdicts (CRITICAL_FAIL wins over WARN over PASS)
@@ -102,6 +103,7 @@ Based on analysis, the "aggregation failures" are actually:
 ### Q3: Which workflow file(s) need modification?
 
 **A3**: The workflow is working as designed. The real issue is:
+
 1. **Agent prompts may be too strict** (false positives)
 2. **Test requirements may be overly aggressive** (e.g., requiring tests for documentation-only changes)
 3. **No override mechanism** for human-approved PRs
@@ -109,6 +111,7 @@ Based on analysis, the "aggregation failures" are actually:
 ### Q4: What is the minimal fix to unblock the affected PRs?
 
 **A4**: Options:
+
 1. **Tune agent prompts** - Reduce false positives by adjusting thresholds
 2. **Add WARN mode** - Convert some CRITICAL_FAIL to WARN for specific conditions
 3. **Human override** - Add label-based bypass for approved PRs

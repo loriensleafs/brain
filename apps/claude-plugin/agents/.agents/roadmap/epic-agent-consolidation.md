@@ -162,6 +162,7 @@ Rationale: Users expect agent consistency across platforms. This reduces the mai
 **P1 (Important, Should Have)**
 
 Rationale:
+
 - High RICE score (9.6) relative to effort
 - Reduces ongoing maintenance burden
 - Enables data-driven decision for full templating

@@ -8,10 +8,12 @@
 ## Protocol Compliance
 
 ### Phase 1: Serena Initialization ✅
+
 - `mcp__plugin_brain_brain__build_context`: COMPLETED
 - Project: ai-agents (D:\src\GitHub\rjmurillo-bot\ai-agents)
 
 ### Phase 2: Context Retrieval ✅
+
 - `.agents/HANDOFF.md`: READ (read-only reference, session 85+ architecture)
 - Memories read:
   - `adr-014-review-findings` (prior ADR review pattern)
@@ -19,11 +21,13 @@
   - `skills-architecture` (architecture patterns)
 
 ### Phase 3: Session Log ✅
+
 - File created: `.agents/sessions/2025-12-23-session-86-adr-017-critic-review.md`
 
 ## Task
 
 Provide structured critic review of ADR-017 in the prescribed format:
+
 - Strengths (3-5 validation perspectives)
 - Weaknesses/Gaps (implementation, testability, evidence claims)
 - Questions requiring clarification (feasibility stress tests)
@@ -34,12 +38,14 @@ Provide structured critic review of ADR-017 in the prescribed format:
 ## Context Summary
 
 ### ADR-017 Overview
+
 - **Status**: Proposed (2025-12-23)
 - **Domain**: Model routing for GitHub Copilot CLI (ai-review composite action)
 - **Problem**: Current routing produces false PASS verdicts due to summary-only PR context and model selection mismatches
 - **Solution**: Evidence-aware tiered routing with conservative verdicts
 
 ### Key Decisions in ADR-017
+
 1. Evidence sufficiency rules: summary-only context forbids PASS
 2. Tiered model routing by prompt shape:
    - JSON extraction: gpt-5-mini primary
@@ -54,6 +60,7 @@ Provide structured critic review of ADR-017 in the prescribed format:
 ## Review Analysis
 
 ### Verdict Summary
+
 - **Overall Position**: Disagree-and-Commit with conditions
 - **Blocking Concerns**: None (P0). Three P1 concerns that should be resolved before implementation
 - **Core Decision**: SOUND (evidence-aware routing, conservative verdicts, tiered models)
@@ -62,6 +69,7 @@ Provide structured critic review of ADR-017 in the prescribed format:
 ### Key Findings
 
 **Strengths (5)**:
+
 1. Clear problem identification with concrete evidence (summary-mode false PASS)
 2. Conservative evidence-sufficiency principle is sound and defensible
 3. Well-reasoned model selection matrix differentiated by prompt shape
@@ -69,6 +77,7 @@ Provide structured critic review of ADR-017 in the prescribed format:
 5. Governance safeguard included (copilot-model parameter required)
 
 **Weaknesses/Gaps (7 critical)**:
+
 1. Model claims lack validation (no A/B tests, vendor benchmarks not provided)
 2. Implementation plan incomplete (CONTEXT_MODE header not shown in examples)
 3. Success metrics aspirational, not measurable (no baselines, no thresholds)
@@ -78,6 +87,7 @@ Provide structured critic review of ADR-017 in the prescribed format:
 7. No fallback for model deprecation or unavailability
 
 **Questions (7 clarity checks)**:
+
 1. What is current false PASS rate baseline?
 2. Are gpt-5-mini and gpt-5.1-codex variants confirmed to exist?
 3. How is "uncertainty is high" escalation criteria enforced?
@@ -87,6 +97,7 @@ Provide structured critic review of ADR-017 in the prescribed format:
 7. Backwards compatibility strategy for existing workflows?
 
 **Recommended Changes (7 specific actions)**:
+
 1. Add baseline metrics and measurable success thresholds
 2. Expand Implementation Notes with before/after examples and prompt headers
 3. Clarify evidence improvement scope (required vs. deferred)
@@ -106,6 +117,7 @@ Provide structured critic review of ADR-017 in the prescribed format:
 ### Recommended Approach
 
 **Two-phase implementation**:
+
 1. **Phase 1 (now)**: Merge ADR-017 as strategic decision. Add `copilot-model` parameter to composite action.
 2. **Phase 2 (next sprint)**: Implementation specifics (examples, metrics, CI guardrails, prompt audit). Do NOT deploy workflow changes until Phase 2 complete.
 
@@ -131,6 +143,7 @@ Provide structured critic review of ADR-017 in the prescribed format:
 ## Summary
 
 ADR-017 critic review completed. Core strategic decision is sound (evidence-aware routing with conservative verdicts). Execution phase requires clarification on:
+
 - Measurable success metrics and baseline false PASS rate
 - Concrete implementation examples (workflow and prompt updates)
 - Model validation plan and cost impact analysis

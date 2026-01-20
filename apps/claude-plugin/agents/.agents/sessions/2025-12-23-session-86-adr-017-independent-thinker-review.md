@@ -8,10 +8,12 @@
 ## Protocol Compliance
 
 **Phase 1: Serena Initialization**
+
 - ✅ `mcp__plugin_brain_brain__build_context` called
 - Project: ai-agents (activated)
 
 **Phase 2: Context Retrieval**
+
 - ✅ HANDOFF.md read (read-only reference per 2025-12-22 change)
 - ✅ ADR-017 read and analyzed
 - ✅ Relevant memories retrieved:
@@ -22,6 +24,7 @@
   - pr-review-noise-skills (review noise context)
 
 **Phase 3: Session Log**
+
 - ✅ Created at `.agents/sessions/2025-12-23-session-86-adr-017-independent-thinker-review.md`
 
 ## Review Scope
@@ -33,18 +36,22 @@
 ## Context Summary
 
 ### ADR-017 Overview
+
 - **Problem**: Copilot model routing lacks conservative stance on insufficient evidence
 - **Proposal**: Tiered routing with evidence sufficiency rules to minimize false PASS
 - **Decision Driver**: Parallel agent execution amplifies missed issues
 
 ### Key Context from Memories
+
 - **cursor[bot]**: 100% actionable (28/28), strong bug detection
 - **Copilot**: ~35% actionable (historical), declining to 21% on PR #249
 - **CodeRabbit**: ~10-30% actionable, high false positive rate
 - **Quality Gate Issue**: Infrastructure failures confounded with code quality failures (PR #156)
 
 ### Evidence-Based Baseline
+
 From memories, the real problem isn't just routing—it's **failure classification**:
+
 - PR #156: 5 PASS + 1 CRITICAL_FAIL (infrastructure issue, not code quality)
 - This suggests evidence sufficiency might be **symptom, not root cause**
 

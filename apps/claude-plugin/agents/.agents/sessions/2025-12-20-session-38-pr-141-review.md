@@ -44,16 +44,19 @@ Investigate PR #141 by rjmurillo-bot, check all review comments, respond to unad
 Adds skill memory documenting a critical lesson learned from PRs #100 and #121:
 
 **The Lesson**: When using the `dorny/paths-filter` pattern for required status checks:
+
 - Checkout is required in ALL jobs using the pattern
 - This includes both check-paths jobs AND skip jobs
 - Without checkout, paths-filter cannot analyze changes
 
 **Background**:
+
 - PR #100: Established the paths-filter pattern
 - PR #121: Copilot incorrectly suggested removing checkout from skip job
 - Owner feedback: "This is incorrect. This is required for `dorny/paths-filter`"
 
 **Files Changed**:
+
 - `.serena/memories/skills-dorny-paths-filter-checkout-requirement.md` (NEW)
 
 ### Review Comments Analysis
@@ -85,17 +88,20 @@ Adds skill memory documenting a critical lesson learned from PRs #100 and #121:
 **Comment Summary**:
 
 **Walkthrough**:
+
 - Confirms new documentation file explaining `dorny/paths-filter` checkout requirement
 - Covers correct/incorrect YAML patterns
 - Supporting evidence and applicability to workflows
 - Estimated review effort: 1 (Trivial), ~3 minutes
 
 **Pre-merge Checks**: ✅ 3/3 PASSED
+
 1. **Title check**: ✅ Follows conventional commit format
 2. **Description check**: ✅ Relates to changeset with background context
 3. **Docstring Coverage**: ✅ No functions found (documentation file)
 
 **Possibly Related PRs**:
+
 - #100: Implements check-paths/skip-tests using `dorny/paths-filter`
 - #109: Adds `actions/checkout` to workflows
 
@@ -140,6 +146,7 @@ All checks PASSED:
 | 2 | 0 | 2 | N/A |
 
 Both comments are bot-generated informational messages with no action items:
+
 1. Gemini: File type not supported (expected behavior)
 2. CodeRabbit: Pre-merge checks passed (validation successful)
 
@@ -148,6 +155,7 @@ Both comments are bot-generated informational messages with no action items:
 ✅ **READY FOR MERGE** (with branch update)
 
 **Criteria Met**:
+
 - [x] All CI checks passing (13/13)
 - [x] No review comments requiring response
 - [x] CodeRabbit pre-merge checks passed (3/3)
@@ -156,6 +164,7 @@ Both comments are bot-generated informational messages with no action items:
 - [x] Conventional commit format followed
 
 **Action Required**:
+
 - Branch is BEHIND main - needs update before merge
 - No reviews required by repository settings
 
@@ -164,6 +173,7 @@ Both comments are bot-generated informational messages with no action items:
 ### Immediate Actions
 
 1. **Update branch from main**:
+
    ```bash
    git checkout feat/skills-dorny-paths-filter
    git pull origin main
@@ -173,6 +183,7 @@ Both comments are bot-generated informational messages with no action items:
 2. **Merge PR** (after branch update):
    - Option A: Merge via GitHub UI (squash and merge recommended)
    - Option B: Via CLI:
+
      ```bash
      gh pr merge 141 --squash --delete-branch
      ```
@@ -180,6 +191,7 @@ Both comments are bot-generated informational messages with no action items:
 ### No Response Needed
 
 Both bot comments are informational and do not require responses:
+
 - Gemini: Expected behavior for memory file types
 - CodeRabbit: All validation passed, no action items
 
@@ -202,6 +214,7 @@ Both bot comments are informational and do not require responses:
 **VERDICT**: ✅ PR #141 READY FOR MERGE
 
 **Summary**:
+
 - 0 review comments requiring response
 - 2 informational bot comments (no action needed)
 - All 13 CI checks passing
@@ -209,6 +222,7 @@ Both bot comments are informational and do not require responses:
 - No blocking issues
 
 **Next Steps**:
+
 1. Update branch from main
 2. Merge PR #141
 3. Delete feature branch

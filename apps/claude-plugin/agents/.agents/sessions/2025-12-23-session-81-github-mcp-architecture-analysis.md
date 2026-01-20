@@ -25,7 +25,7 @@ Conduct comprehensive architectural analysis comparing four approaches to GitHub
 3. **Option C**: PowerShell Daemon (Issue #287) - 10-50ms after warmup
 4. **Option D**: GitHub MCP + Agent Isolation (NEW) - 5-20ms via MCP protocol
 
-Reference: https://raw.githubusercontent.com/obra/superpowers-chrome/refs/heads/main/agents/browser-user.md
+Reference: <https://raw.githubusercontent.com/obra/superpowers-chrome/refs/heads/main/agents/browser-user.md>
 
 ---
 
@@ -36,6 +36,7 @@ Reference: https://raw.githubusercontent.com/obra/superpowers-chrome/refs/heads/
 The official GitHub MCP server (github/github-mcp-server) exposes 40+ tools across toolsets:
 
 **Pull Request Operations:**
+
 - `create_pull_request` - Open new PR
 - `update_pull_request` - Edit PR properties
 - `merge_pull_request` - Merge PR
@@ -48,6 +49,7 @@ The official GitHub MCP server (github/github-mcp-server) exposes 40+ tools acro
 - `request_copilot_review` - Request Copilot review
 
 **Issue Operations:**
+
 - `issue_write` - Create/update issue
 - `issue_read` - Get issue details (comments, sub_issues, labels)
 - `list_issues` - List issues
@@ -57,14 +59,17 @@ The official GitHub MCP server (github/github-mcp-server) exposes 40+ tools acro
 - `assign_copilot_to_issue` - Assign Copilot
 
 **Labels:**
+
 - `label_write` - Create/update/delete labels
 - `get_label` - Get specific label
 - `list_label` - List labels
 
 **Milestones:**
+
 - Supported via `issue_write` with `milestone` parameter
 
 **GAPS IDENTIFIED:**
+
 - No dedicated `add_reaction` tool
 - No explicit GraphQL query passthrough
 - Review thread resolution unclear (may require GraphQL)
@@ -83,6 +88,7 @@ skills: superpowers-chrome:browsing
 ```
 
 Key principles:
+
 1. **Declarative Tool Binding**: MCP servers attached per-agent, not globally
 2. **Context Firewall**: 40 GitHub MCP tools visible only in GitHub agent context
 3. **Delegation Pattern**: Main session delegates to specialized agent via Task tool
@@ -91,6 +97,7 @@ Key principles:
 ### Claude Code Configuration
 
 Current `.claude/settings.local.json` shows:
+
 - `enableAllProjectMcpServers: true`
 - Specific MCP servers enabled: `serena`, `deepwiki`
 - No agent-specific MCP isolation pattern implemented
@@ -102,6 +109,7 @@ Current `.claude/settings.local.json` shows:
 ### Decision 1: ADR-016 Created
 
 Created comprehensive ADR comparing all four approaches with:
+
 - Quantified performance metrics
 - Capability coverage analysis
 - Reversibility assessment
@@ -116,6 +124,7 @@ Created comprehensive ADR comparing all four approaches with:
 ### Decision 3: PowerShell Daemon Deprioritized
 
 Named pipe daemon (Issue #287) deprioritized due to:
+
 - High maintenance complexity
 - Platform-specific implementation
 - Security concerns with IPC

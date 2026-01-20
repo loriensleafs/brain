@@ -1,10 +1,10 @@
 /**
  * Unit tests for generateEmbedding function.
- * Tests empty input handling, truncation, and Ollama integration.
+ * Tests empty input handling, truncation, retry logic, and Ollama integration.
  */
 
-import { describe, test, expect, mock, afterEach } from "bun:test";
-import { generateEmbedding } from "../generateEmbedding";
+import { describe, test, expect, mock, afterEach, beforeEach } from "bun:test";
+import { generateEmbedding, resetOllamaClient } from "../generateEmbedding";
 import { OllamaError } from "../../ollama/types";
 
 describe("generateEmbedding", () => {
@@ -21,8 +21,14 @@ describe("generateEmbedding", () => {
     ) as unknown as typeof fetch;
   };
 
+  beforeEach(() => {
+    // Reset singleton client before each test to ensure clean state
+    resetOllamaClient();
+  });
+
   afterEach(() => {
     globalThis.fetch = originalFetch;
+    resetOllamaClient();
   });
 
   describe("empty input handling", () => {
@@ -88,9 +94,12 @@ describe("generateEmbedding", () => {
     });
   });
 
-  describe("text truncation", () => {
-    test("truncates text exceeding MAX_TEXT_LENGTH (32000 chars)", async () => {
-      // Create text longer than 32000 characters
+  describe("text passthrough (no truncation)", () => {
+    // Note: Truncation/chunking is handled by the caller (embed tool uses chunking.ts).
+    // This service expects pre-chunked text within model token limits.
+
+    test("passes long text directly to Ollama without truncation", async () => {
+      // Create text longer than typical chunk size
       const longText = "a".repeat(35000);
       const mockFetch = mock(() =>
         Promise.resolve({
@@ -108,10 +117,11 @@ describe("generateEmbedding", () => {
         RequestInit
       ];
       const body = JSON.parse(callArgs[1].body as string);
-      expect(body.prompt.length).toBe(32000);
+      // Text is passed through without truncation - caller is responsible for chunking
+      expect(body.prompt.length).toBe(35000);
     });
 
-    test("does not truncate text under MAX_TEXT_LENGTH", async () => {
+    test("passes short text directly to Ollama", async () => {
       const shortText = "a".repeat(1000);
       const mockFetch = mock(() =>
         Promise.resolve({
@@ -132,7 +142,7 @@ describe("generateEmbedding", () => {
       expect(body.prompt.length).toBe(1000);
     });
 
-    test("handles text exactly at MAX_TEXT_LENGTH", async () => {
+    test("handles arbitrary length text", async () => {
       const exactText = "a".repeat(32000);
       const mockFetch = mock(() =>
         Promise.resolve({
@@ -155,24 +165,53 @@ describe("generateEmbedding", () => {
   });
 
   describe("error propagation", () => {
-    test("propagates OllamaError on API failure", async () => {
-      globalThis.fetch = mock(() =>
-        Promise.resolve({
+    test("retries on 5xx errors and eventually throws after max retries", async () => {
+      let callCount = 0;
+      globalThis.fetch = mock(() => {
+        callCount++;
+        return Promise.resolve({
           ok: false,
-          status: 503,
-        } as Response)
-      ) as unknown as typeof fetch;
+          status: 500,
+        } as Response);
+      }) as unknown as typeof fetch;
 
       expect(generateEmbedding("test")).rejects.toThrow(OllamaError);
-    });
+      // Should have retried 3 times (MAX_RETRIES)
+      expect(callCount).toBe(3);
+    }, 15000); // Increase timeout for retry delays
 
-    test("propagates OllamaError with status code on 404", async () => {
-      globalThis.fetch = mock(() =>
-        Promise.resolve({
+    test("succeeds after transient 5xx error", async () => {
+      const mockEmbedding = [0.1, 0.2, 0.3];
+      let callCount = 0;
+      globalThis.fetch = mock(() => {
+        callCount++;
+        if (callCount < 2) {
+          return Promise.resolve({
+            ok: false,
+            status: 500,
+          } as Response);
+        }
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve({ embedding: mockEmbedding }),
+        } as Response);
+      }) as unknown as typeof fetch;
+
+      const result = await generateEmbedding("test");
+      expect(result).toEqual(mockEmbedding);
+      expect(callCount).toBe(2); // First failed, second succeeded
+    }, 10000);
+
+    test("does not retry on 4xx client errors", async () => {
+      let callCount = 0;
+      globalThis.fetch = mock(() => {
+        callCount++;
+        return Promise.resolve({
           ok: false,
           status: 404,
-        } as Response)
-      ) as unknown as typeof fetch;
+        } as Response);
+      }) as unknown as typeof fetch;
 
       try {
         await generateEmbedding("test");
@@ -180,15 +219,33 @@ describe("generateEmbedding", () => {
       } catch (error) {
         expect(error).toBeInstanceOf(OllamaError);
         expect((error as OllamaError).statusCode).toBe(404);
+        expect(callCount).toBe(1); // No retry on 4xx
       }
     });
 
-    test("propagates network errors", async () => {
+    test("propagates network errors without retry", async () => {
+      let callCount = 0;
       globalThis.fetch = mock(() => {
+        callCount++;
         throw new Error("Network error");
       }) as unknown as typeof fetch;
 
       expect(generateEmbedding("test")).rejects.toThrow("Network error");
+      expect(callCount).toBe(1); // Network errors are not OllamaError, not retried
+    });
+  });
+
+  describe("client reuse", () => {
+    test("reuses the same client for multiple calls", async () => {
+      const mockEmbedding = [0.1, 0.2, 0.3];
+      mockFetchSuccess(mockEmbedding);
+
+      await generateEmbedding("test1");
+      await generateEmbedding("test2");
+
+      // Both calls should use the same URL pattern (same client)
+      const mockFn = globalThis.fetch as unknown as ReturnType<typeof mock>;
+      expect(mockFn).toHaveBeenCalledTimes(2);
     });
   });
 });

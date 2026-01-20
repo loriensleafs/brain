@@ -3,12 +3,14 @@
 ## Sessions 92-93
 
 ### Session 92: ADR Renumbering
+
 - **Date**: 2025-12-24
 - **PR**: #310
 - **Task**: Renumber ADR-017→019 and ADR-018→020 to resolve numbering conflicts
 - **Outcome**: Successfully renumbered all ADRs and updated cross-references
 
 ### Session 93: Pre-Commit Protocol Skill
+
 - **Date**: 2025-12-24
 - **PR**: #310
 - **Task**: Generate skill about pre-commit hook compliance

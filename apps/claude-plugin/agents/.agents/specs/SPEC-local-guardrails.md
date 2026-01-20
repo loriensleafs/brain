@@ -18,6 +18,7 @@ This specification defines local validation guardrails to prevent AI Quality Gat
 ### Current State
 
 The AI Quality Gate workflow (`.github/workflows/ai-pr-quality-gate.yml`) runs 6 AI agents on every PR:
+
 - Security Agent
 - QA Agent
 - Analyst Agent
@@ -30,6 +31,7 @@ Each agent invocation costs 1 premium GitHub Copilot request.
 ### Impact
 
 When violations are caught post-hoc:
+
 - **Cost**: 6 premium requests wasted per violating PR
 - **Delay**: Fix-commit-push-wait cycle adds friction
 - **Noise**: Multiple CI comments clutter PR discussion
@@ -68,6 +70,7 @@ This section uses RFC 2119 keywords: MUST, SHOULD, MAY.
 The system MUST provide a validation script that checks Session Protocol compliance before PR creation.
 
 **Acceptance Criteria**:
+
 - [ ] Script exits 0 on PASS, 1 on FAIL, 2 on ERROR
 - [ ] Script validates all MUST requirements from SESSION-PROTOCOL.md
 - [ ] Script auto-detects session log for current branch/date
@@ -79,6 +82,7 @@ The system MUST provide a validation script that checks Session Protocol complia
 The system MUST provide a validation script that detects PR description vs diff mismatches.
 
 **Acceptance Criteria**:
+
 - [ ] Script compares claimed files in description to actual diff
 - [ ] Script issues CRITICAL_FAIL when description mentions files not in diff
 - [ ] Script issues WARNING when major changes are not mentioned
@@ -89,6 +93,7 @@ The system MUST provide a validation script that detects PR description vs diff 
 The system MUST provide a wrapper script that runs all validations before `gh pr create`.
 
 **Acceptance Criteria**:
+
 - [ ] Wrapper runs FR-1 validation (Session Protocol)
 - [ ] Wrapper runs FR-2 validation (PR Description)
 - [ ] Wrapper blocks PR creation if either validation fails
@@ -99,6 +104,7 @@ The system MUST provide a wrapper script that runs all validations before `gh pr
 The system SHOULD provide a detection script that warns about missing test files.
 
 **Acceptance Criteria**:
+
 - [ ] Script detects new/modified .ps1 files without corresponding .Tests.ps1
 - [ ] Script follows documented test location patterns
 - [ ] Script integrates with pre-commit hook as WARNING (non-blocking)

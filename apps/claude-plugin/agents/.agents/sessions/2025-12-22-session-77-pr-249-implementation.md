@@ -99,8 +99,6 @@
 | 2640758375 | [x] | Timeout: Confirmed 45-minute value in workflow |
 | 2640677685 | [x] | Test assertion: Confirmed tests are correct |
 
-
-
 ## Commits
 
 - `31ebdd2` fix(pr-249): apply Skill-PowerShell-002 null-safety pattern to PR functions
@@ -138,4 +136,3 @@ Tests defined in `BeforeAll` block load the script once. Changes to the script r
 | SHOULD | Update PROJECT-PLAN.md | [N/A] | Not applicable |
 | SHOULD | Invoke retrospective (significant sessions) | [N/A] | Not applicable |
 | SHOULD | Verify clean git status | [x] | Clean |
-

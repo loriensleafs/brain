@@ -13,7 +13,7 @@ Copy these templates exactly when fixing session files. Do not recreate from mem
 |-----|------|--------|----------|
 | MUST | Initialize Serena: `mcp__serena__activate_project` | [x] | Tool output present |
 | MUST | Initialize Serena: `mcp__serena__initial_instructions` | [x] | Tool output present |
-| MUST | Read `.agents/HANDOFF.md` | [x] | Content in context |
+| MUST | Search Brain for cross-session context | [x] | Search results in context |
 | MUST | Create this session log | [x] | This file exists |
 | MUST | List skill scripts in `.claude/skills/github/scripts/` | [x] | Output documented below |
 | MUST | Read usage-mandatory memory | [x] | Content in context |
@@ -37,7 +37,7 @@ Copy these templates exactly when fixing session files. Do not recreate from mem
 | MUST | Run markdown lint | [x] | Output below |
 | MUST | Route to qa agent (feature implementation) | [x] | QA report: `.agents/qa/[report].md` |
 | MUST | Commit all changes (including .serena/memories) | [x] | Commit SHA: abc1234 |
-| MUST NOT | Update `.agents/HANDOFF.md` directly | [x] | HANDOFF.md unchanged |
+| MUST | Update Brain note (cross-session context) | [x] | Note write confirmed |
 | SHOULD | Update PROJECT-PLAN.md | [x] | Tasks checked off |
 | SHOULD | Invoke retrospective (significant sessions) | [x] | Doc: _______ |
 | SHOULD | Verify clean git status | [x] | Output below |
@@ -108,7 +108,7 @@ Complete section for new session logs:
 |-----|------|--------|----------|
 | MUST | Initialize Serena: `mcp__serena__activate_project` | [x] | Tool output present |
 | MUST | Initialize Serena: `mcp__serena__initial_instructions` | [x] | Tool output present |
-| MUST | Read `.agents/HANDOFF.md` | [x] | Content in context |
+| MUST | Search Brain for cross-session context | [x] | Search results in context |
 | MUST | Create this session log | [x] | This file exists |
 | MUST | List skill scripts in `.claude/skills/github/scripts/` | [x] | Output documented below |
 | MUST | Read usage-mandatory memory | [x] | Content in context |
@@ -144,7 +144,7 @@ All MUST requirements above are marked complete.
 | MUST | Run markdown lint | [x] | Output below |
 | MUST | Route to qa agent (feature implementation) | [x] | QA report: `.agents/qa/[report].md` |
 | MUST | Commit all changes (including .serena/memories) | [x] | Commit SHA: _______ |
-| MUST NOT | Update `.agents/HANDOFF.md` directly | [x] | HANDOFF.md unchanged |
+| MUST | Update Brain note (cross-session context) | [x] | Note write confirmed |
 | SHOULD | Update PROJECT-PLAN.md | [x] | Tasks checked off |
 | SHOULD | Invoke retrospective (significant sessions) | [x] | Doc: _______ |
 | SHOULD | Verify clean git status | [x] | Output below |

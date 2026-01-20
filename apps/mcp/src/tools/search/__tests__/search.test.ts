@@ -94,6 +94,26 @@ describe("search schema validation", () => {
     expect(result.limit).toBe(10);
     expect(result.threshold).toBe(0.7);
     expect(result.mode).toBe("auto");
+    expect(result.full_context).toBe(false);
+  });
+
+  test("accepts full_context parameter", () => {
+    const withFullContext = SearchArgsSchema.parse({
+      query: "test",
+      full_context: true,
+    });
+    expect(withFullContext.full_context).toBe(true);
+
+    const withoutFullContext = SearchArgsSchema.parse({
+      query: "test",
+      full_context: false,
+    });
+    expect(withoutFullContext.full_context).toBe(false);
+  });
+
+  test("full_context defaults to false when omitted", () => {
+    const result = SearchArgsSchema.parse({ query: "test" });
+    expect(result.full_context).toBe(false);
   });
 
   test("accepts optional project", () => {
@@ -144,5 +164,32 @@ describe("search result structure", () => {
 
     expect(keywordResult.source).toBe("keyword");
     expect(semanticResult.source).toBe("semantic");
+  });
+
+  test("result can include optional fullContent", () => {
+    const resultWithFullContent: SearchResult = {
+      permalink: "notes/test",
+      title: "Test Note",
+      similarity_score: 0.85,
+      snippet: "Short snippet",
+      source: "keyword",
+      fullContent: "This is the full note content that can be much longer than the snippet.",
+    };
+
+    expect(resultWithFullContent.fullContent).toBe(
+      "This is the full note content that can be much longer than the snippet."
+    );
+  });
+
+  test("fullContent is optional in result", () => {
+    const resultWithoutFullContent: SearchResult = {
+      permalink: "notes/test",
+      title: "Test Note",
+      similarity_score: 0.85,
+      snippet: "Short snippet",
+      source: "keyword",
+    };
+
+    expect(resultWithoutFullContent.fullContent).toBeUndefined();
   });
 });

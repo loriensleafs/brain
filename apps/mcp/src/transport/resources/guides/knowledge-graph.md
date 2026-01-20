@@ -12,6 +12,7 @@ priority: 1.0
 ## Entities
 
 **What is an Entity?**
+
 - Any concept, document, or idea represented as a markdown file
 - Has a unique title and permalink
 - Contains frontmatter metadata
@@ -40,6 +41,7 @@ Brief description of the entity
 ```
 
 **Entity Types**:
+
 - `note`: General knowledge (default)
 - `person`: People and contacts
 - `project`: Projects and initiatives
@@ -54,6 +56,7 @@ Brief description of the entity
 **Syntax**: `- [category] content #tag1 #tag2`
 
 **Common Categories**:
+
 - `[fact]`: Objective information
 - `[idea]`: Thoughts and concepts
 - `[decision]`: Choices made
@@ -78,6 +81,7 @@ Brief description of the entity
 ```
 
 **Why Categorize?**:
+
 - Enables semantic search by observation type
 - Helps AI understand context and intent
 - Makes knowledge more queryable
@@ -90,6 +94,7 @@ Brief description of the entity
 **Syntax**: `- relation_type [[Target Entity]]`
 
 **Common Relation Types**:
+
 - `relates_to`: General connection
 - `implements`: Implementation of spec/design
 - `requires`: Dependency relationship
@@ -124,6 +129,7 @@ Brief description of the entity
 ```
 
 **Why explicit relation types matter**:
+
 - Enables semantic graph traversal
 - AI can understand relationship meaning
 - Supports sophisticated context building
@@ -158,6 +164,7 @@ await write_note(
 ```
 
 **How it works**:
+
 1. Forward reference creates placeholder in knowledge graph
 2. When target entity is created, relation is automatically resolved
 3. Graph traversal works in both directions

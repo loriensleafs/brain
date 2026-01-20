@@ -8,11 +8,13 @@
     "dist"
   ],
   "scripts": {
-    "build:wasm": "tinygo build -o dist/validation.wasm -target wasm ./main.go",
+    "build:wasm": "GOOS=js GOARCH=wasm go build -o dist/validation.wasm ./main.go",
     "build:js": "tsc && cp src/wasm_exec.js dist/",
     "build": "yarn build:wasm && yarn build:js",
     "clean": "rm -rf dist",
-    "prepublish": "yarn build"
+    "prepublish": "yarn build",
+    "test": "node --test tests/*.test.js",
+    "test:ts": "tsc --noEmit && node --test tests/*.test.js"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

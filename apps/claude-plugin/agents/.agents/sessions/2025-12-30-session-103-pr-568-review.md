@@ -57,6 +57,7 @@ Address 1 unresolved review thread from gemini-code-assist[bot] regarding GraphQ
 **Path**: Direct implementation (single-file, single-section, clear fix)
 
 **Rationale**:
+
 - Meets Quick Fix criteria: Single file, single code block, can explain in one sentence
 - Security-domain comment gets +50% priority boost
 - gemini-code-assist[bot] has 100% signal quality (7/7 actionable)
@@ -82,6 +83,7 @@ Address 1 unresolved review thread from gemini-code-assist[bot] regarding GraphQ
 Replaced string interpolation with GraphQL variables in PowerShell example:
 
 **Before** (vulnerable):
+
 ```powershell
 $query = @"
 {
@@ -94,6 +96,7 @@ $data = gh api graphql -f query="$query" | ConvertFrom-Json
 ```
 
 **After** (secure):
+
 ```powershell
 $query = '
 query($owner: String!, $repo: String!, $number: Int!) {
@@ -106,6 +109,7 @@ $data = gh api graphql -f query="$query" -f owner="$owner" -f repo="$repo" -F nu
 ```
 
 **Key Changes**:
+
 1. Added GraphQL variable declarations: `query($owner: String!, $repo: String!, $number: Int!)`
 2. Removed string interpolation from query (changed `"$owner"` to `$owner`)
 3. Changed here-string from `@"..."@` to `'...'` (no interpolation needed)
@@ -124,21 +128,25 @@ $data = gh api graphql -f query="$query" -f owner="$owner" -f repo="$repo" -F nu
 ## Learnings
 
 ### Learning 1: Git Worktree Detached HEAD State
+
 When making commits in a git worktree that hasn't been checked out to a branch, commits are made in detached HEAD state. Must checkout the branch first, then cherry-pick the commit.
 
 **Pattern**: Always verify `git branch --show-current` before committing in worktrees.
 
 ### Learning 2: Security-Domain Comments Are Always High Priority
+
 gemini-code-assist[bot] correctly flagged a security issue (injection vulnerability) in documentation example code. Even in docs, security principles matter because developers copy examples.
 
 **Pattern**: Documentation examples must follow the same security standards as production code.
 
 ### Learning 3: GraphQL Variable Syntax
+
 GitHub CLI supports GraphQL variables via `-f` (string) and `-F` (integer/other types) flags. This is the preferred pattern over string interpolation for security and maintainability.
 
 **Reference**: Repository style guide lines 361-384, 661-674
 
 ### Learning 4: gemini-code-assist[bot] Signal Quality
+
 This bot provides detailed explanations with style guide references and code suggestions. 100% actionable in this PR (1/1).
 
 **Action**: Update pr-comment-responder-skills memory with this observation.

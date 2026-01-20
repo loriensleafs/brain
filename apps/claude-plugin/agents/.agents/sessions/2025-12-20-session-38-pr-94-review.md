@@ -65,6 +65,7 @@ Investigate PR #94 (docs: add 3 skills from PR #79 retrospective to skillbook) b
 > Pre-commit hook validates working tree not staged content. The pre-commit hook uses `git diff --cached` to get staged file names but then runs `Invoke-ScriptAnalyzer -Path $file` which reads from the working tree.
 
 **Thread Replies**:
+
 1. **2636893013** (rjmurillo-bot @ 2025-12-20T07:38:12Z): Acknowledged valid observation. Noted this is documentation/example code. Recommended accept-as-is with follow-up issue.
 2. **2636924180** (rjmurillo-bot @ 2025-12-20T08:04:50Z): Follow-up issue created: #120
 3. **2636924831** (rjmurillo-bot @ 2025-12-20T08:06:24Z): Homework complete confirmation with issue #120 link
@@ -123,14 +124,17 @@ All checks passed:
 ✅ **MEETS MERGE CRITERIA**
 
 **Skills Added (3)**:
+
 1. **Skill-PowerShell-001** (95% atomicity): Variable interpolation safety (`$($var)` when followed by colon)
 2. **Skill-CI-001** (92% atomicity): Pre-commit syntax validation with PSScriptAnalyzer
 3. **Skill-Testing-003** (88% atomicity): Basic execution validation for PowerShell scripts
 
 **Bug Fixes**:
+
 - Fixed Get-PRContext.ps1 syntax error (line 64: `$PullRequest:` → `$($PullRequest):`)
 
 **Documentation**:
+
 - Updated HANDOFF.md with session 36 context
 - Skills reference PR #79 as evidence source
 
@@ -165,6 +169,7 @@ All 13 CI checks passed successfully.
 During PR review, attempted to use GitHub skill scripts but encountered syntax errors:
 
 **Affected Scripts**:
+
 - `.claude/skills/github/scripts/pr/Get-PRContext.ps1` - Line 64: `$PullRequest:` syntax error
 - `.claude/skills/github/scripts/pr/Get-PRReviewers.ps1` - Line 105: `$PullRequest:` syntax error
 - `.claude/skills/github/scripts/pr/Get-PRReviewComments.ps1` - Line 87: `$PullRequest:` syntax error

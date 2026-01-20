@@ -74,7 +74,7 @@ All MUST requirements above are marked complete.
 
 ### Input
 
-- URL: https://cwe.mitre.org/data/definitions/699.html
+- URL: <https://cwe.mitre.org/data/definitions/699.html>
 - Coordination with: `.serena/memories/security-agent-vulnerability-detection-gaps.md`
 - Planning document: `.agents/planning/security-agent-detection-gaps-remediation.md`
 - Focus CWEs: CWE-22, CWE-23, CWE-36, CWE-73, CWE-99

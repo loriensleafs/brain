@@ -33,6 +33,7 @@ Conduct structured retrospective on the planning phase for PR maintenance workfl
 ## Analysis Scope
 
 Focus on:
+
 1. Agent coordination effectiveness
 2. PRD iteration quality (critique → revision)
 3. Task breakdown granularity
@@ -40,6 +41,7 @@ Focus on:
 5. Process efficiency metrics
 
 Out of scope:
+
 - Implementation phase (PR #402)
 - Final code quality
 - Deployment outcomes
@@ -53,6 +55,7 @@ Out of scope:
 ### Key Findings
 
 **Success Patterns** (71% Glad outcomes):
+
 1. Gap diagnostics with exact line numbers enabled precise PRD technical requirements
 2. INVEST validation caught Story 3 compound scope, prompted 3a/3b split
 3. PRD iteration loop resolved all 5 critical issues in single cycle
@@ -60,6 +63,7 @@ Out of scope:
 5. Complete code blocks (no placeholders) reduced implementer ambiguity
 
 **Failure Root Causes**:
+
 1. Task iteration did not occur despite critic NEEDS REVISION verdict (11/17 tasks unrevised)
 2. Missing orchestrator routing to loop critic feedback back to task-generator
 3. Task prompts optimized for sequential reading, not amnesiac execution

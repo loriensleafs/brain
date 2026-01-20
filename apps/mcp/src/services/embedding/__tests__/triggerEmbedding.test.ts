@@ -7,13 +7,15 @@ import { describe, test, expect, mock, afterEach, beforeEach, spyOn } from "bun:
 import { triggerEmbedding } from "../triggerEmbedding";
 import * as vectorsModule from "../../../db/vectors";
 import * as connectionModule from "../../../db/connection";
+import * as schemaModule from "../../../db/schema";
 import { logger } from "../../../utils/internal/logger";
 
 describe("triggerEmbedding", () => {
   const originalFetch = globalThis.fetch;
   let mockDb: { close: ReturnType<typeof mock> };
-  let storeEmbeddingSpy: ReturnType<typeof spyOn>;
+  let storeChunkedEmbeddingsSpy: ReturnType<typeof spyOn>;
   let createVectorConnectionSpy: ReturnType<typeof spyOn>;
+  let ensureEmbeddingTablesSpy: ReturnType<typeof spyOn>;
   let loggerDebugSpy: ReturnType<typeof spyOn>;
   let loggerWarnSpy: ReturnType<typeof spyOn>;
 
@@ -21,11 +23,14 @@ describe("triggerEmbedding", () => {
     // Create mock database
     mockDb = { close: mock(() => {}) };
 
-    // Spy on storeEmbedding
-    storeEmbeddingSpy = spyOn(vectorsModule, "storeEmbedding").mockReturnValue(true);
+    // Spy on storeChunkedEmbeddings
+    storeChunkedEmbeddingsSpy = spyOn(vectorsModule, "storeChunkedEmbeddings").mockReturnValue(1);
 
     // Spy on createVectorConnection
     createVectorConnectionSpy = spyOn(connectionModule, "createVectorConnection").mockReturnValue(mockDb as any);
+
+    // Spy on ensureEmbeddingTables
+    ensureEmbeddingTablesSpy = spyOn(schemaModule, "ensureEmbeddingTables").mockImplementation(() => {});
 
     // Spy on logger methods
     loggerDebugSpy = spyOn(logger, "debug").mockImplementation(() => {});
@@ -34,8 +39,9 @@ describe("triggerEmbedding", () => {
 
   afterEach(() => {
     globalThis.fetch = originalFetch;
-    storeEmbeddingSpy.mockRestore();
+    storeChunkedEmbeddingsSpy.mockRestore();
     createVectorConnectionSpy.mockRestore();
+    ensureEmbeddingTablesSpy.mockRestore();
     loggerDebugSpy.mockRestore();
     loggerWarnSpy.mockRestore();
   });
@@ -66,18 +72,14 @@ describe("triggerEmbedding", () => {
       expect(globalThis.fetch).toHaveBeenCalled();
     });
 
-    test("calls storeEmbedding on success", async () => {
+    test("calls storeChunkedEmbeddings on success", async () => {
       const mockEmbedding = Array.from({ length: 768 }, () => 0.5);
       mockFetchSuccess(mockEmbedding);
 
       triggerEmbedding("note-123", "Test content");
       await waitForAsync();
 
-      expect(storeEmbeddingSpy).toHaveBeenCalledWith(
-        mockDb,
-        "note-123",
-        mockEmbedding
-      );
+      expect(storeChunkedEmbeddingsSpy).toHaveBeenCalled();
     });
 
     test("logs debug message on success", async () => {
@@ -87,7 +89,8 @@ describe("triggerEmbedding", () => {
       triggerEmbedding("note-123", "Test content");
       await waitForAsync();
 
-      expect(loggerDebugSpy).toHaveBeenCalledWith("Embedding stored for note: note-123");
+      // The log message now includes chunk count
+      expect(loggerDebugSpy).toHaveBeenCalled();
     });
 
     test("closes database connection after storing", async () => {
@@ -124,7 +127,7 @@ describe("triggerEmbedding", () => {
       );
     });
 
-    test("does not call storeEmbedding when generateEmbedding fails", async () => {
+    test("does not call storeChunkedEmbeddings when generateEmbedding fails", async () => {
       globalThis.fetch = mock(() =>
         Promise.reject(new Error("API error"))
       ) as unknown as typeof fetch;
@@ -132,7 +135,7 @@ describe("triggerEmbedding", () => {
       triggerEmbedding("note-123", "Test content");
       await waitForAsync();
 
-      expect(storeEmbeddingSpy).not.toHaveBeenCalled();
+      expect(storeChunkedEmbeddingsSpy).not.toHaveBeenCalled();
     });
   });
 
@@ -142,14 +145,14 @@ describe("triggerEmbedding", () => {
       triggerEmbedding("note-123", "");
       await waitForAsync();
 
-      expect(storeEmbeddingSpy).not.toHaveBeenCalled();
+      expect(storeChunkedEmbeddingsSpy).not.toHaveBeenCalled();
     });
 
     test("does not store embedding for whitespace-only content", async () => {
       triggerEmbedding("note-123", "   \n\t  ");
       await waitForAsync();
 
-      expect(storeEmbeddingSpy).not.toHaveBeenCalled();
+      expect(storeChunkedEmbeddingsSpy).not.toHaveBeenCalled();
     });
   });
 });

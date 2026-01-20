@@ -8,6 +8,8 @@
 import type { ContextNote } from "./sectionQueries";
 import type { NoteType } from "./noteType";
 import type { NoteStatus } from "./statusParser";
+import type { SessionEnrichment, AgentHistorySummary } from "./sessionEnrichment";
+import type { WorkflowMode } from "../../services/session/types";
 
 /**
  * Structured note for output
@@ -59,10 +61,33 @@ export interface ContextMetadata {
 }
 
 /**
+ * Structured session state for output
+ */
+export interface StructuredSessionState {
+  currentMode: WorkflowMode;
+  activeTask?: string;
+  activeFeature?: string;
+  hasOrchestratorWorkflow: boolean;
+  workflowPhase?: string;
+  activeAgent?: string;
+}
+
+/**
+ * Structured session context for output
+ */
+export interface StructuredSessionContext {
+  state: StructuredSessionState;
+  taskNotes: StructuredNote[];
+  featureNotes: StructuredNote[];
+  recentAgentHistory: AgentHistorySummary[];
+}
+
+/**
  * Complete structured content output
  */
 export interface StructuredContent {
   metadata: ContextMetadata;
+  session_context?: StructuredSessionContext;
   active_features: StructuredFeature[];
   recent_decisions: StructuredDecision[];
   open_bugs: StructuredBug[];
@@ -81,6 +106,7 @@ export interface StructuredOutputInput {
   openBugs: ContextNote[];
   recentActivity: ContextNote[];
   referencedNotes: ContextNote[];
+  sessionEnrichment?: SessionEnrichment;
 }
 
 /**
@@ -97,6 +123,7 @@ export function buildStructuredOutput(
     openBugs,
     recentActivity,
     referencedNotes,
+    sessionEnrichment,
   } = input;
 
   // Calculate total note count
@@ -107,6 +134,11 @@ export function buildStructuredOutput(
     recentActivity.length +
     referencedNotes.length;
 
+  // Build session context if enrichment available
+  const sessionContext = sessionEnrichment
+    ? buildSessionContext(sessionEnrichment)
+    : undefined;
+
   return {
     metadata: {
       project,
@@ -114,11 +146,37 @@ export function buildStructuredOutput(
       note_count: noteCount,
       timeframe,
     },
+    session_context: sessionContext,
     active_features: activeFeatures.map(toStructuredFeature),
     recent_decisions: recentDecisions.map(toStructuredDecision),
     open_bugs: openBugs.map(toStructuredBug),
     recent_activity: recentActivity.map(toStructuredActivity),
     referenced_notes: referencedNotes.map(toStructuredNote),
+  };
+}
+
+/**
+ * Build structured session context from enrichment data
+ */
+function buildSessionContext(
+  enrichment: SessionEnrichment
+): StructuredSessionContext {
+  const { sessionState, taskNotes, featureNotes, recentAgentHistory } =
+    enrichment;
+  const workflow = sessionState.orchestratorWorkflow;
+
+  return {
+    state: {
+      currentMode: sessionState.currentMode,
+      activeTask: sessionState.activeTask,
+      activeFeature: sessionState.activeFeature,
+      hasOrchestratorWorkflow: workflow !== null,
+      workflowPhase: workflow?.workflowPhase,
+      activeAgent: workflow?.activeAgent ?? undefined,
+    },
+    taskNotes: taskNotes.map(toStructuredNote),
+    featureNotes: featureNotes.map(toStructuredNote),
+    recentAgentHistory,
   };
 }
 
