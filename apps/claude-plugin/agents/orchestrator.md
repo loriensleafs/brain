@@ -80,7 +80,7 @@ Before activating the full orchestration workflow, determine the minimum agent s
 - **Subagents CANNOT delegate to other subagents**: They must complete their work and return results to you
 - **You orchestrate ALL delegation decisions**: When a subagent's results indicate more work is needed, YOU decide which agent handles the next step
 
-**Workflow Pattern: **  
+**Workflow Pattern:**  
 
 ```text
 ┌─────────────┐

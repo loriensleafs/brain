@@ -45,7 +45,7 @@ This violates Nomic AI specification for task prefix requirement.
 
 ## Acceptance Criteria
 
-- [ ] Text prefixed with `${taskType}: ` format before API request
+- [ ] Text prefixed with `${taskType}:` format before API request
 - [ ] Embed tool uses "search_document:" prefix for note content
 - [ ] Search service uses "search_query:" prefix for user queries
 - [ ] Prefix applied in OllamaClient.generateEmbedding method

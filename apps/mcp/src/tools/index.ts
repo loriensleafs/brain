@@ -439,9 +439,26 @@ async function callProxiedTool(
           logger.debug({ permalink }, "Triggered embedding for new note");
         }
       } else if (name === "edit_note") {
-        // For edit_note, we'd need to fetch the full content after edit
-        // For now, skip - batch embed can catch up
-        logger.debug("Skipping embedding trigger for edit_note");
+        // Fetch updated content and trigger embedding (fire-and-forget)
+        const identifier = resolvedArgs.identifier as string | undefined;
+        if (identifier) {
+          // Async fetch and trigger - does not block edit response
+          client.callTool({
+            name: "read_note",
+            arguments: { identifier, project: resolvedArgs.project }
+          }).then((readResult) => {
+            // Extract content from read_note response
+            const result = readResult as CallToolResult;
+            const firstContent = result.content?.[0];
+            if (firstContent?.type === "text") {
+              const content = firstContent.text;
+              triggerEmbedding(identifier, content);
+              logger.debug({ identifier }, "Triggered embedding for edited note");
+            }
+          }).catch((error: Error) => {
+            logger.warn({ identifier, error }, "Failed to fetch content for embedding");
+          });
+        }
       }
     }
 

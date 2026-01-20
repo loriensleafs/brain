@@ -278,6 +278,7 @@ apps/tui/cmd/
   ```go
   import hooks "github.com/yourusername/brain/apps/claude-plugin/cmd/hooks"
   ```
+
 - Reuse existing project resolution logic:
 
   ```go
@@ -292,6 +293,7 @@ apps/tui/cmd/
   }
   toolArgs["project"] = project
   ```
+
 - Add investigation task: Verify MCP search tool actually filters by project parameter (check MCP source or test output)
 
 ---

@@ -13,10 +13,12 @@
 ## 2. Context
 
 TASK-004 changed `apps/tui/client/http.go` line 40:
+
 - Before: `Timeout: 10 * time.Minute`
 - After: `Timeout: 5 * time.Minute`
 
 Performance test failed with:
+
 ```
 Error: embedding generation failed: Post "http://127.0.0.1:8765/mcp": 
 context deadline exceeded (Client.Timeout exceeded while awaiting headers)
@@ -27,6 +29,7 @@ Total: 10:00.07
 ## 3. Approach
 
 **Methodology**:
+
 1. Check file timestamps (http.go vs brain binary)
 2. Rebuild binary with `make build`
 3. Test with small batch (5 notes)
@@ -62,6 +65,7 @@ Total: 10:00.07
 ## 5. Results
 
 **Timeline**:
+
 - 18:16 (Jan 19): Binary last built
 - 01:14 (Jan 20): http.go modified (timeout change)
 - 01:15 (Jan 20): Commit created
@@ -70,6 +74,7 @@ Total: 10:00.07
 - 02:24 (Jan 20): Performance test executed with NEW binary: **SUCCESS in 10.13s**
 
 **Performance After Fix**:
+
 - 700 notes processed in 10.13 seconds (584 skipped, 0 processed, 168 failed due to missing notes)
 - No timeout errors
 - MCP server responded immediately
@@ -80,6 +85,7 @@ Total: 10:00.07
 The 10-minute timeout was accurate measurement of the **compiled binary's behavior**, not a bug. The binary contained the old 10-minute timeout constant because it was built 7 hours before the source code change.
 
 This is a classic "working as compiled" issue where:
+
 1. Source code was updated
 2. Binary was NOT rebuilt
 3. Test executed against stale binary
@@ -123,11 +129,13 @@ The batch API optimizations ARE working - 700 notes complete in 10 seconds when 
 ### Data Transparency
 
 **Found**:
+
 - File timestamps proving binary was stale
 - Successful 10-second completion after rebuild
 - MCP server operational and responding correctly
 
 **Not Found**:
+
 - No deadlocks in MCP server
 - No Ollama performance issues
 - No batch API implementation bugs
@@ -135,6 +143,7 @@ The batch API optimizations ARE working - 700 notes complete in 10 seconds when 
 ### Prevention
 
 Add to test checklist:
+
 ```bash
 # Before running performance tests
 make build
