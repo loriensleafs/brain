@@ -21,7 +21,7 @@ describe("OllamaClient", () => {
       expect((client as unknown as { baseUrl: string }).baseUrl).toBe(
         "http://localhost:11434"
       );
-      expect((client as unknown as { timeout: number }).timeout).toBe(30000);
+      expect((client as unknown as { timeout: number }).timeout).toBe(60000);
     });
 
     test("uses custom config when provided", () => {
@@ -40,7 +40,7 @@ describe("OllamaClient", () => {
       expect((client as unknown as { baseUrl: string }).baseUrl).toBe(
         "http://partial:8080"
       );
-      expect((client as unknown as { timeout: number }).timeout).toBe(30000);
+      expect((client as unknown as { timeout: number }).timeout).toBe(60000);
     });
   });
 
@@ -112,7 +112,7 @@ describe("OllamaClient", () => {
         Promise.resolve({
           ok: true,
           status: 200,
-          json: () => Promise.resolve({ embedding: mockEmbedding }),
+          json: () => Promise.resolve({ embeddings: [mockEmbedding] }),
         } as Response)
       );
 
@@ -159,7 +159,7 @@ describe("OllamaClient", () => {
         Promise.resolve({
           ok: true,
           status: 200,
-          json: () => Promise.resolve({ embedding: [0.1] }),
+          json: () => Promise.resolve({ embeddings: [[0.1]] }),
         } as Response)
       );
       globalThis.fetch = mockFetch as unknown as typeof fetch;
@@ -172,14 +172,15 @@ describe("OllamaClient", () => {
         string,
         RequestInit
       ];
-      expect(callArgs[0]).toBe("http://localhost:11434/api/embeddings");
+      expect(callArgs[0]).toBe("http://localhost:11434/api/embed");
       expect(callArgs[1].method).toBe("POST");
       expect(callArgs[1].headers).toEqual({
         "Content-Type": "application/json",
       });
       expect(JSON.parse(callArgs[1].body as string)).toEqual({
         model: "nomic-embed-text",
-        prompt: "my text",
+        input: ["search_document: my text"],
+        truncate: true
       });
     });
 
@@ -188,7 +189,7 @@ describe("OllamaClient", () => {
         Promise.resolve({
           ok: true,
           status: 200,
-          json: () => Promise.resolve({ embedding: [0.1] }),
+          json: () => Promise.resolve({ embeddings: [[0.1]] }),
         } as Response)
       );
       globalThis.fetch = mockFetch as unknown as typeof fetch;
@@ -202,7 +203,8 @@ describe("OllamaClient", () => {
       ];
       expect(JSON.parse(callArgs[1].body as string)).toEqual({
         model: "mxbai-embed-large",
-        prompt: "my text",
+        input: ["search_document: my text"],
+        truncate: true
       });
     });
   });
