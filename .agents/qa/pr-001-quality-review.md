@@ -1,6 +1,6 @@
 # PR #1 Quality Review
 
-**PR**: https://github.com/loriensleafs/brain/pull/1
+**PR**: <https://github.com/loriensleafs/brain/pull/1>
 **Branch**: feat/embedding-optimization-and-auto-sync
 **Base**: main
 **Review Date**: 2026-01-20
@@ -33,6 +33,7 @@ bun test
 ```
 
 **Results**:
+
 - **Pass**: 668/709 tests (94.2%)
 - **Fail**: 35/709 tests (4.9%)
 - **Skip**: 6/709 tests (0.8%)
@@ -52,6 +53,7 @@ bun test
 **Critical Finding**: Real Ollama API verified working via curl. Test failures are mock-only issues, not implementation defects.
 
 **Evidence from ADR-002 QA Validation**:
+
 ```bash
 $ curl -X POST http://localhost:11434/api/embed \
   -H "Content-Type: application/json" \
@@ -80,6 +82,7 @@ make build
 
 **Result**: [PASS]
 **Output**:
+
 - MCP server: 631 modules bundled, 2.24 MB
 - TUI: brain binary built successfully
 - Hooks: brain-hooks binary built successfully
@@ -95,10 +98,11 @@ gh pr checks 1
 ```
 
 **Results**:
+
 | Check | Status | Duration | URL |
 |-------|--------|----------|-----|
-| Validate Consistency | **FAIL** | 30s | https://github.com/loriensleafs/brain/actions/runs/21177298100/job/60909540652 |
-| Check Naming Conventions | PASS | 21s | https://github.com/loriensleafs/brain/actions/runs/21177298100/job/60909540698 |
+| Validate Consistency | **FAIL** | 30s | <https://github.com/loriensleafs/brain/actions/runs/21177298100/job/60909540652> |
+| Check Naming Conventions | PASS | 21s | <https://github.com/loriensleafs/brain/actions/runs/21177298100/job/60909540698> |
 
 **Blocking Issue**: Validate Consistency check is failing
 
@@ -131,6 +135,7 @@ gh pr checks 1
 **Status**: [PASS] - No breaking changes
 
 **Evidence**:
+
 - `embed` tool: Handler signature unchanged (internal refactoring only)
 - `search` tool: Parameters unchanged (task prefix internal)
 - `edit_note` tool: Fire-and-forget pattern, no signature change
@@ -147,6 +152,7 @@ gh pr checks 1
 **Status**: [PASS] - Backward compatible
 
 **Evidence**:
+
 - Single-text API delegates to batch API (backward compatible wrapper)
 - TaskType parameter defaults to "search_document" (maintains current behavior)
 - Environment variables configurable (OLLAMA_TIMEOUT)
@@ -165,16 +171,19 @@ gh pr checks 1
 ### Specification Quality
 
 **Requirements (EARS format)**: 11 total
+
 - ADR-002: 4 requirements (status: implemented)
 - ADR-003: 3 requirements (status: implemented)
 - Catch-up trigger: 4 requirements (status: implemented)
 
 **Design Documents**: 5 total
+
 - ADR-002: 3 design docs (status: implemented)
 - ADR-003: 1 design doc (status: implemented)
 - Catch-up trigger: 1 design doc (status: implemented)
 
 **Task Documents**: 12 total
+
 - ADR-002: 5 tasks (status: complete)
 - ADR-003: 3 tasks (status: complete)
 - Catch-up trigger: 4 tasks (status: complete)
@@ -199,6 +208,7 @@ gh pr checks 1
 **Status**: [COMPLETE]
 
 **Evidence**:
+
 - Batch API method implemented (client.ts:52-93)
 - p-limit concurrency control added (embed/index.ts:13)
 - Timeouts optimized (60s Ollama, 5min Go)
@@ -211,6 +221,7 @@ gh pr checks 1
 **Status**: [COMPLETE]
 
 **Evidence**:
+
 - TaskType enum defined (types.ts:38)
 - Prefix logic implemented (client.ts:62)
 - Call sites updated (3 locations)
@@ -223,6 +234,7 @@ gh pr checks 1
 **Status**: [COMPLETE]
 
 **Evidence**:
+
 - Fire-and-forget pattern implemented (index.ts:446-460)
 - read_note fetch before embedding (line 446-448)
 - Error handling non-blocking (catch block line 458-460)
@@ -235,6 +247,7 @@ gh pr checks 1
 **Status**: [COMPLETE]
 
 **Evidence**:
+
 - getMissingEmbeddingsCount() implemented (catchupTrigger.ts:28-112)
 - Fire-and-forget on bootstrap_context (index.ts:157-159)
 - Logging events structured (trigger + completion)
@@ -258,6 +271,7 @@ gh pr checks 1
 ### Critical Risks
 
 **CI Failure** (P0):
+
 - **Risk**: Consistency validation failing
 - **Impact**: Cannot merge until resolved
 - **Mitigation**: Must investigate and fix before approval
@@ -265,11 +279,13 @@ gh pr checks 1
 ### Low Risks (Non-Blocking)
 
 **Test Mock Mismatch** (P1):
+
 - **Risk**: 94% pass rate instead of 100%
 - **Impact**: Minor - real API verified working
 - **Mitigation**: Fix mocks in follow-up PR
 
 **Code Coverage** (P2):
+
 - **Risk**: 75% overall coverage (target: 80%)
 - **Impact**: Below critic threshold by 5%
 - **Mitigation**: Add tests for uncovered branches in follow-up
@@ -316,6 +332,7 @@ gh pr checks 1
 - [x] QA reports present
 
 **Next Steps**:
+
 1. Investigate Validate Consistency failure
 2. Fix validation errors
 3. Re-run CI
@@ -328,7 +345,7 @@ gh pr checks 1
 - **edit_note Validation**: `.agents/qa/edit-note-trigger-validation.md`
 - **Catch-up Validation**: `.agents/qa/catchup-trigger-validation.md`
 - **PR Description**: 41.4KB with detailed summary
-- **CI Logs**: https://github.com/loriensleafs/brain/actions/runs/21177298100
+- **CI Logs**: <https://github.com/loriensleafs/brain/actions/runs/21177298100>
 
 ## Conclusion
 

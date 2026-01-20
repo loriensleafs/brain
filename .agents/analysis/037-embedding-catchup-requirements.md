@@ -11,11 +11,13 @@
 **User Problem**: "I have a TON of notes that haven't been processed in different projects. Unless I run manually, they won't be processed. I want automatic background catch-up so embeddings don't fall behind."
 
 **Current Implementation** (from `src/tools/index.ts`):
+
 - `write_note`: Triggers embedding immediately via `triggerEmbedding()` (line 432-440)
 - `edit_note`: Triggers embedding via async fetch + triggerEmbedding (line 441-462)
 - Manual batch: `brain embed --project X --limit 0` catches up missing embeddings
 
 **Recent Performance Improvements** (ADR-002 batch API migration):
+
 - Batch API reduces per-note overhead
 - Concurrent processing with p-limit (4 parallel operations)
 - Retry logic with exponential backoff (1s, 2s, 4s)
@@ -27,20 +29,23 @@ This suggests catch-up can run frequently without penalty when already synced.
 
 ## 3. Approach
 
-**Methodology**: 
+**Methodology**:
+
 - Codebase analysis to identify sync gap scenarios
 - Session log review to estimate edit patterns
 - Database schema review to understand detection mechanisms
 - Industry research for sync patterns (Dropbox, VS Code, Git)
 - Performance modeling based on ADR-002 improvements
 
-**Tools Used**: 
+**Tools Used**:
+
 - Read for code analysis
 - Grep for pattern detection
 - WebSearch for industry standards
 - Git log for performance improvement history
 
-**Limitations**: 
+**Limitations**:
+
 - No production database available for backlog measurement
 - Cannot quantify exact frequency of filesystem edits
 - User's "TON of notes" is unquantified
@@ -95,6 +100,7 @@ This suggests catch-up can run frequently without penalty when already synced.
 **Performance Constraints**:
 
 With ADR-002 improvements:
+
 - Single note: ~14-171ms (worst-case from 120s/700 notes target)
 - 10 notes: 140-1710ms (instant)
 - 100 notes: 1.4-17s (background acceptable)
@@ -122,11 +128,13 @@ With ADR-002 improvements:
 ### Backlog Assessment
 
 **Cannot Measure Directly** (no production database access):
+
 - Unknown: How many notes currently lack embeddings
 - Unknown: Daily backlog growth rate
 - Unknown: Distribution across projects
 
 **Estimated Impact**:
+
 - User reports "TON of notes" suggests 500-5000 missing embeddings
 - At 14-171ms per note: 7-855s (7 seconds to 14 minutes) to catch up
 - With batch API: Parallelized across 4 concurrent operations
@@ -163,6 +171,7 @@ This validates frequent catch-up: checking for 0 missing notes is negligible cos
 
 **Filesystem Edits Are The Primary Sync Gap**:
 The combination of:
+
 1. write_note and edit_note now trigger embeddings (P0 complete per Analysis 035)
 2. Failed embeddings reduced by retry logic (ADR-002)
 
@@ -172,6 +181,7 @@ The combination of:
 At 14-171ms per note with batch API parallelization, even large catch-up operations (1000 notes = 14-171s) are acceptable for background processing. The user insight "if there aren't any missing, it's almost instant" validates frequent catch-up checks.
 
 **Industry Precedent Validates Hybrid Approach**:
+
 - **VS Code**: Indexes on startup, updates on file watch
 - **Dropbox**: Continuous sync with batching and exponential backoff
 - **Git**: Periodic background fetch
@@ -201,6 +211,7 @@ These demonstrate that "startup + periodic" is the standard pattern for sync ope
 To implement catch-up, need to detect stale embeddings:
 
 **Database Query**:
+
 ```sql
 -- Notes without any embeddings
 SELECT DISTINCT n.permalink
@@ -217,6 +228,7 @@ GROUP BY n.permalink
 ```
 
 **Missing Infrastructure**:
+
 - Content checksum column in notes table (for staleness detection)
 - Embedding timestamp tracking (for age-based catch-up)
 - Project-level embedding config (for disable/re-enable scenario)
@@ -233,6 +245,7 @@ GROUP BY n.permalink
 ### Implementation Details
 
 **P0 - Project Activation Trigger**:
+
 ```typescript
 // In src/project/resolve.ts or src/tools/bootstrap-context/index.ts
 async function triggerProjectCatchup(project: string): Promise<void> {
@@ -265,6 +278,7 @@ triggerProjectCatchup(resolvedProject);
 ```
 
 **P1 - MCP Startup Trigger**:
+
 ```typescript
 // In src/index.ts or startup initialization
 async function onStartup(): Promise<void> {
@@ -277,6 +291,7 @@ async function onStartup(): Promise<void> {
 ```
 
 **P2 - Periodic Background Catch-Up**:
+
 ```typescript
 // New Inngest workflow: src/inngest/workflows/embeddingCatchup.ts
 export const embeddingCatchupWorkflow = inngest.createFunction(
@@ -297,6 +312,7 @@ export const embeddingCatchupWorkflow = inngest.createFunction(
 ```
 
 **P3 - Content Checksum Tracking**:
+
 ```sql
 -- Schema change (requires migration)
 ALTER TABLE notes ADD COLUMN content_checksum TEXT;
@@ -313,19 +329,23 @@ WHERE n.content_checksum != e.content_checksum
 ### Recommended Phasing
 
 **Phase 1 (Immediate)**: P0 - Project activation trigger
+
 - Highest impact for user's problem ("TON of notes")
 - Reuses existing batch API infrastructure
 - Fast path for already-synced projects ("almost instant")
 
 **Phase 2 (Follow-up)**: P1 - MCP startup trigger
+
 - Low effort (reuses P0 logic)
 - Covers single-project sessions
 
 **Phase 3 (Future)**: P2 - Periodic background catch-up
+
 - Safety net for long sessions
 - Requires Inngest scheduler setup
 
 **Phase 4 (Optimization)**: P3 - Content checksum tracking
+
 - Improves efficiency (re-embed only changed notes)
 - High effort, lower priority
 
@@ -339,7 +359,8 @@ WHERE n.content_checksum != e.content_checksum
 
 ### User Impact
 
-**What changes for you**: 
+**What changes for you**:
+
 - Embeddings automatically catch up when switching projects
 - No manual `brain embed` commands needed
 - Background processing, non-blocking
@@ -347,7 +368,8 @@ WHERE n.content_checksum != e.content_checksum
 
 **Effort required**: Zero (automatic background processing)
 
-**Risk if ignored**: 
+**Risk if ignored**:
+
 - User must manually remember to run `brain embed` after:
   - Bulk importing notes
   - Editing notes outside MCP (Obsidian, VS Code)
@@ -360,6 +382,7 @@ WHERE n.content_checksum != e.content_checksum
 ### Sources Consulted
 
 **Codebase**:
+
 - `/apps/mcp/src/tools/index.ts` - Current trigger implementation
 - `/apps/mcp/src/tools/embed/index.ts` - Batch embedding tool
 - `/apps/mcp/src/services/embedding/triggerEmbedding.ts` - Fire-and-forget embedding service
@@ -367,23 +390,27 @@ WHERE n.content_checksum != e.content_checksum
 - Commit `b09fc49` - Batch API migration
 
 **Industry Research**:
+
 - [Workspace indexing in Visual Studio](https://learn.microsoft.com/en-us/visualstudio/extensibility/workspace-indexing?view=vs-2022)
 - [Make chat an expert in your workspace - VS Code](https://code.visualstudio.com/docs/copilot/reference/workspace-context)
 - [Efficient Batched Synchronization in Dropbox-like Cloud Storage Services](https://sites.cs.ucsb.edu/~ravenben/publications/pdf/dropbox-middleware13.pdf)
 - [Tenacity Retries: Exponential Backoff Decorators 2026](https://johal.in/tenacity-retries-exponential-backoff-decorators-2026/)
 
 **Related Analysis**:
+
 - Analysis 035: Embedding Trigger Strategy (P0 - edit_note trigger)
 
 ### Data Transparency
 
 **Found**:
+
 - Current trigger implementation (write_note and edit_note covered)
 - Batch API performance characteristics (ADR-002)
 - Industry sync patterns (VS Code, Dropbox, Git)
 - User insight: "almost instant" when no catch-up needed
 
 **Not Found**:
+
 - Production metrics: How many notes currently lack embeddings
 - Filesystem edit frequency: How often users edit outside MCP
 - Optimal catch-up batch size: Performance tuning needed

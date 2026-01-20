@@ -61,12 +61,14 @@ bun test edit-note-embedding.test.ts
 **Coverage Assessment**: [ADEQUATE]
 
 Tests cover:
+
 - Happy path (embedding triggered)
 - Performance (non-blocking behavior)
 - Error path (read_note failure)
 - Edge cases (missing identifier, non-text content)
 
 **Not covered** (acceptable for fire-and-forget pattern):
+
 - Actual embedding generation (integration test would require full MCP server)
 - Database writes (unit test scope is trigger logic only)
 
@@ -85,6 +87,7 @@ Tests cover:
 | **Embedding trigger** | triggerEmbedding() | triggerEmbedding() | ✓ |
 
 **Differences are intentional**:
+
 - write_note has content in args (no fetch needed)
 - edit_note must fetch updated content via read_note first
 - Both follow fire-and-forget pattern appropriately for their context
@@ -102,6 +105,7 @@ bun run typecheck
 **Result**: [PASS] - Zero type errors
 
 Type fixes from commit 0b5b80f correctly addressed:
+
 - CallToolResult type cast (line 452)
 - Error type annotation (line 458)
 
@@ -110,6 +114,7 @@ Type fixes from commit 0b5b80f correctly addressed:
 ## Quick Functional Test
 
 [NOT PERFORMED] - Fire-and-forget pattern is adequately verified by unit tests. Integration test would require:
+
 - Running MCP server
 - Mock Ollama endpoint
 - Database inspection

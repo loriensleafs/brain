@@ -27,12 +27,15 @@ User requests automatic background catch-up for missing embeddings without manua
 ### Trigger Characterization
 
 #### Session Start (`bootstrap_context`)
+
 **Pros**:
+
 - Natural entry point, always executed
 - User expects some initialization overhead
 - High confidence trigger will fire
 
 **Cons**:
+
 - Blocking startup experience if synchronous
 - May run when no new notes exist (wasted cycles)
 - Unpredictable workload (0-1000 missing embeddings)
@@ -40,12 +43,15 @@ User requests automatic background catch-up for missing embeddings without manua
 **Resource Profile**: 0-14s spike at session start (worst case: 1000 notes × 14ms/note)
 
 #### Project Activation
+
 **Pros**:
+
 - Contextually relevant (catches up project-specific notes)
 - Less frequent than session start (most users stay in one project)
 - Can be scoped to project notes only
 
 **Cons**:
+
 - Requires project switching to trigger
 - Single-project users may never trigger catch-up
 - More complex to track last catch-up per project
@@ -53,13 +59,16 @@ User requests automatic background catch-up for missing embeddings without manua
 **Resource Profile**: 0-14s spike per project switch (scoped to project notes)
 
 #### Inngest Scheduled (Cron)
+
 **Pros**:
+
 - Predictable resource usage (known schedule)
 - Leverages existing infrastructure (no new code paths)
 - Runs regardless of user activity (true background)
 - Easy to disable/configure
 
 **Cons**:
+
 - Requires Inngest dev server running
 - May run when no work needed
 - Slight staleness window (up to schedule interval)
@@ -67,11 +76,14 @@ User requests automatic background catch-up for missing embeddings without manua
 **Resource Profile**: 0-700ms every N hours (configurable), predictable background load
 
 #### Idle Detection
+
 **Pros**:
+
 - Opportunistic (uses idle CPU)
 - No impact on active user workflow
 
 **Cons**:
+
 - Complex to implement (requires activity tracking)
 - May never trigger for always-active users
 - Unpredictable timing
@@ -79,11 +91,14 @@ User requests automatic background catch-up for missing embeddings without manua
 **Resource Profile**: Variable, depends on user behavior
 
 #### Write/Edit Piggyback (User's Suggestion)
+
 **Pros**:
+
 - Frequent execution (every content change)
 - Guaranteed to run eventually
 
 **Cons**:
+
 - Unpredictable workload (0-1000 missing notes)
 - Resource spike on every user action
 - Architectural boundary violation (see Section 4)
@@ -95,6 +110,7 @@ User requests automatic background catch-up for missing embeddings without manua
 ## 2. Architecture Pattern Analysis
 
 ### Pattern 1: Event-Driven Opportunistic
+
 **Architecture**: Event (write/edit) → Check for missing → Conditional process
 
 ```typescript
@@ -108,15 +124,18 @@ if (missingCount > 0) {
 **Complexity**: Medium (conditional logic needed)
 
 **Pros**:
+
 - Leverages existing event hooks
 - Catches up on every user action
 
 **Cons**:
+
 - Unpredictable resource usage
 - May run unnecessarily if no missing embeddings
 - Tight coupling between content tools and system-wide reconciliation
 
 ### Pattern 2: Scheduled Reconciliation
+
 **Architecture**: Time-based cron → Process all missing
 
 ```typescript
@@ -141,16 +160,19 @@ export const embeddingReconciliation = inngest.createFunction(
 **Complexity**: Low (leverage existing Inngest infrastructure)
 
 **Pros**:
+
 - Predictable resource usage
 - Simple to implement (single workflow file)
 - Runs regardless of user activity
 - Easy to configure (change cron schedule)
 
 **Cons**:
+
 - Requires Inngest dev server
 - Slight staleness window (max = schedule interval)
 
 ### Pattern 3: Lazy Initialization
+
 **Architecture**: Project switch → Check last catch-up → Trigger if stale
 
 ```typescript
@@ -167,15 +189,18 @@ export function setActiveProject(project: string): void {
 **Complexity**: Medium (track last catch-up time per project)
 
 **Pros**:
+
 - Project-scoped (efficient)
 - Only triggers when needed
 
 **Cons**:
+
 - Requires persistent state (last catch-up tracking)
 - Single-project users may never trigger
 - Additional complexity for state management
 
 ### Pattern 4: Hybrid (Scheduled + On-Demand)
+
 **Architecture**: Multiple triggers (cron + session start), same processor
 
 ```typescript
@@ -195,10 +220,12 @@ export const sessionStartReconciliation = inngest.createFunction(
 **Complexity**: Higher (multiple workflows, coordination needed)
 
 **Pros**:
+
 - Most robust (multiple safety nets)
 - Fast catch-up on session start + background safety net
 
 **Cons**:
+
 - More complex
 - Potential duplicate work (both triggers fire close together)
 - Higher maintenance burden
@@ -208,6 +235,7 @@ export const sessionStartReconciliation = inngest.createFunction(
 ## 3. Resource Profile Analysis
 
 **Baseline Performance** (from analysis/035-embedding-trigger-strategy.md):
+
 - Single note embedding: ~14ms
 - Retry logic: 3 attempts with exponential backoff (1s, 2s, 4s)
 - Chunking: ~2000 chars per chunk, 15% overlap
@@ -239,10 +267,12 @@ export const sessionStartReconciliation = inngest.createFunction(
 ### Should write/edit Tools Handle Global Catch-Up?
 
 **Current Architecture**:
+
 - `write_note`: Triggers embedding for THAT note (local responsibility)
 - `edit_note`: Skips embedding (per analysis/035)
 
 **Proposed Architecture** (Piggyback):
+
 - `write_note`/`edit_note`: Trigger for that note + ALL missing notes (global responsibility)
 
 ### Architectural Boundary Analysis
@@ -255,10 +285,12 @@ export const sessionStartReconciliation = inngest.createFunction(
 | **Atomicity** | Transactional (edit this note) | Bulk operation (process all missing) |
 
 **Violation**: Piggybacking catch-up on content tools conflates:
+
 1. **User action** (edit/write a specific note)
 2. **System maintenance** (reconcile all missing embeddings)
 
 These are distinct concerns:
+
 - User action: Predictable, scoped, transactional
 - System maintenance: Unpredictable, global, eventual consistency
 
@@ -273,12 +305,14 @@ These are distinct concerns:
 ### Inngest Availability
 
 **Current State**:
+
 - Inngest client: `apps/mcp/src/inngest/client.ts` (local dev mode)
 - Health check: `checkInngestAvailability()` with 3s timeout
 - Graceful degradation: Server continues if Inngest unavailable
 - Workflows: 9 existing workflows (`sessionState.ts`, `sessionProtocolStart.ts`, etc.)
 
 **Event Types**: 11 defined events in `events.ts`:
+
 - `session/protocol.start`
 - `session/protocol.end`
 - `session/state.update`
@@ -291,6 +325,7 @@ These are distinct concerns:
 ### Implementation Feasibility
 
 **New Workflow Addition**:
+
 ```typescript
 // apps/mcp/src/inngest/workflows/embeddingReconciliation.ts
 import { inngest } from "../client";
@@ -330,12 +365,14 @@ export const embeddingReconciliation = inngest.createFunction(
 ```
 
 **Export Addition**:
+
 ```typescript
 // apps/mcp/src/inngest/index.ts
 export { embeddingReconciliation } from "./workflows/embeddingReconciliation";
 ```
 
 **Server Registration**:
+
 ```typescript
 // apps/mcp/src/transport/http.ts (or wherever workflows are served)
 import { embeddingReconciliation } from "../inngest";
@@ -357,6 +394,7 @@ serve({
 **User Statement**: "I don't want to have to run it manually when embeddings fall behind"
 
 **Interpretation**:
+
 - User wants "set and forget" behavior
 - User willing to accept background resource usage
 - User prioritizes convenience over immediate consistency
@@ -368,6 +406,7 @@ serve({
 **Architect's Counter-Proposal**: Scheduled reconciliation
 
 **Why the Change**:
+
 1. **Separation of concerns**: Content tools stay focused on single-note operations
 2. **Resource predictability**: Scheduled runs are predictable, not spiky
 3. **Implementation simplicity**: Leverage existing Inngest infrastructure
@@ -395,6 +434,7 @@ serve({
 ### Primary Trigger: Scheduled Reconciliation (Pattern 2)
 
 **Why**:
+
 1. **Separation of Concerns**: Keeps content tools focused on single-note operations
 2. **Predictable Resources**: Time-based scheduling provides known resource profile
 3. **Simplicity**: Single workflow file, leverages existing Inngest infrastructure
@@ -402,6 +442,7 @@ serve({
 5. **Configurability**: Easy to adjust schedule (hourly, 6-hourly, daily)
 
 **Implementation**:
+
 ```typescript
 // apps/mcp/src/inngest/workflows/embeddingReconciliation.ts
 export const embeddingReconciliation = inngest.createFunction(
@@ -420,6 +461,7 @@ export const embeddingReconciliation = inngest.createFunction(
 ```
 
 **Schedule Recommendation**: Every 6 hours
+
 - **Rationale**: Balances staleness (max 6-hour window) with resource efficiency
 - **Alternative**: Hourly (lower staleness) or Daily (lower resource usage)
 
@@ -434,7 +476,9 @@ export const embeddingReconciliation = inngest.createFunction(
 ## 9. Rejected Approaches
 
 ### Approach 1: Write/Edit Piggyback
+
 **Why Rejected**:
+
 - Violates separation of concerns (local vs global operations)
 - Unpredictable resource usage (0-1000 missing notes)
 - Tight coupling between content tools and system maintenance
@@ -442,7 +486,9 @@ export const embeddingReconciliation = inngest.createFunction(
 **When to Reconsider**: If scheduled reconciliation proves insufficient and users demand real-time catch-up.
 
 ### Approach 2: Session Start Trigger
+
 **Why Rejected**:
+
 - More complex than scheduled cron (requires state tracking)
 - Less robust (depends on user starting sessions)
 - Single-project users may never switch projects
@@ -450,7 +496,9 @@ export const embeddingReconciliation = inngest.createFunction(
 **When to Reconsider**: If users report frequent context switching and want immediate catch-up on project activation.
 
 ### Approach 3: Idle Detection
+
 **Why Rejected**:
+
 - High complexity (activity tracking required)
 - Unpredictable timing (may never trigger for active users)
 - No clear user benefit over scheduled approach
@@ -473,17 +521,20 @@ export const embeddingReconciliation = inngest.createFunction(
 ### Recommended Implementation Steps
 
 **Phase 1: Core Workflow (Estimated: 2-4 hours)**
+
 1. Create `apps/mcp/src/inngest/workflows/embeddingReconciliation.ts`
 2. Export workflow in `apps/mcp/src/inngest/index.ts`
 3. Register workflow in HTTP transport
 4. Write unit tests for workflow logic
 
 **Phase 2: Configuration (Estimated: 1 hour)**
+
 1. Add `EMBEDDING_RECONCILIATION_CRON` environment variable (default: `0 */6 * * *`)
 2. Document configuration in README
 3. Add logging for reconciliation runs
 
 **Phase 3: Monitoring (Estimated: 1 hour)**
+
 1. Add Inngest dashboard documentation
 2. Add logging for processed/failed notes
 3. Document expected resource usage
@@ -499,6 +550,7 @@ export const embeddingReconciliation = inngest.createFunction(
 **Selected Trigger**: Inngest cron workflow running every 6 hours
 
 **Rationale**:
+
 1. **Simplicity**: Leverages existing Inngest infrastructure with minimal new code
 2. **Separation of Concerns**: Keeps content tools focused on single-note operations
 3. **Predictability**: Time-based scheduling provides known resource profile
@@ -506,10 +558,12 @@ export const embeddingReconciliation = inngest.createFunction(
 5. **Low Complexity**: Single workflow file, straightforward testing
 
 **Trade-Offs Accepted**:
+
 - **Staleness Window**: Up to 6 hours between reconciliation runs
 - **Infrastructure Dependency**: Requires Inngest dev server running
 
 **Rejected Alternatives**:
+
 - **Write/Edit Piggyback**: Violates separation of concerns, unpredictable resource usage
 - **Session Start**: More complex, less robust than scheduled approach
 - **Hybrid**: Unnecessary complexity for initial implementation
@@ -517,11 +571,13 @@ export const embeddingReconciliation = inngest.createFunction(
 ### Implementation Path
 
 **Immediate** (This PR):
+
 1. Create scheduled reconciliation workflow
 2. Configure 6-hour cron schedule
 3. Add basic logging and monitoring
 
 **Future Enhancements** (If Needed):
+
 1. Add session-start trigger if users report 6-hour staleness is too long
 2. Add configuration UI for schedule adjustment
 3. Add project-specific reconciliation controls
@@ -533,11 +589,13 @@ export const embeddingReconciliation = inngest.createFunction(
 ### A. Performance Calculations
 
 **Worst-Case Scenario**: 1000 missing embeddings
+
 - Time: 1000 notes × 14ms/note = 14,000ms = 14s
 - Resource: Background CPU usage, non-blocking
 - Frequency: Every 6 hours
 
 **Typical Scenario**: 50 missing embeddings (estimate)
+
 - Time: 50 notes × 14ms/note = 700ms
 - Resource: Negligible
 - Frequency: Every 6 hours
@@ -554,6 +612,7 @@ export const embeddingReconciliation = inngest.createFunction(
 - `* * *`: Every day, every month, every day of week
 
 **Alternative Schedules**:
+
 - Hourly: `0 * * * *`
 - Every 12 hours: `0 */12 * * *`
 - Daily at midnight: `0 0 * * *`

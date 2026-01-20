@@ -145,6 +145,7 @@
 **Finding**: No formal spec directory exists for edit_note trigger enhancement. This was implemented as a 30-minute quick fix without full 3-tier spec structure.
 
 **Evidence from QA Report**:
+
 - Fire-and-forget pattern verified
 - 5/5 tests passing
 - Error handling present

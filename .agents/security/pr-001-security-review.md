@@ -270,6 +270,7 @@ db.close();
 Auto-embed triggers use fire-and-forget safely:
 
 1. **bootstrap_context catchup** (`catchupTrigger.ts:157`):
+
    ```typescript
    triggerCatchupEmbedding(project).catch((error) => {
      logger.error({ project, error }, "Catch-up embedding trigger failed");
@@ -277,6 +278,7 @@ Auto-embed triggers use fire-and-forget safely:
    ```
 
 2. **edit_note trigger** (`tools/index.ts:446`):
+
    ```typescript
    client.callTool({ ... }).then(...).catch((error: Error) => {
      logger.warn({ identifier, error }, "Failed to fetch content");

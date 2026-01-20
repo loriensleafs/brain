@@ -22,6 +22,7 @@ The Brain MCP server uses Ollama with the `nomic-embed-text` model to generate 7
 **Methodology**: Code analysis of embedding generation code paths
 
 **Tools Used**:
+
 - Grep searches for embedding-related functions
 - File reads of key modules (index.ts, tools/index.ts, triggerEmbedding.ts, embed tool)
 - Analysis of Inngest events for workflow-based triggers
@@ -43,10 +44,12 @@ The Brain MCP server uses Ollama with the `nomic-embed-text` model to generate 7
 ### Facts (Verified)
 
 **Trigger 1: MCP Server Startup**
+
 - **Status**: [FAIL] - Does NOT generate embeddings
 - **Evidence**: `src/index.ts` lines 31-38
 - **Mechanism**: Only creates database table structure (`createEmbeddingsTable(db)`), does not generate embeddings for existing notes
 - **Code**:
+
   ```typescript
   // Initialize embeddings table for semantic search
   try {
@@ -60,10 +63,12 @@ The Brain MCP server uses Ollama with the `nomic-embed-text` model to generate 7
   ```
 
 **Trigger 2: Note Creation (write_note)**
+
 - **Status**: [PASS] - Automatically triggers embedding
 - **Evidence**: `src/tools/index.ts` lines 429-440
 - **Mechanism**: Fire-and-forget async embedding generation after successful write
 - **Code**:
+
   ```typescript
   if (name === "write_note") {
     const title = resolvedArgs.title as string | undefined;
@@ -76,16 +81,19 @@ The Brain MCP server uses Ollama with the `nomic-embed-text` model to generate 7
     }
   }
   ```
+
 - **Implementation**: `src/services/embedding/triggerEmbedding.ts`
   - Chunks content automatically if it exceeds token limits (~2000 chars per chunk with 15% overlap)
   - Does not block note creation (fire-and-forget pattern)
   - Failures are logged but do not fail the write operation
 
 **Trigger 3: Note Edit (edit_note)**
+
 - **Status**: [FAIL] - Does NOT trigger embedding
 - **Evidence**: `src/tools/index.ts` lines 441-445
 - **Mechanism**: Explicitly skipped with TODO comment
 - **Code**:
+
   ```typescript
   } else if (name === "edit_note") {
     // For edit_note, we'd need to fetch the full content after edit
@@ -93,10 +101,12 @@ The Brain MCP server uses Ollama with the `nomic-embed-text` model to generate 7
     logger.debug("Skipping embedding trigger for edit_note");
   }
   ```
+
 - **Rationale**: Would require fetching full content after edit to regenerate embedding
 - **Workaround**: Batch embedding tool can catch up later
 
 **Trigger 4: Manual (generate_embeddings tool)**
+
 - **Status**: [PASS] - Available for manual/batch processing
 - **Evidence**: `src/tools/embed/index.ts`
 - **Mechanism**: User or agent explicitly calls the tool
@@ -111,6 +121,7 @@ The Brain MCP server uses Ollama with the `nomic-embed-text` model to generate 7
   - Skips notes with existing embeddings unless `force=true`
 
 **Trigger 5: Inngest Workflows**
+
 - **Status**: [FAIL] - No workflow-based automation
 - **Evidence**: `src/inngest/workflows/` directory listing (no embedding-related workflows)
 - **Mechanism**: None implemented
@@ -129,6 +140,7 @@ Embedding generation is triggered in **1 of 2** scenarios the user asked about:
 3. **Note Editing**: [FAIL] - Explicitly skipped (not triggered)
 
 The system relies on:
+
 - Automatic embedding on `write_note`
 - Manual batch processing via `generate_embeddings` tool to catch up on `edit_note` changes and any missed writes
 
@@ -137,20 +149,24 @@ The system relies on:
 The current implementation has a coverage gap for `edit_note` operations. This means:
 
 **When Embeddings Stay Fresh**:
+
 - New notes created via `write_note` get embeddings immediately
 - Search results include newly created notes without manual intervention
 
 **When Embeddings Go Stale**:
+
 - Notes modified via `edit_note` retain old embeddings
 - Search results for edited notes reflect pre-edit content until batch embedding runs
 - Deleted content may still appear in search results
 
 **Design Rationale**:
+
 - Fire-and-forget pattern prevents blocking note operations on slow embedding generation
 - `edit_note` skips embedding to avoid fetching full content (performance trade-off)
 - Batch tool provides catch-up mechanism
 
 **Impact of Gap**:
+
 - Low for write-heavy workflows (most content added via `write_note`)
 - Medium for edit-heavy workflows (content frequently updated)
 - Mitigated by periodic batch runs
@@ -166,6 +182,7 @@ The current implementation has a coverage gap for `edit_note` operations. This m
 
 **P1 Recommendation Details**:
 Create an Inngest scheduled workflow that runs `generate_embeddings` nightly with parameters:
+
 - `force=false` (only process missing/stale)
 - `limit=0` (process all)
 - Consider project-scoped batches to spread load
@@ -179,15 +196,18 @@ Create an Inngest scheduled workflow that runs `generate_embeddings` nightly wit
 ### User Impact
 
 **What changes for you**:
+
 - Notes created with `write_note` get embeddings automatically
 - Notes edited with `edit_note` require manual batch embedding to update search results
 - Server restart does not regenerate embeddings
 
 **Effort required**:
+
 - Run `generate_embeddings` tool periodically after heavy editing sessions
 - Consider running with `limit=0` nightly if search freshness is critical
 
 **Risk if ignored**:
+
 - Search results reflect stale content for edited notes
 - Deleted information may still appear in search
 - New information added via edits won't be discoverable via semantic search
@@ -205,12 +225,14 @@ Create an Inngest scheduled workflow that runs `generate_embeddings` nightly wit
 ### Data Transparency
 
 **Found**:
+
 - Automatic embedding on `write_note` (fire-and-forget)
 - Explicit skip of embedding on `edit_note`
 - Manual batch tool with concurrency controls
 - Table initialization at startup (not embedding generation)
 
 **Not Found**:
+
 - Automated periodic embedding workflows
 - Edit-triggered embedding generation
 - Retry queue for failed embeddings (planned per comments)

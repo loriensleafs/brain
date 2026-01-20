@@ -25,17 +25,20 @@ Implement embedding catch-up trigger on session start (bootstrap_context) per st
 ## Artifacts Review
 
 **Strategic Verdict** (038-catchup-trigger-verdict.md):
+
 - Decision: PROJECT ACTIVATION (with simplification)
 - Priority: P0 for initial implementation
 - Rationale: Session start = catch-up eliminates need for scheduled reconciliation
 - Action: Add catch-up trigger to bootstrap_context (4 hour estimate)
 
 **Architecture Analysis** (embedding-catchup-architecture.md):
+
 - Architect recommended: Scheduled reconciliation (Pattern 2)
 - High-level-advisor overruled: Session start trigger (Pattern 3 variant)
 - Reason: User behavior pattern makes scheduled approach over-engineered
 
 **Requirements Analysis** (037-embedding-catchup-requirements.md):
+
 - P0: Project activation trigger
 - Detection query: `SELECT DISTINCT n.permalink FROM notes n LEFT JOIN brain_embeddings e ON n.permalink = e.entity_id WHERE e.entity_id IS NULL`
 - Fire-and-forget: Non-blocking background batch
@@ -49,6 +52,7 @@ Total estimate: 4 hours
 **File**: Create `apps/mcp/src/tools/bootstrap-context/catchupTrigger.ts`
 
 **Acceptance criteria**:
+
 - Query returns count of notes without embeddings
 - Empty result set returns 0
 - Database errors handled gracefully
@@ -59,6 +63,7 @@ Total estimate: 4 hours
 **File**: Same file (`catchupTrigger.ts`)
 
 **Logging checklist**:
+
 - [ ] Trigger event with count and project
 - [ ] Completion event with stats
 - [ ] Error event with failure details
@@ -74,6 +79,7 @@ Total estimate: 4 hours
 **File**: Create `apps/mcp/src/tools/bootstrap-context/__tests__/catchupTrigger.test.ts`
 
 **Test cases**:
+
 - Query returns correct count
 - Zero count skips batch trigger
 - Non-zero count triggers batch
@@ -88,6 +94,7 @@ Total estimate: 4 hours
 **File**: `apps/mcp/src/tools/bootstrap-context/catchupTrigger.ts`
 
 **Approach**:
+
 - Notes are stored in basic-memory, embeddings in vector database
 - Query combines both data sources:
   1. Get all notes from basic-memory via `list_directory`
@@ -99,6 +106,7 @@ Total estimate: 4 hours
 ### TASK-002: Batch Embedding Trigger (Completed)
 
 **Implementation**:
+
 - `triggerCatchupEmbedding()` function with fire-and-forget pattern
 - Logging checkpoints:
   - Trigger event: `logger.info({ project, missingCount }, "Catch-up embedding trigger activated")`
@@ -106,6 +114,7 @@ Total estimate: 4 hours
   - Error event: `logger.error({ project, error }, "Catch-up embedding failed")`
 
 **Fire-and-Forget**:
+
 ```typescript
 generateEmbeddings({ project, limit: 0, force: false })
   .then(result => { /* log completion */ })
@@ -135,6 +144,7 @@ triggerCatchupEmbedding(project).catch((error) => {
 **File**: `apps/mcp/src/tools/bootstrap-context/__tests__/catchupTrigger.test.ts`
 
 **Test coverage**:
+
 - Parameter validation (empty/whitespace project)
 - Error handling (graceful degradation)
 - Integration test placeholders
@@ -171,6 +181,7 @@ triggerCatchupEmbedding(project).catch((error) => {
 **Security Flag**: NO - No security-relevant changes detected
 
 **Justification**:
+
 - No authentication/authorization changes
 - No data protection changes (embeddings are read-only vector data)
 - No input handling changes (project parameter validated)
@@ -181,6 +192,7 @@ triggerCatchupEmbedding(project).catch((error) => {
 - Database operations are read-only queries plus existing embedding storage
 
 **Trigger Categories Checked**:
+
 - Authentication/Authorization: None
 - Data Protection: None (vector embeddings are non-sensitive)
 - Input Handling: Parameter validation only (project string)
@@ -193,13 +205,16 @@ triggerCatchupEmbedding(project).catch((error) => {
 ## Files Changed
 
 **New Files**:
+
 - `apps/mcp/src/tools/bootstrap-context/catchupTrigger.ts` - Catch-up trigger implementation
 - `apps/mcp/src/tools/bootstrap-context/__tests__/catchupTrigger.test.ts` - Tests
 
 **Modified Files**:
+
 - `apps/mcp/src/tools/bootstrap-context/index.ts` - Integration point
 
 **Planning Artifacts** (moved from session 01):
+
 - `.agents/analysis/037-embedding-catchup-requirements.md`
 - `.agents/analysis/038-catchup-trigger-verdict.md`
 - `.agents/architecture/embedding-catchup-architecture.md`
@@ -218,6 +233,7 @@ Implemented embedding catch-up trigger on session start (bootstrap_context) per 
 4. Tests (parameter validation and error handling)
 
 **Test Results**:
+
 - 4 tests passing
 - Typecheck: PASS
 
@@ -225,6 +241,7 @@ Implemented embedding catch-up trigger on session start (bootstrap_context) per 
 Per verdict 038, catch-up runs on every bootstrap_context call (session start). User insight validated: "If there aren't any missing, it's almost instant" - query cost is negligible when synced.
 
 **Next Steps**:
+
 - QA validation: Test with real project containing missing embeddings
 - Monitor logs for catch-up trigger events
 - Validate fire-and-forget behavior doesn't block bootstrap_context

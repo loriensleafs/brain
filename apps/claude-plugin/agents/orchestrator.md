@@ -1765,6 +1765,7 @@ Mark orchestration complete only when:
 ## Content Attribution Constraints
 
 **MUST NOT include in PRs, commits, or user-facing content**:
+
 - "Generated with Claude Code" or similar tool attribution footers
 - Session numbers or session references
 - AI tool signatures or credits

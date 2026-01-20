@@ -46,6 +46,7 @@
 **Scheduled Reconciliation (Architect's recommendation)**
 
 Why rejected:
+
 - Over-engineered for a one-time backlog problem
 - 6-hour staleness window degrades active-session UX
 - Adds Inngest dependency for something that runs naturally on session start
@@ -60,6 +61,7 @@ The architect is correct that content tools shouldn't handle global reconciliati
 **Your "TON of notes" problem**: Solved on next session start. Zero manual intervention.
 
 **Ongoing sync**:
+
 - MCP edits: Already covered by write_note/edit_note triggers
 - Filesystem edits: Caught on next session start (typically within hours)
 

@@ -14,19 +14,22 @@ With ADR-002 performance improvements, single-note embedding now takes approxima
 
 ## 3. Approach
 
-**Methodology**: 
+**Methodology**:
+
 - Codebase analysis of current trigger implementation
 - Session log analysis for usage patterns
 - Performance modeling based on ADR-002 metrics
 - Industry comparison research (Obsidian, VS Code, Notion)
 
-**Tools Used**: 
+**Tools Used**:
+
 - Grep for usage pattern analysis
 - Session log review (318 session files analyzed)
 - WebSearch for industry standards
 - Code review of embedding service
 
-**Limitations**: 
+**Limitations**:
+
 - No production metrics available (embeddings table does not exist in test environment)
 - Cannot measure actual edit frequency without instrumentation
 - Industry comparison limited to public documentation
@@ -49,6 +52,7 @@ With ADR-002 performance improvements, single-note embedding now takes approxima
 ### Facts (Verified)
 
 **Current Implementation**:
+
 - `write_note`: Triggers embedding immediately (fire-and-forget)
 - `edit_note`: Skipped entirely
 - Embedding generation: ~14ms per note (estimated from 120s/700 notes performance target)
@@ -56,6 +60,7 @@ With ADR-002 performance improvements, single-note embedding now takes approxima
 - Retry logic: 3 attempts with exponential backoff (1s, 2s, 4s)
 
 **Usage Patterns**:
+
 - 318 session logs in agent repository
 - ZERO grep matches for "edit_note" in session logs
 - 1 match for "mcp__plugin_brain_brain__edit_note" across all sessions
@@ -65,6 +70,7 @@ With ADR-002 performance improvements, single-note embedding now takes approxima
   - Search guard may be preventing duplicates effectively
 
 **Industry Standards**:
+
 - **VS Code**: Background index updates when files change
 - **Notion**: Eventual consistency with indexing delay (pages shared directly bypass delay)
 - **Obsidian**: Not publicly documented
@@ -88,16 +94,19 @@ With ADR-002 performance improvements, single-note embedding now takes approxima
 ### Staleness Metrics
 
 **When Embeddings Go Stale**:
+
 1. Content changes via edit_note (currently not re-embedded)
 2. New notes created without embeddings (should not happen with current write_note trigger)
 
 **Impact of Staleness**:
+
 - Search misses updated content
 - Semantic similarity calculations use outdated vectors
 - Knowledge graph relationships may be inaccurate
 - User experience degrades gradually
 
 **Acceptable Staleness**:
+
 - Real-time (immediate): Best UX, negligible overhead (~14ms)
 - Near real-time (<1 minute): Acceptable for most use cases
 - Eventual consistency (next session): Degraded UX
@@ -117,6 +126,7 @@ With ADR-002 performance improvements, single-note embedding now takes approxima
 
 **Low Edit_note Adoption**:
 The near-zero usage of edit_note in session logs suggests one of two scenarios:
+
 1. Tool guidance insufficiently encourages incremental updates
 2. Users prefer creating new notes over editing existing ones
 
@@ -130,6 +140,7 @@ VS Code's background index updates demonstrate that real-time indexing on conten
 
 **Current Gap**:
 Skipping edit_note means any content updates leave embeddings stale indefinitely until:
+
 1. User manually triggers batch re-embedding
 2. Next project activation (if implemented)
 3. MCP server restart (if implemented)
@@ -147,6 +158,7 @@ This creates unpredictable staleness windows.
 ### Implementation Details
 
 **P0 - edit_note Trigger**:
+
 ```typescript
 // In src/tools/index.ts, line 441-446
 } else if (name === "edit_note") {
@@ -167,12 +179,14 @@ This creates unpredictable staleness windows.
 ```
 
 **P1 - Project Activation Trigger**:
+
 - Query database for notes without embeddings
 - Query database for notes modified since last embedding
 - Batch trigger embeddings (use existing batchGenerate service)
 - Run async to avoid blocking project activation
 
 **P2 - MCP Startup Trigger**:
+
 - Reuse P1 detection logic
 - Trigger on server initialization
 - Consider startup flag to disable if unwanted
@@ -187,13 +201,15 @@ This creates unpredictable staleness windows.
 
 ### User Impact
 
-**What changes for you**: 
+**What changes for you**:
+
 - Edited notes will automatically update search results without manual re-embedding
 - Search will always reflect latest content (no stale results)
 
 **Effort required**: Zero (automatic background processing)
 
-**Risk if ignored**: 
+**Risk if ignored**:
+
 - Search results become increasingly stale as users edit notes
 - Users must remember to manually re-embed after edits
 - Semantic search quality degrades over time
@@ -203,11 +219,13 @@ This creates unpredictable staleness windows.
 ### Sources Consulted
 
 **Codebase**:
+
 - `/apps/mcp/src/tools/index.ts` - Current trigger implementation
 - `/apps/mcp/src/services/embedding/triggerEmbedding.ts` - Embedding service
 - `/apps/mcp/src/services/embedding/__tests__/integration.test.ts` - Performance targets
 
 **Industry Research**:
+
 - [Make chat an expert in your workspace - VS Code](https://code.visualstudio.com/docs/copilot/reference/workspace-context)
 - [Workspace indexing in Visual Studio](https://learn.microsoft.com/en-us/visualstudio/extensibility/workspace-indexing?view=vs-2022)
 - [Search optimizations and limitations - Notion API](https://developers.notion.com/reference/search-optimizations-and-limitations)
@@ -215,12 +233,14 @@ This creates unpredictable staleness windows.
 ### Data Transparency
 
 **Found**:
+
 - Current trigger implementation (write_note only)
 - Performance metrics from test suite
 - VS Code background index update behavior
 - Notion eventual consistency model
 
 **Not Found**:
+
 - Production usage metrics (edit_note frequency)
 - Actual embedding performance in production
 - Obsidian indexing implementation details

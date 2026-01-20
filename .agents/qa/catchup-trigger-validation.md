@@ -21,6 +21,7 @@
 ### REQ-001 Implementation Analysis
 
 **Query Logic** (lines 28-112):
+
 1. Lists all notes from basic-memory for project (depth: 10)
 2. Parses permalinks from markdown table output
 3. Queries distinct entity_ids from brain_embeddings
@@ -34,6 +35,7 @@
 ### REQ-002 Implementation Analysis
 
 **Fire-and-Forget Pattern** (index.ts lines 157-159):
+
 ```typescript
 triggerCatchupEmbedding(project).catch((error) => {
   logger.error({ project, error }, "Catch-up embedding trigger failed");
@@ -41,6 +43,7 @@ triggerCatchupEmbedding(project).catch((error) => {
 ```
 
 **Verification**:
+
 - No `await` keyword - bootstrap_context returns immediately
 - Error caught and logged, does not propagate to caller
 - Batch processing uses `generateEmbeddings({ project, limit: 0, force: false })` (line 143)
@@ -51,6 +54,7 @@ triggerCatchupEmbedding(project).catch((error) => {
 ### REQ-003a Implementation Analysis
 
 **Trigger Event** (catchupTrigger.ts lines 136-139):
+
 ```typescript
 logger.info(
   { project, missingCount: count },
@@ -66,6 +70,7 @@ logger.info(
 ### REQ-003b Implementation Analysis
 
 **Completion Event** (lines 150-158):
+
 ```typescript
 logger.info(
   {
@@ -79,6 +84,7 @@ logger.info(
 ```
 
 **Error Event** (lines 166-172):
+
 ```typescript
 logger.error(
   {
@@ -114,6 +120,7 @@ logger.error(
 **Coverage Assessment**: 75% (parameter validation + error paths covered, happy path requires integration test)
 
 **Integration Test Gap**: Test file documents 5 required integration tests (lines 39-50):
+
 1. Correct count with real data
 2. Batch embedding trigger verification
 3. Fire-and-forget non-blocking behavior
@@ -129,11 +136,13 @@ logger.error(
 **File**: `src/tools/bootstrap-context/index.ts`
 
 **Import** (line 30):
+
 ```typescript
 import { triggerCatchupEmbedding } from "./catchupTrigger";
 ```
 
 **Invocation** (lines 155-159):
+
 ```typescript
 // Trigger catch-up embedding asynchronously (non-blocking)
 // Per strategic verdict 038: run on every bootstrap_context call
@@ -145,6 +154,7 @@ triggerCatchupEmbedding(project).catch((error) => {
 **Placement**: After context building, before return statement (lines 161-168)
 
 **Verification Checklist**:
+
 - [x] Import statement present
 - [x] Function called with project parameter
 - [x] Fire-and-forget pattern (no await)
@@ -157,16 +167,19 @@ triggerCatchupEmbedding(project).catch((error) => {
 ### Generate Embeddings Integration
 
 **Handler Call** (catchupTrigger.ts line 143):
+
 ```typescript
 generateEmbeddings({ project, limit: 0, force: false })
 ```
 
 **Arguments Verification**:
+
 - `project`: Passed through from bootstrap_context ✓
 - `limit: 0`: Documented as "process all missing" in embed tool ✓
 - `force: false`: Only generate missing embeddings (not regenerate existing) ✓
 
 **Return Value Handling**:
+
 - Success: Parses stats from result.content[0].text (lines 146-158)
 - Failure: Logs error without rethrowing (lines 164-172)
 
@@ -179,12 +192,14 @@ generateEmbeddings({ project, limit: 0, force: false })
 **Measured**: Not directly measured (requires profiling)
 
 **Estimated**:
+
 - List notes from basic-memory: ~20-50ms (depends on note count)
 - Query brain_embeddings: ~5-10ms (indexed query)
 - Set comparison: ~1ms
 - **Total**: ~30-60ms per bootstrap_context call
 
 **Zero-Result Optimization**:
+
 - Early return when count = 0 (line 130-132)
 - No batch embedding triggered
 - Total overhead: ~30-60ms
@@ -195,6 +210,7 @@ generateEmbeddings({ project, limit: 0, force: false })
 ### Non-Blocking Verification
 
 **Evidence**:
+
 1. No `await` on triggerCatchupEmbedding (index.ts line 157)
 2. bootstrap_context returns immediately after trigger (line 161)
 3. Batch processing runs in promise chain (lines 143-173)
@@ -333,6 +349,7 @@ generateEmbeddings({ project, limit: 0, force: false })
 **Blockers**: None
 
 **Pre-Merge Checklist**:
+
 - [x] All requirements implemented
 - [x] Unit tests passing
 - [x] Integration verified
@@ -346,6 +363,7 @@ generateEmbeddings({ project, limit: 0, force: false })
 ### Evidence Summary
 
 **Test Run Output**:
+
 ```
 bun test v1.3.4 (5eb2145b)
 ✓ 4 pass
@@ -355,16 +373,19 @@ Ran 4 tests across 1 file. [2.70s]
 ```
 
 **Integration Points Verified**:
+
 1. bootstrap-context/index.ts lines 157-159
 2. catchupTrigger.ts exports used correctly
 3. embed tool handler called with correct arguments
 
 **Performance Evidence**:
+
 - Query overhead estimated 30-60ms (within 100ms target)
 - Fire-and-forget confirmed (no await)
 - Error handling prevents blocking
 
 **Quality Metrics**:
+
 - Requirements coverage: 100% (4/4 requirements)
 - Acceptance criteria: 94% (17/18 criteria)
 - Test coverage: 75% (parameter validation + error paths)

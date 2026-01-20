@@ -13,6 +13,7 @@ informed: implementer, planner, qa
 The Brain MCP server currently triggers embedding generation only on `write_note` operations (fire-and-forget). The `edit_note` operation explicitly skips embedding triggers with a comment "For now, skip - batch embed can catch up" (line 444 in tools/index.ts).
 
 User proposes adding automatic embedding triggers at:
+
 1. On `edit_note` operations (currently skipped)
 2. On project activation (async background)
 3. On MCP startup (async background)
@@ -49,28 +50,29 @@ if (name === "write_note") {
 ```
 
 **Characteristics**:
-- Trigger: Synchronous (called immediately after write success)
-- Execution: Asynchronous (does not block tool return)
-- Failure mode: Logged warning, does not affect write success
+* Trigger: Synchronous (called immediately after write success)
+* Execution: Asynchronous (does not block tool return)
+* Failure mode: Logged warning, does not affect write success
 
 **Assessment**: This is a **hybrid write-through/write-behind pattern**:
-- Write-through aspect: Trigger happens immediately after write
-- Write-behind aspect: Actual embedding generation is async (fire-and-forget)
+* Write-through aspect: Trigger happens immediately after write
+* Write-behind aspect: Actual embedding generation is async (fire-and-forget)
 
 ### Inngest Event-Driven Architecture
 
 **Existing Infrastructure** (from inngest/events.ts):
-- Session protocol events (protocol.start, protocol.end)
-- Orchestrator events (agent.invoked, agent.completed)
-- Feature completion events
-- Approval workflow events
+* Session protocol events (protocol.start, protocol.end)
+* Orchestrator events (agent.invoked, agent.completed)
+* Feature completion events
+* Approval workflow events
 
 **Assessment**: The system already has event-driven infrastructure via Inngest. However, no note-level events exist:
-- ✗ No `note/created` event
-- ✗ No `note/updated` event
-- ✗ No `note/embedded` event
+* ✗ No `note/created` event
+* ✗ No `note/updated` event
+* ✗ No `note/embedded` event
 
 **Consideration**: Adding note-level events would require:
+
 1. Event emission from write_note/edit_note
 2. Inngest workflow to consume events
 3. Graceful degradation when Inngest unavailable
@@ -119,16 +121,16 @@ else if (name === "edit_note") {
 ```
 
 **Pros**:
-- Consistent with write_note pattern
-- Immediate freshness (embeddings updated after edit)
-- No architectural changes needed
-- Fire-and-forget preserves zero latency
+* Consistent with write_note pattern
+* Immediate freshness (embeddings updated after edit)
+* No architectural changes needed
+* Fire-and-forget preserves zero latency
 
 **Cons**:
-- Requires additional read_note call to fetch content after edit
-- More HTTP overhead (read_note call to basic-memory)
-- Tools remain responsible for index maintenance
-- No bulk catch-up for missed edits
+* Requires additional read_note call to fetch content after edit
+* More HTTP overhead (read_note call to basic-memory)
+* Tools remain responsible for index maintenance
+* No bulk catch-up for missed edits
 
 ### Option 2: Event-Driven with Inngest Workflows
 
@@ -176,17 +178,17 @@ await inngest.send({
 ```
 
 **Pros**:
-- Clean separation of concerns (tools emit events, workflows handle side effects)
-- Centralizes embedding logic in workflow
-- Enables future enhancements (batch processing, prioritization)
-- Retry and failure handling built into Inngest
-- Observability via Inngest dashboard
+* Clean separation of concerns (tools emit events, workflows handle side effects)
+* Centralizes embedding logic in workflow
+* Enables future enhancements (batch processing, prioritization)
+* Retry and failure handling built into Inngest
+* Observability via Inngest dashboard
 
 **Cons**:
-- Requires Inngest to be running (graceful degradation needed)
-- More complex architecture (events, workflows, fallback)
-- Additional latency (~50-200ms event dispatch + workflow invocation)
-- Dependency on external service (Inngest dev server)
+* Requires Inngest to be running (graceful degradation needed)
+* More complex architecture (events, workflows, fallback)
+* Additional latency (~50-200ms event dispatch + workflow invocation)
+* Dependency on external service (Inngest dev server)
 
 ### Option 3: Project Activation Trigger
 
@@ -224,16 +226,16 @@ export function triggerEmbeddingCatchUp(project: string): void {
 ```
 
 **Pros**:
-- Predictable trigger point (user-initiated)
-- Catches up on missed embeddings from edit_note
-- No latency impact on write/edit operations
-- User has visibility (can see embedding generation happening)
+* Predictable trigger point (user-initiated)
+* Catches up on missed embeddings from edit_note
+* No latency impact on write/edit operations
+* User has visibility (can see embedding generation happening)
 
 **Cons**:
-- Can delay project activation if many stale notes
-- Not immediate (edits stay stale until next project activation)
-- Duplicate work if project activated multiple times
-- No catch-up if user doesn't switch projects
+* Can delay project activation if many stale notes
+* Not immediate (edits stay stale until next project activation)
+* Duplicate work if project activated multiple times
+* No catch-up if user doesn't switch projects
 
 ### Option 4: MCP Startup Trigger
 
@@ -267,15 +269,15 @@ export function triggerStartupEmbeddingCatchUp(): void {
 ```
 
 **Pros**:
-- Automatic catch-up on every MCP start
-- No user interaction needed
-- Catches all missed embeddings across all projects
+* Automatic catch-up on every MCP start
+* No user interaction needed
+* Catches all missed embeddings across all projects
 
 **Cons**:
-- Can spike CPU/memory on startup
-- User has no control over timing
-- Wasteful if restarted frequently
-- Stale embeddings persist until next restart
+* Can spike CPU/memory on startup
+* User has no control over timing
+* Wasteful if restarted frequently
+* Stale embeddings persist until next restart
 
 ### Option 5: Scheduled Reconciliation (Inngest Cron)
 
@@ -305,16 +307,16 @@ export const embeddingReconciliationWorkflow = inngest.createFunction(
 ```
 
 **Pros**:
-- Zero user-facing latency impact
-- Automatic catch-up without user action
-- Predictable resource usage (5-minute intervals)
-- Eventual consistency model
+* Zero user-facing latency impact
+* Automatic catch-up without user action
+* Predictable resource usage (5-minute intervals)
+* Eventual consistency model
 
 **Cons**:
-- Embeddings can be 5+ minutes stale
-- Requires Inngest to be running
-- Continuous background CPU usage
-- Staleness window unacceptable for interactive search
+* Embeddings can be 5+ minutes stale
+* Requires Inngest to be running
+* Continuous background CPU usage
+* Staleness window unacceptable for interactive search
 
 ## Recommended Architecture
 
@@ -415,9 +417,9 @@ if (await isInngestAvailable()) {
 4. Validate embedding generation for append/prepend/find_replace/replace_section
 
 **Acceptance Criteria**:
-- edit_note operations trigger embedding generation
-- Embedding trigger does not block edit_note return
-- Failed embeddings log warnings but do not fail edit operation
+* edit_note operations trigger embedding generation
+* Embedding trigger does not block edit_note return
+* Failed embeddings log warnings but do not fail edit operation
 
 ### Phase 2: Scheduled Reconciliation (P2 - Optional)
 
@@ -431,9 +433,9 @@ if (await isInngestAvailable()) {
 4. Add admin tool to trigger reconciliation manually
 
 **Acceptance Criteria**:
-- Cron workflow runs every hour
-- Missing embeddings are caught up within 1 hour
-- Reconciliation respects concurrency limits (p-limit)
+* Cron workflow runs every hour
+* Missing embeddings are caught up within 1 hour
+* Reconciliation respects concurrency limits (p-limit)
 
 ### Phase 3: Monitoring and Observability (P2)
 
@@ -528,43 +530,44 @@ Track metrics to determine if Phase 2 is needed:
 ### Mitigation
 
 **Overhead from read_note**: Acceptable because:
-- Async (does not block user)
-- Amortized over embedding generation time (~260ms total)
-- Edit operations are less frequent than reads
+* Async (does not block user)
+* Amortized over embedding generation time (~260ms total)
+* Edit operations are less frequent than reads
 
 **Missed embeddings**: Acceptable because:
-- Rare (fire-and-forget has high success rate)
-- Manual batch embed tool exists for catch-up
-- Can add scheduled reconciliation if evidence shows it's needed
+* Rare (fire-and-forget has high success rate)
+* Manual batch embed tool exists for catch-up
+* Can add scheduled reconciliation if evidence shows it's needed
 
 ## Validation Requirements
 
 ### Before Implementation
 
-- [ ] Baseline: Measure current embedding freshness lag after write_note
-- [ ] Test: Verify triggerEmbedding handles async execution correctly (no blocking)
-- [ ] Test: Verify embedding failures do not crash or block tool execution
+* [ ] Baseline: Measure current embedding freshness lag after write_note
+* [ ] Test: Verify triggerEmbedding handles async execution correctly (no blocking)
+* [ ] Test: Verify embedding failures do not crash or block tool execution
 
 ### After Implementation
 
-- [ ] Verify: edit_note operations trigger embedding generation
-- [ ] Measure: Embedding lag after edit_note (target: <5 seconds)
-- [ ] Verify: read_note overhead is acceptable (<200ms total)
-- [ ] Verify: Failed embeddings are logged and do not affect edit success
+* [ ] Verify: edit_note operations trigger embedding generation
+* [ ] Measure: Embedding lag after edit_note (target: <5 seconds)
+* [ ] Verify: read_note overhead is acceptable (<200ms total)
+* [ ] Verify: Failed embeddings are logged and do not affect edit success
 
 ## Reversibility Assessment
 
-- [x] **Rollback capability**: Remove edit_note trigger branch, revert to "skip" comment
-- [x] **Vendor lock-in**: No new dependencies introduced
-- [x] **Exit strategy**: Simple code removal (no data migration needed)
-- [x] **Legacy impact**: No breaking changes to tools or APIs
-- [x] **Data migration**: Not applicable (embeddings are derived data)
+* [x] **Rollback capability**: Remove edit_note trigger branch, revert to "skip" comment
+* [x] **Vendor lock-in**: No new dependencies introduced
+* [x] **Exit strategy**: Simple code removal (no data migration needed)
+* [x] **Legacy impact**: No breaking changes to tools or APIs
+* [x] **Data migration**: Not applicable (embeddings are derived data)
 
 ### Exit Strategy
 
 **Trigger conditions**: Embedding lag unacceptable, or edit_note overhead too high
 
 **Migration path**:
+
 1. Remove edit_note trigger branch from tools/index.ts
 2. Restore "skip" comment
 3. Rely on manual batch embed or scheduled reconciliation
@@ -576,50 +579,50 @@ Track metrics to determine if Phase 2 is needed:
 ### Rejected: Event-Driven with Inngest (Option 2)
 
 **Why rejected**:
-- Adds significant complexity (events, workflows, graceful degradation)
-- Requires Inngest to be running (external dependency)
-- Adds 50-200ms latency (event dispatch + workflow invocation)
-- Benefit (separation of concerns) does not justify cost for current scale
+* Adds significant complexity (events, workflows, graceful degradation)
+* Requires Inngest to be running (external dependency)
+* Adds 50-200ms latency (event dispatch + workflow invocation)
+* Benefit (separation of concerns) does not justify cost for current scale
 
 **Reconsider if**: System grows to thousands of notes/day, or embedding logic becomes complex enough to warrant workflow orchestration.
 
 ### Rejected: Project Activation Trigger (Option 3)
 
 **Why rejected**:
-- Unpredictable user experience (activation may be slow)
-- No guarantee user will activate project (stale embeddings persist)
-- Duplicate work if activated multiple times
+* Unpredictable user experience (activation may be slow)
+* No guarantee user will activate project (stale embeddings persist)
+* Duplicate work if activated multiple times
 
 ### Rejected: MCP Startup Trigger (Option 4)
 
 **Why rejected**:
-- Startup spike in CPU/memory usage
-- No user control or visibility
-- Frequent restarts during development waste resources
+* Startup spike in CPU/memory usage
+* No user control or visibility
+* Frequent restarts during development waste resources
 
 ### Rejected: Scheduled Reconciliation Only (Option 5)
 
 **Why rejected**:
-- 30-minute average staleness unacceptable for interactive search
-- Continuous background CPU usage
-- Does not solve immediate freshness requirement
+* 30-minute average staleness unacceptable for interactive search
+* Continuous background CPU usage
+* Does not solve immediate freshness requirement
 
 ## More Information
 
 ### Related ADRs
 
-- ADR-002: Embedding Performance Optimization - Established batch API usage and concurrency patterns
+* ADR-002: Embedding Performance Optimization - Established batch API usage and concurrency patterns
 
 ### Related Analysis
 
-- `.agents/analysis/025-embedding-performance-research.md` - Batch API research
-- `.agents/analysis/026-timeout-changes-performance-review.md` - Timeout cascade analysis
+* `.agents/analysis/025-embedding-performance-research.md` - Batch API research
+* `.agents/analysis/026-timeout-changes-performance-review.md` - Timeout cascade analysis
 
 ### Related Code
 
-- `src/tools/index.ts:429-445` - Current write_note trigger implementation
-- `src/services/embedding/triggerEmbedding.ts` - Fire-and-forget embedding generation
-- `src/services/embedding/generateEmbedding.ts` - Batch embedding API client
+* `src/tools/index.ts:429-445` - Current write_note trigger implementation
+* `src/services/embedding/triggerEmbedding.ts` - Fire-and-forget embedding generation
+* `src/services/embedding/generateEmbedding.ts` - Batch embedding API client
 
 ### Future Enhancements
 
@@ -633,10 +636,10 @@ If Phase 2 (scheduled reconciliation) is implemented:
 ### Open Questions
 
 1. **Should edit_note always trigger, or only for content-modifying operations?**
-   - Recommendation: Always trigger to ensure freshness (metadata changes are rare)
+   * Recommendation: Always trigger to ensure freshness (metadata changes are rare)
 
 2. **Should embedding generation be configurable (enable/disable)?**
-   - Recommendation: Yes, via environment variable `EMBEDDING_AUTO_TRIGGER=true/false`
+   * Recommendation: Yes, via environment variable `EMBEDDING_AUTO_TRIGGER=true/false`
 
 3. **What is acceptable embedding lag for search freshness?**
-   - Recommendation: <5 seconds for interactive search; validate with user feedback
+   * Recommendation: <5 seconds for interactive search; validate with user feedback

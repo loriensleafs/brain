@@ -37,6 +37,7 @@ Git now reports:
 **Divergence Point**: 1f920cd73ecd84df345373620770df3f65b1a80d
 
 **Local Commits (32 commits from feature branch)**:
+
 ```
 9fe20df docs: complete session 04 implementation log
 9830fea feat(mcp): add embedding catch-up trigger on session start
@@ -51,11 +52,13 @@ f6d41c4 fix(mcp): remove unused generateEmbedding import in search service
 ```
 
 **Origin Commits (1 squash merge commit)**:
+
 ```
 81ef246 feat: embedding optimization (59x perf) + auto-sync triggers (#1)
 ```
 
 **Content Comparison**:
+
 - The squash commit (81ef246) contains the combined changes from all 32 local commits
 - No unique content exists in local main
 - All work is preserved in the squash commit
@@ -65,6 +68,7 @@ f6d41c4 fix(mcp): remove unused generateEmbedding import in search service
 **Pattern**: GitHub squash merge workflow creates divergence
 
 When using "Squash and merge" on GitHub:
+
 1. GitHub creates a new commit combining all feature branch commits
 2. GitHub pushes this squash commit to origin/main
 3. Local main still contains the original 32 individual commits
@@ -77,6 +81,7 @@ This is **expected behavior** with squash merges, not a problem.
 The 32 local commits are **duplicates** of work already merged via the squash commit.
 
 Evidence:
+
 - Squash commit message includes all 32 commit messages
 - git diff shows no unique changes in local main
 - All file changes are identical
@@ -85,12 +90,14 @@ Evidence:
 
 **Why this happened**: Standard GitHub squash merge workflow
 
-**Why it's safe to reset**: 
+**Why it's safe to reset**:
+
 - All work is preserved in origin/main via squash commit (81ef246)
 - Local commits contain no unique changes
 - Squash merge is the intended final form
 
 **Alternative approaches rejected**:
+
 - Rebase: Unnecessary complexity, creates duplicate commits
 - Merge: Creates ugly merge commit, preserves redundant history
 - Keep divergence: Makes future operations confusing
@@ -124,11 +131,13 @@ git reset --hard origin/main
 ```
 
 **What this does**:
+
 1. Moves local main branch pointer to origin/main (81ef246)
 2. Discards the 32 individual commits from local history
 3. Updates working directory to match origin/main exactly
 
 **Verification after reset**:
+
 ```bash
 git status
 # Should show: "Your branch is up to date with 'origin/main'"

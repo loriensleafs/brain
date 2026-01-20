@@ -63,6 +63,7 @@ Created `.agents/analysis/037-embedding-catchup-requirements.md`:
 ## Research Sources
 
 **Codebase**:
+
 - `src/tools/index.ts` - Current trigger implementation
 - `src/tools/embed/index.ts` - Batch embedding (4 concurrent operations)
 - `src/services/embedding/triggerEmbedding.ts` - Fire-and-forget service
@@ -70,6 +71,7 @@ Created `.agents/analysis/037-embedding-catchup-requirements.md`:
 - Commit b09fc49 - Batch API migration
 
 **Industry Research**:
+
 - VS Code workspace indexing documentation
 - Dropbox efficient batched synchronization research paper
 - Tenacity retries exponential backoff patterns (2026)
@@ -94,11 +96,13 @@ Created `.agents/analysis/037-embedding-catchup-requirements.md`:
 **Recommended Next Step**: Route to planner for P0 implementation plan (project activation trigger).
 
 **Key Constraints**:
+
 - No production database access (cannot measure actual backlog)
 - Requires detection mechanism (query notes without embeddings)
 - Must be async/non-blocking (user experience)
 
 **Files Modified**:
+
 - Created: `.agents/analysis/037-embedding-catchup-requirements.md`
 - Created: `.agents/sessions/2026-01-20-session-01-embedding-catchup-requirements.md`
 

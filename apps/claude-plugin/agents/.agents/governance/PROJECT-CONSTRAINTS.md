@@ -123,6 +123,7 @@ Single source of truth for project constraints. Index-style document pointing to
 **Rationale Summary**: PRs and commits should focus on technical changes only, not tool attribution. Session references are internal context not relevant to external readers.
 
 **Examples of prohibited content**:
+
 - "Generated with [Claude Code]" footers
 - "Session 17 orchestration" in PR descriptions
 - Tool attribution signatures in commit messages
