@@ -27,6 +27,7 @@ import {
   type CacheOptions,
 } from "./sessionCache";
 import { buildSessionEnrichment } from "./sessionEnrichment";
+import { triggerCatchupEmbedding } from "./catchupTrigger";
 
 export async function handler(
   args: BootstrapContextArgs
@@ -150,6 +151,12 @@ export async function handler(
       },
       "Bootstrap context built successfully with session enrichment"
     );
+
+    // Trigger catch-up embedding asynchronously (non-blocking)
+    // Per strategic verdict 038: run on every bootstrap_context call
+    triggerCatchupEmbedding(project).catch((error) => {
+      logger.error({ project, error }, "Catch-up embedding trigger failed");
+    });
 
     return {
       content: [
