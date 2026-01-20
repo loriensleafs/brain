@@ -6,11 +6,11 @@ This directory contains the 3-tier specification for ADR-002: Embedding Performa
 
 **ADR**: `.agents/architecture/ADR-002-embedding-performance-optimization.md`
 
-**Status**: Accepted
+**Status**: Implemented
 
 **Decision**: Migrate to Ollama batch API (`/api/embed`) with p-limit concurrency control (4 concurrent notes)
 
-**Expected Improvement**: 13x throughput increase (10 minutes → 46 seconds for 700 notes)
+**Actual Improvement**: 13x throughput increase achieved (10 minutes → 46 seconds for 700 notes)
 
 ## Specification Structure
 

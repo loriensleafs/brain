@@ -2,7 +2,7 @@
 type: task
 id: TASK-001
 title: Add TaskType enum and update OllamaClient signatures
-status: todo
+status: complete
 priority: P0
 complexity: XS
 estimate: 10m

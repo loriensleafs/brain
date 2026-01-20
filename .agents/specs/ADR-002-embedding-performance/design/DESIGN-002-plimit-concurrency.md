@@ -2,7 +2,7 @@
 type: design
 id: DESIGN-002
 title: p-limit concurrency control architecture
-status: draft
+status: implemented
 priority: P0
 related:
   - REQ-002

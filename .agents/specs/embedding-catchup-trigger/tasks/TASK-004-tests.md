@@ -2,7 +2,7 @@
 type: task
 id: TASK-004
 title: Add tests for catch-up trigger
-status: todo
+status: complete
 priority: P1
 complexity: S
 estimate: 1.5h

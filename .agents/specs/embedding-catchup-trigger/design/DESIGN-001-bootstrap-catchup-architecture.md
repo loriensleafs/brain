@@ -2,7 +2,7 @@
 type: design
 id: DESIGN-001
 title: Bootstrap context catch-up trigger architecture
-status: draft
+status: implemented
 priority: P0
 related:
   - REQ-001

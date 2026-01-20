@@ -2,7 +2,7 @@
 type: task
 id: TASK-003
 title: Add p-limit dependency for concurrency control
-status: todo
+status: complete
 priority: P0
 complexity: XS
 estimate: 30min

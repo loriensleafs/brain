@@ -8,7 +8,7 @@ Lightweight 3-tier specification for adding TaskType parameter to embedding meth
 
 **Scope**: Add TaskType parameter with "search_document:" and "search_query:" prefixes to embedding generation methods.
 
-**Effort**: 20 minutes (XS complexity quick fix)
+**Effort**: 20 minutes (XS complexity quick fix) - COMPLETED
 
 **Context**: ADR-003 builds on ADR-002's batch API foundation. The batch method already has TaskType parameter; this spec adds it to the single-text method and updates call sites.
 
@@ -92,12 +92,12 @@ Specifications are proportional to implementation effort.
 
 From ADR-003:
 
-- [ ] Unit tests verify both task type prefixes
-- [ ] Unit test verifies default parameter behavior
-- [ ] Embed tool uses "search_document" (manual test)
-- [ ] Search service uses "search_query" (manual test)
-- [ ] TypeScript compilation succeeds
-- [ ] No linting errors
+- [x] Unit tests verify both task type prefixes
+- [x] Unit test verifies default parameter behavior
+- [x] Embed tool uses "search_document" (manual test)
+- [x] Search service uses "search_query" (manual test)
+- [x] TypeScript compilation succeeds
+- [x] No linting errors
 
 ## Related Artifacts
 

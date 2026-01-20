@@ -2,7 +2,7 @@
 type: requirement
 id: REQ-001
 title: Batch API migration for embedding generation
-status: draft
+status: implemented
 priority: P0
 category: functional
 epic: EPIC-ADR-002-implementation

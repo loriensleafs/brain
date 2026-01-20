@@ -2,7 +2,7 @@
 type: task
 id: TASK-002
 title: Update embed tool and search service call sites
-status: todo
+status: complete
 priority: P0
 complexity: XS
 estimate: 5m

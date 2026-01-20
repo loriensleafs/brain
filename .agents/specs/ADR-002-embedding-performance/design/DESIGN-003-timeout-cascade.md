@@ -2,7 +2,7 @@
 type: design
 id: DESIGN-003
 title: Timeout cascade architecture with fail-fast errors
-status: draft
+status: implemented
 priority: P1
 related:
   - REQ-003

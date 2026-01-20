@@ -2,7 +2,7 @@
 type: design
 id: DESIGN-001
 title: Ollama client batch API integration
-status: draft
+status: implemented
 priority: P0
 related:
   - REQ-001

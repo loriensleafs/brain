@@ -2,7 +2,7 @@
 type: task
 id: TASK-002
 title: Refactor embed tool to use batch API
-status: todo
+status: complete
 priority: P0
 complexity: M
 estimate: 3h

@@ -2,7 +2,7 @@
 type: requirement
 id: REQ-002
 title: Apply task-appropriate prefix to embedding text
-status: draft
+status: implemented
 priority: P0
 category: functional
 epic: EPIC-ADR-003-implementation

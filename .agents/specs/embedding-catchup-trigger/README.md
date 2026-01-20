@@ -2,7 +2,7 @@
 
 **Feature**: Automatic background embedding catch-up on session start
 **Effort**: 4 hours
-**Status**: Draft
+**Status**: Implemented
 **Created**: 2026-01-20
 
 ## Overview
@@ -62,7 +62,7 @@ REQ-003b (Completion Event Logging)
 
 | ID | Title | Status |
 |----|-------|--------|
-| DESIGN-001 | Bootstrap context catch-up trigger architecture | Draft |
+| DESIGN-001 | Bootstrap context catch-up trigger architecture | Implemented |
 
 ### Tasks (`tasks/`)
 
@@ -89,10 +89,12 @@ REQ-003b (Completion Event Logging)
 ## Implementation Summary
 
 **New Files**:
+
 - `src/tools/bootstrap-context/catchupTrigger.ts` - Query and batch trigger logic
 - `src/tools/bootstrap-context/__tests__/catchupTrigger.test.ts` - Unit tests
 
 **Modified Files**:
+
 - `src/tools/bootstrap-context/index.ts` - Add catch-up trigger invocation
 
 **Integration Point**: After context building, before return (fire-and-forget)
@@ -113,12 +115,12 @@ REQ-003b (Completion Event Logging)
 
 ## Success Criteria
 
-- [ ] Missing embeddings query executes on session start (< 100ms overhead)
-- [ ] Catch-up trigger fires when missing embeddings detected
-- [ ] Session start remains responsive (fire-and-forget pattern)
-- [ ] Batch processing completes in background
-- [ ] Observability logging provides visibility into catch-up progress (REQ-003a, REQ-003b)
-- [ ] All tests pass (> 90% coverage)
+- [x] Missing embeddings query executes on session start (< 100ms overhead)
+- [x] Catch-up trigger fires when missing embeddings detected
+- [x] Session start remains responsive (fire-and-forget pattern)
+- [x] Batch processing completes in background
+- [x] Observability logging provides visibility into catch-up progress (REQ-003a, REQ-003b)
+- [x] All tests pass (> 90% coverage)
 
 ## Next Steps
 

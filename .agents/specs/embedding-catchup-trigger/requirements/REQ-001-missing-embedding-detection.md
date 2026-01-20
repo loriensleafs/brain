@@ -2,7 +2,7 @@
 type: requirement
 id: REQ-001
 title: Missing embedding detection on session start
-status: draft
+status: implemented
 priority: P0
 category: functional
 epic: embedding-catchup-trigger

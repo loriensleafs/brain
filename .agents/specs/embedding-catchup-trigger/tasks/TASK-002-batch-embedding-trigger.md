@@ -2,7 +2,7 @@
 type: task
 id: TASK-002
 title: Implement batch embedding trigger
-status: todo
+status: complete
 priority: P0
 complexity: S
 estimate: 1h

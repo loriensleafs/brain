@@ -2,7 +2,7 @@
 type: task
 id: TASK-005
 title: Add unit and integration tests for batch embedding
-status: todo
+status: complete
 priority: P0
 complexity: M
 estimate: 4h

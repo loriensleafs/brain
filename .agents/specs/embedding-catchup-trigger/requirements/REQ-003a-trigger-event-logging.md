@@ -2,7 +2,7 @@
 type: requirement
 id: REQ-003a
 title: Log catch-up trigger events
-status: draft
+status: implemented
 priority: P1
 category: non-functional
 epic: embedding-catchup-trigger

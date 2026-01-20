@@ -2,7 +2,7 @@
 type: task
 id: TASK-001
 title: Add generateBatchEmbeddings method to OllamaClient
-status: todo
+status: complete
 priority: P0
 complexity: S
 estimate: 2h

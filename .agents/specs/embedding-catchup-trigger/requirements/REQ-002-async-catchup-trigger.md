@@ -2,7 +2,7 @@
 type: requirement
 id: REQ-002
 title: Asynchronous catch-up processing trigger
-status: draft
+status: implemented
 priority: P0
 category: functional
 epic: embedding-catchup-trigger

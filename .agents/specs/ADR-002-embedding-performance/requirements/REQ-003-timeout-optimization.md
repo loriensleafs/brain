@@ -2,7 +2,7 @@
 type: requirement
 id: REQ-003
 title: Timeout optimization with fail-fast error reporting
-status: draft
+status: implemented
 priority: P1
 category: non-functional
 epic: EPIC-ADR-002-implementation

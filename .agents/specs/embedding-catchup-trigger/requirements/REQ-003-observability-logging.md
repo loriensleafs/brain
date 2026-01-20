@@ -29,6 +29,7 @@ tags:
 **Reason**: EARS compliance violation (compound WHEN clause)
 
 **Superseded By**:
+
 - **REQ-003a**: Log catch-up trigger events (WHEN triggered)
 - **REQ-003b**: Log catch-up completion events (WHEN completes)
 
@@ -47,6 +48,7 @@ SO THAT operators can monitor catch-up progress and diagnose failures
 ## Migration Guide
 
 All references to REQ-003 should be updated to reference both:
+
 - REQ-003a (trigger logging)
 - REQ-003b (completion logging)
 

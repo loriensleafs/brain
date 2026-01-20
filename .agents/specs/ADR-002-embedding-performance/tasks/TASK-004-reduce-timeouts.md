@@ -2,7 +2,7 @@
 type: task
 id: TASK-004
 title: Reduce timeouts for fail-fast error reporting
-status: todo
+status: complete
 priority: P1
 complexity: S
 estimate: 1h

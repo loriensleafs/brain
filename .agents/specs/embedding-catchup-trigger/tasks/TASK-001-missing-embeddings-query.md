@@ -2,7 +2,7 @@
 type: task
 id: TASK-001
 title: Implement missing embeddings query
-status: todo
+status: complete
 priority: P0
 complexity: S
 estimate: 1h

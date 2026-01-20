@@ -2,7 +2,7 @@
 type: requirement
 id: REQ-003
 title: Backward compatibility with default task type
-status: draft
+status: implemented
 priority: P0
 category: non-functional
 epic: EPIC-ADR-003-implementation

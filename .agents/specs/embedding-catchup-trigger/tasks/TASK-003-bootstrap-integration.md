@@ -2,7 +2,7 @@
 type: task
 id: TASK-003
 title: Integrate catch-up trigger into bootstrap_context
-status: todo
+status: complete
 priority: P0
 complexity: XS
 estimate: 0.5h

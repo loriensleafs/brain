@@ -2,7 +2,7 @@
 type: requirement
 id: REQ-001
 title: Task type enum for embedding prefixes
-status: draft
+status: implemented
 priority: P0
 category: functional
 epic: EPIC-ADR-003-implementation

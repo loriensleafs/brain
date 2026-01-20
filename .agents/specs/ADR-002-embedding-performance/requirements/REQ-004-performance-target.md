@@ -2,7 +2,7 @@
 type: requirement
 id: REQ-004
 title: Performance target of 5x minimum improvement
-status: draft
+status: implemented
 priority: P0
 category: non-functional
 epic: EPIC-ADR-002-implementation

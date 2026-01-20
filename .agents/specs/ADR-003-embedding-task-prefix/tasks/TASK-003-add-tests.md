@@ -2,7 +2,7 @@
 type: task
 id: TASK-003
 title: Add unit tests for task type prefix application
-status: todo
+status: complete
 priority: P0
 complexity: XS
 estimate: 5m

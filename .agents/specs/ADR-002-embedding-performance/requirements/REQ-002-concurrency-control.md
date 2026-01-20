@@ -2,7 +2,7 @@
 type: requirement
 id: REQ-002
 title: Concurrency control with p-limit for resource protection
-status: draft
+status: implemented
 priority: P0
 category: non-functional
 epic: EPIC-ADR-002-implementation
