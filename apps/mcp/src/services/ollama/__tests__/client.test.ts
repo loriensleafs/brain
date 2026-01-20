@@ -194,7 +194,7 @@ describe("OllamaClient", () => {
       globalThis.fetch = mockFetch as unknown as typeof fetch;
 
       const client = new OllamaClient();
-      await client.generateEmbedding("my text", "mxbai-embed-large");
+      await client.generateEmbedding("my text", "search_document", "mxbai-embed-large");
 
       const callArgs = mockFetch.mock.calls[0] as unknown as [
         string,
