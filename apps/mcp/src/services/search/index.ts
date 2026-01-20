@@ -20,7 +20,6 @@ import {
 } from "../../db/vectors";
 import { resolveProject } from "../../project/resolve";
 import { logger } from "../../utils/internal/logger";
-import { generateEmbedding } from "../embedding/generateEmbedding";
 import { OllamaClient } from "../ollama/client";
 import { ollamaConfig } from "../../config/ollama";
 import type {
