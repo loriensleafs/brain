@@ -15,7 +15,7 @@ export class OllamaClient {
 
   constructor(config: OllamaConfig = {}) {
     this.baseUrl = config.baseUrl ?? "http://localhost:11434";
-    this.timeout = config.timeout ?? 600000; // 10 minutes
+    this.timeout = config.timeout ?? 60000; // 60 seconds (reduced from 10 min for fail-fast)
   }
 
   /**
