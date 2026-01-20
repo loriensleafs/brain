@@ -31,7 +31,6 @@ export interface CacheOptions {
   project: string;
   timeframe: string;
   includeReferenced: boolean;
-  fullContent?: boolean;
 }
 
 /**
@@ -57,11 +56,11 @@ let stats = {
 /**
  * Generate a cache key from options
  *
- * Key format: `{project}:{timeframe}:{includeReferenced}:{fullContent}`
+ * Key format: `{project}:{timeframe}:{includeReferenced}`
  */
 export function generateCacheKey(options: CacheOptions): string {
-  const { project, timeframe, includeReferenced, fullContent = false } = options;
-  return `${project}:${timeframe}:${includeReferenced}:${fullContent}`;
+  const { project, timeframe, includeReferenced } = options;
+  return `${project}:${timeframe}:${includeReferenced}`;
 }
 
 /**

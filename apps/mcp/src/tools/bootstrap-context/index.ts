@@ -47,14 +47,12 @@ export async function handler(
 
   const timeframe = args.timeframe || "5d";
   const includeReferenced = args.include_referenced ?? true;
-  const fullContent = args.full_context ?? false;
 
   // Check cache first
   const cacheOptions: CacheOptions = {
     project,
     timeframe,
     includeReferenced,
-    fullContent,
   };
 
   const cached = getCachedContext(cacheOptions);
@@ -121,6 +119,7 @@ export async function handler(
     setCachedContext(cacheOptions, structuredContent);
 
     // Build formatted output with session enrichment
+    // Always use full content for rich context injection
     const formattedOutput = buildFormattedOutputWithLimits(
       {
         project,
@@ -132,7 +131,7 @@ export async function handler(
         sessionEnrichment,
       },
       {}, // default limits
-      fullContent
+      true // Always include full content
     );
 
     logger.info(

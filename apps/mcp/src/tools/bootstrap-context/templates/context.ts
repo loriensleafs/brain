@@ -38,12 +38,12 @@ export function renderContext(data: ContextData): string {
     sections.push(renderSessionBlock(data.sessionEnrichment));
   }
 
-  // Active Features (if any) - expanded in full_context mode
+  // Active Features (if any) - expanded with full content
   if (data.activeFeatures.length > 0) {
     sections.push(renderFeaturesBlock(data.activeFeatures, fullContent));
   }
 
-  // Recent Decisions (if any) - expanded in full_context mode
+  // Recent Decisions (if any) - expanded with full content
   if (data.recentDecisions.length > 0) {
     sections.push(renderDecisionsBlock(data.recentDecisions, fullContent));
   }
@@ -53,7 +53,7 @@ export function renderContext(data: ContextData): string {
     sections.push(renderBugsBlock(data.openBugs));
   }
 
-  // Recent Activity (if any) - expanded in full_context mode
+  // Recent Activity (if any) - expanded with full content
   if (data.recentActivity.length > 0) {
     sections.push(renderActivityBlock(data.recentActivity, fullContent));
   }
