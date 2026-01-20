@@ -155,8 +155,8 @@ time brain embed --project brain --limit 700
 - [x] Performance validation attempted (not executable without corpus)
 - [x] Verdict issued (NEEDS WORK)
 - [x] Session log updated
-- [ ] Markdown linting passed (next)
-- [ ] Changes committed (next)
+- [x] Markdown linting passed (auto-fixed)
+- [x] Changes committed (commit d987f45)
 
 ## Evidence
 
@@ -171,3 +171,5 @@ time brain embed --project brain --limit 700
 | Batch API verified | curl test successful | ✓ |
 | QA report created | `.agents/qa/ADR-002-qa-validation.md` | ✓ |
 | Verdict issued | NEEDS WORK (performance untested) | ✓ |
+| Markdown linted | Auto-fixed | ✓ |
+| Committed | d987f45 | ✓ |
