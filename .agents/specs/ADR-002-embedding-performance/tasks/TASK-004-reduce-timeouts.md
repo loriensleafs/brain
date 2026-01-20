@@ -35,6 +35,7 @@ Reduce timeout values across all system layers to enable fast failure detection 
 ## Scope
 
 **In Scope**:
+
 - Update OLLAMA_CONFIG.TIMEOUT from 600,000ms to 60,000ms
 - Update Go HTTP client timeout from 10 minutes to 5 minutes
 - Add timeout configuration to .env.example with documentation
@@ -44,6 +45,7 @@ Reduce timeout values across all system layers to enable fast failure detection 
 - Leave health check timeout at 5s - unchanged
 
 **Out of Scope**:
+
 - Adaptive timeout logic based on note size (keep simple)
 - Timeout telemetry/monitoring (P2 enhancement)
 - Circuit breaker pattern (P2 enhancement)

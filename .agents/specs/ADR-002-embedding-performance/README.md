@@ -94,17 +94,21 @@ flowchart TD
 ## Implementation Order
 
 ### Phase 0: Prerequisites (30 min)
+
 - **TASK-003**: Add p-limit dependency
 - Verify Ollama version (≥0.1.26 with `/api/embed`)
 
 ### Phase 1: Core Changes (5 hours)
+
 - **TASK-001**: Add `generateBatchEmbeddings` to OllamaClient (2h)
 - **TASK-002**: Refactor embed tool to use batch API (3h)
 
 ### Phase 2: Optimization (1 hour)
+
 - **TASK-004**: Reduce timeouts for fail-fast errors (1h)
 
 ### Phase 3: Validation (4 hours)
+
 - **TASK-005**: Add unit and integration tests (4h)
 - Capture baseline performance before optimization
 - Validate 5x minimum improvement (REQ-004)
@@ -172,6 +176,7 @@ All changes are backward compatible. Database schema unchanged.
 ## Questions or Issues
 
 For questions about this specification:
+
 1. Review ADR-002 for decision rationale
 2. Review Analysis documents for research findings
 3. Check traceability matrix for requirement coverage

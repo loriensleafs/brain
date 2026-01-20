@@ -9,6 +9,7 @@
 **Challenge**: The framing conflates two distinct problem types.
 
 **Evidence from codebase** (`/Users/peter.kloss/Dev/brain/apps/mcp/src/services/embedding/generateEmbedding.ts` lines 44-49, 80-83):
+
 - The code already distinguishes 5xx (retryable) from 4xx (permanent)
 - 5xx errors retry automatically (3 attempts with exponential backoff)
 - 4xx errors fail immediately (correct behavior)
@@ -49,6 +50,7 @@ Analysis 025, 026, and 027 already document error categorization, performance tu
 **Challenge**: Recovery logic belongs in the service, not a separate artifact.
 
 **Evidence from codebase**: The P0 fixes from Analysis 025 were implemented in the service layer:
+
 1. Retry with exponential backoff (lines 74-101)
 2. Client connection reuse (lines 21-31)
 3. Error classification (lines 44-49)
@@ -88,16 +90,19 @@ What the proposal overlooks:
 Different ways to think about the problem:
 
 **Framing A (Current Proposal)**: "We need a skill to fix non-retryable errors"
+
 - Assumes errors are fixable
 - Assumes skill is right abstraction
 - Assumes progressive disclosure adds value
 
 **Framing B (Service Quality)**: "We need better error messages and retry logic"
+
 - Error categorization → already in service
 - Retry logic → already in service
 - User-friendly messages → missing (add to service)
 
 **Framing C (Observability)**: "We need visibility into embedding health"
+
 - Check coverage (which notes lack embeddings)
 - Verify integrity (dimension count, null vectors)
 - Report statistics (success rate, performance)
@@ -162,6 +167,7 @@ These uncertainties favor waiting for evidence before building.
 ## Recommendation
 
 **Before building this skill, demonstrate**:
+
 1. At least 3 user reports of embedding failures requiring diagnosis
 2. Specific 4xx error types encountered in production
 3. User actions that successfully resolved the errors

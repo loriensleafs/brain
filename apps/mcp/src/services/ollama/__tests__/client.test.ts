@@ -231,6 +231,69 @@ describe("OllamaClient", () => {
       const body = JSON.parse(callArgs[1].body as string);
       expect(body.input).toEqual(["search_document: test"]);
     });
+
+    test("includes search_document prefix when specified", async () => {
+      const mockFetch = mock(() =>
+        Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve({
+            model: "nomic-embed-text",
+            embeddings: [[0.1, 0.2, 0.3]]
+          }),
+        } as Response)
+      );
+      globalThis.fetch = mockFetch as unknown as typeof fetch;
+
+      const client = new OllamaClient();
+      await client.generateEmbedding("document text", "search_document");
+
+      const callArgs = mockFetch.mock.calls[0] as unknown as [string, RequestInit];
+      const body = JSON.parse(callArgs[1].body as string);
+      expect(body.input).toEqual(["search_document: document text"]);
+    });
+
+    test("includes search_query prefix when specified", async () => {
+      const mockFetch = mock(() =>
+        Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve({
+            model: "nomic-embed-text",
+            embeddings: [[0.1, 0.2, 0.3]]
+          }),
+        } as Response)
+      );
+      globalThis.fetch = mockFetch as unknown as typeof fetch;
+
+      const client = new OllamaClient();
+      await client.generateEmbedding("query text", "search_query");
+
+      const callArgs = mockFetch.mock.calls[0] as unknown as [string, RequestInit];
+      const body = JSON.parse(callArgs[1].body as string);
+      expect(body.input).toEqual(["search_query: query text"]);
+    });
+
+    test("defaults to search_document when task type not specified", async () => {
+      const mockFetch = mock(() =>
+        Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve({
+            model: "nomic-embed-text",
+            embeddings: [[0.1, 0.2, 0.3]]
+          }),
+        } as Response)
+      );
+      globalThis.fetch = mockFetch as unknown as typeof fetch;
+
+      const client = new OllamaClient();
+      await client.generateEmbedding("default text");
+
+      const callArgs = mockFetch.mock.calls[0] as unknown as [string, RequestInit];
+      const body = JSON.parse(callArgs[1].body as string);
+      expect(body.input).toEqual(["search_document: default text"]);
+    });
   });
 
   describe("generateBatchEmbeddings", () => {

@@ -346,13 +346,13 @@ brain embed --retry 3 --delay 500ms --on-error skip
 
 ### Medium-Term Actions (P1)
 
-4. **Create ADR-002: Embedding Service Resilience** (2 hours):
+1. **Create ADR-002: Embedding Service Resilience** (2 hours):
    - Document retry policy
    - Document error handling strategy
    - Document rate limiting rationale
    - Document observability approach
 
-5. **Add monitoring** (3 hours):
+2. **Add monitoring** (3 hours):
    - Log retry attempts with statusCode
    - Track success/failure rates
    - Alert on sustained high failure rates

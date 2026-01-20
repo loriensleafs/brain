@@ -5,6 +5,7 @@
 **Objective**: Evaluate the technical merits and feasibility of creating a `/memory-embeddings` diagnostic skill with progressive disclosure (SKILL.md + references/) for fixing non-retryable embedding errors post-hoc.
 
 **Scope**:
+
 - Error frequency analysis in production
 - Fixability assessment for 4xx errors
 - Architectural decision: preventive vs reactive error handling
@@ -14,6 +15,7 @@
 ## 2. Context
 
 **Proposal**: Create `.claude/skills/memory-embeddings/` with:
+
 - SKILL.md: Main workflow (run, detect, categorize, fix, retry, report)
 - references/error-categorization.md
 - references/fix-patterns.md
@@ -42,6 +44,7 @@
 ### Historical Error Patterns
 
 **From Session Logs (2026-01-19)**:
+
 - Session 12: 29/50 notes failed with Ollama 500 errors (58% failure rate)
 - Session 13: Ollama 500 errors noted, not search-related
 - Session 14: Validation of 500 error fixes
@@ -74,6 +77,7 @@ function isRetryableError(error: unknown): boolean {
 ```
 
 **Retry Strategy** (generateEmbedding.ts:74-101):
+
 - MAX_RETRIES: 3
 - BASE_DELAY_MS: 1000
 - Exponential backoff: 1s, 2s, 4s
@@ -99,11 +103,13 @@ function isRetryableError(error: unknown): boolean {
 ### False Equivalence Identified
 
 **session-log-fixer** fixes deterministic, structural issues:
+
 - Missing Protocol Compliance section → Add section
 - Unchecked MUST requirements → Mark [x] with evidence
 - Placeholder commit SHA → Replace with real SHA
 
 **memory-embeddings (proposed)** would attempt to fix runtime errors:
+
 - 413 Payload Too Large → Cannot reduce batch size post-hoc
 - 422 Unprocessable Entity → Cannot sanitize content after failure
 - 400 Bad Request → Cannot fix malformed API request post-hoc
@@ -113,6 +119,7 @@ function isRetryableError(error: unknown): boolean {
 ## 5. Progressive Disclosure Justification
 
 **Proposed References**:
+
 1. error-categorization.md - Retryable vs non-retryable
 2. fix-patterns.md - Diagnostic fixes for 413, 422, 400
 3. performance-tuning.md - Batch size, concurrency
@@ -142,6 +149,7 @@ function isRetryableError(error: unknown): boolean {
 ### Why Reactive Skill is Wrong
 
 **4xx errors indicate code bugs, not data issues**:
+
 - 400 Bad Request → Malformed API call (code bug)
 - 413 Payload Too Large → Batch size exceeds limit (code bug)
 - 422 Unprocessable Entity → Invalid input format (code bug)
@@ -162,6 +170,7 @@ function isRetryableError(error: unknown): boolean {
 ### Error Frequency
 
 **Production Evidence** (2026-01-19 sessions):
+
 - 5xx errors: 29 occurrences (Ollama 500 Internal Server Error)
 - 4xx errors: 0 occurrences
 - 413 Payload Too Large: 0 occurrences
@@ -185,6 +194,7 @@ function isRetryableError(error: unknown): boolean {
 ### Service vs Skill Architecture
 
 **Current Service Code** (CORRECT):
+
 ```typescript
 // 5xx: Retry automatically
 if (error.statusCode >= 500 && error.statusCode < 600) {
@@ -196,6 +206,7 @@ throw error;
 ```
 
 **Proposed Skill** (INCORRECT):
+
 ```text
 1. Detect 4xx error in logs
 2. Apply diagnostic fix
@@ -209,6 +220,7 @@ throw error;
 ### Why 4xx Errors Don't Occur in Production
 
 **Hypothesis**: The embedding service PREVENTS 4xx errors at the code level:
+
 1. Chunking limits text size → Prevents 413 Payload Too Large
 2. API request format is static → Prevents 400 Bad Request
 3. Content is read from notes → Prevents 422 Unprocessable Entity
@@ -220,12 +232,14 @@ throw error;
 ### Skill vs Service Responsibility
 
 **Service responsibilities** (embedding/generateEmbedding.ts):
+
 - Retry transient errors (5xx) ✅
 - Fail fast on client errors (4xx) ✅
 - Handle timeouts ✅
 - Chunk text to prevent oversize payloads ✅
 
 **Skill responsibilities** (proposed):
+
 - Fix 4xx errors post-hoc ❌ (cannot fix code bugs)
 - Tune batch size ❌ (config change, not diagnostic fix)
 - Retry failed embeddings ❌ (already automatic)
@@ -235,12 +249,14 @@ throw error;
 ### Progressive Disclosure Assessment
 
 **Progressive disclosure** is justified when:
+
 1. Main skill workflow is complex (multiple phases)
 2. Reference material is lengthy (>100 lines)
 3. Multiple fix patterns exist (variety of solutions)
 4. Troubleshooting requires domain knowledge
 
 **memory-embeddings assessment**:
+
 1. Workflow: Simple (detect → log, no fix possible) ❌
 2. Reference length: 0 lines (no fix patterns exist) ❌
 3. Fix patterns: 0 (4xx not fixable post-hoc) ❌
@@ -267,12 +283,14 @@ throw error;
 **If monitoring/observability is the goal**, create:
 
 **`.claude/skills/memory-diagnostics/SKILL.md`** (NO references/ folder):
+
 - Check embedding coverage (which notes lack embeddings)
 - Verify database integrity (orphaned chunks)
 - Report health statistics (success rate, avg time)
 - Trigger manual re-embed for failed notes
 
 **Difference**:
+
 - Diagnostic, not fixer
 - Works with successful architecture, doesn't try to fix code bugs
 - Single-file skill (no progressive disclosure needed)
@@ -296,6 +314,7 @@ throw error;
 ### If You Proceed Anyway
 
 **Problems you will encounter**:
+
 1. No 4xx errors in production logs to test against
 2. Cannot fix 413/422/400 errors without code changes
 3. Skill would be maintenance burden with zero value
@@ -308,28 +327,33 @@ throw error;
 ### Sources Consulted
 
 **Code Analysis**:
+
 - `apps/mcp/src/services/embedding/generateEmbedding.ts` (retry logic)
 - `apps/mcp/src/services/ollama/client.ts` (error handling)
 - `apps/mcp/src/tools/embed/index.ts` (batch processing)
 - `.agents/architecture/ADR-002-embedding-performance-optimization.md` (design)
 
 **Test Analysis**:
+
 - `apps/mcp/src/services/embedding/__tests__/generateEmbedding.test.ts`
 - `apps/mcp/src/services/embedding/__tests__/integration.test.ts`
 - `apps/mcp/src/services/embedding/__tests__/batchGenerate.test.ts`
 
 **Session Logs**:
+
 - `.agents/sessions/2026-01-19-session-12-chunked-embeddings-validation.md`
 - `.agents/sessions/2026-01-19-session-14-ollama-error-fixes-validation.md`
 - `.agents/sessions/2026-01-19-session-16-timeout-fixes-final-validation.md`
 - `.agents/analysis/025-ollama-500-errors.md`
 
 **Reference Pattern**:
+
 - `apps/claude-plugin/skills/session-log-fixer/SKILL.md`
 
 ### Data Transparency
 
 **Found**:
+
 - 0 production 4xx errors in session logs
 - 29 production 5xx errors (Ollama 500)
 - isRetryableError() categorizes 5xx as retryable, 4xx as non-retryable
@@ -338,6 +362,7 @@ throw error;
 - Static API format prevents 400 Bad Request
 
 **Not Found**:
+
 - No 413 Payload Too Large errors
 - No 422 Unprocessable Entity errors
 - No 400 Bad Request errors (except synthetic test errors)

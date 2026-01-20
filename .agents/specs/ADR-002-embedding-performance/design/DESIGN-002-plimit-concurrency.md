@@ -29,6 +29,7 @@ tags:
 This design implements note-level concurrency control using the p-limit library to prevent Ollama server resource exhaustion. The architecture processes multiple notes concurrently while limiting simultaneous operations to match Ollama's `OLLAMA_NUM_PARALLEL` capacity.
 
 Key design principles:
+
 1. **Note-level concurrency**: Each note processed independently with chunk-level batching
 2. **Backpressure via p-limit**: Queue-based concurrency limiting without artificial delays
 3. **Fail-isolated**: One note's failure does not block other notes
@@ -42,6 +43,7 @@ Key design principles:
 **Purpose**: Define and validate concurrency limits from environment variables.
 
 **Responsibilities**:
+
 - Read EMBEDDING_CONCURRENCY environment variable
 - Validate concurrency value (min 1, max 16)
 - Provide default value (4) matching Ollama defaults
@@ -94,6 +96,7 @@ logger.info({
 **Purpose**: Apply concurrency limiting to note processing operations.
 
 **Responsibilities**:
+
 - Create p-limit instance with configured concurrency
 - Wrap note processing in limit() calls
 - Return Promise.allSettled for all notes
@@ -204,6 +207,7 @@ interface BatchProcessResult {
 **Purpose**: Process individual notes with batch embedding and error handling.
 
 **Responsibilities**:
+
 - Read note content from database
 - Chunk note text
 - Generate batch embeddings for all chunks
@@ -325,6 +329,7 @@ export async function processNoteWithBatchEmbedding(
 **Purpose**: Integrate concurrency-controlled processing into embed tool.
 
 **Current Implementation** (removed):
+
 ```typescript
 // OLD: Sequential with artificial delays
 for (const batch of batches) {
@@ -337,6 +342,7 @@ for (const batch of batches) {
 ```
 
 **New Implementation**:
+
 ```typescript
 import { processNotesWithConcurrency } from '../../services/embedding/concurrency';
 import { processNoteWithBatchEmbedding } from '../../services/embedding/processNote';

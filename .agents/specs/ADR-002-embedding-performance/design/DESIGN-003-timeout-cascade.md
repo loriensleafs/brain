@@ -30,6 +30,7 @@ tags:
 This design optimizes the timeout cascade across all system layers to enable fast failure detection while supporting the performance target. The architecture reduces excessive timeouts (10 minutes → 60 seconds for Ollama operations) while maintaining appropriate timeouts for long-running operations (Bun MCP server).
 
 Key design principles:
+
 1. **Right-sized timeouts**: Match timeout to expected operation duration
 2. **Fail-fast**: Detect failures quickly with actionable error messages
 3. **Context preservation**: Timeout errors include operation details (note, chunk count, elapsed time)
@@ -92,6 +93,7 @@ const TIMEOUT_CALCULATIONS = {
 **Purpose**: Reduce Ollama client timeout from 10 minutes to 60 seconds.
 
 **Responsibilities**:
+
 - Read OLLAMA_TIMEOUT environment variable
 - Apply timeout using AbortSignal
 - Provide sensible default (60 seconds)
@@ -218,6 +220,7 @@ export class OllamaClient {
 **Purpose**: Reduce Go CLI HTTP client timeout from 10 minutes to 5 minutes.
 
 **Responsibilities**:
+
 - Apply timeout to all Brain CLI HTTP requests
 - Handle timeout errors gracefully
 - Report timeout with context (operation, elapsed time)
@@ -309,6 +312,7 @@ func DoWithTimeout(
 **Purpose**: Enrich timeout errors with actionable context for debugging.
 
 **Responsibilities**:
+
 - Include operation details (note identifier, chunk count)
 - Include timing details (elapsed time, expected time, timeout limit)
 - Differentiate timeout from network errors

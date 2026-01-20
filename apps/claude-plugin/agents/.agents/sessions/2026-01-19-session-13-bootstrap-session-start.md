@@ -23,6 +23,7 @@
 | SHOULD | Note starting commit | [x] | SHA: 6b0bbd421fa548b820aa77111a5b677b268533e5 |
 
 **Git Status at Start**:
+
 - Branch: `main`
 - Last Commit: `6b0bbd421fa548b820aa77111a5b677b268533e5` - "qa: validate embedding timeout fix eliminates EOF errors"
 - Working Tree: Dirty (staged changes from previous session timeout fix work)
@@ -36,6 +37,7 @@
 **Status**: ✅ Complete
 
 **What was done**:
+
 - Listed all 32 Brain MCP tools organized by category
 - Executed full session start protocol per /bootstrap command
 - Initialized Brain MCP with bootstrap_context
@@ -73,6 +75,7 @@
 | 3 | adr-review skill (6 agents) | Multi-agent validation | Complete |
 
 **Artifacts Created**:
+
 1. `.agents/analysis/025-embedding-performance-research.md` - Web research on Ollama best practices
 2. `.agents/analysis/026-timeout-changes-performance-review.md` - Code review of 4 timeout layers
 3. `.agents/architecture/ADR-002-embedding-performance-optimization.md` - Approved optimization plan
@@ -81,22 +84,26 @@
 **Key Findings**:
 
 **1. What Actually Fixed EOF Error**:
+
 - **Root cause**: Bun idleTimeout = 0 (Layer 4) - THE fix
 - **Secondary fix**: Go HTTP timeout increase (Layer 1) - Required after root cause fix
 - **Not fixes**: Ollama timeout (Layer 3), inter-chunk delays (Layer 2)
 
 **2. What Hurt Performance**:
+
 - **200ms inter-chunk delay**: +100% processing time overhead (154s of 294s is pure delay)
 - **1000ms batch delay**: +13s per 700 notes
 - **Combined overhead**: 52% of total time is artificial waiting
 
 **3. Approved Optimizations** (ADR-002):
+
 - Migrate to `/api/embed` batch API: 5-10x fewer HTTP requests
 - Remove artificial delays: Eliminates 52% overhead
 - Add p-limit concurrency (4 parallel): 4x throughput
 - **Combined impact**: 13x faster (5 minutes → 46 seconds for 700 notes)
 
 **Decisions Made**:
+
 - Use p-limit (not p-queue) for simplicity
 - Batch at note level (not chunk level) for error isolation
 - Concurrency limit of 4 (matches OLLAMA_NUM_PARALLEL default)
@@ -104,6 +111,7 @@
 - Timeout: 60s per request, 5min Go client (right-sized)
 
 **Validation Requirements** (before deployment):
+
 1. Capture baseline measurements
 2. Verify Ollama version >= 0.1.26
 3. Implement chunk batch size limit (32)
@@ -112,11 +120,13 @@
 6. Add memory monitoring (P2)
 
 **ADR Review Outcome**:
+
 - **Status**: ACCEPTED (consensus in 1 round)
 - **Votes**: 4 Accept + 2 Disagree-and-Commit
 - **Dissent**: Independent-thinker (batch API behavior unverified), Security (SSRF guard deferred)
 
 **Files Modified**:
+
 - `.agents/architecture/ADR-002-embedding-performance-optimization.md` - Updated with validation requirements
 - `.agents/critique/ADR-002-debate-log.md` - Created debate log
 
@@ -127,6 +137,7 @@
 ## Session Summary
 
 **Tasks Completed**:
+
 1. ✅ Bootstrap session initialization
 2. ✅ Embedding performance comprehensive research (parallel analysts)
 3. ✅ ADR-002 creation and 6-agent review

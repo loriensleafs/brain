@@ -11,6 +11,7 @@
 This plan implements ADR-002 by migrating from Ollama's single-text `/api/embeddings` endpoint to the batch `/api/embed` endpoint with p-limit concurrency control. The implementation eliminates 100% artificial delay overhead, reduces HTTP request count by 67%, and introduces concurrent note processing. The changes target 13x throughput improvement while maintaining backward compatibility and reliability.
 
 **Key Changes**:
+
 - Migrate to batch API with `generateBatchEmbeddings` method
 - Add p-limit dependency for concurrency control (4 concurrent notes)
 - Remove 200ms inter-chunk delays (100% overhead elimination)
@@ -21,23 +22,27 @@ This plan implements ADR-002 by migrating from Ollama's single-text `/api/embedd
 ## Milestones
 
 ### Milestone 1: Prerequisites and Setup
+
 **Tasks**: TASK-003
 **Effort**: 30 minutes
 **Blocking**: TASK-002
 
 **Deliverables**:
+
 - [ ] p-limit package installed via `bun add p-limit`
 - [ ] package.json updated with p-limit dependency
 - [ ] bun.lock updated with lockfile entry
 - [ ] Verification: Import test succeeds
 
 **Acceptance Criteria**:
+
 - Package version: latest stable (~5.0.0)
 - Zero vulnerabilities in dependency tree
 - TypeScript types included
 - `import pLimit from 'p-limit'` compiles successfully
 
 **Risks**:
+
 - Package incompatibility with Bun (low - already tested in analysis)
 - Network issues during installation (retry strategy: use cached registry)
 
@@ -46,11 +51,13 @@ This plan implements ADR-002 by migrating from Ollama's single-text `/api/embedd
 ---
 
 ### Milestone 2: Batch API Core Changes
+
 **Tasks**: TASK-001, TASK-002
 **Effort**: 5 hours
 **Depends On**: Milestone 1 (TASK-003)
 
 **Deliverables**:
+
 - [ ] OllamaClient.generateBatchEmbeddings method added
 - [ ] BatchEmbedRequest and BatchEmbedResponse types defined
 - [ ] Embed tool refactored to use batch API
@@ -63,6 +70,7 @@ This plan implements ADR-002 by migrating from Ollama's single-text `/api/embedd
 **Acceptance Criteria**:
 
 **TASK-001 (OllamaClient)**:
+
 - Method signature: `async generateBatchEmbeddings(texts: string[], model?: string): Promise<number[][]>`
 - Empty input optimization (returns `[]` without API call)
 - Request to `/api/embed` with `{ model, input: string[], truncate: true }`
@@ -73,6 +81,7 @@ This plan implements ADR-002 by migrating from Ollama's single-text `/api/embedd
 - Existing `generateEmbedding` delegates to batch method
 
 **TASK-002 (Embed Tool)**:
+
 - Sequential processing loop removed
 - All `await sleep()` calls deleted
 - Concurrent processing via `processNotesWithConcurrency`
@@ -81,12 +90,14 @@ This plan implements ADR-002 by migrating from Ollama's single-text `/api/embedd
 - Tool response: `{ success: boolean, embedded: number, failed: number }`
 
 **ADR-003 Coordination**:
+
 - `generateBatchEmbeddings` MUST accept TaskType parameter for future compatibility
 - Parameter: `taskType: TaskType = "search_document"`
 - Implementation: Prefix each text with `${taskType}: ${text}`
 - Rationale: When ADR-003 implements task prefix, batch API will be ready
 
 **Risks**:
+
 | Risk | Probability | Impact | Mitigation |
 |------|-------------|--------|------------|
 | Ollama version missing `/api/embed` | Low | High | Add version check in TASK-001 with clear error message |
@@ -95,6 +106,7 @@ This plan implements ADR-002 by migrating from Ollama's single-text `/api/embedd
 | Memory exhaustion from large batches | Low | Medium | MAX_CHUNKS_PER_BATCH = 32 limit |
 
 **Rollback Plan**:
+
 - Revert `embed/index.ts` to use `generateEmbedding` (single-text API)
 - Re-add delays if Ollama resource exhaustion occurs
 - Indicators for rollback: Ollama 500 error rate >5%, throughput <5x baseline
@@ -102,11 +114,13 @@ This plan implements ADR-002 by migrating from Ollama's single-text `/api/embedd
 ---
 
 ### Milestone 3: Optimization and Validation
+
 **Tasks**: TASK-004, TASK-005
 **Effort**: 5 hours
 **Depends On**: Milestone 2 (TASK-001, TASK-002)
 
 **Deliverables**:
+
 - [ ] Ollama client timeout reduced to 60s
 - [ ] Go HTTP client timeout reduced to 5min
 - [ ] .env.example updated with timeout documentation
@@ -123,6 +137,7 @@ This plan implements ADR-002 by migrating from Ollama's single-text `/api/embedd
 **Acceptance Criteria**:
 
 **TASK-004 (Timeouts)**:
+
 - OLLAMA_CONFIG.TIMEOUT default = 60000ms (was 600000ms)
 - HTTPClientTimeout constant = 5 minutes (was 10 minutes)
 - Timeout validation: minimum 1000ms, warning if >300000ms
@@ -131,6 +146,7 @@ This plan implements ADR-002 by migrating from Ollama's single-text `/api/embedd
 - Non-retryable errors: 4xx (except 408)
 
 **TASK-005 (Tests)**:
+
 - Empty input returns empty array
 - Single text batching works
 - Multiple texts batching works
@@ -143,12 +159,14 @@ This plan implements ADR-002 by migrating from Ollama's single-text `/api/embedd
 - 700 notes complete <120 seconds (5x minimum), <60s target (10x)
 
 **Performance Validation**:
+
 - Capture baseline before implementation: `time brain embed --project brain --limit 700`
 - Measure after implementation
 - **Minimum**: 5x improvement (600s → 120s)
 - **Target**: 13x improvement (600s → 46s)
 
 **Risks**:
+
 | Risk | Probability | Impact | Mitigation |
 |------|-------------|--------|------------|
 | Test flakiness | Medium | Medium | 10 consecutive runs required for pass |
@@ -173,6 +191,7 @@ TASK-001 (Batch method) -----> TASK-002 (Refactor embed tool)
 **Critical Path**: TASK-003 → TASK-001 → TASK-002 → TASK-005 (8.5 hours)
 
 **Parallel Opportunities**:
+
 - TASK-004 (timeouts) can be done in parallel with TASK-002 (no dependency)
 - TASK-003 (install) can be done while reading TASK-001 specs
 
@@ -197,23 +216,27 @@ TASK-001 (Batch method) -----> TASK-002 (Refactor embed tool)
 1. **TASK-003: Add p-limit dependency**
    - **Why first**: Required by TASK-002 concurrency implementation
    - **Commands**:
+
      ```bash
      cd apps/mcp
      bun add p-limit
      grep p-limit package.json  # Verify
      ```
+
    - **Validation**: Import test succeeds
    - **Output**: package.json updated, bun.lock committed
 
 2. **Verify Ollama version**
    - **Why**: Batch API requires Ollama 0.1.26+
    - **Commands**:
+
      ```bash
      ollama --version
      curl -X POST http://localhost:11434/api/embed \
        -H "Content-Type: application/json" \
        -d '{"model": "nomic-embed-text", "input": ["test"]}'
      ```
+
    - **Validation**: Ollama returns embeddings array
    - **If fails**: Document incompatibility, block implementation
 
@@ -221,7 +244,7 @@ TASK-001 (Batch method) -----> TASK-002 (Refactor embed tool)
 
 ### Phase 1: Core Changes (5 hours)
 
-3. **TASK-001: Add generateBatchEmbeddings to OllamaClient** (2h)
+1. **TASK-001: Add generateBatchEmbeddings to OllamaClient** (2h)
    - **Why now**: Batch method must exist before embed tool refactor
    - **Files**:
      - `apps/mcp/src/services/ollama/client.ts` (modify)
@@ -236,7 +259,7 @@ TASK-001 (Batch method) -----> TASK-002 (Refactor embed tool)
    - **ADR-003 Coordination**: TaskType parameter added NOW for future compatibility
    - **Validation**: Local test with single text, multiple texts
 
-4. **TASK-002: Refactor embed tool to use batch API** (3h)
+2. **TASK-002: Refactor embed tool to use batch API** (3h)
    - **Why now**: Depends on TASK-001 batch method
    - **Files**:
      - `apps/mcp/src/tools/embed/index.ts` (modify)
@@ -255,6 +278,7 @@ TASK-001 (Batch method) -----> TASK-002 (Refactor embed tool)
      - **DELETE**: BATCH_DELAY_MS constant
      - **DELETE**: All `await sleep()` calls
    - **Validation**:
+
      ```bash
      brain embed --project brain --limit 10
      # Verify logs show concurrent processing
@@ -265,7 +289,7 @@ TASK-001 (Batch method) -----> TASK-002 (Refactor embed tool)
 
 ### Phase 2: Optimization (1 hour)
 
-5. **TASK-004: Reduce timeouts for fail-fast errors** (1h)
+1. **TASK-004: Reduce timeouts for fail-fast errors** (1h)
    - **Why now**: Can be done in parallel with TASK-002, improves error UX
    - **Files**:
      - `apps/mcp/src/config/ollama.ts` (modify)
@@ -286,7 +310,7 @@ TASK-001 (Batch method) -----> TASK-002 (Refactor embed tool)
 
 ### Phase 3: Validation (4 hours)
 
-6. **TASK-005: Add unit and integration tests** (4h)
+1. **TASK-005: Add unit and integration tests** (4h)
    - **Why last**: Tests validate all prior tasks
    - **Files**:
      - `apps/mcp/src/services/ollama/__tests__/client.test.ts` (create)
@@ -298,6 +322,7 @@ TASK-001 (Batch method) -----> TASK-002 (Refactor embed tool)
      - **Integration**: 100 real notes (<30s), 700 real notes (<120s minimum)
      - **Performance**: Baseline measurement, 5x minimum validation
    - **Validation**:
+
      ```bash
      bun test  # All unit tests
      bun test --integration  # Requires Ollama running
@@ -317,8 +342,10 @@ TASK-001 (Batch method) -----> TASK-002 (Refactor embed tool)
 ## Validation Checkpoints
 
 ### Checkpoint 1: Prerequisites Complete
+
 **When**: After TASK-003
 **Verify**:
+
 - [ ] p-limit in package.json
 - [ ] bun.lock committed
 - [ ] `import pLimit from 'p-limit'` compiles
@@ -329,8 +356,10 @@ TASK-001 (Batch method) -----> TASK-002 (Refactor embed tool)
 ---
 
 ### Checkpoint 2: Batch Method Functional
+
 **When**: After TASK-001
 **Verify**:
+
 - [ ] `generateBatchEmbeddings` method exists
 - [ ] Empty input returns `[]`
 - [ ] Single text batching works
@@ -344,8 +373,10 @@ TASK-001 (Batch method) -----> TASK-002 (Refactor embed tool)
 ---
 
 ### Checkpoint 3: Embed Tool Refactored
+
 **When**: After TASK-002
 **Verify**:
+
 - [ ] Sequential loops removed
 - [ ] OLLAMA_REQUEST_DELAY_MS deleted
 - [ ] BATCH_DELAY_MS deleted
@@ -355,6 +386,7 @@ TASK-001 (Batch method) -----> TASK-002 (Refactor embed tool)
 - [ ] Tool response format correct
 
 **Manual Test**:
+
 ```bash
 brain embed --project brain --limit 10
 # Expected: <5 seconds, logs show concurrency
@@ -365,8 +397,10 @@ brain embed --project brain --limit 10
 ---
 
 ### Checkpoint 4: Timeouts Optimized
+
 **When**: After TASK-004
 **Verify**:
+
 - [ ] Ollama timeout = 60000ms
 - [ ] Go timeout = 5min
 - [ ] .env.example documented
@@ -374,6 +408,7 @@ brain embed --project brain --limit 10
 - [ ] Retryable errors identified correctly
 
 **Manual Test**:
+
 ```typescript
 // Trigger timeout error
 const client = new OllamaClient('http://localhost:11434', 1000);
@@ -386,8 +421,10 @@ await client.generateBatchEmbeddings(['test']); // Should timeout
 ---
 
 ### Checkpoint 5: Tests Passing
+
 **When**: After TASK-005
 **Verify**:
+
 - [ ] All unit tests pass
 - [ ] All integration tests pass (Ollama running)
 - [ ] Code coverage >80%
@@ -399,14 +436,17 @@ await client.generateBatchEmbeddings(['test']); // Should timeout
 ---
 
 ### Checkpoint 6: Performance Validation (BLOCKING)
+
 **When**: After all tasks complete
 **Verify**:
+
 - [ ] Baseline captured (before optimization)
 - [ ] Optimized performance measured
 - [ ] Improvement ≥5x (MINIMUM)
 - [ ] Improvement ≥10x (TARGET)
 
 **Failure Action**: If <5x improvement, analyze bottlenecks:
+
 1. Check Ollama server performance (CPU, memory)
 2. Verify concurrency limit = 4
 3. Verify delays removed
@@ -420,7 +460,9 @@ await client.generateBatchEmbeddings(['test']); // Should timeout
 ## Rollback Plan
 
 ### Trigger Conditions
+
 Execute rollback if ANY of the following occur:
+
 - Ollama 500 error rate >5%
 - Embedding throughput <5x baseline
 - Memory pressure on Ollama server
@@ -430,33 +472,45 @@ Execute rollback if ANY of the following occur:
 ### Rollback Steps
 
 #### Immediate (15 minutes)
+
 1. **Revert embed tool**:
+
    ```bash
    git checkout HEAD~1 apps/mcp/src/tools/embed/index.ts
    ```
+
 2. **Re-add delays** if needed:
+
    ```typescript
    const OLLAMA_REQUEST_DELAY_MS = 200;  // Temporary
    ```
+
 3. **Deploy hotfix**
 
 #### Short-term (1 hour)
+
 1. **Full revert**:
+
    ```bash
    git revert <commit-sha>
    ```
+
 2. **Revert timeout changes** if causing issues:
+
    ```bash
    git checkout HEAD~1 apps/mcp/src/config/ollama.ts
    git checkout HEAD~1 apps/tui/client/http.go
    ```
+
 3. **Remove p-limit dependency**:
+
    ```bash
    cd apps/mcp
    bun remove p-limit
    ```
 
 #### Long-term (Post-mortem)
+
 1. **Root cause analysis**:
    - Why did performance target miss?
    - What caused reliability issues?
@@ -466,7 +520,9 @@ Execute rollback if ANY of the following occur:
 4. **Re-attempt with mitigations**
 
 ### Rollback Verification
+
 After rollback:
+
 - [ ] Embedding generation succeeds
 - [ ] Error rate returns to baseline
 - [ ] Performance acceptable (even if slower)
@@ -476,7 +532,8 @@ After rollback:
 
 ## Success Criteria
 
-### Implementation Complete When:
+### Implementation Complete When
+
 - [ ] All 5 tasks (TASK-001 through TASK-005) marked complete
 - [ ] All 6 validation checkpoints passed
 - [ ] Code coverage >80% for new code
@@ -487,7 +544,8 @@ After rollback:
 - [ ] Commits follow atomic commit standards
 - [ ] PR approved by QA agent
 
-### Performance Targets:
+### Performance Targets
+
 | Metric | Baseline | Minimum (5x) | Target (13x) | Measured |
 |--------|----------|--------------|--------------|----------|
 | 100 notes | 85s | 17s | 7s | ___ |
@@ -495,7 +553,8 @@ After rollback:
 | HTTP requests | 2100 | 700 | 700 | ___ |
 | Delay overhead | 52% | 0% | 0% | ___ |
 
-### Quality Gates:
+### Quality Gates
+
 - [ ] No regressions in existing functionality
 - [ ] Backward compatibility maintained (no breaking changes)
 - [ ] Database schema unchanged
@@ -525,6 +584,7 @@ After rollback:
    - Verify document/query asymmetry
 
 **Implementation Order**:
+
 ```text
 ADR-002 (batch API + TaskType parameter)
     ↓
@@ -549,16 +609,19 @@ ADR-003 (task prefix usage at call sites)
 ## Questions or Blockers
 
 ### For Implementer
+
 - Verify Ollama version ≥0.1.26 before starting
 - Test batch API availability before TASK-001
 - Monitor memory usage during integration tests
 
 ### For QA
+
 - Ensure Ollama server running for integration tests
 - Capture baseline performance before optimization
 - Validate performance regression tests in CI
 
 ### For Orchestrator
+
 - Route to implementer for execution
 - Route to qa for validation after implementation
 - Route to critic if performance target missed

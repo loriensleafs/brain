@@ -23,6 +23,7 @@ Implementing ADR-002 embedding performance optimization by migrating from single
 - Commit: `ebe9ccd` - chore(mcp): add p-limit dependency
 
 **Evidence**:
+
 ```bash
 $ ollama --version
 ollama version is 0.14.1
@@ -38,6 +39,7 @@ $ curl -X POST http://localhost:11434/api/embed \
 **TASK-001**: Add batch method to OllamaClient (2h actual)
 
 **Files Modified**:
+
 - `apps/mcp/src/services/ollama/types.ts`
 - `apps/mcp/src/services/ollama/client.ts`
 - `apps/mcp/src/services/embedding/generateEmbedding.ts`
@@ -72,6 +74,7 @@ $ curl -X POST http://localhost:11434/api/embed \
 **TASK-002**: Refactor embed tool (3h actual)
 
 **Files Modified**:
+
 - `apps/mcp/src/tools/embed/index.ts`
 
 **Implementation Details**:
@@ -103,6 +106,7 @@ $ curl -X POST http://localhost:11434/api/embed \
    - Progress logging inside loops (replaced with final summary)
 
 **Performance Impact**:
+
 - HTTP requests reduced 67%: 2100 → 700 (for 700 notes with 3 chunks avg)
 - Delay overhead eliminated: 100% of artificial delays removed
 - Concurrent processing: 4x parallelism via p-limit
@@ -114,6 +118,7 @@ $ curl -X POST http://localhost:11434/api/embed \
 **TASK-004**: Reduce timeouts (1h actual)
 
 **Files Modified**:
+
 - `apps/mcp/src/config/ollama.ts`
 - `apps/mcp/src/services/ollama/client.ts`
 - `apps/tui/client/http.go`
@@ -128,6 +133,7 @@ $ curl -X POST http://localhost:11434/api/embed \
 | Go HTTP client | `http.go:38` | 10 minutes | 5 minutes | 2x reduction |
 
 **Rationale**:
+
 - Batch API completes in <1 second per request
 - 700 notes complete in <2 minutes total with concurrency
 - 60s timeout provides 60x safety margin for single requests
@@ -135,6 +141,7 @@ $ curl -X POST http://localhost:11434/api/embed \
 - Fail-fast behavior improves error UX
 
 **Documentation**:
+
 - Added OLLAMA_TIMEOUT section to `.env.example`
 - Added comments explaining timeout rationale in code
 
@@ -147,6 +154,7 @@ $ curl -X POST http://localhost:11434/api/embed \
 **Status**: Deferred to separate implementation session
 
 **Rationale**:
+
 - Core implementation (Phases 0-2) complete and compiles successfully
 - Batch API functionality verified via manual curl testing
 - TypeScript compilation passes with no errors
@@ -155,12 +163,14 @@ $ curl -X POST http://localhost:11434/api/embed \
 - Tests can be added in follow-up session before merge
 
 **Planned Test Files** (per critic IS1 recommendation - `__tests__/` subdirectories):
+
 1. `apps/mcp/src/services/ollama/__tests__/batchGenerate.test.ts` - Unit tests for batch method
 2. `apps/mcp/src/services/embedding/__tests__/concurrency.test.ts` - p-limit concurrency tests
 3. `apps/mcp/src/services/embedding/__tests__/timeout.test.ts` - Timeout behavior tests
 4. `apps/mcp/src/services/embedding/__tests__/integration.test.ts` - End-to-end tests
 
 **Test Coverage Requirements** (for follow-up):
+
 - Empty input handling
 - Single text batching
 - Multiple texts batching
@@ -173,6 +183,7 @@ $ curl -X POST http://localhost:11434/api/embed \
 - 700 notes performance test (≥5x improvement required, ≥10x target)
 
 **Manual Validation Completed**:
+
 - ✅ Ollama batch API endpoint verified via curl
 - ✅ TypeScript compilation passes
 - ✅ Empty input optimization confirmed in code review
@@ -186,6 +197,7 @@ $ curl -X POST http://localhost:11434/api/embed \
 **Decision**: Add `TaskType` parameter to `generateBatchEmbeddings` NOW, even though ADR-003 isn't implemented yet.
 
 **Rationale**:
+
 - ADR-003 implements AFTER ADR-002 completes
 - Adding parameter now avoids breaking change later
 - Text prefixing is no-op until ADR-003 call sites updated
@@ -206,6 +218,7 @@ $ curl -X POST http://localhost:11434/api/embed \
 **Decision**: Batch chunks per note, not all chunks from all notes.
 
 **Rationale**:
+
 - Simpler error isolation: one note fails, others succeed
 - Simpler progress tracking: processed/failed by note
 - Aligns with storage pattern: store all chunks for a note atomically
@@ -218,6 +231,7 @@ $ curl -X POST http://localhost:11434/api/embed \
 **Decision**: 4 concurrent note operations (matches Ollama `OLLAMA_NUM_PARALLEL=4` default).
 
 **Rationale**:
+
 - Ollama default parallel limit is 4
 - Provides 4x throughput without overwhelming server
 - Configurable via `CONCURRENCY_LIMIT` constant if needed
@@ -227,6 +241,7 @@ $ curl -X POST http://localhost:11434/api/embed \
 **Decision**: `MAX_CHUNKS_PER_BATCH = 32`
 
 **Rationale**:
+
 - Prevents memory exhaustion from oversized batches
 - Most notes have <10 chunks (avg ~3)
 - 32 chunks = ~64KB text = safe for memory
@@ -239,10 +254,12 @@ $ curl -X POST http://localhost:11434/api/embed \
 **Issue**: Adding `taskType` parameter to `generateEmbedding` broke existing call sites.
 
 **Affected Files**:
+
 - `apps/mcp/src/services/embedding/generateEmbedding.ts:76`
 - `apps/mcp/src/services/ollama/__tests__/client.test.ts:197`
 
 **Resolution**: Updated call sites to pass `taskType` parameter:
+
 ```typescript
 // Before
 await client.generateEmbedding(text, "nomic-embed-text");
@@ -268,6 +285,7 @@ await client.generateEmbedding(text, "search_document", "nomic-embed-text");
 ### None (Plan followed exactly)
 
 All tasks implemented as specified in approved plan:
+
 - TASK-003: p-limit dependency ✓
 - TASK-001: Batch method with ADR-003 compatibility ✓
 - TASK-002: Embed tool refactor with p-limit ✓
@@ -290,11 +308,13 @@ All tasks implemented as specified in approved plan:
 **Theoretical Performance Calculation**:
 
 Given implementation changes:
+
 - Batch API: 3 chunks/note → 1 HTTP request (67% reduction)
 - Delay removal: 200ms/chunk + 1000ms/batch → 0ms (100% elimination)
 - Concurrency: 4 concurrent notes (4x parallelism)
 
 Expected improvement:
+
 - Old: (700 notes × 260ms/note) / 1 = 182 seconds (sequential)
 - New: (700 notes × 260ms/note) / 4 = 45.5 seconds (concurrent)
 - Ratio: 182s / 45.5s = 4x minimum (without delays)
@@ -350,6 +370,7 @@ apps/tui/client/http.go                          # Timeout: 10min → 5min
 **Status**: NO - No security-relevant changes detected
 
 **Justification**:
+
 - Performance optimization only
 - No authentication, authorization, or data protection changes
 - No external interface changes (MCP tool signature unchanged)
@@ -358,6 +379,7 @@ apps/tui/client/http.go                          # Timeout: 10min → 5min
 - No execution of dynamic code
 
 **Categories Not Triggered**:
+
 - ❌ Authentication/Authorization
 - ❌ Data Protection
 - ❌ Input Handling (no new validation added)
@@ -372,12 +394,14 @@ apps/tui/client/http.go                          # Timeout: 10min → 5min
 **Status**: ✓ Complete
 
 **Actions Taken**:
+
 1. Added `TaskType` enum to `types.ts`
 2. Added `taskType` parameter to `generateBatchEmbeddings`
 3. Implemented text prefixing: `${taskType}: ${text}`
 4. Updated `generateEmbedding` to delegate with `taskType`
 
 **ADR-003 Readiness**:
+
 - ✅ Batch method accepts TaskType parameter
 - ✅ Text prefixing logic implemented
 - ⏸️ Call sites use default `"search_document"` (ADR-003 will update)

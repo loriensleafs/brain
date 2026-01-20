@@ -31,6 +31,7 @@ SO THAT HTTP overhead is reduced by 5-50x compared to sequential single-text API
 The current implementation uses the `/api/embeddings` endpoint (singular) which accepts a single text string and returns a single embedding vector. For a note with multiple chunks, this requires N sequential HTTP requests where N is the number of chunks.
 
 Analysis 025 identified:
+
 - Current API: POST `/api/embeddings` with `{ prompt: string }` returns `{ embedding: number[] }`
 - Batch API: POST `/api/embed` with `{ input: string[] }` returns `{ embeddings: number[][] }`
 - HTTP overhead reduction: 3-10 chunks per note → 3-10x fewer requests
@@ -56,11 +57,13 @@ The Ollama batch API is available in Ollama 0.1.26+ and provides array-based inp
 Batch API migration addresses the primary performance bottleneck:
 
 **Current Performance (Sequential)**:
+
 - 700 notes × 3 chunks average = 2100 HTTP requests
 - Each request: ~50ms embedding + 50ms HTTP overhead = 100ms total
 - Total time: 2100 × 100ms = 210,000ms = 3.5 minutes in HTTP overhead alone
 
 **After Batch API**:
+
 - 700 notes = 700 HTTP requests (one per note with all chunks)
 - Each request: ~100ms embedding (3 chunks) + 50ms HTTP overhead = 150ms total
 - Total time: 700 × 150ms = 105,000ms = 1.75 minutes

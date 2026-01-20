@@ -31,16 +31,19 @@ SO THAT users can diagnose issues quickly instead of waiting for 10-minute timeo
 ## Context
 
 The current implementation uses 10-minute timeouts everywhere:
+
 - Ollama client: 600,000ms (10 minutes)
 - Go HTTP client: 10 minutes
 - Bun idleTimeout: 0 (disabled, correct)
 
 With batch API and concurrency, a single note with 3 chunks completes in ~100-200ms. The 10-minute timeout is 3000x longer than needed and masks failures:
+
 - User waits 10 minutes to learn of an error
 - No indication of which note or operation failed
 - Timeout errors are indistinguishable from network errors
 
 Analysis 026 calculated right-sized timeouts:
+
 - Single batch embedding: 100-200ms
 - Per-note with read/store: 260ms
 - 700 notes with concurrency 4: 45.5 seconds
@@ -66,21 +69,25 @@ Analysis 026 calculated right-sized timeouts:
 Right-sized timeouts improve user experience and system reliability:
 
 **Current State (10-minute timeout)**:
+
 - Single note fails → user waits 10 minutes to see error
 - Error message: "Request timeout" (no context)
 - Difficult to diagnose: network issue? Ollama crash? Bad note content?
 
 **After Optimization (60-second timeout)**:
+
 - Single note fails → user sees error in 60 seconds
 - Error message: "Embedding timeout for note 'feature-authentication.md' after 60s (expected <1s)"
 - Clear diagnosis: specific note, expected vs actual time, retry suggestion
 
 **Performance Impact**:
+
 - 700 notes with 4 concurrent = 45.5 seconds expected
 - 60-second timeout per-request allows 30% safety margin
 - 5-minute CLI timeout handles 3000+ notes (13x current corpus)
 
 **Fail-Fast Benefits**:
+
 - Faster feedback loop for users
 - Clearer error messages with context
 - Reduced resource consumption (don't wait 10 minutes for known failures)

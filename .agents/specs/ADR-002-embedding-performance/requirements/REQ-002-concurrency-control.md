@@ -32,6 +32,7 @@ SO THAT Ollama server resource exhaustion is prevented while maximizing throughp
 The current implementation processes notes sequentially with artificial delays to prevent overwhelming the Ollama server. Analysis 026 identified that these delays add 100% overhead (434 seconds delay vs 175 seconds work for 700 notes).
 
 Removing delays without concurrency control would create unbounded parallelism:
+
 - 700 notes processed simultaneously → massive memory consumption
 - Ollama server default `OLLAMA_NUM_PARALLEL=4` → server rejects excess requests with 500 errors
 - No backpressure mechanism → request queue grows unbounded
@@ -58,14 +59,17 @@ The solution uses p-limit to cap concurrency at 4 simultaneous operations, match
 Concurrency control with p-limit provides optimal throughput while preventing resource exhaustion:
 
 **Without Concurrency Control (Sequential)**:
+
 - 700 notes × 260ms per note = 182,000ms = 3 minutes
 - Single-threaded, no parallelism benefit
 
 **Without Concurrency Control (Unbounded Parallel)**:
+
 - 700 simultaneous requests → Ollama overwhelmed
 - 500 errors, memory exhaustion, unpredictable behavior
 
 **With p-limit Concurrency (4 concurrent)**:
+
 - 700 notes / 4 concurrent = 175 batches
 - 175 batches × 260ms = 45,500ms = 46 seconds
 - 4x throughput improvement from parallelism
@@ -74,6 +78,7 @@ Concurrency control with p-limit provides optimal throughput while preventing re
 Combined with batch API (REQ-001), total improvement: 10 minutes → 46 seconds = 13x faster.
 
 **Why 4 concurrent?**
+
 - Matches Ollama default `OLLAMA_NUM_PARALLEL=4`
 - Allows users to tune via `EMBEDDING_CONCURRENCY` environment variable
 - Conservative default prevents overwhelming typical hardware

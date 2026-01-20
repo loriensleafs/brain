@@ -27,6 +27,7 @@ tags:
 This design adds batch embedding support to the existing OllamaClient class by introducing a new `generateBatchEmbeddings` method that uses the `/api/embed` endpoint. The design maintains backward compatibility with the existing single-text `generateEmbedding` method while providing a more efficient batch interface.
 
 The batch API integration follows these principles:
+
 1. **Single responsibility**: OllamaClient handles HTTP communication with Ollama
 2. **Index alignment**: Output embeddings array indices match input text indices
 3. **Error handling**: All-or-nothing failure (entire batch succeeds or fails)
@@ -40,6 +41,7 @@ The batch API integration follows these principles:
 **Purpose**: Provide batch embedding generation via Ollama `/api/embed` endpoint.
 
 **Responsibilities**:
+
 - Accept array of text strings as input
 - Send POST request to `/api/embed` with batch payload
 - Parse batch response and return embeddings array
@@ -146,6 +148,7 @@ export class OllamaClient {
 **Purpose**: Define TypeScript interfaces for batch API request/response.
 
 **Responsibilities**:
+
 - Document Ollama batch API contract
 - Enable TypeScript type checking
 - Provide IDE autocomplete
@@ -210,6 +213,7 @@ class OllamaError extends Error {
 **Purpose**: Update embed tool to use batch API instead of sequential calls.
 
 **Current Implementation**:
+
 ```typescript
 // OLD: Sequential single-text calls
 for (const chunk of chunks) {
@@ -220,6 +224,7 @@ for (const chunk of chunks) {
 ```
 
 **New Implementation**:
+
 ```typescript
 // NEW: Single batch call per note
 const chunkTexts = chunks.map(c => c.text);

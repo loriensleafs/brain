@@ -52,8 +52,11 @@ Implement three independent context enhancement features that improve user exper
 ### Milestone 1: Feature 1 - Hook Format Fix
 
 **Status**: [PENDING]
+
 **Goal**: Fix SessionStart hook output to use Claude's documented format
+
 **Estimated Effort**: 30 minutes based on simple format restructuring
+
 **Dependencies**: None (blocker for Feature 2)
 
 **Deliverables**:
@@ -99,8 +102,11 @@ apps/claude-plugin/cmd/hooks/
 ### Milestone 2: Feature 2 - MCP Tool Enhancement
 
 **Status**: [PENDING]
+
 **Goal**: Add full_context parameter to bootstrap_context tool
+
 **Estimated Effort**: 3-4 hours based on template rendering complexity
+
 **Dependencies**: None (independent feature)
 
 **Deliverables**:
@@ -153,8 +159,11 @@ apps/mcp/src/tools/bootstrap-context/
 ### Milestone 3: Feature 2 - Hook Integration
 
 **Status**: [PENDING]
+
 **Goal**: Update SessionStart hook to use full_context
+
 **Estimated Effort**: 1-2 hours based on simple parameter passing
+
 **Dependencies**: Milestone 2 complete
 
 **Deliverables**:
@@ -189,8 +198,11 @@ apps/claude-plugin/cmd/hooks/
 ### Milestone 4: Feature 2 - CLI Enhancement
 
 **Status**: [PENDING]
+
 **Goal**: Add --full-content flag to brain bootstrap command
+
 **Estimated Effort**: 1 hour based on existing flag patterns
+
 **Dependencies**: Milestone 2 complete (Milestone 3 optional)
 
 **Deliverables**:
@@ -223,8 +235,11 @@ apps/tui/cmd/
 ### Milestone 5: Feature 3 - CLI Search Project Flag
 
 **Status**: [PENDING]
+
 **Goal**: Add optional project flag with auto-resolution to CLI search
+
 **Estimated Effort**: 30 minutes based on reusing existing resolveProject function
+
 **Dependencies**: None (independent feature)
 
 **Deliverables**:
@@ -263,7 +278,6 @@ apps/tui/cmd/
   ```go
   import hooks "github.com/yourusername/brain/apps/claude-plugin/cmd/hooks"
   ```
-
 - Reuse existing project resolution logic:
 
   ```go
@@ -278,7 +292,6 @@ apps/tui/cmd/
   }
   toolArgs["project"] = project
   ```
-
 - Add investigation task: Verify MCP search tool actually filters by project parameter (check MCP source or test output)
 
 ---
@@ -286,10 +299,15 @@ apps/tui/cmd/
 ### Milestone 6: Pre-PR Validation
 
 **Status**: [PENDING]
+
 **Goal**: Validate implementation meets acceptance criteria
+
 **Estimated Effort**: 1-2 hours based on standard validation checklist
+
 **Dependencies**: Milestones 1-5 complete
+
 **Assignee**: QA Agent
+
 **Blocking**: PR creation
 
 **Tasks**:
@@ -471,12 +489,12 @@ func TestMCPSearchFiltering(t *testing.T) {
 
 ### Token Cost Analysis
 
-| Scenario | Estimated Tokens | Evidence Base |
-|----------|-----------------|---------------|
-| Compact mode (6 features) | ~200 tokens | Analyst report: 30 tokens/line × 6 lines |
-| Full content mode (6 features) | ~3000 tokens | Analyst report: 500 tokens/feature × 6 |
-| Ratio | 15x | Analyst calculation |
-| Context window impact | Low (<2% of 200K) | Claude Sonnet 4.5 |
+| Scenario                       | Estimated Tokens  | Evidence Base                            |
+| ------------------------------ | ----------------- | ---------------------------------------- |
+| Compact mode (6 features)      | ~200 tokens       | Analyst report: 30 tokens/line × 6 lines |
+| Full content mode (6 features) | ~3000 tokens      | Analyst report: 500 tokens/feature × 6   |
+| Ratio                          | 15x               | Analyst calculation                      |
+| Context window impact          | Low (<2% of 200K) | Claude Sonnet 4.5                        |
 
 **Mitigation**: Full context is opt-in and used only where value justifies cost (SessionStart hook for immediate context).
 
@@ -488,11 +506,11 @@ func TestMCPSearchFiltering(t *testing.T) {
 
 **Breaking Change Risk**: NONE
 
-| Scenario | Impact | Mitigation |
-|----------|--------|------------|
+| Scenario           | Impact                      | Mitigation                                         |
+| ------------------ | --------------------------- | -------------------------------------------------- |
 | Hook output format | No impact (internal change) | Claude processes additionalContext field correctly |
-| Hook content | No change | All existing sections preserved |
-| Hook tests | Tests updated | Verify new format structure |
+| Hook content       | No change                   | All existing sections preserved                    |
+| Hook tests         | Tests updated               | Verify new format structure                        |
 
 **Validation**:
 
@@ -504,11 +522,11 @@ func TestMCPSearchFiltering(t *testing.T) {
 
 **Breaking Change Risk**: LOW
 
-| Scenario | Impact | Mitigation |
-|----------|--------|------------|
-| Existing callers | No impact (default: false) | Schema default maintains current behavior |
-| Hook callers | Behavior change (opt-in full content) | Explicit opt-in required |
-| CLI callers | No impact (no flag = compact) | Flag is optional |
+| Scenario         | Impact                                | Mitigation                                |
+| ---------------- | ------------------------------------- | ----------------------------------------- |
+| Existing callers | No impact (default: false)            | Schema default maintains current behavior |
+| Hook callers     | Behavior change (opt-in full content) | Explicit opt-in required                  |
+| CLI callers      | No impact (no flag = compact)         | Flag is optional                          |
 
 **Validation**:
 
@@ -520,11 +538,11 @@ func TestMCPSearchFiltering(t *testing.T) {
 
 **Breaking Change Risk**: NONE
 
-| Scenario | Impact | Mitigation |
-|----------|--------|------------|
-| CLI calls without --project | Auto-resolution from CWD | Maintains convenience, flag is optional |
-| CLI calls outside project dirs | Error message (same as before) | Clear error with instructions |
-| MCP tool calls | No impact (project already optional) | Auto-resolution using existing resolveProject |
+| Scenario                       | Impact                               | Mitigation                                    |
+| ------------------------------ | ------------------------------------ | --------------------------------------------- |
+| CLI calls without --project    | Auto-resolution from CWD             | Maintains convenience, flag is optional       |
+| CLI calls outside project dirs | Error message (same as before)       | Clear error with instructions                 |
+| MCP tool calls                 | No impact (project already optional) | Auto-resolution using existing resolveProject |
 
 **Validation**:
 
@@ -541,11 +559,11 @@ func TestMCPSearchFiltering(t *testing.T) {
 
 Based on analyst investigation (`.agents/analysis/020-hook-context-injection-truncation.md`):
 
-| Mode | Sections Expanded | Token Count | Use Case |
-|------|------------------|-------------|----------|
-| **Compact (current)** | None (wikilinks only) | ~200 | General bootstrap, quick context |
-| **Full context** | Active features, recent decisions, recent activity | ~3000 | SessionStart hook, rich context |
-| **Full context (all sections)** | All 6 sections | ~4500 | Rarely needed |
+| Mode                            | Sections Expanded                                  | Token Count | Use Case                         |
+| ------------------------------- | -------------------------------------------------- | ----------- | -------------------------------- |
+| **Compact (current)**           | None (wikilinks only)                              | ~200        | General bootstrap, quick context |
+| **Full context**                | Active features, recent decisions, recent activity | ~3000       | SessionStart hook, rich context  |
+| **Full context (all sections)** | All 6 sections                                     | ~4500       | Rarely needed                    |
 
 ### Expansion Strategy
 
@@ -565,11 +583,11 @@ Based on analyst investigation (`.agents/analysis/020-hook-context-injection-tru
 
 ### Token Budget
 
-| Context Type | Tokens | Percentage of 200K Window |
-|--------------|--------|---------------------------|
-| Compact bootstrap | 200 | 0.1% |
-| Full bootstrap | 3000 | 1.5% |
-| Session reminder (total) | ~5000 | 2.5% |
+| Context Type             | Tokens | Percentage of 200K Window |
+| ------------------------ | ------ | ------------------------- |
+| Compact bootstrap        | 200    | 0.1%                      |
+| Full bootstrap           | 3000   | 1.5%                      |
+| Session reminder (total) | ~5000  | 2.5%                      |
 
 **Verdict**: Full context mode is affordable for SessionStart hook use case.
 
@@ -577,13 +595,13 @@ Based on analyst investigation (`.agents/analysis/020-hook-context-injection-tru
 
 ## Risks
 
-| Risk | Probability | Impact | Mitigation |
-|------|-------------|--------|------------|
-| **Token cost exceeds expectations** | Low | Medium | Measured in tests; limit sections expanded |
-| **Backward compatibility break** | Low | High | Default parameter = false; regression tests |
-| **Auto-resolution ambiguity** | Medium | Low | Clear error messages; document resolution order |
-| **Test coverage gaps** | Medium | Medium | QA validation milestone; 90% coverage target |
-| **Hook integration failure** | Low | Medium | Integration test in real session |
+| Risk                                | Probability | Impact | Mitigation                                      |
+| ----------------------------------- | ----------- | ------ | ----------------------------------------------- |
+| **Token cost exceeds expectations** | Low         | Medium | Measured in tests; limit sections expanded      |
+| **Backward compatibility break**    | Low         | High   | Default parameter = false; regression tests     |
+| **Auto-resolution ambiguity**       | Medium      | Low    | Clear error messages; document resolution order |
+| **Test coverage gaps**              | Medium      | Medium | QA validation milestone; 90% coverage target    |
+| **Hook integration failure**        | Low         | Medium | Integration test in real session                |
 
 ---
 

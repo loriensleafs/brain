@@ -11,6 +11,7 @@
 Your instinct was correct: **Most timeout changes didn't fix the problem, and some hurt performance.** Comprehensive research identified the actual fix and quantified all performance impacts.
 
 **Bottom Line**:
+
 - Root cause: Bun idleTimeout (Layer 4)
 - Performance killer: 200ms delays (Layer 2) add 100% overhead
 - Solution: Migrate to batch API + remove delays = **13x faster**
@@ -28,6 +29,7 @@ Your instinct was correct: **Most timeout changes didn't fix the problem, and so
 | Other timeout changes | No impact | Timeouts only matter when exceeded |
 
 **Delay Overhead Breakdown** (700 notes):
+
 ```
 Actual work:     140 seconds (48%)
 Delay overhead:  154 seconds (52%)
@@ -99,6 +101,7 @@ Total:           294 seconds (4.9 minutes)
 **Expected Combined Improvement**: **13x faster**
 
 **Performance Projection**:
+
 ```
 Current:  700 notes in 5 minutes (294 seconds)
 After:    700 notes in 46 seconds
@@ -108,6 +111,7 @@ Savings:  248 seconds (4.1 minutes saved)
 ### The Critical Insight: Wrong API Endpoint
 
 **Current Implementation** (slow):
+
 ```typescript
 // Makes N separate HTTP requests for N chunks
 for (const chunk of chunks) {
@@ -117,6 +121,7 @@ for (const chunk of chunks) {
 ```
 
 **Approved Implementation** (fast):
+
 ```typescript
 // Makes 1 HTTP request for N chunks
 const embeddings = await POST /api/embed {
@@ -134,17 +139,20 @@ const embeddings = await POST /api/embed {
 ### Web Research (Analysis 025)
 
 **Ollama Best Practices Found**:
+
 - Batch API `/api/embed` supports input arrays (documented)
 - OLLAMA_NUM_PARALLEL default is 4 (match concurrency to this)
 - Model keep-alive reduces reload latency
 - Optimal batch sizes: 32-64 for GPU, 8-16 for CPU
 
 **Bun Performance**:
+
 - Native fetch 3x faster than Node.js
 - Automatic connection pooling (256 max connections)
 - No need for external HTTP clients (ky, axios, undici)
 
 **Package Recommendations**:
+
 - p-limit: 4.3kB, pure JS, Bun compatible, 153M weekly downloads
 - NOT recommended: p-queue (heavier), axios/ky (unnecessary), bun-queue (Redis dependency)
 
@@ -162,6 +170,7 @@ const embeddings = await POST /api/embed {
 | Layer 2 (Delays) | Rate limiting | **Wasteful - REMOVE** |
 
 **Performance Calculations** (verified):
+
 - Delay overhead: 52% of total time
 - Reduction potential: 40% improvement just from removing delays
 - Additional 5-10x from batch API migration
@@ -173,6 +182,7 @@ const embeddings = await POST /api/embed {
 ### Agent Consensus
 
 **Phase 1**: Independent reviews from 6 agents
+
 - architect: Identified P0 gaps (chunk batch size, memory pressure, error categorization)
 - critic: Performance claim mismatch, missing baseline
 - independent-thinker: Batch API behavior unverified
@@ -185,6 +195,7 @@ const embeddings = await POST /api/embed {
 **Phase 3**: Added Validation Requirements section to ADR with 6 requirements
 
 **Phase 4**: Convergence check - All 6 agents voted
+
 - **4 Accept**: architect, critic, analyst, high-level-advisor
 - **2 Disagree-and-Commit**: independent-thinker (batch behavior), security (SSRF guard)
 
@@ -225,12 +236,14 @@ bun add p-limit
 ### Phase 1: Core Changes (P0) - 2 hours
 
 **Files to Create/Modify**:
+
 1. `src/services/ollama/client.ts` - Add `generateBatchEmbeddings()` method
 2. `src/services/embedding/generateBatchEmbedding.ts` - NEW file for batch logic
 3. `src/services/ollama/types.ts` - Add `BatchEmbedResponse` interface
 4. `src/tools/embed/index.ts` - Refactor to use batch API + p-limit
 
 **Files to Delete From**:
+
 - Remove `OLLAMA_REQUEST_DELAY_MS` constant (embed/index.ts:23)
 - Remove `BATCH_DELAY_MS` constant (embed/index.ts:29)
 
@@ -313,12 +326,14 @@ time brain embed --project brain --limit 700
 ## Next Steps
 
 **If you want to proceed with optimization**:
+
 1. Run Phase 0 prerequisites (30 min)
 2. Implement ADR-002 Phase 1 (2 hours)
 3. Validate 5x+ improvement
 4. Deploy
 
 **If you want to keep current state**:
+
 - EOF errors are fixed (idleTimeout = 0)
 - Performance is acceptable for your current use case
 - Optimization can wait

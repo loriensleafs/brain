@@ -32,6 +32,7 @@ SO THAT a minimum 5x improvement over the baseline 10-minute performance is achi
 ## Context
 
 The current embedding system processes 700 notes in approximately 10 minutes (600 seconds). ADR-002 estimates a 13x improvement (600s → 46s) based on theoretical analysis:
+
 - Batch API: 2x improvement (eliminate HTTP overhead)
 - Remove delays: 2x improvement (eliminate 100% artificial overhead)
 - Concurrency (4x): 4x improvement (parallel processing)
@@ -40,6 +41,7 @@ The current embedding system processes 700 notes in approximately 10 minutes (60
 Conservative estimate accounting for overhead: 13x improvement → 46 seconds target.
 
 This requirement sets a minimum acceptance threshold of 5x improvement (120 seconds) to ensure:
+
 - Implementation delivers measurable value
 - Edge cases and variance don't cause failure
 - Rollback threshold is clear (if <5x, revert)
@@ -63,16 +65,19 @@ This requirement sets a minimum acceptance threshold of 5x improvement (120 seco
 Setting a conservative 5x minimum threshold ensures:
 
 **Risk Mitigation**:
+
 - Theoretical analysis may overestimate (no network latency, perfect batching)
 - Edge cases may increase variance (large notes, slow Ollama responses)
 - Real-world conditions differ from idealized calculations
 
 **Clear Success Criteria**:
+
 - 5x improvement: PASS (measurable value delivered)
 - 3x improvement: CONDITIONAL (investigate bottlenecks, consider rollback)
 - 1x improvement: FAIL (rollback, re-analyze)
 
 **Validation Methodology**:
+
 ```bash
 # Baseline (before implementation)
 time brain embed --project brain --limit 700 > baseline.log

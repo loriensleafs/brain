@@ -39,6 +39,7 @@ Refactor the embed tool to use the new `generateBatchEmbeddings` method instead 
 ## Scope
 
 **In Scope**:
+
 - Replace sequential `generateEmbedding` calls with `generateBatchEmbeddings`
 - Remove OLLAMA_REQUEST_DELAY_MS constant and all delay logic
 - Remove BATCH_DELAY_MS constant and all batch delay logic
@@ -49,6 +50,7 @@ Refactor the embed tool to use the new `generateBatchEmbeddings` method instead 
 - Update tool response format
 
 **Out of Scope**:
+
 - p-limit integration implementation (provided by DESIGN-002 code)
 - Timeout configuration (handled in TASK-004)
 - Chunk batch size limits (provided by DESIGN-002 config)
@@ -95,6 +97,7 @@ These files provide the infrastructure for the embed tool refactor.
 ### Step 2: Refactor Embed Tool
 
 **Current Implementation (Remove)**:
+
 ```typescript
 // OLD: Sequential with delays
 for (const batch of batches) {
@@ -111,6 +114,7 @@ for (const batch of batches) {
 ```
 
 **New Implementation**:
+
 ```typescript
 import { processNotesWithConcurrency } from '../../services/embedding/concurrency';
 import { processNoteWithBatchEmbedding } from '../../services/embedding/processNote';
@@ -158,6 +162,7 @@ export const embedTool = {
 ### Step 3: Verify Removal of Delays
 
 Search codebase for:
+
 - `OLLAMA_REQUEST_DELAY_MS` (should be 0 results after removal)
 - `BATCH_DELAY_MS` (should be 0 results after removal)
 - `await sleep` in embedding code (should be 0 results after removal)

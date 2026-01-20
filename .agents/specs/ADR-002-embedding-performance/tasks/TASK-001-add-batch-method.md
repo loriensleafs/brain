@@ -35,6 +35,7 @@ Add a new `generateBatchEmbeddings` method to the OllamaClient class that uses t
 ## Scope
 
 **In Scope**:
+
 - Add `generateBatchEmbeddings(texts: string[], model?: string): Promise<number[][]>` method
 - Request uses `/api/embed` endpoint with `input: string[]` field
 - Response parsing for `embeddings: number[][]` field
@@ -45,6 +46,7 @@ Add a new `generateBatchEmbeddings` method to the OllamaClient class that uses t
 - Update existing `generateEmbedding` to delegate to batch method
 
 **Out of Scope**:
+
 - Concurrency control (handled in TASK-003)
 - Timeout configuration changes (handled in TASK-004)
 - Embed tool refactoring (handled in TASK-002)
@@ -78,13 +80,15 @@ Add a new `generateBatchEmbeddings` method to the OllamaClient class that uses t
 Follow the implementation in DESIGN-001 Component 1 exactly. Key points:
 
 1. **Empty input optimization**:
+
 ```typescript
 if (texts.length === 0) {
   return [];
 }
 ```
 
-2. **Request structure**:
+1. **Request structure**:
+
 ```typescript
 const payload = {
   model,
@@ -93,7 +97,8 @@ const payload = {
 };
 ```
 
-3. **Index alignment validation**:
+1. **Index alignment validation**:
+
 ```typescript
 if (data.embeddings.length !== texts.length) {
   throw new OllamaError(
@@ -103,7 +108,8 @@ if (data.embeddings.length !== texts.length) {
 }
 ```
 
-4. **Backward compatibility**:
+1. **Backward compatibility**:
+
 ```typescript
 async generateEmbedding(text: string, model: string = "nomic-embed-text"): Promise<number[]> {
   const [embedding] = await this.generateBatchEmbeddings([text], model);

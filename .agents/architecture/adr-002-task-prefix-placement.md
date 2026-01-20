@@ -15,12 +15,14 @@ Should the "search_document:" task prefix fix be added to ADR-002 (Embedding Per
 **ADR-002 Title**: "Embedding Performance Optimization: Batch API Migration with Concurrency Control"
 
 **ADR-002 Focus**: Performance optimization through:
+
 1. Batch API migration (`/api/embeddings` → `/api/embed`)
 2. Concurrency control (p-limit)
 3. Delay removal
 4. Timeout reduction
 
 **Task Prefix Fix**:
+
 - **Purpose**: Correctness/quality (not performance)
 - **Impact**: 15-25% embedding quality improvement per Analysis 030
 - **Mechanism**: Proper model usage (required by nomic-embed-text specification)
@@ -43,6 +45,7 @@ The task prefix fix touches the same file (`client.ts`) as batch migration, crea
 **[CONCERN 4] API Compatibility**
 
 Task prefix works for BOTH APIs:
+
 - Current: `/api/embeddings` with `prompt: "search_document: " + text`
 - New: `/api/embed` with `input: ["search_document: " + text1, ...]`
 
@@ -53,12 +56,14 @@ This suggests it's orthogonal to the batch migration decision.
 **Related Concerns from ADR-002 Debate**:
 
 From consensus record (lines 7-8):
+
 - `consensus: 4-accept-2-disagree-and-commit`
 - Decision focused on performance tradeoffs, not quality
 
 **Phase Structure in ADR-002**:
 
 Phases 0-4 are organized around batch migration:
+
 - Phase 0: Prerequisites (dependency, version check)
 - Phase 1: Core batch API changes
 - Phase 2: Timeout optimization
@@ -98,22 +103,26 @@ No phase is dedicated to "correctness fixes" or "quality improvements."
 **Proposed Title**: "Embedding Quality: Implement nomic-embed-text Task Prefix Specification"
 
 **Scope**:
+
 - Add `search_document:` prefix to document embeddings
 - Add `search_query:` prefix to query embeddings (future)
 - Validate compliance with Nomic model specification
 
 **Decision Drivers**:
+
 - Model specification compliance (Nomic docs require task prefix)
 - 15-25% embedding quality improvement (Analysis 030)
 - Zero performance cost
 - Works with both current and future batch API
 
 **Implementation**:
+
 - Phase 0: Add prefix to current API immediately (quick win)
 - Phase 1: Carry forward to batch API during ADR-002 implementation
 - No additional dependencies or infrastructure changes
 
 **Why Separate**:
+
 - Different concern (quality vs. performance)
 - Different validation (semantic coherence vs. throughput)
 - Different rollback criteria (embedding quality degradation vs. performance regression)
@@ -129,6 +138,7 @@ No phase is dedicated to "correctness fixes" or "quality improvements."
 ```
 
 Benefits:
+
 - Immediate quality improvement before performance work
 - Simpler rollback (can revert batch migration without losing task prefix)
 - Independent validation of each change
@@ -142,10 +152,12 @@ Benefits:
 ```
 
 Benefits:
+
 - Faster overall timeline
 - Both improvements delivered together
 
 Risks:
+
 - Merge conflicts in `client.ts`
 - Harder to attribute quality changes to task prefix vs. batch API
 
@@ -156,6 +168,7 @@ Risks:
 ```
 
 Drawbacks:
+
 - Violates atomic commit principle
 - Makes rollback harder (all-or-nothing)
 - Conflates quality and performance validation
@@ -166,12 +179,14 @@ Drawbacks:
 **YES - ADR-003 Must Trigger adr-review**
 
 Rationale:
+
 1. Creates new ADR file matching `.agents/architecture/ADR-*.md`
 2. Architectural decision (model usage pattern affects all embeddings)
 3. Quality implications across entire semantic search system
 4. Per AGENTS.md Section "ADR Review Requirement (MANDATORY)"
 
 Process:
+
 1. Architect creates ADR-003 draft
 2. Returns to orchestrator with MANDATORY routing signal
 3. Orchestrator invokes adr-review skill
@@ -187,6 +202,7 @@ If ADR-003 is accepted and implemented BEFORE ADR-002:
 **ADR-002 Phase 1 Update Required**:
 
 Current plan (line 360-363):
+
 ```markdown
 1. **Add batch embedding method to OllamaClient**
    - File: `src/services/ollama/client.ts`
@@ -195,6 +211,7 @@ Current plan (line 360-363):
 ```
 
 Updated plan:
+
 ```markdown
 1. **Add batch embedding method to OllamaClient**
    - File: `src/services/ollama/client.ts`
@@ -231,6 +248,7 @@ async generateBatchEmbeddings(
 ### No Changes to ADR-002 Decision
 
 Adding task prefix does NOT change:
+
 - Performance estimates (13x improvement still valid)
 - Batch API choice
 - Concurrency model

@@ -15,6 +15,7 @@ consensus: 4-accept-2-disagree-and-commit
 The current embedding generation system exhibits 100% overhead from artificial delays and uses a legacy single-text API endpoint. Processing 700 notes takes approximately 5 minutes when the actual embedding work requires only 2.5 minutes.
 
 Evidence from analyst research:
+
 - Analysis 025: Identified `/api/embeddings` (single) vs `/api/embed` (batch) API mismatch
 - Analysis 026: Quantified 200ms inter-chunk delay adds 100% processing time overhead
 
@@ -22,17 +23,17 @@ How should we redesign the embedding pipeline to eliminate unnecessary overhead 
 
 ## Decision Drivers
 
-* **Performance**: 700 notes currently takes 5 minutes; target is under 1 minute
-* **Reliability**: Ollama 500 errors must be handled gracefully without data loss
-* **Resource safety**: Prevent overwhelming Ollama server during batch operations
-* **Maintainability**: Changes should simplify, not complicate, the codebase
-* **Backward compatibility**: No breaking changes to MCP tool interface or database schema
+- **Performance**: 700 notes currently takes 5 minutes; target is under 1 minute
+- **Reliability**: Ollama 500 errors must be handled gracefully without data loss
+- **Resource safety**: Prevent overwhelming Ollama server during batch operations
+- **Maintainability**: Changes should simplify, not complicate, the codebase
+- **Backward compatibility**: No breaking changes to MCP tool interface or database schema
 
 ## Considered Options
 
-* **Option A**: Migrate to batch API with p-limit concurrency control
-* **Option B**: Keep single-text API, remove delays, add p-limit only
-* **Option C**: Parallel chunk processing with worker threads
+- **Option A**: Migrate to batch API with p-limit concurrency control
+- **Option B**: Keep single-text API, remove delays, add p-limit only
+- **Option C**: Parallel chunk processing with worker threads
 
 ## Decision Outcome
 
@@ -40,17 +41,18 @@ Chosen option: **Option A - Migrate to batch API with p-limit concurrency contro
 
 ### Consequences
 
-* Good, because eliminates 5-50x HTTP overhead by batching chunks
-* Good, because removes 100% artificial delay overhead
-* Good, because p-limit provides backpressure without guessing delays
-* Good, because Bun's native fetch already provides connection pooling
-* Bad, because requires handling partial batch failures
-* Bad, because batch API response format differs from current single-text format
-* Neutral, because adds p-limit dependency (4.3kB, pure JS, Bun compatible)
+- Good, because eliminates 5-50x HTTP overhead by batching chunks
+- Good, because removes 100% artificial delay overhead
+- Good, because p-limit provides backpressure without guessing delays
+- Good, because Bun's native fetch already provides connection pooling
+- Bad, because requires handling partial batch failures
+- Bad, because batch API response format differs from current single-text format
+- Neutral, because adds p-limit dependency (4.3kB, pure JS, Bun compatible)
 
 ### Confirmation
 
 Implementation verified through:
+
 1. Unit tests for batch embedding function with mocked Ollama
 2. Integration test processing 100 notes, comparing before/after timing
 3. Error injection tests for partial batch failures
@@ -153,6 +155,7 @@ interface EmbedResponse {
 **Level**: Note-level concurrency with chunk-level batching.
 
 **Rationale**:
+
 - Batching at chunk level (all chunks from all notes) would require complex bookkeeping to map embeddings back to notes
 - Note-level concurrency with per-note batch API calls provides simpler error handling and progress tracking
 - 4 concurrent note operations aligns with Ollama's default `OLLAMA_NUM_PARALLEL=4`
@@ -174,6 +177,7 @@ const results = await Promise.allSettled(
 **Why not batch across notes?**
 
 Batching all chunks from all notes into one mega-request would:
+
 1. Require tracking which embedding belongs to which note/chunk
 2. Fail entirely if any chunk fails (all-or-nothing)
 3. Create massive payloads that could exceed limits
@@ -283,6 +287,7 @@ async function processNoteWithRetry(
 **Current State**: Singleton `OllamaClient` with Bun's automatic connection pooling.
 
 **No Changes Needed**: Bun's fetch automatically:
+
 - Pools connections (256 max by default)
 - Manages HTTP keep-alive
 - Handles connection reuse
@@ -523,6 +528,7 @@ All changes are backward compatible. The database schema is unchanged.
 Each note's chunks are batched into one API call. Notes are processed concurrently with p-limit.
 
 Rationale:
+
 - Simpler error isolation (one note's failure doesn't affect others)
 - Simpler progress tracking (processed/failed notes, not chunks)
 - Aligns with existing storage pattern (store all chunks for a note atomically)
@@ -532,11 +538,13 @@ Rationale:
 **Answer**: 4 concurrent note operations.
 
 Rationale:
+
 - Matches Ollama's default `OLLAMA_NUM_PARALLEL=4`
 - Provides 4x throughput without overwhelming server
 - Can be tuned via environment variable if needed
 
 Make configurable:
+
 ```typescript
 const CONCURRENCY_LIMIT = parseInt(process.env.EMBEDDING_CONCURRENCY ?? '4', 10);
 ```
@@ -558,6 +566,7 @@ Hardcoded defaults are conservative; users can tune for their hardware.
 **Answer**: P2 (optional enhancement).
 
 For initial implementation, p-limit + retry provides adequate protection. Circuit breaker adds value if:
+
 - Ollama server is shared/remote
 - Failure spikes are common
 - Fast-fail is preferable to slow degradation
@@ -567,6 +576,7 @@ For initial implementation, p-limit + retry provides adequate protection. Circui
 **Answer**: Entire note fails if batch fails.
 
 The Ollama `/api/embed` endpoint returns all-or-nothing. If the request fails:
+
 1. Return null from `generateBatchEmbeddings`
 2. Mark note as failed
 3. Increment failure counter
@@ -585,6 +595,7 @@ This is simpler than chunk-level retry and matches existing error handling patte
 | Delay overhead | 52% | 0% | Eliminated |
 
 Assumptions:
+
 - Average 3 chunks per note
 - Concurrency limit of 4
 - No retry needed (healthy Ollama)

@@ -45,6 +45,7 @@ Create comprehensive unit and integration tests for the batch embedding implemen
 ## Scope
 
 **In Scope**:
+
 - Unit tests for OllamaClient.generateBatchEmbeddings
 - Unit tests for concurrency control (p-limit behavior)
 - Unit tests for timeout error handling
@@ -54,6 +55,7 @@ Create comprehensive unit and integration tests for the batch embedding implemen
 - Performance baseline measurement (for REQ-004 validation)
 
 **Out of Scope**:
+
 - Load testing (>1000 notes) - P2 enhancement
 - Circuit breaker tests - P2 enhancement
 - Memory leak tests - P2 enhancement
@@ -355,6 +357,7 @@ describe('Integration Tests', () => {
 ## Testing Requirements
 
 ### Unit Tests
+
 - [ ] All unit tests pass
 - [ ] Mock-based tests do not require Ollama
 - [ ] Tests are deterministic (no flakiness)
@@ -362,6 +365,7 @@ describe('Integration Tests', () => {
 - [ ] Edge cases covered (empty input, single item)
 
 ### Integration Tests
+
 - [ ] Ollama server running with nomic-embed-text model
 - [ ] 100-note test completes <30 seconds
 - [ ] 700-note test completes <120 seconds (5x minimum)
@@ -369,6 +373,7 @@ describe('Integration Tests', () => {
 - [ ] Tests clean up test data after completion
 
 ### Performance Validation
+
 - [ ] Baseline measurement documented (before optimization)
 - [ ] Post-optimization measurement shows ≥5x improvement
 - [ ] Performance regression test added to CI

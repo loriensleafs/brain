@@ -35,12 +35,14 @@ Add the p-limit npm package as a dependency to enable queue-based concurrency li
 ## Scope
 
 **In Scope**:
+
 - Add p-limit to package.json using Bun package manager
 - Verify package installation
 - Verify Bun compatibility
 - Update lockfile (bun.lock)
 
 **Out of Scope**:
+
 - Implementation of concurrency logic (handled in TASK-002)
 - Configuration of concurrency limits (handled in TASK-002)
 - Testing (handled in TASK-005)
@@ -107,6 +109,7 @@ console.log('All tasks complete');
 ```
 
 Run test:
+
 ```bash
 bun run test-plimit.ts
 # Should output: Task 1-5 (max 4 concurrent)
@@ -158,5 +161,6 @@ git checkout package.json bun.lock
 ```
 
 Alternative implementations:
+
 - Manual Promise pooling (more complex, not recommended)
 - async-pool package (similar functionality)

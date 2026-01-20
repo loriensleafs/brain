@@ -22,10 +22,12 @@ The ADR proposes a valid technical change (adding task prefixes for nomic-embed-
 **Assessment**: [PARTIALLY VERIFIED]
 
 **Evidence Found**:
+
 - HuggingFace documentation states: "the text prompt _must_ include a _task instruction prefix_"
 - However, Nomic API documentation states: "default is `search_document` if no `task_type` is provided"
 
 **Discrepancy**: There is a difference between:
+
 1. **Nomic API/SDK usage**: task_type parameter with defaults (does NOT require manual prefix)
 2. **Third-party library usage (Transformers, SentenceTransformers, Ollama)**: Requires manual prefix in text
 
@@ -38,6 +40,7 @@ The ADR proposes a valid technical change (adding task prefixes for nomic-embed-
 **Assessment**: [NOT SUBSTANTIATED]
 
 **Evidence Search Results**:
+
 - Nomic documentation: No quality percentage mentioned
 - HuggingFace model card: No percentage improvement mentioned
 - Analysis 030 (cited source): Provides the claim but no external citation
@@ -85,6 +88,7 @@ const prefixedText = `search_document: ${text}`;
 ### Implementation Effort
 
 ADR claims 15 minutes for core change. This is reasonable:
+
 - 1 line of code change
 - 1 unit test addition
 - No schema changes
@@ -120,6 +124,7 @@ Since Brain uses Ollama (not Nomic API directly), the prefix requirement is real
 **Status**: [PASS]
 
 Current `/api/embeddings` endpoint accepts:
+
 ```json
 { "model": "nomic-embed-text", "prompt": "search_document: text here" }
 ```
@@ -131,11 +136,13 @@ Prefix can be added without API changes.
 **Status**: [PASS]
 
 Future `/api/embed` endpoint accepts:
+
 ```json
 { "model": "nomic-embed-text", "input": ["search_document: text1", "search_document: text2"] }
 ```
 
 ADR-002 implementation plan already shows prefix carrying forward (line 218):
+
 ```typescript
 const prefixedTexts = texts.map(t => `search_document: ${t}`);
 ```
@@ -145,6 +152,7 @@ const prefixedTexts = texts.map(t => `search_document: ${t}`);
 **Status**: [WARNING]
 
 ADR-003 addresses document embedding but search service also generates embeddings for queries. For optimal retrieval:
+
 - Documents: `search_document: <text>`
 - Queries: `search_query: <query>`
 
@@ -184,20 +192,22 @@ The technical decision is sound. Adding task prefixes is the correct approach fo
 
 ### Optional Improvements
 
-4. Define quantifiable validation metrics (MRR, precision@k)
-5. Add benchmark test comparing retrieval quality before/after
+1. Define quantifiable validation metrics (MRR, precision@k)
+2. Add benchmark test comparing retrieval quality before/after
 
 ---
 
 ## Data Transparency
 
 ### Found
+
 - Nomic HuggingFace documentation confirming prefix requirement for third-party libraries
 - Nomic API documentation showing task_type parameter defaults
 - Ollama API specification showing no task_type parameter support
 - ADR-002 batch API compatibility confirmation
 
 ### Not Found
+
 - Empirical benchmark showing 15-25% quality improvement
 - Any quantified comparison of prefix vs. no-prefix embedding quality
 - Documentation of nomic-embed-text behavior without prefix through Ollama

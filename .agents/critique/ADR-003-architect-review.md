@@ -91,6 +91,7 @@ ADR-003 is a well-structured, architecturally coherent decision that correctly s
 | Rollback criteria | Performance regression | Quality degradation |
 
 This separation enables:
+
 - Independent implementation timelines
 - Independent validation criteria
 - Independent rollback decisions
@@ -106,6 +107,7 @@ This separation enables:
 1. **Compatibility Statement** (line 29): "Must work with current single-text API and future batch API (ADR-002)"
 
 2. **Implementation Coordination** (lines 49, 245-262): Batch API inherits prefix pattern:
+
    ```typescript
    const prefixedTexts = texts.map(t => `search_document: ${t}`);
    ```
@@ -115,6 +117,7 @@ This separation enables:
 4. **Validation Requirement 3** (lines 243-262): Explicit batch API compatibility test
 
 **Architecture Decision**: The `adr-002-task-prefix-placement.md` analysis document correctly justified this separation. The architect's prior analysis (that document) determined ADR-003 should be separate due to:
+
 - Different concern (quality vs. performance)
 - Different validation (semantic coherence vs. throughput)
 - Different rollback criteria
@@ -173,6 +176,7 @@ When implementing query-time embedding for search, add:
 Phase 3 (lines 177-180) mentions updating .env.example to "document Nomic AI specification link." This is documentation, not configuration. The language could be clearer.
 
 **Current**:
+
 ```markdown
 1. **Update .env.example**
    - Add comment explaining task prefix requirement
@@ -180,6 +184,7 @@ Phase 3 (lines 177-180) mentions updating .env.example to "document Nomic AI spe
 ```
 
 **Suggested**:
+
 ```markdown
 1. **Update documentation**
    - Add comment to client.ts explaining task prefix requirement
@@ -191,6 +196,7 @@ Phase 3 (lines 177-180) mentions updating .env.example to "document Nomic AI spe
 Line 326 links to `https://www.nomic.ai/blog/posts/nomic-embed-text-v1`. Blog posts can move or be deleted.
 
 **Recommendation**: Either:
+
 1. Add archived version link
 2. Extract relevant specification text into ADR (preferred for archival purposes)
 

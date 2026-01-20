@@ -21,6 +21,8 @@ import {
 import { resolveProject } from "../../project/resolve";
 import { logger } from "../../utils/internal/logger";
 import { generateEmbedding } from "../embedding/generateEmbedding";
+import { OllamaClient } from "../ollama/client";
+import { ollamaConfig } from "../../config/ollama";
 import type {
   SearchOptions,
   SearchResult,
@@ -385,7 +387,9 @@ export class SearchService {
     }
 
     try {
-      const queryEmbedding = await generateEmbedding(query);
+      // Generate query embedding using OllamaClient directly to specify search_query task type
+      const client = new OllamaClient(ollamaConfig);
+      const queryEmbedding = await client.generateEmbedding(query, "search_query");
       if (!queryEmbedding) {
         logger.debug("Failed to generate query embedding");
         return [];

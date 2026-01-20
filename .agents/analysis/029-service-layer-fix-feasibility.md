@@ -48,6 +48,7 @@ return await client.generateEmbedding(sanitized, "nomic-embed-text");
 ### Value: VERY LOW (0% observed failure rate)
 
 **Evidence**:
+
 - 0 production 422 errors documented across all session logs
 - Analysis 023, 024, 025, 027: Only 500/EOF errors observed
 - Ollama API docs ([source](https://docs.ollama.com/api/errors)) don't list 422 as common error
@@ -69,6 +70,7 @@ const OVERLAP_PERCENT = 0.15;
 ```
 
 **Model Limits** (from research):
+
 - nomic-embed-text context window: 2048 tokens ([source](https://ollama.com/library/nomic-embed-text))
 - Current chunk size: 2000 chars = ~500 tokens (4x safety margin)
 - Known issues: Ollama may use 512-8192 token window depending on config ([source](https://github.com/ollama/ollama/issues/7008))
@@ -82,6 +84,7 @@ const OVERLAP_PERCENT = 0.15;
 | 413 error fallback | `generateEmbedding.ts` retry logic | 2 hours | LOW |
 
 **Why it's already sufficient**:
+
 - 2000 char chunks = 500 tokens (well under 2048 limit)
 - Zero 413 errors observed in production
 - Chunking happens BEFORE API call (preventive, not reactive)
@@ -89,6 +92,7 @@ const OVERLAP_PERCENT = 0.15;
 ### Value: NONE (problem already prevented)
 
 **Evidence**:
+
 - 0 production 413 errors
 - Chunking service has 100% test coverage (`chunking.ts`, `batchGenerate.test.ts`)
 - ADR-002 Section 4 (lines 200-279): Chunking strategy validated
@@ -137,6 +141,7 @@ export async function generateEmbedding(text: string): Promise<number[] | null> 
 ### Value: LOW (400 errors indicate code bugs, not content issues)
 
 **Evidence**:
+
 - 0 production 400 errors
 - 400 Bad Request = malformed API request (code bug, not data issue)
 - Current retry logic: `isRetryableError()` correctly fails fast on 4xx (line 45-48)
@@ -187,6 +192,7 @@ async function generateWithFallback(texts: string[]): Promise<EmbeddingResult> {
 ### Value: MEDIUM (improves resilience but no observed need)
 
 **Evidence**:
+
 - Current retry handles all observed failures (29 × 500 errors, 0 × 4xx errors)
 - Batch processing already throttled (200ms delay between calls, 1s between batches)
 - ADR-002 concurrency design prevents resource exhaustion
@@ -197,7 +203,7 @@ async function generateWithFallback(texts: string[]): Promise<EmbeddingResult> {
 
 ## 5. ADR-002 Gap Analysis
 
-### What's Implemented (from ADR-002 Section 4):
+### What's Implemented (from ADR-002 Section 4)
 
 | Feature | Implementation | Lines of Code |
 |---------|---------------|---------------|
@@ -210,7 +216,7 @@ async function generateWithFallback(texts: string[]): Promise<EmbeddingResult> {
 
 **Total Service Layer Code**: 783 LOC (chunking + generate + retry + embed)
 
-### What's Planned But Not Done:
+### What's Planned But Not Done
 
 | Feature | ADR-002 Reference | Status | Priority |
 |---------|-------------------|--------|----------|
@@ -220,7 +226,7 @@ async function generateWithFallback(texts: string[]): Promise<EmbeddingResult> {
 
 **ADR-002 lines 450-476**: Error categorization is COMPLETE. 4xx fail-fast logic implemented.
 
-### What's Missing Entirely:
+### What's Missing Entirely
 
 | Feature | Why Not Implemented | Would it Help? |
 |---------|---------------------|----------------|

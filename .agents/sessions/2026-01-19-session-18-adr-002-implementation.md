@@ -20,20 +20,24 @@ Implement ADR-002 embedding performance optimization by migrating from single-te
 ## Implementation Sequence
 
 ### Phase 0: Prerequisites (30 min) - COMPLETE
+
 - [x] TASK-003: Add p-limit dependency
 - [x] Verify Ollama version ≥0.1.26 (0.14.1 confirmed)
 - [x] Validation Checkpoint 1
 
 ### Phase 1: Core Changes (5 hours) - COMPLETE
+
 - [x] TASK-001: Add batch method to OllamaClient
 - [x] TASK-002: Refactor embed tool
 - [x] Validation Checkpoint 2-3
 
 ### Phase 2: Optimization (1 hour) - COMPLETE
+
 - [x] TASK-004: Reduce timeouts
 - [x] Validation Checkpoint 4
 
 ### Phase 3: Validation (4 hours) - DEFERRED
+
 - [ ] TASK-005: Add comprehensive tests (deferred to follow-up)
 - [ ] Performance validation (≥5x minimum) (deferred to follow-up)
 - [ ] Validation Checkpoint 5-6

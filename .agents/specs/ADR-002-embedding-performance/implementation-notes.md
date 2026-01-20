@@ -109,6 +109,7 @@ to confirm REQ-004: 5x minimum improvement (600s → 120s target).
 **Command**: `bun test src/services/ollama/__tests__/client.test.ts src/services/embedding/__tests__/concurrency.test.ts src/services/embedding/__tests__/timeout.test.ts`
 
 **Results**:
+
 - 50 tests passing
 - 5 tests skipped (timeout-specific, test environment limitation)
 - 0 tests failing
@@ -192,10 +193,12 @@ None. All acceptance criteria met for TASK-005.
 ## Files Created/Modified
 
 **Created**:
+
 - `apps/mcp/src/services/embedding/__tests__/concurrency.test.ts` (329 lines)
 - `apps/mcp/src/services/embedding/__tests__/timeout.test.ts` (331 lines)
 
 **Modified**:
+
 - `apps/mcp/src/services/ollama/__tests__/client.test.ts` (+214 lines)
 - `apps/mcp/src/services/embedding/__tests__/integration.test.ts` (+124 lines)
 

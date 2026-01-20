@@ -5,6 +5,7 @@
 **Objective**: Determine if running markdownlint-cli2 --fix on markdown notes before generating embeddings could improve the 58% embedding failure rate.
 
 **Scope**:
+
 - What markdownlint-cli2 --fix actually changes
 - Whether markdown formatting issues contribute to Ollama 500 errors
 - Performance impact of adding linting to embedding pipeline
@@ -15,12 +16,14 @@
 **Problem Statement**: User suggests running markdownlint-cli2 --fix on notes before embedding generation to sanitize content and potentially prevent errors.
 
 **Current Pipeline** (from ADR-002):
+
 1. Read note from basic-memory (markdown content)
 2. Chunk text using llm-splitter (~2000 chars, 15% overlap)
 3. Send raw text chunks to Ollama `/api/embeddings`
 4. Store embeddings in vector database
 
 **Observed Errors**:
+
 - 58% failure rate (29 of 50 notes failed)
 - 100% of failures were Ollama 500 errors (server errors)
 - 0 client errors (400, 413, 422)
@@ -29,6 +32,7 @@
 ## 3. Approach
 
 **Methodology**:
+
 - Code review of embedding pipeline to understand text preprocessing
 - Web research on markdownlint-cli2 capabilities
 - Research on embedding model sensitivity to markdown syntax
@@ -36,11 +40,13 @@
 - Performance impact assessment
 
 **Tools Used**:
+
 - Read tool for code analysis
 - Grep for error pattern identification
 - WebSearch for markdownlint and embedding model research
 
 **Limitations**:
+
 - No access to actual Ollama 500 error logs showing root cause
 - No benchmark data for markdownlint performance on our notes
 - Cannot reproduce 58% failure rate in controlled environment
@@ -98,6 +104,7 @@ These are **formatting fixes**, not content changes.
 **3. No Markdown-Related Errors in Evidence**
 
 Grep search for markdown issues in session logs returned 0 matches for:
+
 - "malformed markdown"
 - "code fence" errors
 - "triple backtick" issues
@@ -109,6 +116,7 @@ All observed failures were Ollama 500 errors (server/infrastructure issues).
 From [Nomic documentation](https://www.nomic.ai/blog/posts/nomic-embed-text-v1):
 
 nomic-embed-text requires task prefix instructions:
+
 - `search_document: <text>` for document embedding
 - `search_query: <text>` for query embedding
 - `clustering: <text>` for clustering
@@ -140,6 +148,7 @@ From [dlaa.me blog](https://dlaa.me/blog/post/markdownlintcli2):
 > "markdownlint-cli2 implements concurrent linting to overcome performance overhead."
 
 **Estimate for our use case** (conservative):
+
 - Average note: ~5KB markdown
 - markdownlint-cli2: ~50-100ms per note
 - 50 notes × 100ms = 5 seconds overhead
@@ -151,6 +160,7 @@ From [dlaa.me blog](https://dlaa.me/blog/post/markdownlintcli2):
 **H1: Markdown Formatting Causes Ollama 500 Errors**
 
 **Evidence against**:
+
 - 0 client errors (400, 413, 422) observed
 - If formatting was bad, Ollama would return 400 Bad Request, not 500
 - 500 errors indicate server infrastructure issues, not payload issues
@@ -160,10 +170,12 @@ From [dlaa.me blog](https://dlaa.me/blog/post/markdownlintcli2):
 **H2: Normalized Markdown Improves Embedding Quality**
 
 **Evidence for**:
+
 - Research shows markdown structure improves embeddings
 - Consistent formatting could improve semantic coherence
 
 **Evidence against**:
+
 - We're not currently using markdown structure (sent as raw text)
 - Embedding model doesn't parse markdown syntax
 - Quality improvement ≠ error reduction
@@ -173,10 +185,12 @@ From [dlaa.me blog](https://dlaa.me/blog/post/markdownlintcli2):
 **H3: Missing Task Prefix Reduces Embedding Quality**
 
 **Evidence for**:
+
 - Nomic docs explicitly require task prefixes
 - Our implementation sends raw text without prefix
 
 **Evidence against**:
+
 - This would reduce quality, not cause 500 errors
 - Ollama still accepts requests without prefix
 
@@ -194,6 +208,7 @@ From [dlaa.me blog](https://dlaa.me/blog/post/markdownlintcli2):
 **Root Cause of 58% Failure Rate: Infrastructure, Not Markdown**
 
 From Analysis 025:
+
 1. Missing retry logic (P0 - implemented)
 2. New OllamaClient per request (P0 - implemented)
 3. Insufficient delays (P1 - implemented)
@@ -210,12 +225,14 @@ This impacts **embedding quality**, not error rate.
 ### Why markdownlint-cli2 Won't Fix Ollama 500 Errors
 
 **Ollama 500 errors indicate**:
+
 - Memory exhaustion
 - Connection pool exhaustion
 - Model loading failures
 - Rate limiting
 
 **markdownlint-cli2 fixes**:
+
 - Whitespace
 - Heading styles
 - List formatting
@@ -226,16 +243,19 @@ This impacts **embedding quality**, not error rate.
 ### Why Markdown Structure Matters (But Not For Errors)
 
 Markdown hierarchy (headings, lists) can improve:
+
 - Semantic coherence in chunks
 - Retrieval quality
 - Search relevance
 
 But this requires:
+
 - Markdown-aware chunking (split by headings)
 - Structure preservation in embeddings
 - Metadata extraction
 
 Our current pipeline:
+
 - Uses whitespace-only splitting
 - Sends raw text without structure metadata
 - Doesn't leverage markdown semantics
@@ -306,6 +326,7 @@ async generateEmbedding(
 ```
 
 **Impact**:
+
 - Zero performance cost
 - 0% error reduction (not the problem)
 - 15-25% embedding quality improvement (proper model usage)
@@ -322,6 +343,7 @@ async generateEmbedding(
 6. **Already solved**: 58% failure rate fixed by retry logic (Analysis 025)
 
 **When it WOULD help**:
+
 - If we had 400 Bad Request errors (payload issues)
 - If we had markdown parsing failures
 - If we were seeing "malformed content" errors
@@ -354,13 +376,14 @@ function stripMarkdown(text: string): string {
 
 **Confidence**: High (95%)
 
-**Rationale**: 
+**Rationale**:
 
 Zero evidence that markdown formatting contributes to the 58% failure rate. All observed errors were Ollama 500 (infrastructure issues), not 400 (payload issues). The failure rate has been reduced to <5% through retry logic, connection reuse, and increased delays (Analysis 025 recommendations implemented). Adding markdownlint-cli2 would impose 50% performance overhead for 0% error reduction and minimal quality improvement. The actual quality improvement opportunity is adding the required "search_document:" task prefix (0% overhead, 15-25% quality gain).
 
 ### User Impact
 
-**What changes for you**: 
+**What changes for you**:
+
 - **DO NOT** add markdownlint-cli2 to embedding pipeline
 - **DO** add "search_document:" prefix to all embeddings (15 min implementation)
 - Embedding quality improves 15-25% with proper task prefix
@@ -368,7 +391,8 @@ Zero evidence that markdown formatting contributes to the 58% failure rate. All 
 
 **Effort required**: 15 minutes to add task prefix
 
-**Risk if ignored**: 
+**Risk if ignored**:
+
 - Suboptimal embedding quality (missing task prefix)
 - No risk from NOT using markdownlint (no evidence it helps)
 
@@ -377,12 +401,14 @@ Zero evidence that markdown formatting contributes to the 58% failure rate. All 
 ### Sources Consulted
 
 **Code Analysis**:
+
 - `/apps/mcp/src/services/embedding/generateEmbedding.ts` - No preprocessing
 - `/apps/mcp/src/services/embedding/chunking.ts` - Whitespace-only splitting
 - `/apps/mcp/src/services/ollama/client.ts` - Raw text to API
 - `/apps/mcp/src/tools/embed/index.ts` - Batch processing
 
 **Web Research**:
+
 - [markdownlint-cli2 documentation](https://github.com/DavidAnson/markdownlint-cli2) - What --fix changes
 - [Nomic Embed documentation](https://www.nomic.ai/blog/posts/nomic-embed-text-v1) - Task prefix requirements
 - [Markdown for embeddings](https://medium.com/@kanishk.khatter/markdown-a-smarter-choice-for-embeddings-than-json-or-xml-70791ece24df) - Quality benefits
@@ -390,12 +416,14 @@ Zero evidence that markdown formatting contributes to the 58% failure rate. All 
 - [markdownlint performance](https://github.com/igorshubovych/markdownlint-cli/issues/108) - Overhead benchmarks
 
 **Prior Analysis**:
+
 - Analysis 025: Ollama 500 Errors (root cause identified)
 - ADR-002: Embedding Performance Optimization
 
 ### Data Transparency
 
 **Found**:
+
 - Zero markdown syntax errors in session logs
 - 100% of failures were Ollama 500 errors (infrastructure)
 - 0 Ollama 400 errors (would indicate payload issues)
@@ -403,6 +431,7 @@ Zero evidence that markdown formatting contributes to the 58% failure rate. All 
 - markdownlint-cli2 imposes 50% overhead for minimal benefit
 
 **Not Found**:
+
 - Evidence of markdown-causing embedding failures
 - Malformed markdown causing Ollama errors
 - Code fence syntax errors
@@ -410,6 +439,7 @@ Zero evidence that markdown formatting contributes to the 58% failure rate. All 
 - Ollama server logs showing payload-related 500 errors
 
 **Could Not Verify**:
+
 - Exact quality improvement from markdown normalization
 - Precise markdownlint-cli2 performance on our note corpus
 - Ollama internal error details (500 error root causes)

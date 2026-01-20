@@ -12,6 +12,7 @@
 **Outcome**: No conflicting PRs or issues. Evidence base from Analysis 025 and 026.
 
 **Key Findings**:
+
 - No existing p-limit usage in codebase
 - No related ADRs beyond numbering
 - Analysis documents provide strong foundation
@@ -34,6 +35,7 @@
 ### Consensus Points
 
 All agents agree:
+
 - ✓ Batch API migration is correct approach
 - ✓ p-limit appropriate for concurrency
 - ✓ Current delays are wasteful
@@ -67,6 +69,7 @@ All agents agree:
 **High-Level-Advisor Ruling**: Architect P0s downgraded to P1 implementation requirements.
 
 **Rationale**:
+
 - Chunk batch size, memory analysis, error categorization are implementation details
 - No other agent corroborates P0 severity
 - Security approved p-limit dependency
@@ -75,6 +78,7 @@ All agents agree:
 ### Consolidated Recommendations
 
 **ADR Amendments Required**:
+
 1. Add Validation Requirements section ✅ DONE
 2. Fix performance claim (10-20x → 13x) ✅ DONE
 3. Fix absolute paths → relative paths ✅ DONE
@@ -87,6 +91,7 @@ All agents agree:
 ## Phase 3: Resolution
 
 **Actions Taken**:
+
 1. Created Validation Requirements section with 6 requirements (P1 + P2)
 2. Fixed performance claim to "13x estimated"
 3. Fixed file paths to relative format
@@ -131,11 +136,13 @@ Launching convergence check with all 6 agents to review updated ADR and vote: Ac
 ### Dissent to Document
 
 **Independent-Thinker Dissent**:
+
 - Concern: "All-or-nothing" batch API claim lacks empirical verification
 - Commitment: Execute ADR fully, validate behavior in integration tests
 - Track for retrospective if behavior differs from expectation
 
 **Security Dissent**:
+
 - Concern: SSRF guard for OLLAMA_BASE_URL deferred to P1
 - Commitment: Execute ADR, track URL validation as P1 follow-up
 - Risk: 4/10 (acceptable for internal service communication)
@@ -145,6 +152,7 @@ Launching convergence check with all 6 agents to review updated ADR and vote: Ac
 **Routing**: Orchestrator may proceed to implementer with this approved ADR.
 
 **Next Steps**:
+
 1. Execute Phase 0 prerequisites (p-limit installation, Ollama version check)
 2. Implement Phase 1 core changes (batch API migration)
 3. Validate baseline before deployment per Validation Req #1
