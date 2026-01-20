@@ -11,6 +11,7 @@
 Investigate why the pr-comment-responder template sync check often fails after merge conflict resolution.
 
 **Context**:
+
 - PR #246 had merge conflicts resolved in pr-comment-responder templates
 - CI check failed at Session Protocol Validation (NOT template validation)
 - User reports "this check is often missed"
@@ -33,6 +34,7 @@ Initial assumption: Template sync validation failed.
 **Reality**: Session Protocol Validation failed (9 MUST requirement violations across multiple session files).
 
 **Evidence**:
+
 - `gh pr checks 246` shows "Validate Generated Files: PASS"
 - Actual failure: "Aggregate Results: FAIL" from ai-session-protocol.yml
 - Error: "Session protocol validation failed: 9 MUST requirement(s) not met"
@@ -42,6 +44,7 @@ Initial assumption: Template sync validation failed.
 Commit 24063c5 on branch `fix/pr-comment-responder-template-sync` was merged into `docs/ai-misses` (PR #246).
 
 **Files changed**:
+
 - `templates/agents/pr-comment-responder.shared.md` (source template)
 - `src/copilot-cli/pr-comment-responder.agent.md` (generated)
 - `src/vs-code-agents/pr-comment-responder.agent.md` (generated)
@@ -126,14 +129,17 @@ Templates are auto-resolved to main branch version and regeneration happens corr
 ## Recommendations Summary
 
 **P0 - Critical**:
+
 1. Add session protocol pre-check to merge-resolver before push
 2. Correct user's mental model: issue is session protocol, not templates
 
 **P1 - Important**:
+
 1. Add template regeneration verification after auto-resolution
 2. Document session protocol requirements in merge-resolver skill
 
 **P2 - Nice to Have**:
+
 1. Create automated pre-push validation script
 
 ## Analysis Artifacts
@@ -141,6 +147,7 @@ Templates are auto-resolved to main branch version and regeneration happens corr
 Created: `.agents/analysis/001-merge-resolver-session-protocol-gap.md`
 
 Complete root cause analysis with:
+
 - Verified facts vs hypotheses
 - Evidence-based findings
 - Quantified metrics

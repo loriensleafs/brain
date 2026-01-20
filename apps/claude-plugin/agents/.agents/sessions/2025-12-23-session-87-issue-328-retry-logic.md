@@ -29,6 +29,7 @@ Implement retry logic for infrastructure failures in AI Quality Gate to reduce f
 ## Problem Statement
 
 AI Quality Gate has 25% failure rate where many failures are infrastructure issues (not code problems):
+
 - 5 of 6 agents PASS but 1 infrastructure failure causes entire PR to be marked CRITICAL_FAIL
 - 50-80% of premium API requests wasted on re-runs
 - Manual intervention required for transient failures
@@ -53,6 +54,7 @@ Based on analysis of `.github/actions/ai-review/action.yml` (lines 522-568), inf
 4. **Rate limiting** (indicated in stderr)
 
 Code quality failures always have:
+
 - Non-empty output with structured verdict
 - Explicit "VERDICT: CRITICAL_FAIL" with reason
 - Findings describing the code issue
@@ -60,6 +62,7 @@ Code quality failures always have:
 ### Implementation Approach
 
 Add retry logic at the **composite action level** (`ai-review/action.yml`) rather than workflow level because:
+
 - Encapsulates retry logic close to failure point
 - Reusable across all workflows using this action
 - Maintains single responsibility of workflow orchestration
@@ -68,11 +71,13 @@ Add retry logic at the **composite action level** (`ai-review/action.yml`) rathe
 ## Protocol Compliance
 
 ### Phase 1: Initialization
+
 - [x] Serena activation: N/A (MCP tools not available in this session)
 - [x] Read HANDOFF.md
 - [x] Session log created
 
 ### Phase 2: Work
+
 - [x] Completed
 
 ### Implementation Summary
@@ -97,11 +102,13 @@ Add retry logic at the **composite action level** (`ai-review/action.yml`) rathe
 #### Key Patterns
 
 Infrastructure failures are detected by:
+
 - Exit code 124 (timeout)
 - Non-zero exit with empty stdout AND stderr
 - Stderr containing: rate limit, timeout, network error, connection refused, 503/502/504
 
 Code quality failures always have:
+
 - Non-empty output with structured verdict
 - Never retried automatically
 

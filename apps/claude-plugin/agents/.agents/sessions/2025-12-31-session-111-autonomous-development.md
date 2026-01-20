@@ -64,6 +64,7 @@ Rationale: Foundational task that enables #654 (investigation-only pattern match
 ### Test Results
 
 All 27 tests pass:
+
 - InvestigationAllowlist: 2 tests
 - Test-InvestigationOnlyEligibility: 21 tests (including 2 new edge cases)
 - Is-DocsOnly vs Test-InvestigationOnlyEligibility: 3 tests

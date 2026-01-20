@@ -40,6 +40,119 @@ export interface TaskStatus {
 // Alias for backwards compatibility with existing code
 export type Task = TaskStatus;
 
+/**
+ * Checklist validation result for a protocol section.
+ */
+export interface ChecklistValidation {
+  totalMustItems: number;
+  completedMustItems: number;
+  totalShouldItems: number;
+  completedShouldItems: number;
+  missingMustItems?: string[];
+  missingShouldItems?: string[];
+}
+
+/**
+ * Session protocol validation result with protocol-specific fields.
+ */
+export interface SessionProtocolValidationResult extends ValidationResult {
+  sessionLogPath?: string;
+  brainInitialized: boolean;
+  brainUpdated: boolean;
+  startChecklist: ChecklistValidation;
+  endChecklist: ChecklistValidation;
+}
+
+/**
+ * Feature artifacts discovered for consistency validation.
+ */
+export interface FeatureArtifacts {
+  epic?: string;
+  prd?: string;
+  tasks?: string;
+  plan?: string;
+}
+
+/**
+ * Scope alignment validation result.
+ */
+export interface ScopeAlignmentResult {
+  passed: boolean;
+  issues?: string[];
+}
+
+/**
+ * Requirement coverage validation result.
+ */
+export interface RequirementCoverageResult {
+  passed: boolean;
+  issues?: string[];
+  requirementCount: number;
+  taskCount: number;
+}
+
+/**
+ * Naming conventions validation result.
+ */
+export interface NamingConventionsResult {
+  passed: boolean;
+  issues?: string[];
+}
+
+/**
+ * Cross-references validation result.
+ */
+export interface CrossReferencesResult {
+  passed: boolean;
+  issues?: string[];
+  references?: string[];
+}
+
+/**
+ * Task completion validation result.
+ */
+export interface TaskCompletionResult {
+  passed: boolean;
+  issues?: string[];
+  total: number;
+  completed: number;
+  p0Incomplete?: string[];
+  p1Incomplete?: string[];
+}
+
+/**
+ * Consistency validation result with cross-document validation fields.
+ */
+export interface ConsistencyValidationResult extends ValidationResult {
+  basePath?: string;
+  feature?: string;
+  checkpoint: number;
+  artifacts: FeatureArtifacts;
+  scopeAlignment: ScopeAlignmentResult;
+  requirementCoverage: RequirementCoverageResult;
+  namingConventions: NamingConventionsResult;
+  crossReferences: CrossReferencesResult;
+  taskCompletion: TaskCompletionResult;
+}
+
+/**
+ * Artifact naming validation result.
+ */
+export interface ArtifactNamingResult {
+  valid: boolean;
+  filePath: string;
+  patternType: string;
+}
+
+/**
+ * Naming convention validation result.
+ */
+export interface NamingConventionResult {
+  valid: boolean;
+  filename: string;
+  pattern: string;
+}
+
 // Go runtime interface from wasm_exec.js
 interface GoRuntime {
   importObject: WebAssembly.Imports;
@@ -57,6 +170,27 @@ declare global {
   function brainDetectScenario(prompt: string): ScenarioResult;
 
   function brainCheckTasks(tasks: TaskStatus[]): ValidationResult;
+
+  function brainValidateSessionProtocol(
+    content: string,
+    sessionLogPath?: string
+  ): SessionProtocolValidationResult;
+
+  function brainValidateConsistency(
+    epicContent: string,
+    prdContent: string,
+    tasksContent: string,
+    planContent: string,
+    feature: string,
+    checkpoint: number
+  ): ConsistencyValidationResult;
+
+  function brainValidateNamingConvention(
+    filename: string,
+    pattern: string
+  ): NamingConventionResult;
+
+  function brainValidateArtifactNaming(filePath: string): ArtifactNamingResult;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   var Go: new () => GoRuntime;
@@ -155,4 +289,113 @@ export function detectScenario(prompt: string): ScenarioResult {
 export function checkTasks(tasks: TaskStatus[]): ValidationResult {
   ensureInitialized();
   return globalThis.brainCheckTasks(tasks);
+}
+
+/**
+ * Validate session protocol compliance from session log content.
+ * Performs comprehensive validation per SESSION-PROTOCOL.md requirements.
+ *
+ * Checks performed:
+ * - Filename format (if path provided)
+ * - Required sections present (Session Info, Protocol Compliance, Session Start, Session End)
+ * - Session Start checklist MUST items completed
+ * - Session End checklist MUST items completed
+ * - Brain MCP initialization evidence
+ * - Brain note update evidence
+ * - Git branch documented
+ * - Commit SHA evidence
+ * - Markdown lint evidence
+ *
+ * @param content - Session log file content
+ * @param sessionLogPath - Optional path for filename format validation
+ * @returns SessionProtocolValidationResult with detailed check results
+ */
+export function validateSessionProtocol(
+  content: string,
+  sessionLogPath?: string
+): SessionProtocolValidationResult {
+  ensureInitialized();
+  return globalThis.brainValidateSessionProtocol(content, sessionLogPath);
+}
+
+/**
+ * Validate cross-document consistency for a feature.
+ * Performs comprehensive validation of artifact relationships, naming conventions,
+ * and requirement coverage.
+ *
+ * Checkpoint 1 (Pre-Critic) validates:
+ * - Scope alignment between Epic and PRD
+ * - Requirement coverage (PRD requirements have corresponding tasks)
+ * - Naming conventions for all artifacts
+ * - Cross-references point to existing files
+ *
+ * Checkpoint 2 (Post-Implementation) additionally validates:
+ * - Task completion (all P0 tasks complete)
+ *
+ * @param epicContent - Epic document content (empty string if not available)
+ * @param prdContent - PRD document content
+ * @param tasksContent - Tasks document content
+ * @param planContent - Plan document content (empty string if not available)
+ * @param feature - Feature name being validated
+ * @param checkpoint - Validation checkpoint (1 = Pre-Critic, 2 = Post-Implementation)
+ * @returns ConsistencyValidationResult with detailed validation results
+ */
+export function validateConsistency(
+  epicContent: string,
+  prdContent: string,
+  tasksContent: string,
+  planContent: string,
+  feature: string,
+  checkpoint: number
+): ConsistencyValidationResult {
+  ensureInitialized();
+  return globalThis.brainValidateConsistency(
+    epicContent,
+    prdContent,
+    tasksContent,
+    planContent,
+    feature,
+    checkpoint
+  );
+}
+
+/**
+ * Validate that a filename matches a specific naming convention pattern.
+ *
+ * Valid patterns:
+ * - epic: EPIC-NNN-kebab-case.md
+ * - adr: ADR-NNN-kebab-case.md
+ * - prd: prd-kebab-case.md
+ * - tasks: tasks-kebab-case.md
+ * - plan: NNN-kebab-case-plan.md or plan-kebab-case.md
+ * - tm: TM-NNN-kebab-case.md
+ * - req: REQ-NNN-kebab-case.md
+ * - design: DESIGN-NNN-kebab-case.md
+ * - task: TASK-NNN-kebab-case.md
+ * - skill: Skill-Category-NNN.md
+ * - retro: YYYY-MM-DD-kebab-case.md
+ * - session: YYYY-MM-DD-session-NN.md
+ *
+ * @param filename - Filename to validate
+ * @param pattern - Pattern type to validate against
+ * @returns NamingConventionResult with validation result
+ */
+export function validateNamingConvention(
+  filename: string,
+  pattern: string
+): NamingConventionResult {
+  ensureInitialized();
+  return globalThis.brainValidateNamingConvention(filename, pattern);
+}
+
+/**
+ * Validate that a file follows artifact naming conventions.
+ * Auto-detects the artifact type based on filename and directory.
+ *
+ * @param filePath - Full path to the file
+ * @returns ArtifactNamingResult with validation result and detected pattern type
+ */
+export function validateArtifactNaming(filePath: string): ArtifactNamingResult {
+  ensureInitialized();
+  return globalThis.brainValidateArtifactNaming(filePath);
 }

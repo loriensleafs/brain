@@ -89,6 +89,7 @@ Launched 7 parallel pr-comment-responder agents using git worktrees:
 ### Worktree Cleanup
 
 Removed 8 worktrees:
+
 - worktree-pr-531, worktree-pr-562, worktree-pr-563, worktree-pr-564
 - worktree-pr-565, worktree-pr-580, worktree-pr-593, worktree-pr-494
 

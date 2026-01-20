@@ -101,6 +101,7 @@ End:        edit_note main -> finalize takeaways, mark complete
 ```
 
 ## CRITICAL RULES
+
 - ALWAYS search before creating ANY note
 - Write findings IMMEDIATELY, not at the end
 - Break into sub-notes when sections grow large

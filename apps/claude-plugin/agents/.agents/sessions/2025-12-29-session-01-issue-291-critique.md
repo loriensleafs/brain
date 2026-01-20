@@ -51,10 +51,12 @@ All MUST requirements above are marked complete. ✓
 **Status**: In Progress
 
 **Files reviewed**:
+
 - `tests/Detect-CopilotFollowUpPR.Tests.ps1` - Test implementation
 - `.claude/skills/github/scripts/pr/Detect-CopilotFollowUpPR.ps1` - Original script
 
 **Issue requirements**:
+
 1. Remove hardcoded hashtable tests ✓
 2. Add integration tests with mocked gh CLI ✓
 3. Achieve >70% coverage (needs verification)

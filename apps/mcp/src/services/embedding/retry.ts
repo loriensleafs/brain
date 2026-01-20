@@ -1,11 +1,15 @@
 /**
  * Retry logic with exponential backoff for embedding generation.
  * Processes queued embeddings with configurable retry limits.
+ *
+ * Uses chunked embeddings for content that exceeds model token limits.
  */
 
 import { generateEmbedding } from "./generateEmbedding";
-import { storeEmbedding } from "../../db/vectors";
+import { chunkText } from "./chunking";
+import { storeChunkedEmbeddings, type ChunkEmbeddingInput } from "../../db/vectors";
 import { createVectorConnection } from "../../db/connection";
+import { ensureEmbeddingTables } from "../../db/schema";
 import {
   dequeueEmbedding,
   markEmbeddingProcessed,
@@ -21,6 +25,36 @@ const BASE_DELAY_MS = 1000;
  */
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Generate embeddings for all chunks of content.
+ * @param content - Full content to chunk and embed
+ * @returns Array of chunk embeddings or null if any chunk fails
+ */
+async function generateChunkedEmbeddings(
+  content: string
+): Promise<ChunkEmbeddingInput[] | null> {
+  const chunks = chunkText(content);
+  const results: ChunkEmbeddingInput[] = [];
+
+  for (const chunk of chunks) {
+    const embedding = await generateEmbedding(chunk.text);
+    if (!embedding) {
+      return null;
+    }
+
+    results.push({
+      chunkIndex: chunk.chunkIndex,
+      totalChunks: chunk.totalChunks,
+      chunkStart: chunk.start,
+      chunkEnd: chunk.end,
+      chunkText: chunk.text,
+      embedding,
+    });
+  }
+
+  return results;
 }
 
 /**
@@ -41,12 +75,13 @@ export async function processWithRetry(
   }
 
   try {
-    const embedding = await generateEmbedding(content);
-    if (embedding) {
+    const chunkEmbeddings = await generateChunkedEmbeddings(content);
+    if (chunkEmbeddings && chunkEmbeddings.length > 0) {
       const db = createVectorConnection();
       try {
-        storeEmbedding(db, noteId, embedding);
-        logger.info(`Embedding retry succeeded for note ${noteId}`);
+        ensureEmbeddingTables(db);
+        storeChunkedEmbeddings(db, noteId, chunkEmbeddings);
+        logger.info(`Embedding retry succeeded for note ${noteId} (${chunkEmbeddings.length} chunks)`);
         return true;
       } finally {
         db.close();

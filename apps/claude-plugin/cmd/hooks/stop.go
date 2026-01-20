@@ -10,10 +10,10 @@ import (
 
 // StopOutput represents the output for stop hook
 type StopOutput struct {
-	Continue    bool     `json:"continue"`
-	Message     string   `json:"message,omitempty"`
-	Checks      []Check  `json:"checks,omitempty"`
-	Remediation string   `json:"remediation,omitempty"`
+	Continue    bool    `json:"continue"`
+	Message     string  `json:"message,omitempty"`
+	Checks      []Check `json:"checks,omitempty"`
+	Remediation string  `json:"remediation,omitempty"`
 }
 
 // Check represents a validation check result
@@ -46,8 +46,9 @@ func RunStop() error {
 		UpdatedAt: workflowState.UpdatedAt,
 	}
 
-	// Run validation
-	result := validation.ValidateSession(state)
+	// Run stop readiness validation (not full session protocol validation)
+	// Stop readiness is informational only - it should WARN, not BLOCK
+	result := validation.ValidateStopReadiness(state)
 
 	// Convert checks
 	for _, c := range result.Checks {
@@ -74,7 +75,6 @@ func RunStop() error {
 
 	return nil
 }
-
 
 // outputJSON writes JSON output to stdout
 func outputJSON(v any) error {

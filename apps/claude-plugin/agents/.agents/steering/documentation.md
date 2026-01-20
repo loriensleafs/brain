@@ -15,7 +15,8 @@ status: placeholder
 
 **Applies to**: `**/*.md` (excluding agent prompts and steering)
 
-**Excludes**: 
+**Excludes**:
+
 - `src/claude/**/*.md` (see agent-prompts.md)
 - `.agents/steering/**` (self-referential)
 
@@ -26,6 +27,7 @@ This steering file will provide documentation standards and formatting guideline
 ## Planned Content (Phase 4)
 
 ### Guidelines
+
 - Markdown formatting conventions
 - Document structure templates
 - Cross-reference format
@@ -34,6 +36,7 @@ This steering file will provide documentation standards and formatting guideline
 - Code block formatting
 
 ### Patterns
+
 - ADR structure
 - README templates
 - API documentation
@@ -41,12 +44,14 @@ This steering file will provide documentation standards and formatting guideline
 - Badge usage
 
 ### Anti-Patterns
+
 - Broken links
 - Missing metadata
 - Inconsistent formatting
 - Unclear section organization
 
 ### Examples
+
 - Well-structured documentation
 - Effective cross-referencing
 - Clear metadata usage

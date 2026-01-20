@@ -63,7 +63,7 @@ The agent MUST complete Brain initialization before any other action. This is a 
 
 **Requirements:**
 
-1. The agent MUST call `mcp__plugin_brain_brain__build_context` with the project path as the first tool call
+1. The agent MUST call `mcp__plugin_brain_brain__bootstrap_context` with the project path as the first tool call
 2. The agent MUST load initial context by reading relevant notes via `mcp__plugin_brain_brain__read_note`
 3. The agent MUST NOT read files, search code, or respond to user requests until initialization succeeds
 4. If initialization fails, the agent MUST report the failure and stop
@@ -82,9 +82,9 @@ The agent MUST read context documents before starting work. This is a **blocking
 
 **Requirements:**
 
-1. The agent MUST read `.agents/HANDOFF.md` for previous session context (READ-ONLY reference)
-2. The agent MUST read the `memory-index` note using `mcp__plugin_brain_brain__read_note` to identify task-relevant notes
-3. The agent MUST read notes from `memory-index` that match the task keywords before modifying code or files
+1. The agent MUST read the `memory-index` note using `mcp__plugin_brain_brain__read_note` to identify task-relevant notes
+2. The agent MUST read notes from `memory-index` that match the task keywords before modifying code or files
+3. The agent MUST search Brain notes for cross-session context: `mcp__plugin_brain_brain__search(query="session context [topic]")`
 4. The agent SHOULD read `.agents/planning/enhancement-PROJECT-PLAN.md` if working on enhancement project
 5. The agent MAY read additional context files based on task requirements
 
@@ -103,12 +103,12 @@ The `memory-index` maps task keywords to essential notes. Example workflow:
 
 **Verification:**
 
-- File contents appear in session context
-- Agent references prior decisions from HANDOFF.md
-- Agent does not ask questions answered in HANDOFF.md
+- Brain notes content appears in session context
+- Agent references prior decisions from Brain notes
+- Agent does not ask questions answered in existing Brain notes
 - Session log Protocol Compliance section lists notes read (in Evidence column)
 
-**Rationale:** Agents are expert amnesiacs. Without reading HANDOFF.md, they will repeat completed work or contradict prior decisions. Note: HANDOFF.md is a read-only reference; do not modify it during sessions. Without loading relevant notes, agents repeat solved problems or miss established patterns.
+**Rationale:** Agents are expert amnesiacs. Without loading relevant Brain notes, they repeat solved problems or miss established patterns. Brain notes provide cross-session context that persists between sessions.
 
 ### Phase 3: Import Shared Notes (RECOMMENDED)
 
@@ -217,7 +217,7 @@ Copy this checklist to each session log and verify completion:
 |-----|------|--------|----------|
 | MUST | Initialize Brain: `mcp__plugin_brain_brain__build_context` | [ ] | Tool output present |
 | MUST | Load initial context: `mcp__plugin_brain_brain__read_note` | [ ] | Tool output present |
-| MUST | Read `.agents/HANDOFF.md` | [ ] | Content in context |
+| MUST | Search Brain for cross-session context | [ ] | Search results in context |
 | MUST | Create this session log | [ ] | This file exists |
 | MUST | List skill scripts in `.claude/skills/github/scripts/` | [ ] | Output documented below |
 | MUST | Read usage-mandatory note | [ ] | Content in context |
@@ -307,24 +307,21 @@ The agent MUST update documentation before ending.
 
 **Requirements:**
 
-1. The agent MUST NOT update `.agents/HANDOFF.md` directly. Session context MUST go to:
+1. The agent MUST persist session context to Brain notes:
    - Your session log at `.agents/sessions/YYYY-MM-DD-session-NN.md`
    - Brain note for cross-session context (using `mcp__plugin_brain_brain__write_note` or `mcp__plugin_brain_brain__edit_note`)
-   - `.agents/handoffs/{branch}/{session}.md` for branch-specific handoff (if on feature branch)
 2. The agent MUST complete the session log with:
    - Tasks attempted and outcomes
    - Decisions made with rationale
    - Challenges encountered and resolutions
    - Link reference for next session handoff
 3. The agent SHOULD update PROJECT-PLAN.md if tasks were completed
-4. The agent MAY read `.agents/HANDOFF.md` for historical context (read-only reference)
 
 **Verification:**
 
 - Session log contains complete information
 - Brain note updated with relevant context
 - PROJECT-PLAN.md checkboxes updated if applicable
-- HANDOFF.md is NOT modified (unless explicitly approved by architect)
 
 ### Phase 2: Quality Checks (REQUIRED)
 
@@ -478,7 +475,6 @@ Copy this checklist to each session log and verify completion:
 | MUST | Run markdown lint | [ ] | Lint output clean |
 | MUST | Route to qa agent (feature implementation) | [ ] | QA report: `.agents/qa/[report].md` OR `SKIPPED: investigation-only` |
 | MUST | Commit all changes (including .brain/notes) | [ ] | Commit SHA: _______ |
-| MUST NOT | Update `.agents/HANDOFF.md` directly | [ ] | HANDOFF.md unchanged |
 | SHOULD | Update PROJECT-PLAN.md | [ ] | Tasks checked off |
 | SHOULD | Invoke retrospective (significant sessions) | [ ] | Doc: _______ |
 | SHOULD | Verify clean git status | [ ] | `git status` output |
@@ -513,7 +509,7 @@ Create at: `.agents/sessions/YYYY-MM-DD-session-NN.md`
 |-----|------|--------|----------|
 | MUST | Initialize Brain: `mcp__plugin_brain_brain__build_context` | [ ] | Tool output present |
 | MUST | Load initial context: `mcp__plugin_brain_brain__read_note` | [ ] | Tool output present |
-| MUST | Read `.agents/HANDOFF.md` | [ ] | Content in context |
+| MUST | Search Brain for cross-session context | [ ] | Search results in context |
 | MUST | Create this session log | [ ] | This file exists |
 | MUST | List skill scripts in `.claude/skills/github/scripts/` | [ ] | Output documented below |
 | MUST | Read usage-mandatory note | [ ] | Content in context |
@@ -579,7 +575,6 @@ All MUST requirements above are marked complete.
 | MUST | Run markdown lint | [ ] | Output below |
 | MUST | Route to qa agent (feature implementation) | [ ] | QA report: `.agents/qa/[report].md` OR `SKIPPED: investigation-only` |
 | MUST | Commit all changes (including .brain/notes) | [ ] | Commit SHA: _______ |
-| MUST NOT | Update `.agents/HANDOFF.md` directly | [ ] | HANDOFF.md unchanged |
 | SHOULD | Update PROJECT-PLAN.md | [ ] | Tasks checked off |
 | SHOULD | Invoke retrospective (significant sessions) | [ ] | Doc: _______ |
 | SHOULD | Verify clean git status | [ ] | Output below |
@@ -679,9 +674,9 @@ Example:
 ```markdown
 ### Protocol Violation Detected
 
-**Requirement**: MUST read `.agents/HANDOFF.md`
+**Requirement**: MUST search Brain for cross-session context
 **Status**: Skipped
-**Recovery**: Reading now before continuing work
+**Recovery**: Searching Brain notes now before continuing work
 **Timestamp**: [When detected]
 ```
 
@@ -712,7 +707,7 @@ The `Validate-SessionProtocol.ps1` script checks session protocol compliance:
 | Protocol Compliance section | Contains start/end checklists | Critical |
 | MUST items checked | All MUST requirements marked complete | Critical |
 | QA validation ran | QA report exists in `.agents/qa/` (feature sessions) | Critical |
-| HANDOFF.md updated | Modified within session timeframe | Warning |
+| Brain note updated | Cross-session context persisted | Warning |
 | Git commit exists | Commit with matching date | Warning |
 | Lint ran | Evidence of markdownlint execution | Warning |
 
@@ -756,5 +751,4 @@ These documents reference this protocol but MUST NOT duplicate it:
 - [AGENTS.md](../AGENTS.md) - Full agent catalog and workflows
 - [CLAUDE.md](../CLAUDE.md) - Claude Code entry point
 - [AGENT-INSTRUCTIONS.md](./AGENT-INSTRUCTIONS.md) - Task execution protocol
-- [HANDOFF.md](./HANDOFF.md) - Session context
 - [PROTOCOL-ANTIPATTERNS.md](./governance/PROTOCOL-ANTIPATTERNS.md) - Protocol design antipatterns and replacement patterns

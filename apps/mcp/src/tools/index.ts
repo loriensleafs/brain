@@ -24,12 +24,10 @@ import { invalidateCache as invalidateBootstrapCache } from "./bootstrap-context
 import { triggerEmbedding } from "../services/embedding/triggerEmbedding";
 
 // Import wrapper tool modules
-import * as setProject from "./set-project";
-import * as getProject from "./get-project";
-import * as clearProject from "./clear-project";
-import * as configureCodePath from "./configure-code-path";
 import * as session from "./session";
 import * as bootstrapContext from "./bootstrap-context";
+// Unified projects tools (each tool in its own subdirectory)
+import * as projects from "./projects";
 import * as listFeaturesByPriority from "./list-features-by-priority";
 import * as analyzeProject from "./analyze-project";
 import * as migrateCluster from "./migrate-cluster";
@@ -51,42 +49,6 @@ interface WrapperTool {
 }
 
 const WRAPPER_TOOLS: Map<string, WrapperTool> = new Map([
-  [
-    "set_project",
-    {
-      definition: setProject.toolDefinition,
-      handler: setProject.handler as (
-        args: Record<string, unknown>
-      ) => Promise<CallToolResult>,
-    },
-  ],
-  [
-    "get_project",
-    {
-      definition: getProject.toolDefinition,
-      handler: getProject.handler as (
-        args: Record<string, unknown>
-      ) => Promise<CallToolResult>,
-    },
-  ],
-  [
-    "clear_project",
-    {
-      definition: clearProject.toolDefinition,
-      handler: clearProject.handler as (
-        args: Record<string, unknown>
-      ) => Promise<CallToolResult>,
-    },
-  ],
-  [
-    "configure_code_path",
-    {
-      definition: configureCodePath.toolDefinition,
-      handler: configureCodePath.handler as (
-        args: Record<string, unknown>
-      ) => Promise<CallToolResult>,
-    },
-  ],
   [
     "session",
     {
@@ -219,6 +181,61 @@ const WRAPPER_TOOLS: Map<string, WrapperTool> = new Map([
     {
       definition: workflow.getWorkflowToolDefinition,
       handler: workflow.getWorkflowHandler as (
+        args: Record<string, unknown>
+      ) => Promise<CallToolResult>,
+    },
+  ],
+  // Unified projects tools
+  [
+    "active_project",
+    {
+      definition: projects.activeProject.toolDefinition,
+      handler: projects.activeProject.handler as (
+        args: Record<string, unknown>
+      ) => Promise<CallToolResult>,
+    },
+  ],
+  [
+    "list_projects",
+    {
+      definition: projects.listProjects.toolDefinition,
+      handler: projects.listProjects.handler as (
+        args: Record<string, unknown>
+      ) => Promise<CallToolResult>,
+    },
+  ],
+  [
+    "get_project_details",
+    {
+      definition: projects.getProjectDetails.toolDefinition,
+      handler: projects.getProjectDetails.handler as (
+        args: Record<string, unknown>
+      ) => Promise<CallToolResult>,
+    },
+  ],
+  [
+    "edit_project",
+    {
+      definition: projects.editProject.toolDefinition,
+      handler: projects.editProject.handler as (
+        args: Record<string, unknown>
+      ) => Promise<CallToolResult>,
+    },
+  ],
+  [
+    "create_project",
+    {
+      definition: projects.createProject.toolDefinition,
+      handler: projects.createProject.handler as (
+        args: Record<string, unknown>
+      ) => Promise<CallToolResult>,
+    },
+  ],
+  [
+    "delete_project",
+    {
+      definition: projects.deleteProject.toolDefinition,
+      handler: projects.deleteProject.handler as (
         args: Record<string, unknown>
       ) => Promise<CallToolResult>,
     },
@@ -467,8 +484,7 @@ async function injectProject(
     return args;
   }
 
-  const cwd = (args.cwd as string | undefined) || process.cwd();
-  const resolved = resolveProject(undefined, cwd);
+  const resolved = resolveProject(undefined);
 
   if (!resolved) {
     logger.debug("No project resolved, passing through to basic-memory");

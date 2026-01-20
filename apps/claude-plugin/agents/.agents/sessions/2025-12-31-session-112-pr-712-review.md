@@ -109,7 +109,7 @@ None - straightforward review response.
 
 **Status**: COMPLETE
 **Commits**: 67a4f65
-**PR URL**: https://github.com/rjmurillo/ai-agents/pull/712
+**PR URL**: <https://github.com/rjmurillo/ai-agents/pull/712>
 
 All review comments addressed:
 

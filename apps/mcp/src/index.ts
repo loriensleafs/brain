@@ -13,9 +13,7 @@ import { config } from "./config";
 import { logger, logStartup, flushLogs } from "./utils/internal/logger";
 import { closeBasicMemoryClient } from "./proxy/client";
 import {
-  initSession,
-  cleanupSession,
-  cleanupOrphanSessions,
+  getSession,
 } from "./services/session";
 import { initInngestService, isWorkflowAvailable } from "./services/inngest";
 import { ensureOllama } from "./services/ollama";
@@ -49,12 +47,9 @@ async function main(): Promise<void> {
       : "Ollama unavailable - semantic search will use keyword fallback"
   );
 
-  // Clean up orphan sessions from crashed processes
-  await cleanupOrphanSessions();
-
-  // Initialize session for this process
-  const sessionId = initSession();
-  logger.info({ sessionId }, "Session initialized");
+  // Initialize session state (creates default if not exists)
+  await getSession();
+  logger.info("Session state initialized");
 
   // Initialize Inngest service (non-blocking)
   // Server continues even if Inngest unavailable
@@ -100,7 +95,6 @@ async function shutdown(code: number = 0): Promise<void> {
   logger.info({ code }, "Shutting down Brain MCP server");
 
   try {
-    await cleanupSession();
     await closeBasicMemoryClient();
   } catch (error) {
     logger.error({ error }, "Error during shutdown");
@@ -118,7 +112,14 @@ process.on("uncaughtException", (error) => {
   shutdown(1);
 });
 process.on("unhandledRejection", (reason) => {
-  logger.fatal({ reason }, "Unhandled rejection");
+  // Serialize error properly for logging
+  const errorInfo =
+    reason instanceof Error
+      ? { message: reason.message, stack: reason.stack, name: reason.name }
+      : { reason: String(reason) };
+  logger.fatal(errorInfo, "Unhandled rejection");
+  // Also log to stderr for immediate visibility
+  console.error("Unhandled rejection:", reason);
   shutdown(1);
 });
 

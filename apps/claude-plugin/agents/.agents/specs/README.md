@@ -112,6 +112,7 @@ updated: YYYY-MM-DD
 See `.agents/governance/consistency-protocol.md` for validation rules.
 
 Automated validation checks:
+
 - Cross-reference integrity
 - Orphan detection
 - Status consistency

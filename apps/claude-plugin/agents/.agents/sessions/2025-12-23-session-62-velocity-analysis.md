@@ -24,6 +24,7 @@
 ## Task Overview
 
 Analyze open and closed PRs from Dec 20-23, 2025:
+
 - Count changes and review rounds
 - Identify issues caught in CI but not locally
 - Find sources of delay
@@ -32,6 +33,7 @@ Analyze open and closed PRs from Dec 20-23, 2025:
 ## Analysis Approach
 
 Launching parallel agents to:
+
 1. Analyze closed PRs from last 3 days
 2. Analyze open PRs and their blockers
 3. Examine workflow run failures

@@ -26,6 +26,8 @@ const CONFIG_PATH = path.join(
 interface BrainConfig {
   /** Map of project names to code directory paths */
   code_paths: Record<string, string>;
+  /** Default notes path. @deprecated '~/memories' */
+  default_notes_path: string;
 }
 
 /**
@@ -38,13 +40,14 @@ function loadConfig(): BrainConfig {
       const parsed = JSON.parse(content);
       return {
         code_paths: parsed.code_paths || {},
+        default_notes_path: parsed.default_notes_path || "~/memories",
       };
     }
   } catch (error) {
     logger.warn({ error, path: CONFIG_PATH }, "Failed to load brain config");
   }
 
-  return { code_paths: {} };
+  return { code_paths: {}, default_notes_path: "~/memories" };
 }
 
 /**

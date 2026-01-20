@@ -73,15 +73,19 @@ Available GitHub skills:
 **Status**: In Progress
 
 **What was done**:
+
 - Loaded HANDOFF dashboard and session-start memories relevant to PR review workflow.
 
 **Decisions made**:
+
 - Use GitHub PR skill scripts for review/triage operations instead of raw `gh`, except for notification retrieval if no skill exists.
 
 **Challenges**:
+
 - Serena MCP tools are not available in this environment, so memory reads use local `.serena/memories/` files instead.
 
 **Files changed**:
+
 - `.agents/sessions/2025-12-31-session-01-pr-review-triage.md` - created.
 
 ---
@@ -118,4 +122,3 @@ Clean - all changes committed.
 
 - Session created in cloud environment without Serena MCP access
 - Future sessions should use skill scripts for GitHub operations
-

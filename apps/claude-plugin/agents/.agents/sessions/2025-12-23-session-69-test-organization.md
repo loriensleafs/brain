@@ -29,6 +29,7 @@
 ### Review Feedback Analysis
 
 **Comments to address**:
+
 1. Comment #2644216844 - Move `Detect-SkillViolation.Tests.ps1` to `tests/`
 2. Comment #2644217274 - Move `Detect-TestCoverageGaps.Tests.ps1` to `tests/`
 3. Comment #2644217723 - Move `New-ValidatedPR.Tests.ps1` to `tests/`
@@ -37,6 +38,7 @@
 ### Phase 1: Test File Migration
 
 **Actions**:
+
 - Moved `scripts/tests/Detect-SkillViolation.Tests.ps1` to `tests/`
 - Moved `scripts/tests/Detect-TestCoverageGaps.Tests.ps1` to `tests/`
 - Moved `scripts/tests/New-ValidatedPR.Tests.ps1` to `tests/`
@@ -51,12 +53,14 @@
 **Created ADR-019**: Script Organization and Usage Patterns
 
 **Key Decisions**:
+
 - Established 5-tier hierarchy based on intended audience
 - Clear placement rules for new scripts
 - PowerShell naming conventions enforced
 - Documentation in scripts/README.md
 
 **Organization**:
+
 1. `scripts/` - Developer-facing utilities
 2. `.github/scripts/` - CI/CD automation (GitHub Actions only)
 3. `build/scripts/` - Build system automation
@@ -64,6 +68,7 @@
 5. `tests/` - Pester test files (root-level)
 
 **Clarified `New-ValidatedPR.ps1`**:
+
 - **Audience**: Developers (not CI-only)
 - **Purpose**: Validated PR creation with guardrails
 - **Pattern**: Thin wrapper around skill for CLI convenience
@@ -71,6 +76,7 @@
 ### Phase 3: Documentation Updates
 
 **Updated files**:
+
 - `scripts/README.md` - Added organization section with ADR link
 - `.agents/architecture/ADR-019-script-organization.md` - Comprehensive guidelines
 
@@ -111,17 +117,20 @@ Changes staged for commit
 ### Files Changed
 
 **Moved**:
+
 - `scripts/tests/Detect-SkillViolation.Tests.ps1` → `tests/`
 - `scripts/tests/Detect-TestCoverageGaps.Tests.ps1` → `tests/`
 - `scripts/tests/New-ValidatedPR.Tests.ps1` → `tests/`
 
 **Modified**:
+
 - `tests/Detect-SkillViolation.Tests.ps1` - Updated paths, fixed warnings
 - `tests/Detect-TestCoverageGaps.Tests.ps1` - Updated paths
 - `tests/New-ValidatedPR.Tests.ps1` - Updated paths
 - `scripts/README.md` - Added organization section
 
 **Added**:
+
 - `.agents/architecture/ADR-019-script-organization.md`
 
 ### Test Results

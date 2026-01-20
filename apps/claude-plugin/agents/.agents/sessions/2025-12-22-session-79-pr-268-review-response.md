@@ -87,18 +87,18 @@
 
 ### P2 Fixes (Implemented)
 
-4. **Comment 2641901270**: Added error handling with exit code check to label removal step
-5. **Comment 2641901304**: Clarified sweep job comment about regex vs AI synthesis
+1. **Comment 2641901270**: Added error handling with exit code check to label removal step
+2. **Comment 2641901304**: Clarified sweep job comment about regex vs AI synthesis
 
 ### Won't Fix (Justified)
 
-6. **Comment 2641901239**: URL fragments unlikely in GitHub issue comments
-7. **Comment 2641901256**: Test cleanup uses unique issue numbers
-8. **Comment 2641901294**: Workflow concurrency prevents race conditions
+1. **Comment 2641901239**: URL fragments unlikely in GitHub issue comments
+2. **Comment 2641901256**: Test cleanup uses unique issue numbers
+3. **Comment 2641901294**: Workflow concurrency prevents race conditions
 
 ### By Design
 
-9. **Comment 2641901260**: Verdict format is intentional prompt design
+1. **Comment 2641901260**: Verdict format is intentional prompt design
 
 ## Phase 6: Replies Posted
 
@@ -134,4 +134,3 @@ All 9 new comments received replies:
 **Status**: COMPLETE
 **Comments Addressed**: 9/9 (5 implemented, 3 won't fix, 1 by design)
 **Commit SHA**: 5191059
-

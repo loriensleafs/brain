@@ -26,6 +26,7 @@
 Respond to Copilot security review comment on PR #255 about supply chain risk with `powershell-yaml` module dynamic installation.
 
 **User Instructions**:
+
 1. Acknowledge valid security concern
 2. Create GitHub issue to track supply chain hardening
 3. Reply to comment with acknowledgment + issue reference
@@ -43,6 +44,7 @@ Respond to Copilot security review comment on PR #255 about supply chain risk wi
 This is a valid security concern about supply chain risk. Classification: **Security Domain** (based on Skill-Triage-001).
 
 Keywords detected:
+
 - "supply chain"
 - "malicious"
 - "compromised"
@@ -136,5 +138,5 @@ Successfully responded to Copilot security comment on PR #255 without making cod
 
 **Artifacts**:
 
-- Issue: https://github.com/rjmurillo/ai-agents/issues/304
-- Reply: https://github.com/rjmurillo/ai-agents/pull/255#discussion_r2644152017
+- Issue: <https://github.com/rjmurillo/ai-agents/issues/304>
+- Reply: <https://github.com/rjmurillo/ai-agents/pull/255#discussion_r2644152017>

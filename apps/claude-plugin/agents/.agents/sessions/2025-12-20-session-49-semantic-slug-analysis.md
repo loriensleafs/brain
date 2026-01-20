@@ -27,10 +27,12 @@
 Analyze the "Semantic Slug" protocol proposal and its impact on the Skills Index Registry PRD.
 
 Compare:
+
 - Current PRD: `Skill-PowerShell-001` + central registry at `skills-index.md`
 - Proposed: `skill-git-squash-merge-clean-history.md` + domain consolidation + `000-memory-index.md`
 
 Questions:
+
 1. How does this change the PRD approach?
 2. Migration path from current naming to semantic slugs?
 3. Should 65+ skill files consolidate? Target count?
@@ -49,16 +51,19 @@ Questions:
 ### Current State (as of Session 46)
 
 **File Counts:**
+
 - Atomic skills: 28 files (`skill-{domain}-{number}-{name}.md`)
 - Collection skills: 37 files (`skills-{domain}.md`)
 - Total: 65 skill-related memory files
 
 **Current Naming Patterns:**
+
 1. `skill-analysis-001-comprehensive-analysis-standard.md`
 2. `skill-planning-001-checkbox-manifest.md`
 3. `skills-planning.md` (collection with multiple skills)
 
 **PRD Proposal (Session 46):**
+
 - Skill ID format: `Skill-{Domain}-{Number}` (e.g., `Skill-Analysis-001`)
 - Central registry: `skills-index.md` in `.serena/memories/`
 - Quick reference table with 5 columns
@@ -68,20 +73,24 @@ Questions:
 ### Semantic Slug Proposal (Session 48)
 
 **Naming Convention:**
+
 - Bad: `Skill-Git-004.md`
 - Good: `skill-git-squash-merge-clean-history.md`
 
 **Consolidation Strategy:**
+
 - Merge tiny files into domain libraries
 - Example: `skill-react-hooks.md` + `skill-react-context.md` → `context-react-development-standards.md`
 - Target: 15-20 domain libraries instead of 65 files
 
 **Index Pattern:**
+
 - `000-memory-index.md` (sorts first in listings)
 - One-line summary per memory file
 - Read at session start if unsure where to look
 
 **Recommended Prefixes:**
+
 - `adr-[000]-[slug].md` - Chronological decisions (keep numbers)
 - `context-[domain]-[topic].md` - Architecture/domain knowledge
 - `pattern-[problem]-[solution].md` - Recurring bugs and fixes

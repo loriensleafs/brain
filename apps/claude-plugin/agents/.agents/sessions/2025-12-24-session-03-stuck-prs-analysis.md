@@ -46,6 +46,7 @@ PR #334 has all required checks passing, is approved, and is MERGEABLE. It can b
 ### Actually Stuck PRs: 16 of 20
 
 **Blocker Distribution**:
+
 - Aggregate Results Failures: 10 PRs (most common)
 - Missing Workflow (like #334): 1 PR (#342 only)
 - Spec Coverage Failures: 2 PRs (#332, #246)
@@ -68,7 +69,7 @@ Only PR #342 shares the missing workflow blocker type.
 
 **Analysis document**: `.agents/analysis/341-stuck-prs-investigation.md`
 
-**GitHub comment**: https://github.com/rjmurillo/ai-agents/issues/341#issuecomment-3689092839
+**GitHub comment**: <https://github.com/rjmurillo/ai-agents/issues/341#issuecomment-3689092839>
 
 ## Recommendations
 

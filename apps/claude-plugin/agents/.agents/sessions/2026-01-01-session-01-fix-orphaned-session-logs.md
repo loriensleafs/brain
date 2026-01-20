@@ -54,16 +54,19 @@ All MUST requirements above are marked complete or N/A.
 **Status**: Complete
 
 **What was done**:
+
 - Analyzed `.githooks/pre-commit` and `scripts/Validate-Session.ps1`
 - Identified catch-22: session logs + implementation files together fail validation
 - Reviewed ADR-034 investigation-only exemption logic
 
 **Root Cause**:
 When a session creates BOTH a session log AND implementation files (ADRs, code), validation logic treats ALL files as subject to QA requirements. This creates impossible situation:
+
 1. Use `investigation-only` skip → fails because implementation files present
 2. Don't use skip → needs QA which subagent sessions don't provide
 
 **Files analyzed**:
+
 - `.githooks/pre-commit` (lines 767-840)
 - `scripts/Validate-Session.ps1` (lines 287-465)
 - `.agents/architecture/ADR-034-investigation-session-qa-exemption.md`
@@ -73,18 +76,21 @@ When a session creates BOTH a session log AND implementation files (ADRs, code),
 **Status**: Complete
 
 **What was done**:
+
 - Added `$script:AuditArtifacts` array to identify audit trail files
 - Created `Get-ImplementationFiles` function to filter out audit artifacts
 - Modified validation logic to use filtered file list for QA checks
 - Updated SESSION-PROTOCOL.md to document session log exemption
 
 **Decisions made**:
+
 - Session logs ARE audit trail, NOT implementation → exempt from QA
 - Filter includes: `.agents/sessions/`, `.agents/analysis/`, `.serena/memories/`
 - Investigation allowlist remains separate and unchanged
 - Docs-only check now runs on implementation files only (audit artifacts filtered out)
 
 **Files changed**:
+
 - `scripts/Validate-Session.ps1` - Added filtering logic
 - `.agents/SESSION-PROTOCOL.md` - Documented session log exemption
 
@@ -93,12 +99,14 @@ When a session creates BOTH a session log AND implementation files (ADRs, code),
 **Status**: Complete
 
 **What was done**:
+
 - Created test scenarios for filtering logic
 - Verified session logs are properly filtered from implementation checks
 - Confirmed ADR + session log → docs-only skip allowed
 - Confirmed code + session log → QA required (for code only)
 
 **Test Results**:
+
 ```
 Test Case 1: Session log + ADR
   Input: .agents/sessions/2025-12-30-session-102.md, .agents/architecture/ADR-036.md

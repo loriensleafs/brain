@@ -208,4 +208,3 @@
 - [ ] Pairings verified with partner agents
 - [ ] Limitations tested in practice
 - [ ] Capabilities matrix updated
-

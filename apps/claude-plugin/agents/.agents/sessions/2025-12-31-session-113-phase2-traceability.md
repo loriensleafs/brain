@@ -183,4 +183,4 @@ Summary: 0 error(s)
 ### PR Created
 
 - **PR #715**: feat(traceability): implement Phase 2 spec layer traceability validation
-- **URL**: https://github.com/rjmurillo/ai-agents/pull/715
+- **URL**: <https://github.com/rjmurillo/ai-agents/pull/715>

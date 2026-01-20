@@ -47,11 +47,13 @@ Analyze AI Issue Triage workflow failure and extract learnings/skills.
 PowerShell's `Import-Module` requires explicit relative path prefix (`./`) to load modules from file paths.
 
 **Wrong** (commit 981ebf7):
+
 ```powershell
 Import-Module .github/scripts/AIReviewCommon.psm1
 ```
 
 **Correct** (PR #222):
+
 ```powershell
 Import-Module ./.github/scripts/AIReviewCommon.psm1
 ```
@@ -80,16 +82,19 @@ Import-Module ./.github/scripts/AIReviewCommon.psm1
 ### 1. Why Did 51 Reviews Miss This?
 
 **Hypothesis**: Bot reviews (CodeRabbit, Copilot, Cursor) focus on:
+
 - Code logic and security vulnerabilities
 - Style and best practices
 - NOT runtime environment specifics like PowerShell module resolution
 
 **Evidence**:
+
 - 51 reviews likely automated bot reviews
 - Bots don't execute code in CI environment
 - Path resolution is environment-dependent behavior
 
 **Contributing Factors**:
+
 - No CI test coverage for the workflow itself
 - Module import syntax appears valid (it IS valid syntax)
 - Error only occurs in specific execution context (GitHub Actions)
@@ -97,11 +102,13 @@ Import-Module ./.github/scripts/AIReviewCommon.psm1
 ### 2. Was There Any CI That Could Have Caught This?
 
 **Current state**: No
+
 - AI Issue Triage workflow triggers only on `issues` events
 - No pre-merge CI validation for workflows
 - PowerShell module not tested in isolation
 
 **What COULD have caught it**:
+
 1. **Workflow validation**: GitHub Actions workflow syntax validation (doesn't catch runtime errors)
 2. **Pre-commit hook**: PowerShell script analyzer on workflow scripts
 3. **Integration test**: Trigger workflow in test environment before merge
@@ -126,12 +133,14 @@ Import-Module ./.github/scripts/MyModule.psm1  # OK - explicit relative
 ```
 
 **Why it happens**:
+
 - PowerShell distinguishes between "module names" and "file paths"
 - Without `./`, PowerShell treats argument as module name
 - Module names are searched in `$env:PSModulePath` directories
 - `.github/scripts/AIReviewCommon.psm1` looks like path but missing `./` prefix
 
 **Common in CI/CD**: YES
+
 - Local development often has modules in PSModulePath
 - CI environments have minimal PSModulePath
 - Developers test locally with different module resolution paths
@@ -143,17 +152,20 @@ Import-Module ./.github/scripts/MyModule.psm1  # OK - explicit relative
 ### Pattern: Environment-Dependent Path Resolution
 
 **Failure signature**:
+
 1. Code works locally (or not tested locally)
 2. Code fails in CI with "module not found"
 3. Path looks correct but missing environment-specific prefix
 4. Bot reviews don't catch it (no execution)
 
 **Detection**:
+
 - Pre-commit: PowerShell linting with path validation
 - CI: Workflow dry-run or integration test
 - Code review: Human reviewer with PowerShell CI experience
 
 **Prevention**:
+
 - Always use `./` for relative file paths in Import-Module
 - Test PowerShell scripts in CI-like environment before commit
 - Add workflow validation to CI pipeline
@@ -161,11 +173,13 @@ Import-Module ./.github/scripts/MyModule.psm1  # OK - explicit relative
 ### Impact Analysis
 
 **Severity**: HIGH
+
 - Critical workflow broken for 5 hours
 - No issues could be auto-triaged
 - User-facing functionality degraded
 
 **Blast radius**:
+
 - All new issues created in 5-hour window (#219, #220)
 - Workflow runs failed: 2 confirmed
 - Manual intervention required to triage issues
@@ -190,12 +204,14 @@ Import-Module ./.github/scripts/MyModule.psm1  # OK - explicit relative
 **Trigger**: Writing `Import-Module` with path to `.psm1` or `.psd1` file
 
 **Evidence**:
+
 - PR #212 (commit 981ebf7): `Import-Module .github/scripts/AIReviewCommon.psm1` failed in CI
 - PR #222: Fixed by adding `./` prefix → `Import-Module ./.github/scripts/AIReviewCommon.psm1`
 - Failure mode: Module not found in PSModulePath
 - Environment: GitHub Actions ubuntu-latest runner
 
 **Problem**:
+
 ```powershell
 # WRONG - PowerShell treats as module name, searches PSModulePath
 Import-Module .github/scripts/AIReviewCommon.psm1
@@ -205,6 +221,7 @@ Import-Module scripts/MyModule.psm1
 ```
 
 **Solution**:
+
 ```powershell
 # CORRECT - Explicit relative path with ./ prefix
 Import-Module ./.github/scripts/AIReviewCommon.psm1
@@ -217,6 +234,7 @@ Import-Module PSScriptAnalyzer
 ```
 
 **Why It Matters**:
+
 - PowerShell distinguishes "module names" from "file paths"
 - Without `./`, argument is treated as module name
 - Module names are searched in `$env:PSModulePath` directories only
@@ -224,6 +242,7 @@ Import-Module PSScriptAnalyzer
 - Local development may work if module in PSModulePath
 
 **Cross-platform Note**:
+
 - Works on Windows, Linux, macOS (PowerShell Core 7+)
 - `./` is portable across all platforms
 - Backslash `.\` works on Windows but not portable
@@ -244,12 +263,14 @@ Import-Module PSScriptAnalyzer
 **Trigger**: Changes to `.github/workflows/*.yml` or scripts called by workflows
 
 **Evidence**:
+
 - PR #212: Workflow changed to use PowerShell Import-Module
 - No pre-merge test triggered workflow
 - First failure occurred 5 hours post-merge on real issue creation
 - 51 bot reviews didn't execute workflow code
 
 **Problem**:
+
 - Static analysis (linting, syntax check) doesn't catch runtime errors
 - Bot reviews analyze code but don't execute in CI context
 - Workflow only tested in production when triggered by real events
@@ -305,6 +326,7 @@ jobs:
 ```
 
 **Alternative: Manual testing checklist**:
+
 ```markdown
 ## Pre-merge Workflow Testing
 
@@ -316,12 +338,14 @@ jobs:
 ```
 
 **Why It Matters**:
+
 - Workflows are production code but often not tested pre-merge
 - Runtime errors only caught when workflow triggers (could be hours/days later)
 - Failed workflows break user-facing functionality
 - Integration tests catch environment-specific issues (paths, modules, auth)
 
 **Anti-pattern**:
+
 - Merging workflow changes without execution test
 - Relying solely on bot reviews for workflow validation
 - Assuming syntax validation catches runtime errors

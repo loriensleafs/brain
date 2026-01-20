@@ -3,7 +3,7 @@
  * Provides embedding generation and health check functionality.
  */
 
-import { OllamaConfig, EmbeddingResponse, BatchEmbedResponse, OllamaError, TaskType } from "./types";
+import { OllamaConfig, BatchEmbedResponse, OllamaError, TaskType } from "./types";
 
 /**
  * Client for interacting with Ollama API.

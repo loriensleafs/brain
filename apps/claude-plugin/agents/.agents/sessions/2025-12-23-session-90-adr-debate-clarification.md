@@ -16,6 +16,7 @@
 ## Context
 
 User provided a multi-agent debate protocol template with unfilled placeholders:
+
 - `{{ADR_CONTENT}}` - Should contain the ADR text to review
 - `{{DEBATE_LOG}}` - Should contain previous debate rounds (if any)
 - `{{CURRENT_ROUND}}` - Should indicate which round this is
@@ -23,6 +24,7 @@ User provided a multi-agent debate protocol template with unfilled placeholders:
 ## Current State of ADR-017
 
 Based on prior sessions:
+
 - **Session 86**: Round 1 debate with 5 agents (architect, critic, independent-thinker, security, analyst)
 - **Session 87**: Convergence check - achieved consensus
 - **Session 88**: Additional convergence verification
@@ -32,6 +34,7 @@ Based on prior sessions:
 ## Untracked Files
 
 The following session files from the debate process are untracked:
+
 - `.agents/sessions/2025-12-23-session-86-adr-017-architect-review.md`
 - `.agents/sessions/2025-12-23-session-86-adr-017-independent-thinker-review.md`
 - `.agents/sessions/2025-12-23-session-86-adr-017-security-review.md`
@@ -87,6 +90,7 @@ The following session files from the debate process are untracked:
 ## Follow-up: ADR-018 Creation
 
 **Context**: User asked whether ADR-017 strictly adheres to foundational ADR definition. Analysis revealed:
+
 - ADR-017 bundles 7 related decisions (violates "single AD" criterion)
 - "Any Decision Record" debate: MADR broadens to governance, critics maintain architectural focus
 - Codebase has hybrid pattern: ADR-014 (architecture) + COST-GOVERNANCE (governance)
@@ -96,6 +100,7 @@ The following session files from the debate process are untracked:
 **Deliverable**: ADR-018 - Architecture vs Governance Decision Split Criteria
 
 **Key provisions**:
+
 1. **Decision matrix**: Classify by architectural impact + enforcement requirements
 2. **Three patterns**: ADR-only, Governance-only, Split (ADR + Governance)
 3. **Decision workflow**: Flowchart for placement

@@ -24,6 +24,7 @@
 ### Skill Inventory
 
 Available GitHub skills:
+
 - PR operations: `.claude/skills/github/scripts/pr/`
 - Issue operations: `.claude/skills/github/scripts/issue/`
 - Reactions: `.claude/skills/github/scripts/reactions/`

@@ -27,6 +27,7 @@
 ### Skill Inventory
 
 Available GitHub skills:
+
 - Close-PR.ps1, Detect-CopilotFollowUpPR.ps1, Get-PRChecks.ps1, Get-PRContext.ps1
 - Get-PRReviewComments.ps1, Get-PRReviewers.ps1, Get-PRReviewThreads.ps1
 - Get-UnaddressedComments.ps1, Get-UnresolvedReviewThreads.ps1
@@ -55,6 +56,7 @@ All MUST requirements above are marked complete.
 **Status**: Complete
 
 **What was done**:
+
 - Created and switched to feat/163-job-retry branch
 - Assigned issue #163 to myself
 
@@ -63,6 +65,7 @@ All MUST requirements above are marked complete.
 **Status**: Complete
 
 **Findings**:
+
 - GitHub Actions has no native job-level retry for matrix jobs (feature request dormant since 2024)
 - Current implementation already has action-level retry (inside ai-review composite action)
 - Current retry timing: 0s, 10s, 30s (from Issue #338)
@@ -73,6 +76,7 @@ All MUST requirements above are marked complete.
 Issue #163 asks for "job-level retry" but composite action already provides this functionality. The actual gap is the **retry timing** - needs longer backoff for better rate limit recovery.
 
 **Decision**:
+
 - Update existing retry delays in ai-review composite action
 - Change from (0s, 10s, 30s) to (0s, 30s, 60s)
 - Rationale: Longer backoff gives rate limits more time to reset
@@ -83,12 +87,14 @@ Issue #163 asks for "job-level retry" but composite action already provides this
 **Status**: Complete
 
 **What was done**:
+
 - Updated `RETRY_DELAYS` in `.github/actions/ai-review/action.yml`
 - Changed from `(0 10 30)` to `(0 30 60)` seconds
 - Added comment referencing Issue #163
 - Kept MAX_RETRIES=2 (initial + 2 retries = 3 total attempts)
 
 **Files modified**:
+
 - `.github/actions/ai-review/action.yml` (line 520)
 
 ### Acceptance Criteria Verification
@@ -103,6 +109,7 @@ Issue #163 asks for "job-level retry" but composite action already provides this
 | Final failure after all retries exhausted | ✅ PASS | Lines 598-607 handle final failure with clear error message |
 
 **Verification Notes**:
+
 - Exponential backoff interpretation: Array shows delay *before* each attempt, so: attempt 1 (0s delay), attempt 2 (30s delay), attempt 3 (60s delay)
 - Total max wait time: 90 seconds (increased from previous 40 seconds)
 - Provides better rate limit recovery window
@@ -145,6 +152,7 @@ Summary: 0 error(s)
 ## Notes for Next Session
 
 **Implementation Summary**:
+
 - Issue #163 requested "job-level retry" for matrix jobs
 - Investigation revealed retry already exists at action level
 - Gap was retry timing: 0s/10s/30s vs requested 0s/30s/60s

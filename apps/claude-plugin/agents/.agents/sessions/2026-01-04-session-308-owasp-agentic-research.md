@@ -74,11 +74,11 @@ All MUST requirements above are marked complete.
 
 ### Input Sources
 
-- URL: https://genai.owasp.org/resources/?e-filter-3b7adda-resource-item=cheat-sheets
+- URL: <https://genai.owasp.org/resources/?e-filter-3b7adda-resource-item=cheat-sheets>
 - PDF: OWASP Top 10 for Agentic Applications (2026-12.6-1)
-- URL: https://owaspai.org/
-- URL: https://owasp.org/www-project-top-ten/
-- URL: https://github.com/OWASP/Top10
+- URL: <https://owaspai.org/>
+- URL: <https://owasp.org/www-project-top-ten/>
+- URL: <https://github.com/OWASP/Top10>
 
 ### Background
 

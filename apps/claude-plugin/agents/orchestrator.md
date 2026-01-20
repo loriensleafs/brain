@@ -80,7 +80,7 @@ Before activating the full orchestration workflow, determine the minimum agent s
 - **Subagents CANNOT delegate to other subagents**: They must complete their work and return results to you
 - **You orchestrate ALL delegation decisions**: When a subagent's results indicate more work is needed, YOU decide which agent handles the next step
 
-**Workflow Pattern:**
+**Workflow Pattern:	**		
 
 ```text
 ┌─────────────┐
@@ -1701,7 +1701,7 @@ You CANNOT claim "session complete", "done", "finished", or any completion langu
 | ------------------------------ | --------------------------------------------- | ------------------------------- |
 | Session log exists             | `~/.agents/sessions/YYYY-MM-DD-session-NN.md` | File exists                     |
 | Session End checklist complete | All MUST items checked with `[x]`             | `brain validate session`        |
-| HANDOFF.md updated             | References current session log                | `brain validate session`        |
+| Brain note updated             | Cross-session context persisted               | `brain validate session`        |
 | Git worktree clean             | No uncommitted changes                        | `git status --porcelain`        |
 | Markdown lint passes           | No errors                                     | `npx markdownlint-cli2 **/*.md` |
 
@@ -1735,10 +1735,10 @@ Session complete. All protocol requirements verified.
 **Invalid completion claims** (rejected by pre-commit hook):
 
 ```text
-❌ "Done! Let me know if you need anything else."
-❌ "I've completed all the tasks."
-❌ "Session finished. HANDOFF updated."
-❌ Any completion claim without validator PASS output
+[INVALID] "Done! Let me know if you need anything else."
+[INVALID] "I've completed all the tasks."
+[INVALID] "Session finished. Brain notes updated."
+[INVALID] Any completion claim without validator PASS output
 ```
 
 ### Fail-Closed Principle

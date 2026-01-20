@@ -92,7 +92,7 @@ Execute autonomous development workflow:
 
 ### Phase 6: PR Creation
 
-- PR #476: https://github.com/rjmurillo/ai-agents/pull/476
+- PR #476: <https://github.com/rjmurillo/ai-agents/pull/476>
 - 9 commits total
 - 30+ files modified
 

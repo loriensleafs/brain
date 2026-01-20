@@ -11,6 +11,7 @@ Research and incorporate knowledge about: **{TOPIC}**
 **Source URLs** (if provided): {URLS}
 
 **Read the task again:**
+
 - Topic: {TOPIC}
 - Why this matters: {CONTEXT}
 - Sources: {URLS}
@@ -20,6 +21,7 @@ Research and incorporate knowledge about: **{TOPIC}**
 ## Execution Principles
 
 Complete the research-and-incorporate workflow systematically. Focus on:
+
 - **Depth over breadth**: Thorough analysis of core concepts, not surface coverage of everything
 - **Concrete examples over abstract theory**: Every principle needs real-world demonstration
 - **Integration with ai-agents project**: Every insight must show applicability
@@ -44,6 +46,7 @@ Proceed with tool usage directly. Do not ask for permission or verify access.
 ### Phase 1: Research and Context Gathering (BLOCKING)
 
 **Before beginning research, analyze existing project context:**
+
 - What does ai-agents already know about this topic? (Check Forgetful/Serena)
 - What related patterns exist in the codebase? (Related ADRs, protocols, skills)
 - How does this topic connect to current work? (Project priorities, recent sessions)
@@ -71,11 +74,13 @@ This prevents duplication and ensures new knowledge integrates with existing und
    - If URLs provided, fetch each using WebFetch tool with TWO-STEP analysis:
 
    **Step 1 - Extract quotes** (grounding):
+
    ```
    WebFetch(url, prompt="Find quotes relevant to {TOPIC}. Extract verbatim text in <quotes> tags.")
    ```
 
    **Step 2 - Analyze quotes** (reasoning):
+
    ```
    Based ONLY on the quotes extracted above, identify:
    - Core principles mentioned
@@ -91,13 +96,14 @@ This prevents duplication and ensures new knowledge integrates with existing und
      - "{TOPIC} decision frameworks"
 
 **Normal research failures** (handle without apologizing):
+
 - URL returns 404 or paywall: Note unavailability, use alternative sources
 - WebSearch returns limited results: Refine query or proceed with available information
 - Source contradicts another source: Document both perspectives, note disagreement
 
 These are expected research conditions, not errors requiring user notification.
 
-3. **Synthesis Requirements (MUST include all)**:
+1. **Synthesis Requirements (MUST include all)**:
    - Core principles and foundational concepts
    - Practical frameworks or models
    - Real-world applications with concrete examples
@@ -110,6 +116,7 @@ These are expected research conditions, not errors requiring user notification.
 
 **Before writing, verify Phase 1 completion:**
 <phase_1_verification>
+
 - Do I understand core principles? (Can I explain to original author?)
 - Do I have 3+ concrete examples with context?
 - Have I identified minimum 3 failure modes?
@@ -194,6 +201,7 @@ If any verification fails, return to Phase 1. Do not proceed with incomplete und
 **Note**: Organize for clarity, not template compliance. If the topic doesn't have "historical context," don't force it. Focus on what matters.
 
 **Quality Gates (BLOCKING)**:
+
 - Write 3000-5000 words minimum
 - Include minimum 3 concrete examples with context
 - Identify minimum 3 failure modes
@@ -206,6 +214,7 @@ If any verification fails, return to Phase 1. Do not proceed with incomplete und
 
 **Before assessment, verify Phase 2 completion:**
 <phase_2_verification>
+
 - Is analysis comprehensive? (3000-5000 words)
 - Are examples concrete? (Not generic scenarios)
 - Are failure modes specific? (Not vague warnings)
@@ -288,6 +297,7 @@ Add section to analysis document:
 
 **Before creating memories, verify Phase 3 completion:**
 <phase_3_verification>
+
 - Have I identified specific integration points? (Not generic possibilities)
 - Are applications concrete? (File paths, agent names, protocol sections)
 - Is priority justified? (Based on project goals, not opinion)
@@ -342,6 +352,7 @@ mcp__plugin_brain_brain__write_note(
 **CRITICAL REQUIREMENT**: Create 5-10 atomic memories
 
 **Each memory MUST satisfy (RULE 0)**:
+
 - **Atomic**: ONE concept per memory (not a grab-bag of loosely related ideas)
 - **Constrained**: <2000 characters maximum (content field only)
 - **Actionable**: Include pattern/example/pitfall, not just theory
@@ -350,6 +361,7 @@ mcp__plugin_brain_brain__write_note(
 Violating these constraints creates unusable memories that pollute the knowledge graph.
 
 **Memory Categories**:
+
 1. Core definition and principle
 2. Primary framework or model
 3. Key application pattern
@@ -520,11 +532,13 @@ Verify ALL completed:
 ## Token Efficiency
 
 **Reuse Over Recreation**:
+
 - Reference analysis document in memories (don't duplicate content)
 - Link memories instead of repeating explanations
 - Create atomic memories that combine in queries (not monolithic dumps)
 
 **Strategic Importance Scoring**:
+
 - 10: Foundational principles that inform multiple systems
 - 9: Critical frameworks that guide major decisions
 - 8: Practical patterns with broad applicability

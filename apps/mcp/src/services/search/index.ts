@@ -4,11 +4,20 @@
  * Provides a clean interface for semantic, keyword, and hybrid search
  * operations. Wraps the underlying search tool implementation.
  *
+ * Semantic search uses chunked embeddings and deduplicates results by note,
+ * returning the best matching chunk's text as the snippet.
+ *
  * @see ADR-001: Search Service Abstraction
  */
 
 import { getBasicMemoryClient } from "../../proxy/client";
 import { createVectorConnection } from "../../db";
+import { ensureEmbeddingTables } from "../../db/schema";
+import {
+  hasEmbeddings,
+  semanticSearchChunked,
+  deduplicateByEntity,
+} from "../../db/vectors";
 import { resolveProject } from "../../project/resolve";
 import { logger } from "../../utils/internal/logger";
 import { generateEmbedding } from "../embedding/generateEmbedding";
@@ -252,17 +261,19 @@ export class SearchService {
 
   private resolveProjectContext(project?: string): string | undefined {
     if (project) return project;
-    return resolveProject(undefined, process.cwd()) ?? undefined;
+    return resolveProject(undefined) ?? undefined;
   }
 
+  /**
+   * Check if embeddings exist in the database.
+   */
   private checkEmbeddingsExist(): boolean {
     try {
       const db = createVectorConnection();
-      const row = db
-        .query("SELECT COUNT(*) as count FROM brain_embeddings")
-        .get() as { count: number } | null;
+      ensureEmbeddingTables(db);
+      const exists = hasEmbeddings(db);
       db.close();
-      return row ? row.count > 0 : false;
+      return exists;
     } catch (error) {
       logger.debug({ error }, "Failed to check embeddings existence");
       return false;
@@ -381,38 +392,34 @@ export class SearchService {
       }
 
       const db = createVectorConnection();
-      const embeddingArr = new Float32Array(queryEmbedding);
+      ensureEmbeddingTables(db);
 
-      const results = db
-        .query(
-          `
-          SELECT
-            entity_id,
-            vec_distance_cosine(embedding, ?) as distance
-          FROM brain_embeddings
-          WHERE distance <= ?
-          ORDER BY distance ASC
-          LIMIT ?
-          `
-        )
-        .all(embeddingArr, 1 - threshold, limit) as Array<{
-        entity_id: string;
-        distance: number;
-      }>;
+      // Search across all chunks, fetch more than limit to allow for deduplication
+      const rawResults = semanticSearchChunked(
+        db,
+        queryEmbedding,
+        limit * 3, // Fetch extra to ensure enough after deduplication
+        threshold
+      );
       db.close();
 
-      return results.map((r) => {
-        const parts = r.entity_id.split("/");
-        const titleSlug = parts[parts.length - 1] || r.entity_id;
+      // Deduplicate by entity, keeping best chunk per note
+      const deduplicated = deduplicateByEntity(rawResults);
+
+      // Limit to requested number and map to SearchResult
+      return deduplicated.slice(0, limit).map((r) => {
+        const parts = r.entityId.split("/");
+        const titleSlug = parts[parts.length - 1] || r.entityId;
         const title = titleSlug
           .replace(/-/g, " ")
           .replace(/\b\w/g, (c) => c.toUpperCase());
 
         return {
-          permalink: r.entity_id,
+          permalink: r.entityId,
           title,
-          similarity_score: 1 - r.distance,
-          snippet: "",
+          similarity_score: r.similarity,
+          // Use the matching chunk's text as the snippet
+          snippet: r.chunkText.slice(0, 200),
           source: "semantic" as const,
         };
       });

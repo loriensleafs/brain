@@ -38,7 +38,7 @@ func RunPreToolUse() error {
 	}
 
 	// Perform gate check
-	result := PerformGateCheck(toolInput.Tool)
+	result := performGateCheck(toolInput.Tool)
 
 	// Build output
 	output := PreToolUseOutput{

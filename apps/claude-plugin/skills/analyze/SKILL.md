@@ -31,6 +31,7 @@ echo '{"stepNumber": 1, "totalSteps": 6, "thoughts": "Starting analysis. User re
 State is automatically persisted to: `/tmp/brain-analyze/analyze-state-YYYY-MM-DD.json`
 
 The state file tracks:
+
 - Focus areas and priorities
 - Investigation plans
 - Findings by severity

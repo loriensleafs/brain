@@ -53,6 +53,7 @@ Documenting our database architecture choices for the authentication system.
 ## Effective Observation Writing
 
 **Good observations are**:
+
 - **Specific**: Avoid vague statements
 - **Categorized**: Use appropriate category
 - **Tagged**: Add relevant tags
@@ -62,6 +63,7 @@ Documenting our database architecture choices for the authentication system.
 **Examples**:
 
 **Poor observations**:
+
 ```markdown
 - [fact] We use a database
 - [idea] Security is important
@@ -69,6 +71,7 @@ Documenting our database architecture choices for the authentication system.
 ```
 
 **Good observations**:
+
 ```markdown
 - [fact] PostgreSQL 14 database runs on AWS RDS with 16GB RAM #infrastructure
 - [decision] Implemented rate limiting at 100 requests/minute per user #security

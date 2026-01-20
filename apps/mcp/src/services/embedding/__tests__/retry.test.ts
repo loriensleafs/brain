@@ -20,34 +20,39 @@ import {
 } from "../retry";
 import * as vectorsModule from "../../../db/vectors";
 import * as connectionModule from "../../../db/connection";
+import * as schemaModule from "../../../db/schema";
 import * as queueModule from "../queue";
 import { logger } from "../../../utils/internal/logger";
 
 describe("retry", () => {
   const originalFetch = globalThis.fetch;
   let mockDb: { close: ReturnType<typeof mock> };
-  let storeEmbeddingSpy: ReturnType<typeof spyOn>;
+  let storeChunkedEmbeddingsSpy: ReturnType<typeof spyOn>;
   let createVectorConnectionSpy: ReturnType<typeof spyOn>;
+  let ensureEmbeddingTablesSpy: ReturnType<typeof spyOn>;
   let loggerInfoSpy: ReturnType<typeof spyOn>;
   let loggerWarnSpy: ReturnType<typeof spyOn>;
 
   beforeEach(() => {
     mockDb = { close: mock(() => {}) };
-    storeEmbeddingSpy = spyOn(vectorsModule, "storeEmbedding").mockReturnValue(
-      true
-    );
+    storeChunkedEmbeddingsSpy = spyOn(vectorsModule, "storeChunkedEmbeddings").mockReturnValue(1);
     createVectorConnectionSpy = spyOn(
       connectionModule,
       "createVectorConnection"
     ).mockReturnValue(mockDb as any);
+    ensureEmbeddingTablesSpy = spyOn(
+      schemaModule,
+      "ensureEmbeddingTables"
+    ).mockImplementation(() => {});
     loggerInfoSpy = spyOn(logger, "info").mockImplementation(() => {});
     loggerWarnSpy = spyOn(logger, "warn").mockImplementation(() => {});
   });
 
   afterEach(() => {
     globalThis.fetch = originalFetch;
-    storeEmbeddingSpy.mockRestore();
+    storeChunkedEmbeddingsSpy.mockRestore();
     createVectorConnectionSpy.mockRestore();
+    ensureEmbeddingTablesSpy.mockRestore();
     loggerInfoSpy.mockRestore();
     loggerWarnSpy.mockRestore();
   });
@@ -86,14 +91,7 @@ describe("retry", () => {
       const result = await processWithRetry("note-123", "Test content", 0);
 
       expect(result).toBe(true);
-      expect(storeEmbeddingSpy).toHaveBeenCalledWith(
-        mockDb,
-        "note-123",
-        mockEmbedding
-      );
-      expect(loggerInfoSpy).toHaveBeenCalledWith(
-        "Embedding retry succeeded for note note-123"
-      );
+      expect(storeChunkedEmbeddingsSpy).toHaveBeenCalled();
     });
 
     test("returns true for empty content (null embedding)", async () => {
@@ -101,7 +99,7 @@ describe("retry", () => {
       const result = await processWithRetry("note-123", "", 0);
 
       expect(result).toBe(true);
-      expect(storeEmbeddingSpy).not.toHaveBeenCalled();
+      expect(storeChunkedEmbeddingsSpy).not.toHaveBeenCalled();
     });
 
     test("returns false after max retries exceeded", async () => {
@@ -117,7 +115,7 @@ describe("retry", () => {
       expect(loggerWarnSpy).toHaveBeenCalledWith(
         `Max retries (${MAX_RETRIES}) exceeded for note note-123`
       );
-      expect(storeEmbeddingSpy).not.toHaveBeenCalled();
+      expect(storeChunkedEmbeddingsSpy).not.toHaveBeenCalled();
     });
 
     test("returns false on API error and logs retry attempt", async () => {

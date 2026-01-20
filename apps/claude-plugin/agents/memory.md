@@ -208,14 +208,14 @@ query: "task keywords"
 limit: 10
 ```
 
-2. **Browse folders** (when you know the domain):
+1. **Browse folders** (when you know the domain):
 
 ```text
 mcp__plugin_brain_brain__list_directory
 dir_name: "analysis"  # or features/, research/, decisions/, etc.
 ```
 
-3. **Direct access** (when you know the note):
+1. **Direct access** (when you know the note):
 
 ```text
 mcp__plugin_brain_brain__read_note

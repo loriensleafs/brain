@@ -49,7 +49,7 @@ Research and incorporate learnings from the official Claude Code blog post on bu
 
 ## Research Target
 
-**URL**: https://www.claude.com/blog/building-skills-for-claude-code
+**URL**: <https://www.claude.com/blog/building-skills-for-claude-code>
 **Topic**: Building Skills for Claude Code
 **Context**: This ai-agents project has an extensive skill system. Understanding official guidance will help align our implementation with best practices.
 

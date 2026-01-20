@@ -7,14 +7,17 @@ import (
 	"strings"
 
 	"github.com/peterkloss/brain-tui/client"
+	"github.com/peterkloss/brain/packages/validation"
 	"github.com/spf13/cobra"
 )
 
 var (
-	searchLimit     int
-	searchThreshold float64
-	searchMode      string
-	searchDepth     int
+	searchLimit       int
+	searchThreshold   float64
+	searchMode        string
+	searchDepth       int
+	searchProject     string
+	searchFullContent bool
 )
 
 // SearchResult represents a single search result.
@@ -25,6 +28,7 @@ type SearchResult struct {
 	URL             string  `json:"url"`
 	SimilarityScore float64 `json:"similarity_score,omitempty"`
 	Snippet         string  `json:"snippet,omitempty"`
+	FullContent     string  `json:"fullContent,omitempty"`
 	Source          string  `json:"source,omitempty"`
 	Depth           int     `json:"depth,omitempty"` // 0 = direct match, 1+ = related via wikilinks
 }
@@ -52,17 +56,31 @@ Examples:
   brain search "git hooks" --limit 5
   brain search "session protocol" --mode semantic --threshold 0.8
   brain search "OAuth" --depth 1           # Include related notes
+  brain search "patterns" --project brain  # Search specific project
+  brain search "patterns" --full-content   # Include full note content
 
 Search Modes:
   auto     - Tries semantic search first, falls back to keyword (default)
   semantic - Vector similarity search only
   keyword  - Text-based search only
+  hybrid   - Combines semantic and keyword results with score fusion
 
 Depth:
   0 - Direct matches only (default)
   1 - Include notes linked from matches
   2 - Include notes 2 levels deep
-  3 - Maximum depth (3 levels)`,
+  3 - Maximum depth (3 levels)
+
+Full Content:
+  When --full-content is specified, results include complete note content
+  instead of compact snippets. Useful for detailed review of matches.
+
+Project Resolution:
+  If --project is not specified, the project is auto-resolved from:
+  1. BM_PROJECT environment variable
+  2. BM_ACTIVE_PROJECT environment variable (legacy)
+  3. BRAIN_PROJECT environment variable
+  4. Current working directory match against configured code_paths`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: runSearch,
 }
@@ -71,12 +89,22 @@ func init() {
 	rootCmd.AddCommand(searchCmd)
 	searchCmd.Flags().IntVarP(&searchLimit, "limit", "l", 10, "Maximum number of results (1-100)")
 	searchCmd.Flags().Float64VarP(&searchThreshold, "threshold", "t", 0.7, "Similarity threshold for semantic search (0-1)")
-	searchCmd.Flags().StringVarP(&searchMode, "mode", "m", "auto", "Search mode: auto, semantic, keyword")
+	searchCmd.Flags().StringVarP(&searchMode, "mode", "m", "auto", "Search mode: auto, semantic, keyword, hybrid")
 	searchCmd.Flags().IntVarP(&searchDepth, "depth", "d", 0, "Relation depth: follow wikilinks N levels (0-3)")
+	searchCmd.Flags().StringVarP(&searchProject, "project", "p", "", "Project to search (auto-resolved from CWD if not specified)")
+	searchCmd.Flags().BoolVar(&searchFullContent, "full-content", false, "Include full note content instead of snippets")
 }
 
 func runSearch(cmd *cobra.Command, args []string) error {
 	query := strings.Join(args, " ")
+
+	// Resolve project using hierarchy: explicit flag > env vars > CWD match
+	project := validation.ResolveProject(searchProject, "")
+	if project == "" {
+		fmt.Fprintf(os.Stderr, "Error: No project specified and none could be resolved from CWD.\n")
+		fmt.Fprintf(os.Stderr, "Use --project flag or run from a configured project directory.\n")
+		os.Exit(1)
+	}
 
 	brainClient, err := client.EnsureServerRunning()
 	if err != nil {
@@ -86,7 +114,8 @@ func runSearch(cmd *cobra.Command, args []string) error {
 
 	// Build tool arguments
 	toolArgs := map[string]any{
-		"query": query,
+		"query":   query,
+		"project": project,
 	}
 
 	if searchLimit != 10 {
@@ -100,6 +129,9 @@ func runSearch(cmd *cobra.Command, args []string) error {
 	}
 	if searchDepth > 0 {
 		toolArgs["depth"] = searchDepth
+	}
+	if searchFullContent {
+		toolArgs["fullContent"] = true
 	}
 
 	// Call the search tool
@@ -145,7 +177,7 @@ func printSearchResults(results []SearchResult) {
 		// Show depth indicator for related notes
 		depthPrefix := ""
 		if r.Depth > 0 {
-			depthPrefix = fmt.Sprintf("[↳%d] ", r.Depth)
+			depthPrefix = fmt.Sprintf("[depth %d] ", r.Depth)
 		}
 		fmt.Printf("%d. %s%s\n", i+1, depthPrefix, r.Title)
 
@@ -174,7 +206,15 @@ func printSearchResults(results []SearchResult) {
 			}
 			fmt.Println()
 		}
-		if r.Snippet != "" {
+
+		// Show full content if available, otherwise show snippet
+		if r.FullContent != "" {
+			content := r.FullContent
+			if len(content) > 2000 {
+				content = content[:2000] + "..."
+			}
+			fmt.Printf("\n%s\n", content)
+		} else if r.Snippet != "" {
 			snippet := r.Snippet
 			if len(snippet) > 100 {
 				snippet = snippet[:100] + "..."

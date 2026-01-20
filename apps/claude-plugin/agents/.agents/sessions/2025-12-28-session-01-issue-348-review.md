@@ -1,17 +1,21 @@
 # Session 01 - Issue #348 Fix Review
+
 **Date**: 2025-12-28
 **Agent**: critic
 **Task**: Review memory-validation exit code 129 fix
 
 ## Objective
+
 Verify that the fix for issue #348 addresses the root cause and meets acceptance criteria.
 
 ## Issue Context
+
 - Workflow failed on push events with exit code 129
 - Root cause: `${{ github.base_ref }}` is empty for non-PR events
 - Fix: Changed line 55 to use `$env:GITHUB_BASE_REF` for runtime evaluation
 
 ## Acceptance Criteria from Issue #348
+
 1. Line 55 uses `$env:GITHUB_BASE_REF` instead of `${{ github.base_ref }}`
 2. Workflow passes on PR creation
 3. Workflow passes on push to main
@@ -19,6 +23,7 @@ Verify that the fix for issue #348 addresses the root cause and meets acceptance
 5. Exit code 129 no longer occurs
 
 ## Review Progress
+
 - [x] Read memory-validation.yml
 - [x] Verify fix at line 55
 - [x] Search for other occurrences of `${{ github.base_ref }}`
@@ -29,18 +34,21 @@ Verify that the fix for issue #348 addresses the root cause and meets acceptance
 ## Findings
 
 ### Fix Verification
+
 - **Line 55**: Comment explains parse-time vs runtime evaluation issue
 - **Line 57**: Implements `$env:GITHUB_BASE_REF` instead of `${{ github.base_ref }}`
 - **Scope**: Correctly placed inside `pull_request` event conditional (line 53)
 - **Pattern search**: No other occurrences in workflow files
 
 ### Root Cause Confirmation
+
 - `${{ github.base_ref }}` is evaluated at parse time
 - Only populated for pull_request events
 - Empty for push events, causing invalid git diff syntax
 - Exit code 129 results from git command syntax error
 
 ### Fix Correctness
+
 - `$env:GITHUB_BASE_REF` provides runtime evaluation
 - Environment variable guaranteed to be set within pull_request conditional
 - PowerShell syntax follows convention

@@ -11,6 +11,7 @@ Specifications are managed in the Memory "specs" project. All specs live in a ce
 See SPEC-1 and SPEC-2 in the "specs" project for the full specification-driven development process.
 
 Available commands:
+
 - `create [name]` - Create new specification
 - `status` - Show all spec statuses
 - `show [spec-name]` - Read a specific spec
@@ -20,22 +21,26 @@ Available commands:
 
 Execute the spec command: `/spec $ARGUMENTS`
 
-### If command is "create":
+### If command is "create"
+
 1. Get next SPEC number by searching existing specs in "specs" project
 2. Create new spec using template from SPEC-2
 3. Use mcp__basic-memory__write_note with project="specs"
 4. Include standard sections: Why, What, How, How to Evaluate
 
-### If command is "status":
+### If command is "status"
+
 1. Use mcp__basic-memory__search_notes with project="specs"
 2. Display table with spec number, title, and progress
 3. Show completion status from checkboxes in content
 
-### If command is "show":
+### If command is "show"
+
 1. Use mcp__basic-memory__read_note with project="specs"
 2. Display the full spec content
 
-### If command is "review":
+### If command is "review"
+
 1. Read the specified spec and its "How to Evaluate" section
 2. Review current implementation against success criteria with careful evaluation of:
    - **Functional completeness** - All specified features working

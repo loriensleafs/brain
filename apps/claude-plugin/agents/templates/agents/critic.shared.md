@@ -242,8 +242,8 @@ If specialists do NOT have unanimous agreement:
 **Recommendation**: Route to high-level-advisor for resolution
 ```
 
-4. **Block approval** until high-level-advisor provides guidance
-5. **Document resolution** in critique for retrospective learning
+1. **Block approval** until high-level-advisor provides guidance
+2. **Document resolution** in critique for retrospective learning
 
 ## Escalation Prompt Completeness Requirements
 

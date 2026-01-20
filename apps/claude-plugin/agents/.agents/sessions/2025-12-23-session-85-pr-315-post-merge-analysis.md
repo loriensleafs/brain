@@ -15,6 +15,7 @@ User requested review of PR #315 via `/pr-review 315` command. Initial investiga
 During session execution, discovered that **PR #315 was already merged** (commit e6ccf3a on main) before thread resolution work began.
 
 Timeline:
+
 1. User invoked `/pr-review 315`
 2. Agent validated PR exists and is "OPEN"
 3. Agent resolved 15 unresolved review threads via GraphQL
@@ -42,10 +43,12 @@ Even though PR was already merged, the session produced valuable outcomes:
 ### 1. Resolved Review Threads (15 total)
 
 **Batch 1 - Gemini threads (8)**:
+
 - PRRT_kwDOQoWRls5nOQAw through PRRT_kwDOQoWRls5nOQA6
 - All resolved via GraphQL mutation
 
 **Batch 2 - Copilot threads (7 unresolved)**:
+
 - PRRT_kwDOQoWRls5nOQqw, PRRT_kwDOQoWRls5nOQqz, PRRT_kwDOQoWRls5nOQq2, PRRT_kwDOQoWRls5nOQq4, PRRT_kwDOQoWRls5nOQq8, PRRT_kwDOQoWRls5nO05Y, PRRT_kwDOQoWRls5nO05h
 - All resolved via GraphQL mutation
 
@@ -54,11 +57,13 @@ Even though PR was already merged, the session produced valuable outcomes:
 ### 2. New Skills Added to Memory
 
 **Skill-PR-Review-004: Thread Resolution Protocol**
+
 - Review comment replies do NOT automatically resolve threads
 - Must execute separate GraphQL `resolveReviewThread` mutation
 - Validation: 2 (PR #310, PR #315)
 
 **Skill-PR-Review-005: Batch Thread Resolution Efficiency**
+
 - Use GraphQL mutation aliases to resolve multiple threads in single call
 - Reduces API calls by N-1 where N is thread count
 - Validation: 1 (PR #315)

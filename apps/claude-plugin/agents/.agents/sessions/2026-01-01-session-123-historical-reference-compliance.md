@@ -94,7 +94,7 @@ Fixed 8 violations across 2 files:
 
 ### Phase 5: Open PR
 
-Created PR #733 (2026-01-01): https://github.com/rjmurillo/ai-agents/pull/733
+Created PR #733 (2026-01-01): <https://github.com/rjmurillo/ai-agents/pull/733>
 
 ## Decisions
 
@@ -122,4 +122,4 @@ Created PR #733 (2026-01-01): https://github.com/rjmurillo/ai-agents/pull/733
 
 ## PR Created
 
-**PR #733**: https://github.com/rjmurillo/ai-agents/pull/733
+**PR #733**: <https://github.com/rjmurillo/ai-agents/pull/733>

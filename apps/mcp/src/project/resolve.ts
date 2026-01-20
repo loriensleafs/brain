@@ -1,33 +1,28 @@
 /**
- * Project resolution with 5-level hierarchy.
+ * Project resolution with 3-level hierarchy.
  *
- * Resolution priority (same as Python memory_wrapper):
+ * Resolution priority:
  * 1. Explicit parameter
  * 2. Session state (in-memory)
  * 3. BM_PROJECT env var
  * 4. BM_ACTIVE_PROJECT env var (legacy)
- * 5. CWD match against code_paths (deepest first)
- * 6. null → caller prompts user
+ * 5. null → caller shows error
+ *
+ * CWD matching was removed to make resolution more explicit and less confusing.
  */
 
-import * as path from "path";
-import { getCodePaths } from "./config";
 import { logger } from "../utils/internal/logger";
 
 // Session state (in-memory, per-process)
 let activeProject: string | null = null;
 
 /**
- * Resolve project using the 5-level hierarchy.
+ * Resolve project using the hierarchy.
  *
  * @param explicit - Explicitly specified project name (highest priority)
- * @param cwd - Current working directory for path matching
  * @returns Resolved project name or null if none found
  */
-export function resolveProject(
-  explicit?: string,
-  cwd?: string
-): string | null {
+export function resolveProject(explicit?: string): string | null {
   // 1. Explicit parameter always wins
   if (explicit) {
     logger.debug({ project: explicit }, "Project from explicit parameter");
@@ -54,15 +49,7 @@ export function resolveProject(
     return envActive;
   }
 
-  // 5. CWD match against code_paths
-  const checkCwd = cwd || process.cwd();
-  const matched = matchCwdToProject(checkCwd);
-  if (matched) {
-    logger.debug({ project: matched, cwd: checkCwd }, "Project from CWD match");
-    return matched;
-  }
-
-  // 6. No project resolved
+  // 5. No project resolved
   logger.debug("No project resolved");
   return null;
 }
@@ -94,43 +81,6 @@ export function getActiveProject(): string | null {
 }
 
 /**
- * Match a working directory to a project by code path.
- *
- * Returns the project whose code_path is the deepest (most specific)
- * ancestor of cwd. This handles nested project directories correctly.
- */
-function matchCwdToProject(cwd: string): string | null {
-  const codePaths = getCodePaths();
-
-  if (Object.keys(codePaths).length === 0) {
-    return null;
-  }
-
-  let bestMatch: { project: string; depth: number } | null = null;
-  const normalizedCwd = path.resolve(cwd);
-
-  for (const [project, codePath] of Object.entries(codePaths)) {
-    if (!codePath) continue;
-
-    const normalizedCodePath = path.resolve(codePath);
-
-    // Check if cwd is inside or equals code_path
-    if (
-      normalizedCwd === normalizedCodePath ||
-      normalizedCwd.startsWith(normalizedCodePath + path.sep)
-    ) {
-      const depth = normalizedCodePath.split(path.sep).length;
-
-      if (!bestMatch || depth > bestMatch.depth) {
-        bestMatch = { project, depth };
-      }
-    }
-  }
-
-  return bestMatch?.project || null;
-}
-
-/**
  * Get the resolution hierarchy for debugging/display.
  */
 export function getResolutionHierarchy(): string[] {
@@ -139,7 +89,6 @@ export function getResolutionHierarchy(): string[] {
     `2. Session state: ${activeProject || "none"}`,
     `3. BM_PROJECT env: ${process.env.BM_PROJECT || "none"}`,
     `4. BM_ACTIVE_PROJECT env: ${process.env.BM_ACTIVE_PROJECT || "none"}`,
-    "5. CWD match against code_paths",
-    "6. null (prompt user)",
+    "5. null (error)",
   ];
 }

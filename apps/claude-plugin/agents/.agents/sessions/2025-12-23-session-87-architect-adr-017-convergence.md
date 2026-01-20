@@ -88,6 +88,7 @@ Reviewing `.agents/architecture/ADR-017-model-routing-low-false-pass.md` (update
 **P0 (Blocking for my Accept)**:
 
 None identified. All P0 issues from Round 1 have been addressed:
+
 - ✅ Baseline measurement section exists (Prerequisites)
 - ✅ Prompt injection safeguards added (Section 4)
 - ✅ CONTEXT_MODE mandatory (Section 4, line 119)
@@ -107,18 +108,21 @@ None identified. All P0 issues from Round 1 have been addressed:
 ### Architectural Soundness Assessment
 
 **Decision quality**:
+
 - Evidence-based conservatism is architecturally sound
 - Conservative verdict policy (forbid PASS on insufficient evidence) aligns with ADR-005 (security hardening patterns)
 - Tiered model routing matches prompt shapes correctly
 - Governance guardrail prevents silent regressions
 
 **Consistency with prior ADRs**:
+
 - ✅ ADR-014 (Distributed Handoff) - no conflicts
 - ✅ ADR-010 (Quality Gates) - aggregator policy references it correctly
 - ✅ ADR-005 (PowerShell hardening) - security-first mindset consistent
 - ✅ ADR-013 (Agent Orchestration MCP) - orchestrator will enforce routing
 
 **Completeness**:
+
 - ✅ Problem clearly articulated
 - ✅ Decision rationale explicit
 - ✅ Alternatives considered with tradeoffs

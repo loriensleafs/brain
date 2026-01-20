@@ -51,6 +51,7 @@
 **Status**: Complete
 
 **Actions**:
+
 1. Read SESSION-PROTOCOL.md to understand current protocol
 2. Retrieved 8 retrospective and monitoring memories
 3. Analyzed recent session logs for failure patterns
@@ -58,6 +59,7 @@
 5. Examined codebase metrics (19 agents, 32 skills, 424KB context)
 
 **Key Findings**:
+
 - 80% overlap with vexjoy's patterns (domain separation, deterministic programs, context density)
 - Orchestrator is 63KB (largest prompt) - contains both routing and coordination
 - Failure modes: 60% protocol violations, 17x scope explosions, skill bypasses
@@ -78,6 +80,7 @@
 | Router layer | Separate | Combined in orchestrator | Missing - causes bloat |
 
 **Evidence of Overlap**:
+
 - `Get-PRContext.ps1` wraps `gh pr view` (deterministic program pattern)
 - `security.md` contains threat knowledge, not methodology (domain separation)
 - Critic gate before merge, QA gate after code (phase gates between agents)
@@ -88,12 +91,14 @@
 **Status**: Complete
 
 **Our Actual Failures** (from memories):
+
 1. Protocol violations: 60% CRITICAL_FAIL rate before guardrails (PR #226)
 2. Skill bypasses: 3+ violations per session (Session 15)
 3. Scope explosions: 17x line count (PR #395 - Copilot SWE)
 4. Security misses: 1 HIGH (CWE-20/78 in PR #211)
 
 **vexjoy Prevention Mapping**:
+
 - Protocol violations: NO - philosophy doesn't enforce compliance
 - Skill bypasses: YES - indirect invocation prevents direct LLM environment access
 - Scope explosions: PARTIAL - phase gates help, but not root cause
@@ -110,12 +115,14 @@
 **Verdict**: APPROVE WITH CONDITIONS
 
 **Conditions**:
+
 1. Router split must show measurable benefit before adoption
 2. Phase gates documented for 3 complex agents with enforcement
 3. Skill creation criteria documented in governance
 4. Reject indirect skill invocation - strengthen existing protocol instead
 
 **Rationale**:
+
 - 80% overlap - we already implement core patterns
 - 20% gap (Router split, phase gates) addresses real issues
 - Evidence-based adoption - require proof before migration
@@ -196,9 +203,11 @@
 ### Serena Memory Updates
 
 **Created**:
+
 - `debate-002-everything-deterministic-evaluation` - Critique findings and conditions
 
 **Content**:
+
 ```markdown
 # Debate 002: Everything Deterministic Philosophy Evaluation
 

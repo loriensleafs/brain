@@ -53,10 +53,12 @@ This system includes **19 specialized agents** organized into 5 categories.
 **Specialization**: Task analysis, agent selection, workflow management
 
 **Input**:
+
 - User request or task description
 - Context from previous work (optional)
 
 **Output**:
+
 - Delegated work to appropriate agents
 - Coordinated multi-agent workflows
 - Final results aggregation
@@ -66,11 +68,13 @@ This system includes **19 specialized agents** organized into 5 categories.
 **Called By**: User (entry point), pr-comment-responder
 
 **When to Use**:
+
 - Complex multi-step tasks requiring multiple specialists
 - When unsure which agent to use
 - Tasks requiring coordination across domains
 
 **Example Invocation**:
+
 ```text
 @orchestrator Implement a rate limiting feature for the API endpoints.
 Include security review and test coverage.
@@ -87,11 +91,13 @@ Include security review and test coverage.
 **Specialization**: Task decomposition, dependency analysis, milestone definition
 
 **Input**:
+
 - Epic or PRD document
 - Technical constraints
 - Business requirements
 
 **Output**:
+
 - Milestone definitions with goals
 - Work packages with dependencies
 - Impact analysis requests to specialists
@@ -101,11 +107,13 @@ Include security review and test coverage.
 **Called By**: orchestrator, roadmap
 
 **When to Use**:
+
 - Breaking down epics into implementable chunks
 - Creating project milestones
 - Understanding work dependencies
 
 **Example Invocation**:
+
 ```text
 @planner Break down EPIC-001 (User Authentication) into milestones
 with clear acceptance criteria and dependencies.
@@ -122,10 +130,12 @@ with clear acceptance criteria and dependencies.
 **Specialization**: Task atomization, complexity estimation, sequencing
 
 **Input**:
+
 - Milestone or work package from planner
 - PRD requirements
 
 **Output**:
+
 - Atomic task definitions (TASK-NNN format)
 - Acceptance criteria per task
 - Complexity estimates (XS/S/M/L/XL)
@@ -136,11 +146,13 @@ with clear acceptance criteria and dependencies.
 **Called By**: orchestrator, planner
 
 **When to Use**:
+
 - After PRD or milestone is created
 - When breaking work into assignable units
 - Generating implementation-ready task lists
 
 **Example Invocation**:
+
 ```text
 @task-generator Generate atomic tasks from the Authentication milestone.
 Include complexity estimates and file impact.
@@ -157,11 +169,13 @@ Include complexity estimates and file impact.
 **Specialization**: EARS requirements format, traceability chains, specification hierarchy
 
 **Input**:
+
 - Vague feature description or idea
 - User clarifications (gathered via questions)
 - Related context (ADRs, existing features)
 
 **Output**:
+
 - Requirements documents in `.agents/specs/requirements/REQ-NNN-*.md`
 - Design documents in `.agents/specs/design/DESIGN-NNN-*.md`
 - Task documents in `.agents/specs/tasks/TASK-NNN-*.md`
@@ -171,18 +185,21 @@ Include complexity estimates and file impact.
 **Called By**: orchestrator
 
 **When to Use**:
+
 - Converting vague ideas into implementable specs
 - Creating formal requirements with EARS format
 - Establishing traceability between requirements, design, and tasks
 - When "what should this do?" needs a structured answer
 
 **Example Invocation**:
+
 ```text
 @spec-generator Create specifications for a session state persistence feature.
 I need requirements in EARS format, a design doc, and atomic tasks.
 ```
 
 **3-Tier Output**:
+
 ```text
 REQ-NNN (WHAT/WHY) → DESIGN-NNN (HOW) → TASK-NNN (IMPLEMENTATION)
 ```
@@ -200,11 +217,13 @@ REQ-NNN (WHAT/WHY) → DESIGN-NNN (HOW) → TASK-NNN (IMPLEMENTATION)
 **Specialization**: C#, .NET, test-driven development, SOLID principles
 
 **Input**:
+
 - Task specification with acceptance criteria
 - Design decisions from architect
 - Steering file context
 
 **Output**:
+
 - Implementation code
 - Unit tests (100% coverage target)
 - Documentation updates
@@ -214,11 +233,13 @@ REQ-NNN (WHAT/WHY) → DESIGN-NNN (HOW) → TASK-NNN (IMPLEMENTATION)
 **Called By**: orchestrator, planner
 
 **When to Use**:
+
 - Writing new code for defined tasks
 - Fixing bugs with clear reproduction steps
 - Refactoring with architect guidance
 
 **Example Invocation**:
+
 ```text
 @implementer Implement the GetUserPreferences method as specified in TASK-042.
 Follow the design in ADR-015. Ensure 100% test coverage.
@@ -235,11 +256,13 @@ Follow the design in ADR-015. Ensure 100% test coverage.
 **Specialization**: GitHub Actions, Azure Pipelines, MSBuild, infrastructure
 
 **Input**:
+
 - Pipeline requirements
 - Deployment targets
 - Infrastructure constraints
 
 **Output**:
+
 - Pipeline configurations (YAML)
 - Build scripts
 - Infrastructure documentation in `.agents/devops/`
@@ -249,11 +272,13 @@ Follow the design in ADR-015. Ensure 100% test coverage.
 **Called By**: orchestrator, planner
 
 **When to Use**:
+
 - Modifying `.github/workflows/`
 - Configuring build systems
 - Managing deployment processes
 
 **Example Invocation**:
+
 ```text
 @devops Create a GitHub Actions workflow for automated NuGet publishing
 on release tags. Include security scanning.
@@ -270,11 +295,13 @@ on release tags. Include security scanning.
 **Specialization**: OWASP Top 10, STRIDE analysis, secure coding, CWE detection
 
 **Input**:
+
 - Code to review
 - Feature design
 - Change scope
 
 **Output**:
+
 - Threat models in `.agents/security/TM-NNN-*.md`
 - Security reports in `.agents/security/SR-NNN-*.md`
 - Post-Implementation Verification (PIV) reports
@@ -284,12 +311,14 @@ on release tags. Include security scanning.
 **Called By**: orchestrator, architect, devops
 
 **When to Use**:
+
 - Touching auth/authorization code
 - Handling user data
 - Adding external APIs
 - Reviewing security-sensitive changes
 
 **Example Invocation**:
+
 ```text
 @security Review the OAuth implementation for vulnerabilities.
 Create a threat model and identify required controls.
@@ -308,11 +337,13 @@ Create a threat model and identify required controls.
 **Specialization**: Plan review, risk identification, scope validation
 
 **Input**:
+
 - Planning artifacts (PRDs, task breakdowns)
 - Acceptance criteria
 - Business objectives
 
 **Output**:
+
 - Critique report in `.agents/critique/`
 - Approval/rejection with rationale
 - Specific improvement recommendations
@@ -322,11 +353,13 @@ Create a threat model and identify required controls.
 **Called By**: orchestrator, planner
 
 **When to Use**:
+
 - After planning artifacts created
 - Before implementation begins
 - Validating scope and completeness
 
 **Example Invocation**:
+
 ```text
 @critic Review the implementation plan at .agents/planning/PLAN-auth.md
 Validate scope, risks, and alignment with requirements.
@@ -343,11 +376,13 @@ Validate scope, risks, and alignment with requirements.
 **Specialization**: Test strategy, coverage validation, user scenario testing
 
 **Input**:
+
 - Implementation to verify
 - Acceptance criteria
 - Test requirements
 
 **Output**:
+
 - Test strategies in `.agents/qa/NNN-*-test-strategy.md`
 - Test reports in `.agents/qa/NNN-*-test-report.md`
 - Coverage analysis
@@ -357,11 +392,13 @@ Validate scope, risks, and alignment with requirements.
 **Called By**: orchestrator, implementer
 
 **When to Use**:
+
 - Immediately after implementer changes
 - Verifying acceptance criteria
 - Assessing test coverage
 
 **Example Invocation**:
+
 ```text
 @qa Verify the UserAuthentication implementation.
 Run tests, check coverage, and validate user scenarios.
@@ -378,11 +415,13 @@ Run tests, check coverage, and validate user scenarios.
 **Specialization**: Contrarian analysis, assumption testing, alternative viewpoints
 
 **Input**:
+
 - Decision or assumption to challenge
 - Existing analysis or proposal
 - Claims to fact-check
 
 **Output**:
+
 - Evidence-based challenge or validation
 - Alternative perspectives with tradeoffs
 - Uncertainty declarations
@@ -392,11 +431,13 @@ Run tests, check coverage, and validate user scenarios.
 **Called By**: orchestrator, high-level-advisor
 
 **When to Use**:
+
 - Validating important decisions
 - Challenging group consensus
 - Needing devil's advocate perspective
 
 **Example Invocation**:
+
 ```text
 @independent-thinker Challenge the assumption that microservices
 are the right architecture for this project. What alternatives
@@ -416,11 +457,13 @@ should we consider?
 **Specialization**: ADRs, design patterns, system boundaries, impact analysis
 
 **Input**:
+
 - Design questions or proposals
 - Technical change requests
 - Cross-cutting concerns
 
 **Output**:
+
 - ADRs in `.agents/architecture/ADR-NNN-*.md`
 - Design guidance
 - Impact analysis
@@ -430,11 +473,13 @@ should we consider?
 **Called By**: orchestrator, planner, roadmap
 
 **When to Use**:
+
 - Introducing new dependencies
 - Changing system boundaries
 - Making cross-cutting technical decisions
 
 **Example Invocation**:
+
 ```text
 @architect Design the caching layer for user sessions.
 Document the decision in an ADR with tradeoff analysis.
@@ -451,11 +496,13 @@ Document the decision in an ADR with tradeoff analysis.
 **Specialization**: Root cause analysis, API research, requirements gathering, feature request evaluation
 
 **Input**:
+
 - Problem to investigate
 - Feature request to evaluate
 - Research topic
 
 **Output**:
+
 - Analysis reports in `.agents/analysis/`
 - Root cause findings
 - Requirements documentation
@@ -466,12 +513,14 @@ Document the decision in an ADR with tradeoff analysis.
 **Called By**: orchestrator, planner
 
 **When to Use**:
+
 - Investigating bugs (unclear cause)
 - Evaluating feature requests
 - Pre-implementation research
 - Understanding external APIs
 
 **Example Invocation**:
+
 ```text
 @analyst Investigate why API responses are slow for large datasets.
 Identify the bottleneck and recommend solutions.
@@ -488,10 +537,12 @@ Identify the bottleneck and recommend solutions.
 **Specialization**: Product requirements, feature specs, junior-developer-friendly docs
 
 **Input**:
+
 - Feature concept or request
 - Clarifying answers from user
 
 **Output**:
+
 - PRDs in `.agents/planning/PRD-*.md`
 - Explainer documents
 - Technical specifications
@@ -501,11 +552,13 @@ Identify the bottleneck and recommend solutions.
 **Called By**: orchestrator, roadmap
 
 **When to Use**:
+
 - Creating feature specifications
 - Documenting requirements
 - Explaining complex features
 
 **Example Invocation**:
+
 ```text
 @explainer Create a PRD for the user notification system.
 Ask clarifying questions before writing.
@@ -524,11 +577,13 @@ Ask clarifying questions before writing.
 **Specialization**: Ruthless triage, decision-making, priority conflicts
 
 **Input**:
+
 - Strategic decision or conflict
 - Multi-agent disagreements
 - Priority disputes
 
 **Output**:
+
 - Clear verdicts (do X, not options)
 - Priority stack (P0/P1/P2/KILL)
 - Continue/Pivot/Cut recommendations
@@ -538,12 +593,14 @@ Ask clarifying questions before writing.
 **Called By**: orchestrator, roadmap
 
 **When to Use**:
+
 - Strategic impasses
 - Conflicting agent recommendations
 - Hard prioritization decisions
 - Decision paralysis
 
 **Example Invocation**:
+
 ```text
 @high-level-advisor We're stuck between rewriting the auth system
 or patching it. Team is split. Give us a verdict.
@@ -560,11 +617,13 @@ or patching it. Team is split. Give us a verdict.
 **Specialization**: Epic definition, RICE/KANO prioritization, product vision
 
 **Input**:
+
 - Feature vision or idea
 - Business context
 - User needs
 
 **Output**:
+
 - Epic definitions in `.agents/roadmap/`
 - Roadmap updates
 - Priority recommendations
@@ -574,11 +633,13 @@ or patching it. Team is split. Give us a verdict.
 **Called By**: orchestrator, high-level-advisor
 
 **When to Use**:
+
 - Defining new features
 - Prioritizing backlog
 - Validating work alignment with strategy
 
 **Example Invocation**:
+
 ```text
 @roadmap Define an epic for multi-tenant support.
 Prioritize it against existing roadmap items.
@@ -595,11 +656,13 @@ Prioritize it against existing roadmap items.
 **Specialization**: Five Whys, Fishbone analysis, skill extraction
 
 **Input**:
+
 - Task or session to analyze
 - Execution artifacts
 - Feedback
 
 **Output**:
+
 - Retrospective reports in `.agents/retrospective/`
 - Skill recommendations (ADD/UPDATE/TAG/REMOVE)
 - Process improvements
@@ -609,12 +672,14 @@ Prioritize it against existing roadmap items.
 **Called By**: orchestrator
 
 **When to Use**:
+
 - After task completion
 - After failures
 - Session end
 - Milestone completion
 
 **Example Invocation**:
+
 ```text
 @retrospective Analyze the authentication implementation session.
 Extract learnings and recommend skill updates.
@@ -633,10 +698,12 @@ Extract learnings and recommend skill updates.
 **Specialization**: Knowledge retrieval, context persistence, skill citation
 
 **Input**:
+
 - Context retrieval query
 - Milestone summary to store
 
 **Output**:
+
 - Retrieved context
 - Storage confirmation
 - Skill citations
@@ -646,11 +713,13 @@ Extract learnings and recommend skill updates.
 **Called By**: orchestrator (typically at session start/end)
 
 **When to Use**:
+
 - Session start for context retrieval
 - Milestone completion for persistence
 - Complex memory operations
 
 **Example Invocation**:
+
 ```text
 @memory Retrieve context about the authentication feature
 implementation from previous sessions.
@@ -667,10 +736,12 @@ implementation from previous sessions.
 **Specialization**: Skill storage, deduplication, quality gates
 
 **Input**:
+
 - Reflection with pattern, evidence, recommendation
 - Skill update requests
 
 **Output**:
+
 - Skill entity creation/update
 - Deduplication results
 - Quality validation
@@ -680,11 +751,13 @@ implementation from previous sessions.
 **Called By**: orchestrator (after retrospective)
 
 **When to Use**:
+
 - After retrospective analysis
 - Persisting proven strategies
 - Removing harmful patterns
 
 **Example Invocation**:
+
 ```text
 @skillbook Add skill from retrospective:
 ## Pattern: Use /m:1 flag for CI builds
@@ -703,10 +776,12 @@ implementation from previous sessions.
 **Specialization**: Comment triage, reviewer communication, bot handling
 
 **Input**:
+
 - PR number
 - Review comments to address
 
 **Output**:
+
 - Comment map in `.agents/pr-comments/PR-[N]/`
 - Task lists
 - Reply drafts
@@ -716,11 +791,13 @@ implementation from previous sessions.
 **Called By**: User (via /pr-comment-responder command)
 
 **When to Use**:
+
 - Responding to GitHub PR review comments
 - Managing bot reviewer feedback
 - Coordinating comment resolution
 
 **Example Invocation**:
+
 ```text
 @pr-comment-responder Address all review comments on PR #47.
 Triage by priority and implement fixes.
@@ -747,6 +824,7 @@ flowchart TD
 **Agents**: `orchestrator → implementer → qa`
 
 **Use When**:
+
 - Single file changes
 - Obvious bug fixes
 - Typo fixes
@@ -774,6 +852,7 @@ flowchart TD
 **Agents**: `orchestrator → analyst → planner → implementer → qa`
 
 **Use When**:
+
 - Need to investigate first
 - 2-5 files affected
 - Some complexity
@@ -811,6 +890,7 @@ flowchart TD
 **Agents**: `orchestrator → independent-thinker → high-level-advisor → task-generator`
 
 **Use When**:
+
 - "Should we do this?" questions
 - Scope/priority conflicts
 - Alternative approaches
@@ -825,6 +905,7 @@ flowchart TD
 For exploring vague ideas and package requests.
 
 **Trigger Detection**:
+
 - Package/library URLs
 - Vague scope: "we need to add", "what if we"
 - Incomplete feature descriptions
@@ -890,6 +971,7 @@ flowchart TD
 For multi-domain changes (3+ domains: code, architecture, security, ops, quality).
 
 **Trigger Conditions**:
+
 - Feature touches 3+ domains
 - Security-sensitive areas (auth, data, external APIs)
 - Breaking changes (API, schema)
@@ -918,6 +1000,7 @@ flowchart TD
 **Note**: Orchestrator executes each consultation and aggregates (subagents cannot delegate to each other)
 
 **Disagree and Commit Protocol**:
+
 1. All specialists present positions with data
 2. Critic facilitates discussion
 3. High-level-advisor makes final call if needed
@@ -1007,16 +1090,18 @@ flowchart TD
 
 ---
 
-## 5. Memory and Handoff System
+## 5. Memory and Session Context System
 
-### 5.1 Session Handoff
+### 5.1 Cross-Session Context
 
-#### HANDOFF.md Structure
+At session end, persist context to Brain notes:
 
-At session end, create a handoff document:
-
-```markdown
-# Session Handoff
+```python
+mcp__plugin_brain_brain__write_note(
+    title="session-context-[topic]",
+    folder="sessions",
+    content="""
+## Session Context
 
 **Date**: YYYY-MM-DD
 **Session ID**: [unique identifier]
@@ -1037,6 +1122,8 @@ At session end, create a handoff document:
 
 ## Files Modified
 - [path/to/file]: [Change type]
+"""
+)
 ```
 
 #### Session Log Location
@@ -1483,6 +1570,7 @@ Critic MUST review before implementation when:
 - Breaking changes to APIs
 
 **Checklist**:
+
 - [ ] Scope matches requirements
 - [ ] Dependencies identified
 - [ ] Risks documented
@@ -1576,17 +1664,17 @@ When work cannot proceed:
 | Agent | Model | Rationale |
 |-------|-------|-----------|
 | orchestrator | sonnet | Fast routing decisions |
-| implementer | sonnet | Balanced code generation |
-| analyst | sonnet | Research efficiency |
-| architect | sonnet | Design analysis |
-| planner | sonnet | Planning speed |
-| critic | sonnet | Review efficiency |
-| qa | sonnet | Test validation |
-| explainer | sonnet | Documentation |
-| task-generator | sonnet | Task decomposition |
+| implementer | opus | Balanced code generation |
+| analyst | opus | Research efficiency |
+| architect | opus | Design analysis |
+| planner | opus | Planning speed |
+| critic | opus | Review efficiency |
+| qa | opus | Test validation |
+| explainer | opus | Documentation |
+| task-generator | opus | Task decomposition |
 | high-level-advisor | opus | Strategic depth |
 | independent-thinker | opus | Deep analysis |
-| memory | sonnet | Simple operations |
+| memory | opus | Simple operations |
 | retrospective | sonnet | Learning extraction |
 | skillbook | sonnet | Skill management |
 | devops | sonnet | Infrastructure |
@@ -1636,11 +1724,11 @@ argument-hint: [Usage hint for users]
 [Guiding principles]
 ```
 
-2. **Register in AGENT-SYSTEM.md**: Add to Agent Catalog
+1. **Register in AGENT-SYSTEM.md**: Add to Agent Catalog
 
-3. **Update Routing**: Add patterns to routing heuristics
+2. **Update Routing**: Add patterns to routing heuristics
 
-4. **Create Output Directory**: `mkdir .agents/[agent-name]/`
+3. **Create Output Directory**: `mkdir .agents/[agent-name]/`
 
 ### 11.2 Adding Steering Files
 
@@ -1662,7 +1750,7 @@ Glob pattern: `[pattern]`
 [Good and bad examples]
 ```
 
-2. **Register Pattern**: Add to Steering File Locations table
+1. **Register Pattern**: Add to Steering File Locations table
 
 ### 11.3 Adding Workflows
 
@@ -1681,9 +1769,9 @@ Glob pattern: `[pattern]`
 [ASCII or Mermaid diagram]
 ```
 
-2. **Update Workflow Selection Table**
+1. **Update Workflow Selection Table**
 
-3. **Add Routing Rules**: Update orchestrator patterns if needed
+2. **Add Routing Rules**: Update orchestrator patterns if needed
 
 ---
 

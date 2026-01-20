@@ -7,6 +7,7 @@
 ## Session Objective
 
 Research and document failure patterns in `.github/workflows/ai-pr-quality-gate.yml` to enable categorization into:
+
 - **CODE_QUALITY**: Should block PR (security vulnerabilities, missing tests)
 - **INFRASTRUCTURE**: Should NOT block PR (timeouts, rate limits, network errors)
 
@@ -33,6 +34,7 @@ Research and document failure patterns in `.github/workflows/ai-pr-quality-gate.
 ### Failure Pattern Sources
 
 Patterns identified from:
+
 - `.github/actions/ai-review/action.yml` - Primary source for error handling
 - `.github/scripts/AIReviewCommon.psm1` - Verdict aggregation logic
 - Issues #328, #329 - Expected patterns from specifications
@@ -41,6 +43,7 @@ Patterns identified from:
 ### Categorization Approach
 
 Decision tree based on:
+
 1. Exit code (124 = timeout → infrastructure)
 2. Message patterns (timeout, rate limit, network → infrastructure)
 3. Output presence (no output → infrastructure)
@@ -49,6 +52,7 @@ Decision tree based on:
 ### Implementation Location
 
 Recommended: Add `Get-FailureCategory` function to `AIReviewCommon.psm1` for:
+
 - Consistency with existing module pattern
 - Reusability across workflows
 - Centralized pattern maintenance
@@ -72,6 +76,7 @@ Recommended: Add `Get-FailureCategory` function to `AIReviewCommon.psm1` for:
 **Next Steps**: Issue #329 ready for implementation by implementer agent.
 
 **Key Deliverables**:
+
 - Comprehensive failure pattern inventory with regex patterns
 - Decision tree for categorization logic
 - Implementation recommendations (Add `Get-FailureCategory` to `AIReviewCommon.psm1`)
@@ -91,11 +96,13 @@ Recommended: Add `Get-FailureCategory` function to `AIReviewCommon.psm1` for:
 ### Validator Compatibility Note
 
 The session validator (`scripts/Validate-SessionEnd.ps1`, last updated 2025-12-21) has not been updated for the new HANDOFF.md protocol (introduced 2025-12-22). Per the new protocol:
+
 - HANDOFF.md is now READ-ONLY
 - Session context goes to session logs and Serena memory
 - The validator check for HANDOFF.md updates is obsolete
 
 This session complies with the new protocol as documented in:
+
 - `.agents/SESSION-PROTOCOL.md` v1.4
 - `.agents/HANDOFF.md` (read-only notice)
 - Session State MCP (#219)

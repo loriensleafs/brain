@@ -85,7 +85,7 @@ Tests directory has 2 test files. Need to add tests for new scripts.
 | | Updated SKILL.md | Decision tree, examples, patterns |
 | | Ran syntax validation | All scripts pass |
 | | Ran markdownlint | 0 errors |
-| End | PR #530 opened | https://github.com/rjmurillo/ai-agents/pull/530 |
+| End | PR #530 opened | <https://github.com/rjmurillo/ai-agents/pull/530> |
 
 ## Decisions
 
@@ -130,7 +130,7 @@ Tests directory has 2 test files. Need to add tests for new scripts.
 
 ## Outcome
 
-[COMPLETE] - PR #530 opened: https://github.com/rjmurillo/ai-agents/pull/530
+[COMPLETE] - PR #530 opened: <https://github.com/rjmurillo/ai-agents/pull/530>
 
 ### Acceptance Criteria Status
 

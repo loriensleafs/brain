@@ -175,11 +175,13 @@ When returning work for revision, use this format:
 **Detection**: Parse YAML front matter `related:` fields and validate chains.
 
 **Resolution**:
+
 1. Every TASK must link to at least one DESIGN
 2. Every DESIGN must link to at least one REQ
 3. Forward and backward references must match
 
 **Example**:
+
 ```yaml
 # In TASK-001-*.md
 related:

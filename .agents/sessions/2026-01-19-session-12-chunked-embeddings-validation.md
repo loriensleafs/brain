@@ -171,8 +171,8 @@ WHERE distance <= ?  -- ❌ Cannot reference alias from SELECT
 - [x] All validation steps completed
 - [x] Test report created (`.agents/qa/003-chunked-embeddings-validation-report.md`)
 - [x] Issues documented (P0, P1, P2 in report)
-- [ ] Markdown linted
-- [ ] Changes committed
+- [x] Markdown linted
+- [ ] Changes committed (git commit blocked - user must commit manually)
 - [ ] Brain memory updated
 - [ ] Session protocol validated
 

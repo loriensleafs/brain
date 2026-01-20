@@ -77,15 +77,15 @@ Added eyes reactions to 8 new comments:
 
 **P1 - Human request (1 issue, actionable)**:
 
-3. 2641487748: ADR-015 compliance for Enter-ScriptLock/Exit-ScriptLock - FIXED
+1. 2641487748: ADR-015 compliance for Enter-ScriptLock/Exit-ScriptLock - FIXED
 
 **P2 - Copilot (5 issues, documentation improvements - DEFERRED)**:
 
-4. 2641451839: Add (0x1B) to test name - nice-to-have
-5. 2641451871: Add boundary test comment - nice-to-have
-6. 2641451887: Add contents: write explanation - nice-to-have
-7. 2641451904: Add dry-run default comment - nice-to-have
-8. 2641451915: Fix backtick escaping in comment - nice-to-have
+1. 2641451839: Add (0x1B) to test name - nice-to-have
+2. 2641451871: Add boundary test comment - nice-to-have
+3. 2641451887: Add contents: write explanation - nice-to-have
+4. 2641451904: Add dry-run default comment - nice-to-have
+5. 2641451915: Fix backtick escaping in comment - nice-to-have
 
 ### Phase 6: Implementation [COMPLETE]
 
@@ -145,4 +145,3 @@ Commit 2465e58:
 | SHOULD | Update PROJECT-PLAN.md | [N/A] | Not applicable |
 | SHOULD | Invoke retrospective (significant sessions) | [N/A] | Not applicable |
 | SHOULD | Verify clean git status | [x] | Clean |
-

@@ -38,7 +38,7 @@ Before starting work, complete these steps IN ORDER:
 - [ ] Read this file completely
 - [ ] Read `.agents/AGENT-SYSTEM.md` for agent catalog
 - [ ] Read `.agents/planning/enhancement-PROJECT-PLAN.md` for current project
-- [ ] Check `.agents/HANDOFF.md` for previous session notes
+- [ ] Check `.agents/Brain notes` for previous session notes
 - [ ] Identify your assigned phase and tasks
 - [ ] Create session log: `.agents/sessions/YYYY-MM-DD-session-NN.md`
 
@@ -51,7 +51,7 @@ Before starting work, complete these steps IN ORDER:
 | `AGENT-INSTRUCTIONS.md` | How to execute work (this file) | Rarely - only if process changes |
 | `AGENT-SYSTEM.md` | Agent catalog and workflows | When agents added/modified |
 | `planning/enhancement-PROJECT-PLAN.md` | Master project plan | After task completion |
-| `HANDOFF.md` | Session-to-session context | At END of every session |
+| `Brain notes` | Session-to-session context | At END of every session |
 | `sessions/*.md` | Detailed session logs | Throughout session |
 | `governance/*.md` | Standards and protocols | When governance changes |
 | `specs/*/*.md` | Requirements, designs, tasks | When specs created/updated |
@@ -74,7 +74,7 @@ Use the **table format** (not bullet lists) for validation to pass:
 |-----|------|--------|----------|
 | MUST | Initialize Serena: `mcp__plugin_brain_brain__build_context` | [x] | Tool output present |
 | MUST | Initialize Serena: `mcp__plugin_brain_brain__build_context` | [x] | Tool output present |
-| MUST | Read `.agents/HANDOFF.md` | [x] | Content in context |
+| MUST | Read `.agents/Brain notes` | [x] | Content in context |
 | MUST | Create this session log | [x] | This file exists |
 | MUST | List skill scripts in `.claude/skills/github/scripts/` | [x] | Output documented below |
 | MUST | Read skill-usage-mandatory memory | [x] | Content in context |
@@ -128,7 +128,7 @@ See [SESSION-PROTOCOL.md](SESSION-PROTOCOL.md) for full requirements and validat
 | MUST | Run `npx markdownlint-cli2 --fix "**/*.md"` | [x] | Lint clean |
 | MUST | Route to qa agent (feature implementation) | [x] | QA report path or SKIPPED: docs-only |
 | MUST | Commit all changes (including `.serena/memories/`) | [x] | Commit SHA: abc1234 |
-| MUST NOT | Update `.agents/HANDOFF.md` | [x] | HANDOFF.md unchanged |
+| MUST NOT | Update `.agents/Brain notes` | [x] | Brain notes unchanged |
 ```
 
 See [SESSION-PROTOCOL.md](SESSION-PROTOCOL.md) for full requirements and validation rules.
@@ -156,20 +156,20 @@ grep -r "[agent-name]" src/claude/*.md
 grep -r "[agent-name]" .agents/*.md
 ```
 
-2. **Check Workflow Dependencies**
+1. **Check Workflow Dependencies**
 
 ```bash
 # Find workflows that include this agent
 grep -r "→.*[agent-name]\|[agent-name].*→" .agents/
 ```
 
-3. **Verify Routing Consistency**
+1. **Verify Routing Consistency**
 
 - Check orchestrator.md routing table
 - Verify agent is listed in AGENT-SYSTEM.md
 - Confirm delegate relationships are bidirectional
 
-4. **Create Impact Analysis Section**
+1. **Create Impact Analysis Section**
 
 ```markdown
 ## Impact Analysis - [Agent/Feature Name]
@@ -180,7 +180,7 @@ grep -r "→.*[agent-name]\|[agent-name].*→" .agents/
 
 ### Affected Documentation
 - [ ] `AGENT-SYSTEM.md` - Update catalog entry
-- [ ] `HANDOFF.md` - Note capability change
+- [ ] `Brain notes` - Note capability change
 
 ### Workflow Changes
 - [ ] [Workflow name] - [Description of change]
@@ -269,13 +269,16 @@ Refs: S-006
 ```markdown
 <!-- ❌ WRONG - triggers MD040 -->
 ```
+
 some code
+
 ```
 
 <!-- ✅ CORRECT -->
 ```text
 some code
 ```
+
 ```
 
 **Common language identifiers:**
@@ -318,7 +321,7 @@ Create at session start: `.agents/sessions/YYYY-MM-DD-session-NN.md`
 
 - [ ] Read AGENT-INSTRUCTIONS.md
 - [ ] Read AGENT-SYSTEM.md
-- [ ] Read HANDOFF.md
+- [ ] Read Brain notes
 - [ ] Identified tasks: [Task IDs]
 
 ## Tasks Completed
@@ -368,11 +371,12 @@ git status
 - [Important context]
 - [Gotchas discovered]
 - [Recommendations]
+
 ```
 
 ---
 
-## HANDOFF.md Template
+## Brain notes Template
 
 Update at session end:
 
@@ -453,8 +457,9 @@ If you need context, read these files in order:
 1. `.agents/AGENT-INSTRUCTIONS.md` - Process instructions (this file)
 2. `.agents/AGENT-SYSTEM.md` - Agent catalog and workflows
 3. `.agents/planning/enhancement-PROJECT-PLAN.md` - Master project plan
-4. `.agents/HANDOFF.md` - Previous session context
+4. `.agents/Brain notes` - Previous session context
 5. `.agents/sessions/YYYY-MM-DD-session-NN.md` - Last session details
+
 ```
 
 ---
@@ -511,6 +516,7 @@ For quality-critical outputs:
 | 3 | [any] | Regenerate if score < 70% | Improved artifact |
 
 **Loop termination:**
+
 - Score >= 70%: Accept
 - Score < 70% AND iterations < 3: Regenerate
 - Iterations >= 3: Escalate to user
@@ -540,6 +546,7 @@ analyst → independent-thinker → high-level-advisor → architect
 ```
 
 The critic will:
+
 - Identify gaps in the plan
 - Challenge assumptions
 - Suggest improvements
@@ -667,6 +674,7 @@ After discovering a reusable pattern:
 ### YAML Front Matter Schema
 
 **Requirements:**
+
 ```yaml
 ---
 type: requirement
@@ -681,6 +689,7 @@ updated: YYYY-MM-DD
 ```
 
 **Designs:**
+
 ```yaml
 ---
 type: design
@@ -694,6 +703,7 @@ updated: YYYY-MM-DD
 ```
 
 **Tasks:**
+
 ```yaml
 ---
 type: task
@@ -757,7 +767,7 @@ Before delegating to an agent:
 - ✅ Update documentation as you go
 - ✅ Check off tasks immediately when complete
 - ✅ Run markdown linting frequently
-- ✅ Update HANDOFF.md before session ends
+- ✅ Update Brain notes before session ends
 - ✅ **Invoke critic agent** before major implementations
 - ✅ **Invoke qa agent** after implementations
 - ✅ **Run retrospective agent** after significant sessions
@@ -769,7 +779,7 @@ Before delegating to an agent:
 - ❌ Skip the pre-flight checklist
 - ❌ Make large commits with multiple unrelated changes
 - ❌ Forget to update PROJECT-PLAN.md checkboxes
-- ❌ Leave session without updating HANDOFF.md
+- ❌ Leave session without updating Brain notes
 - ❌ Assume the next session has context you didn't document
 - ❌ Skip verification steps
 - ❌ **Skip critic validation** - empty critique/ directory is a warning sign
@@ -821,4 +831,3 @@ As the project progresses, document lessons learned here following this format:
 **Fix Applied**:
 - [What was done to resolve]
 ```
-

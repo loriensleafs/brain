@@ -16,6 +16,7 @@
 ## Objective
 
 Analyze current AI reviewer bot usage and recommend consolidation strategy based on:
+
 - Signal quality (actionable vs false positive rate)
 - Unique value provided by each bot
 - Configuration/maintenance overhead

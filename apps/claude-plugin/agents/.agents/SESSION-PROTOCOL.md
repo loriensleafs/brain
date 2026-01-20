@@ -82,7 +82,7 @@ The agent MUST read context documents before starting work. This is a **blocking
 
 **Requirements:**
 
-1. The agent MUST read `.agents/HANDOFF.md` for previous session context (READ-ONLY reference)
+1. The agent MUST read `.agents/Brain notes` for previous session context (READ-ONLY reference)
 2. The agent MUST read the `memory-index` Serena memory to identify task-relevant memories
 3. The agent MUST read memories from `memory-index` that match the task keywords before modifying code or files
 4. The agent SHOULD read `.agents/planning/enhancement-PROJECT-PLAN.md` if working on enhancement project
@@ -104,11 +104,11 @@ The `memory-index` maps task keywords to essential memories. Example workflow:
 **Verification:**
 
 - File contents appear in session context
-- Agent references prior decisions from HANDOFF.md
-- Agent does not ask questions answered in HANDOFF.md
+- Agent references prior decisions from Brain notes
+- Agent does not ask questions answered in Brain notes
 - Session log Protocol Compliance section lists memories read (in Evidence column)
 
-**Rationale:** Agents are expert amnesiacs. Without reading HANDOFF.md, they will repeat completed work or contradict prior decisions. Note: HANDOFF.md is a read-only reference; do not modify it during sessions. Without loading relevant memories, agents repeat solved problems or miss established patterns.
+**Rationale:** Agents are expert amnesiacs. Without reading Brain notes, they will repeat completed work or contradict prior decisions. Note: Brain notes is a read-only reference; do not modify it during sessions. Without loading relevant memories, agents repeat solved problems or miss established patterns.
 
 ### Phase 3: Import Shared Memories (RECOMMENDED)
 
@@ -148,9 +148,11 @@ The agent MUST validate skill availability before starting work. This is a **blo
    ```
 
 3. The agent MUST read the usage-mandatory memory using `mcp__plugin_brain_brain__read_note` with `memory_file_name="usage-mandatory"`
-  - If the serena MCP is not available, then the agent MUST read `.serena/memories/usage-mandatory.md`
-4. The agent MUST read `.agents/governance/PROJECT-CONSTRAINTS.md`
-5. The agent MUST document available skills in session log under "Skill Inventory"
+
+- If the serena MCP is not available, then the agent MUST read `.serena/memories/usage-mandatory.md`
+
+1. The agent MUST read `.agents/governance/PROJECT-CONSTRAINTS.md`
+2. The agent MUST document available skills in session log under "Skill Inventory"
 
 **Verification:**
 
@@ -217,7 +219,7 @@ Copy this checklist to each session log and verify completion:
 |-----|------|--------|----------|
 | MUST | Initialize Serena: `mcp__plugin_brain_brain__build_context` | [ ] | Tool output present |
 | MUST | Initialize Serena: `mcp__plugin_brain_brain__build_context` | [ ] | Tool output present |
-| MUST | Read `.agents/HANDOFF.md` | [ ] | Content in context |
+| MUST | Read `.agents/Brain notes` | [ ] | Content in context |
 | MUST | Create this session log | [ ] | This file exists |
 | MUST | List skill scripts in `.claude/skills/github/scripts/` | [ ] | Output documented below |
 | MUST | Read usage-mandatory memory | [ ] | Content in context |
@@ -307,7 +309,7 @@ The agent MUST update documentation before ending.
 
 **Requirements:**
 
-1. The agent MUST NOT update `.agents/HANDOFF.md` directly. Session context MUST go to:
+1. The agent MUST NOT update `.agents/Brain notes` directly. Session context MUST go to:
    - Your session log at `.agents/sessions/YYYY-MM-DD-session-NN.md`
    - Serena memory for cross-session context (using `mcp__plugin_brain_brain__write_note` or equivalent)
    - `.agents/handoffs/{branch}/{session}.md` for branch-specific handoff (if on feature branch)
@@ -317,14 +319,14 @@ The agent MUST update documentation before ending.
    - Challenges encountered and resolutions
    - Link reference for next session handoff
 3. The agent SHOULD update PROJECT-PLAN.md if tasks were completed
-4. The agent MAY read `.agents/HANDOFF.md` for historical context (read-only reference)
+4. The agent MAY read `.agents/Brain notes` for historical context (read-only reference)
 
 **Verification:**
 
 - Session log contains complete information
 - Serena memory updated with relevant context
 - PROJECT-PLAN.md checkboxes updated if applicable
-- HANDOFF.md is NOT modified (unless explicitly approved by architect)
+- Brain notes is NOT modified (unless explicitly approved by architect)
 
 ### Phase 2: Quality Checks (REQUIRED)
 
@@ -478,7 +480,7 @@ Copy this checklist to each session log and verify completion:
 | MUST | Run markdown lint | [ ] | Lint output clean |
 | MUST | Route to qa agent (feature implementation) | [ ] | QA report: `.agents/qa/[report].md` OR `SKIPPED: investigation-only` |
 | MUST | Commit all changes (including .serena/memories) | [ ] | Commit SHA: _______ |
-| MUST NOT | Update `.agents/HANDOFF.md` directly | [ ] | HANDOFF.md unchanged |
+| MUST NOT | Update `.agents/Brain notes` directly | [ ] | Brain notes unchanged |
 | SHOULD | Update PROJECT-PLAN.md | [ ] | Tasks checked off |
 | SHOULD | Invoke retrospective (significant sessions) | [ ] | Doc: _______ |
 | SHOULD | Verify clean git status | [ ] | `git status` output |
@@ -513,7 +515,7 @@ Create at: `.agents/sessions/YYYY-MM-DD-session-NN.md`
 |-----|------|--------|----------|
 | MUST | Initialize Serena: `mcp__plugin_brain_brain__build_context` | [ ] | Tool output present |
 | MUST | Initialize Serena: `mcp__plugin_brain_brain__build_context` | [ ] | Tool output present |
-| MUST | Read `.agents/HANDOFF.md` | [ ] | Content in context |
+| MUST | Read `.agents/Brain notes` | [ ] | Content in context |
 | MUST | Create this session log | [ ] | This file exists |
 | MUST | List skill scripts in `.claude/skills/github/scripts/` | [ ] | Output documented below |
 | MUST | Read usage-mandatory memory | [ ] | Content in context |
@@ -579,7 +581,7 @@ All MUST requirements above are marked complete.
 | MUST | Run markdown lint | [ ] | Output below |
 | MUST | Route to qa agent (feature implementation) | [ ] | QA report: `.agents/qa/[report].md` OR `SKIPPED: investigation-only` |
 | MUST | Commit all changes (including .serena/memories) | [ ] | Commit SHA: _______ |
-| MUST NOT | Update `.agents/HANDOFF.md` directly | [ ] | HANDOFF.md unchanged |
+| MUST NOT | Update `.agents/Brain notes` directly | [ ] | Brain notes unchanged |
 | SHOULD | Update PROJECT-PLAN.md | [ ] | Tasks checked off |
 | SHOULD | Invoke retrospective (significant sessions) | [ ] | Doc: _______ |
 | SHOULD | Verify clean git status | [ ] | Output below |
@@ -679,7 +681,7 @@ Example:
 ```markdown
 ### Protocol Violation Detected
 
-**Requirement**: MUST read `.agents/HANDOFF.md`
+**Requirement**: MUST read `.agents/Brain notes`
 **Status**: Skipped
 **Recovery**: Reading now before continuing work
 **Timestamp**: [When detected]
@@ -712,7 +714,7 @@ The `Validate-SessionProtocol.ps1` script checks session protocol compliance:
 | Protocol Compliance section | Contains start/end checklists | Critical |
 | MUST items checked | All MUST requirements marked complete | Critical |
 | QA validation ran | QA report exists in `.agents/qa/` (feature sessions) | Critical |
-| HANDOFF.md updated | Modified within session timeframe | Warning |
+| Brain notes updated | Modified within session timeframe | Warning |
 | Git commit exists | Commit with matching date | Warning |
 | Lint ran | Evidence of markdownlint execution | Warning |
 
@@ -756,5 +758,5 @@ These documents reference this protocol but MUST NOT duplicate it:
 - [AGENTS.md](../AGENTS.md) - Full agent catalog and workflows
 - [CLAUDE.md](../CLAUDE.md) - Claude Code entry point
 - [AGENT-INSTRUCTIONS.md](./AGENT-INSTRUCTIONS.md) - Task execution protocol
-- [HANDOFF.md](./HANDOFF.md) - Session context
+- [Brain notes](./Brain notes) - Session context
 - [PROTOCOL-ANTIPATTERNS.md](./governance/PROTOCOL-ANTIPATTERNS.md) - Protocol design antipatterns and replacement patterns

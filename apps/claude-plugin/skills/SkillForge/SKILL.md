@@ -65,6 +65,7 @@ TypeError: Cannot read property 'map' of undefined
 ## Triggers
 
 ### Creation Triggers
+
 - `SkillForge: {goal}` - Full autonomous skill creation
 - `create skill` - Natural language activation
 - `design skill for {purpose}` - Purpose-first creation
@@ -72,6 +73,7 @@ TypeError: Cannot read property 'map' of undefined
 - `skillforge --plan-only` - Generate specification without execution
 
 ### Routing Triggers (NEW in v4.0)
+
 - `{any input}` - Analyzes and routes automatically
 - `do I have a skill for` - Searches existing skills
 - `which skill` / `what skill` - Recommends matching skills
@@ -133,6 +135,7 @@ Production-Ready Agentic Skill
 ```
 
 **Key principles:**
+
 - **Phase 0 prevents duplicates** - Always checks existing skills first
 - Evolution/timelessness is the core lens (score ≥ 7 required)
 - Every decision includes WHY
@@ -321,6 +324,7 @@ Scripts enable skills to be **agentic** - capable of autonomous operation with s
 | **Calculation** | Compute metrics/scores | Scoring or analysis |
 
 **Script Requirements:**
+
 - Python 3.x with standard library only (graceful fallbacks for extras)
 - `Result` dataclass pattern for structured returns
 - Exit codes: 0=success, 1=failure, 10=validation failure, 11=verification failure

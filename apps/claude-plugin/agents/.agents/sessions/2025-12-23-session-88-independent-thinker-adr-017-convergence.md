@@ -46,6 +46,7 @@ Reviewing `.agents/architecture/ADR-017-model-routing-low-false-pass.md`:
 
 **Change**: Added explicit scope boundary:
 > "This ADR addresses **false PASS due to evidence gaps and model fit**. It does NOT address:
+>
 > - Infrastructure failures causing cascading verdicts (see Issue #164: Failure Categorization)"
 
 **Assessment**: This directly addresses my blind spot. The ADR now explicitly acknowledges the infrastructure noise problem and scopes it out of this ADR's responsibility. This is intellectually honest—it doesn't pretend to solve all false PASS problems, only the evidence/model-fit subset. This separates concerns correctly. ✅
@@ -66,6 +67,7 @@ Reviewing `.agents/architecture/ADR-017-model-routing-low-false-pass.md`:
 **My Concern**: Fallback policy undefined; what happens if primary models unavailable?
 
 **Change**: Added explicit fallback chains:
+>
 > - `gpt-5-mini` unavailable → `claude-haiku-4.5`
 > - `gpt-5.1-codex-max` unavailable → `gpt-5.1-codex` → `claude-sonnet-4.5`
 > - `claude-opus-4.5` unavailable → `claude-sonnet-4.5` (with WARN that escalation is degraded)
@@ -96,12 +98,14 @@ Reviewing `.agents/architecture/ADR-017-model-routing-low-false-pass.md`:
 **Change**: Added Section 6 with explicit boundaries:
 
 **CAN do on summary-only**:
+
 - File pattern analysis
 - Metadata checks (PR title, labels)
 - Description completeness
 - Risk flagging (large scope, sensitive paths)
 
 **CANNOT do**:
+
 - Line-level code review
 - Specific bug detection
 - Test coverage verification
@@ -117,6 +121,7 @@ Reviewing `.agents/architecture/ADR-017-model-routing-low-false-pass.md`:
 
 **Change**: Added:
 > "Guardrail implementation:
+>
 > - Location: Add validation step at start of each ai-*.yml workflow
 > - Error message: ERROR: copilot-model not specified. See ADR-017...
 > - Implementation: Before this ADR moves to Accepted, a PR must exist..."
@@ -137,6 +142,7 @@ Reviewing `.agents/architecture/ADR-017-model-routing-low-false-pass.md`:
 **My Concern**: Cost trade-off understated; escalation to Opus is expensive.
 
 **Change**: Added explicit cost consideration:
+
 - Negative Consequences section now includes: "Higher cost and longer runs in cases that escalate to Opus"
 - Prerequisites include cost estimation (P1, lines 224-230)
 - Success metrics include cost bound: "Cost increase < 25% vs baseline" (line 342)
@@ -148,6 +154,7 @@ Reviewing `.agents/architecture/ADR-017-model-routing-low-false-pass.md`:
 **My Concern**: Evidence sufficiency rules may just shift false PASS to WARN fatigue and developer frustration.
 
 **Change**: Multiple safeguards:
+
 1. Risk review contract defines what agents CAN accomplish (so WARN is justified by actual work, not inability)
 2. Evidence improvement recommendations (lines 270-274): "Instead of stat-only, include a bounded patch sample"
 3. Developer workflow note (line 286): "Are developers ignoring WARN on summary-only PRs?" is part of post-deployment audit
@@ -182,22 +189,27 @@ Reviewing `.agents/architecture/ADR-017-model-routing-low-false-pass.md`:
 ### Assessment of Disagreement Points
 
 **Point 1: "False PASS may not be bottleneck"**
+
 - ✅ **Resolved**: ADR now acknowledges infrastructure noise (Issue #164) as separate concern. This ADR solves evidence sufficiency specifically. Both problems may exist; they have different solutions.
 - My confidence: The scope clarification is intellectually honest. I'm satisfied.
 
 **Point 2: "Evidence sufficiency rules may create WARN fatigue"**
+
 - ✅ **Addressed**: Risk review contract defines what agents CAN do in summary mode (file patterns, metadata, risk flagging). WARN will be grounded in actual work, not inability.
 - My confidence: This won't eliminate WARN fatigue risk, but it's more honest than assuming PASS on insufficient evidence.
 
 **Point 3: "Model claims are heuristic"**
+
 - ✅ **Acknowledged**: Added statement: "Model quality claims...are heuristic. Quarterly review recommended."
 - My confidence: This separates "we think these models are better" (heuristic) from "evidence-sufficiency rules are sound" (proven). The confidence scoring threshold (70%) will provide empirical feedback.
 
 **Point 4: "Cost trade-off understated"**
+
 - ✅ **Quantified**: Cost increase target <25%, 20% escalation rate threshold
 - My confidence: Numbers are present, though calibration will happen via audit.
 
 **Point 5: "Summary-mode PRs may be rare"**
+
 - ✅ **Testable**: Baseline audit will measure this. If rare, policy complexity is unjustified and can be simplified.
 - My confidence: The policy is defensible either way—if rare, we implement conservatively at low cost; if common, policy is justified.
 

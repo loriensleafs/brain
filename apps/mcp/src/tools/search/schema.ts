@@ -29,9 +29,9 @@ export const SearchArgsSchema = z.object({
     .default(0.7)
     .describe("Similarity threshold for semantic search (0-1)"),
   mode: z
-    .enum(["auto", "semantic", "keyword"])
+    .enum(["auto", "semantic", "keyword", "hybrid"])
     .default("auto")
-    .describe("Search mode: auto, semantic, or keyword"),
+    .describe("Search mode: auto, semantic, keyword, or hybrid"),
   depth: z
     .number()
     .int()
@@ -67,6 +67,7 @@ export const toolDefinition: Tool = {
 - **auto** (default): Tries semantic search first, falls back to keyword if no embeddings or no results
 - **semantic**: Vector similarity search only (requires embeddings)
 - **keyword**: Text-based search via basic-memory
+- **hybrid**: Combines semantic and keyword results with score fusion
 
 ## Parameters
 
@@ -108,7 +109,7 @@ List of results with:
       },
       mode: {
         type: "string",
-        enum: ["auto", "semantic", "keyword"],
+        enum: ["auto", "semantic", "keyword", "hybrid"],
         description: "Search mode (default: auto)",
       },
       depth: {

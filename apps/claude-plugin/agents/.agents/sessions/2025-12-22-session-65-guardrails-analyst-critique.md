@@ -26,6 +26,7 @@
 **Objective**: Conduct critical evidence-based analysis of Local Guardrails specification and plan.
 
 **Focus Areas**:
+
 1. Evidence validity (n=8 sample size)
 2. Violation category accuracy (60%/40%/10%)
 3. False positive risks
@@ -51,11 +52,13 @@
 ### Evidence Quality Concerns
 
 **Sample Size (n=8)**: INSUFFICIENT
+
 - Spec claims 60% Session Protocol failures based on 8 PRs
 - Only 3 PRs show CRITICAL_FAIL (37.5%, not 60%)
 - No statistical significance testing performed
 
 **Cherry-Picked Data**: LIKELY
+
 - Spec lists PR #206 (PASS) and #141 (PASS) in sample
 - Including passing PRs inflates denominator without adding violations
 - Actual failure rate among failing PRs: 3/4 = 75%
@@ -63,6 +66,7 @@
 ### Alternative Solution Exists
 
 **Issue #230 already proposed same solution**:
+
 - Pre-commit hooks for session log validation
 - Workflow validation for protocol compliance
 - Unattended execution protocol

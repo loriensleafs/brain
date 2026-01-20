@@ -129,7 +129,7 @@ When orchestrator routes back to security after implementation:
 - [ ] Test coverage includes security test cases
 ```
 
-3. **PIV Report Template**
+1. **PIV Report Template**
 
 Save to: `.agents/security/PIV-[feature].md`
 

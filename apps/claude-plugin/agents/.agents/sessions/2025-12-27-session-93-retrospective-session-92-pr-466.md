@@ -36,6 +36,7 @@ PR #466 is the continuation work involving rebase and ADR number collision resol
 **Step 1: Observe (Facts Only)**
 
 Tool calls and outputs:
+
 - Session 92 (2025-12-24): ADR renumbering in PR #310 branch
   - Files renamed: ADR-017→019, ADR-018→020 (10 files total)
   - Commit: 7522c2d (not in main, in copilot/sub-pr-310 branch)
@@ -55,33 +56,40 @@ Tool calls and outputs:
 **Step 2: Respond (Reactions)**
 
 Pivots:
+
 - User pointed out skill auto-trigger fix was a "band-aid" not root solution
 - Discovered framework limitation: skills are pull-based, not push-based
 - Had to rebase PR #466 and resolve ADR number collision
 
 Retries:
+
 - None - both sessions executed cleanly
 
 Escalations:
+
 - User clarification on framework limitations (aspirational vs actual behavior)
 
 Blocks:
+
 - None - all work completed successfully
 
 **Step 3: Analyze (Interpretations)**
 
 Patterns:
+
 1. **Template-First Pattern**: Session 92 (2025-12-24) notes mention updating templates then regenerating
 2. **ADR Number Collision**: Happened during rebase when two branches created same ADR number independently
 3. **Skill Framework Gap**: Documentation said "triggers on X" but no automatic invocation exists
 4. **BLOCKING Gate Solution**: Added explicit enforcement in agent prompts to compensate for framework limitation
 
 Anomalies:
+
 - Session 92 had TWO distinct execution contexts (different dates, different branches)
 - ADR numbering collision occurred despite sequential numbering scheme
 - User explicitly called out that the fix is a workaround, not fundamental solution
 
 Correlations:
+
 - Template updates require regeneration for copilot-cli/vs-code-agents but NOT Claude variants
 - BLOCKING gate pattern reused from session-end validation protocol
 - ADR collision happened because branches diverged before ADR-021 was created in main
@@ -89,16 +97,19 @@ Correlations:
 **Step 4: Apply (Actions)**
 
 Skills to update:
+
 - ADR number collision prevention (check before creating)
 - Template-first pattern (update templates before regeneration)
 - Skill framework limitation awareness (pull vs push)
 - BLOCKING gate enforcement pattern
 
 Process changes:
+
 - Add ADR number check to architect agent pre-creation protocol
 - Document framework limitations clearly in skill documentation
 
 Context to preserve:
+
 - User feedback that auto-trigger fix is a workaround
 - Framework constraint: skills cannot auto-invoke based on file operations
 
@@ -121,11 +132,13 @@ Context to preserve:
 | T+22 | - | Commit 7a012c6 | Success | Low |
 
 **Timeline Patterns:**
+
 - Three distinct work streams (renumber, auto-trigger, rebase)
 - Clean execution in all three (no failures)
 - User intervention only for framework limitation clarification
 
 **Energy Shifts:**
+
 - High energy during implementation phases
 - Medium energy during problem discovery
 - Low energy during commit/completion
@@ -135,20 +148,24 @@ Context to preserve:
 #### Outcome Classification
 
 **Mad (Blocked/Failed):**
+
 - None - all work completed successfully
 
 **Sad (Suboptimal):**
+
 1. **ADR number collision during rebase** - Could have been prevented with pre-check
 2. **Skill framework limitation** - Auto-trigger requires manual BLOCKING gate workaround
 3. **Template confusion** - Initial assumption that Claude variants were auto-generated (they're not)
 
 **Glad (Success):**
+
 1. **BLOCKING gate solution** - Clean enforcement pattern borrowed from session-end validation
 2. **ADR renumbering** - Both instances executed cleanly with full cross-reference updates
 3. **User feedback loop** - User clarified framework limitation, preventing future misunderstanding
 4. **Analysis document** - Comprehensive analysis at `.agents/analysis/adr-review-trigger-fix.md` provided clear implementation plan
 
 **Distribution:**
+
 - Mad: 0 events (0%)
 - Sad: 3 events (25%)
 - Glad: 4 events (75%)
@@ -225,27 +242,32 @@ Context to preserve:
 #### Learning Matrix
 
 **:) Continue (What worked):**
+
 - BLOCKING gate pattern from session-end validation reused successfully for adr-review
 - Comprehensive analysis document guided implementation cleanly
 - User feedback clarified framework limitations early
 - ADR renumbering executed cleanly with full cross-reference updates
 
 **:( Change (What didn't work):**
+
 - No pre-creation ADR number check (caused collision during rebase)
 - Aspirational skill documentation (claimed auto-trigger without enforcement)
 - Assumption that Claude variants are auto-generated from templates (they're not)
 
 **Idea (New approaches):**
+
 - Atomic ADR numbering via git hook or validation script
 - Framework limitation documentation section in each skill
 - Pre-creation checklist for architect agent (check existing ADRs, check main branch)
 
 **Invest (Long-term improvements):**
+
 - True push-based skill invocation (framework change, out of scope)
 - Automated ADR number assignment (prevents manual collision)
 - Template-variant sync verification (detect drift between templates and Claude variants)
 
 **Priority Items:**
+
 1. **Continue:** BLOCKING gate enforcement pattern (proven reliable)
 2. **Change:** Add pre-creation ADR number check to architect workflow
 3. **Idea:** Document framework limitations in SKILL.md files
@@ -258,6 +280,7 @@ Context to preserve:
 #### Outcome: SUCCESS
 
 All work completed successfully across three execution contexts:
+
 1. ADR renumbering (2025-12-24)
 2. ADR review auto-trigger fix (2025-12-27)
 3. PR #466 rebase collision resolution
@@ -460,6 +483,7 @@ After creating ADR, verify uniqueness:
 git ls-files --others --exclude-standard | grep "ADR-$NUMBER" # Check local
 git fetch origin main && git diff main --name-only | grep "ADR-$NUMBER" # Check main
 ```
+
 ```
 
 ---
@@ -525,9 +549,11 @@ Every SKILL.md should include:
 ## Verification
 
 After writing SKILL.md:
+
 - Does "Trigger" language match actual invocation mechanism?
 - Is enforcement documented with detection patterns?
 - Are framework limitations explicitly stated?
+
 ```
 
 ---
@@ -564,6 +590,7 @@ git status src/claude/*.md  # Should show modifications if template changes appl
 **Anti-Pattern:** Update template, run generator, commit without verifying diffs.
 
 **Evidence:** Session 92 template-first pattern + architecture-template-variant-maintenance memory
+
 ```
 
 ---
@@ -670,12 +697,14 @@ BLOCKING gate pattern successfully reused for adr-review skill enforcement:
 #### +/Delta
 
 **+ Keep:**
+
 - Structured retrospective framework (4-Step Debrief, Five Whys, SMART validation) produced concrete, actionable learnings
 - Atomicity scoring prevented vague skills from entering skillbook
 - Deduplication check ensured novelty before persistence
 - SMART validation caught potential issues early (all 3 skills passed on first attempt)
 
 **Delta Change:**
+
 - Retrospective took 60+ minutes (could optimize for routine learnings)
 - Phase 0 data gathering required manual commit archaeology (could improve session log quality to reduce this)
 - SMART validation somewhat redundant given atomicity scoring (consider consolidating)
@@ -687,6 +716,7 @@ BLOCKING gate pattern successfully reused for adr-review skill enforcement:
 **Score:** 3/4 (High return)
 
 **Benefits Received:**
+
 1. Identified ADR number collision prevention gap (affects all future ADRs)
 2. Discovered framework limitation documentation need (improves skill clarity)
 3. Validated BLOCKING gate pattern reusability (can apply to other mandatory workflows)
@@ -703,17 +733,20 @@ BLOCKING gate pattern successfully reused for adr-review skill enforcement:
 #### Helped, Hindered, Hypothesis
 
 **Helped:**
+
 - Session 92 logs provided clear execution context
 - Git commit messages had detailed rationale
 - User feedback explicitly stated framework limitation
 - Existing memories (architecture-template-variant-maintenance, protocol-blocking-gates) provided connection points
 
 **Hindered:**
+
 - Session 92 had two distinct contexts (different dates/branches) requiring disambiguation
 - Some commits not in main branch (had to search PR branch specifically)
 - cloudmcp-manager memory search tool unavailable (had to use read_memory directly)
 
 **Hypothesis:**
+
 - Add "Key Learnings" section to session logs for future retrospectives (reduces data gathering time)
 - Tag commits with learning indicators (e.g., "learning: ADR collision prevention")
 - Create retrospective template for routine sessions (optimize for <30 minute completion)
@@ -779,16 +812,19 @@ BLOCKING gate pattern successfully reused for adr-review skill enforcement:
 **Retrospective Complete:** Session 92 and PR #466 analysis
 
 **Skills Created:**
+
 1. Skill-Architecture-016: ADR Number Check (92% atomicity)
 2. Skill-Documentation-008: Framework Constraints (88% atomicity)
 
 **Memories Updated:**
+
 1. architecture-template-variant-maintenance (verification step)
 2. protocol-blocking-gates (adr-review validation)
 
 **Commit:** a89c324
 
 **Next Actions:**
+
 - Architect agent: Integrate ADR number check into pre-creation workflow
 - Skill authors: Add Framework Limitations sections to existing SKILL.md files
 

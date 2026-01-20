@@ -1,10 +1,15 @@
 /**
  * Unit tests for batchGenerate function.
  * Tests batch processing, failure handling, and progress callbacks.
+ *
+ * Note: Since generateEmbedding now has retry logic with exponential backoff,
+ * tests that simulate failures need to use 4xx errors (non-retryable) or
+ * consistently fail all retry attempts for 5xx errors.
  */
 
-import { describe, test, expect, mock, afterEach } from "bun:test";
+import { describe, test, expect, mock, afterEach, beforeEach } from "bun:test";
 import { batchGenerate } from "../batchGenerate";
+import { resetOllamaClient } from "../generateEmbedding";
 
 describe("batchGenerate", () => {
   const originalFetch = globalThis.fetch;
@@ -20,18 +25,20 @@ describe("batchGenerate", () => {
     ) as unknown as typeof fetch;
   };
 
-  // Helper to create mock fetch that fails on specific indices
+  // Helper to create mock fetch that fails on specific text indices (not call indices)
+  // Uses 400 Bad Request (non-retryable) to ensure immediate failure
   const mockFetchWithFailures = (
     embedding: number[],
-    failIndices: Set<number>
+    failTextIndices: Set<number>
   ) => {
-    let callCount = 0;
+    // Track which text index we're processing based on successful calls
+    let textIndex = 0;
     globalThis.fetch = mock(() => {
-      const currentCall = callCount++;
-      if (failIndices.has(currentCall)) {
+      const currentTextIndex = textIndex++;
+      if (failTextIndices.has(currentTextIndex)) {
         return Promise.resolve({
           ok: false,
-          status: 503,
+          status: 400, // Use 400 (client error) which is non-retryable
         } as Response);
       }
       return Promise.resolve({
@@ -42,8 +49,14 @@ describe("batchGenerate", () => {
     }) as unknown as typeof fetch;
   };
 
+  beforeEach(() => {
+    // Reset singleton client before each test to ensure clean state
+    resetOllamaClient();
+  });
+
   afterEach(() => {
     globalThis.fetch = originalFetch;
+    resetOllamaClient();
   });
 
   describe("empty input handling", () => {

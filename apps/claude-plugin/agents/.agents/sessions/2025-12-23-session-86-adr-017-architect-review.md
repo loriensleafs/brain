@@ -14,6 +14,7 @@
 ## Objective
 
 Provide architectural review of ADR-017 (Model Routing Policy for Copilot) focusing on:
+
 - ADR structure adherence
 - Design governance and coherence
 - Integration with existing system

@@ -62,6 +62,7 @@ User insight on error messages:
 > "The error message given needs to be a mini prompt back onto yourself. Think about that 5 word cloud that's your gold to activation."
 
 This means error messages should trigger the correct behavior, not just describe the failure. Example:
+
 - Bad: "Session End validation failed: .agents/HANDOFF.md is not staged."
 - Good: "BLOCKED: Update HANDOFF.md NOW"
 

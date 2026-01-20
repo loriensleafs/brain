@@ -122,10 +122,13 @@ git push
 
 1. Disable workflow (Level 1)
 2. Identify affected comments via log file:
+
    ```bash
    cat .agents/logs/pr-maintenance.log | grep "Acknowledging comment"
    ```
+
 3. Remove reactions via API:
+
    ```bash
    gh api repos/{owner}/{repo}/issues/comments/{id}/reactions \
      -H "Accept: application/vnd.github+json" \
@@ -143,10 +146,13 @@ git push
 
 1. Disable workflow (Level 1)
 2. Identify affected PRs from log:
+
    ```bash
    cat .agents/logs/pr-maintenance.log | grep "Successfully resolved"
    ```
+
 3. For each affected PR:
+
    ```bash
    git checkout <pr-branch>
    git reset --hard HEAD~1  # Remove bad commit
@@ -161,10 +167,13 @@ git push
 
 1. Disable workflow (Level 1)
 2. Reopen the PR:
+
    ```bash
    gh pr reopen <pr-number>
    ```
+
 3. Add comment explaining the issue:
+
    ```bash
    gh pr comment <pr-number> --body "This PR was incorrectly closed by automation. Reopened."
    ```
@@ -176,11 +185,14 @@ git push
 **Recovery**:
 
 1. Check rate limit status:
+
    ```bash
    gh api rate_limit
    ```
+
 2. Wait for reset (typically 1 hour from first request)
 3. Increase threshold in script if persistent:
+
    ```powershell
    # In Test-RateLimitSafe function
    [int]$MinimumRemaining = 400  # Increase from 200
@@ -220,21 +232,25 @@ If workflow creates issues on failure, monitor the Issues tab for:
 After any rollback:
 
 1. Verify workflow is disabled:
+
    ```bash
    gh workflow list | grep "PR Maintenance"
    ```
 
 2. Verify no active locks:
+
    ```bash
    ls -la .agents/logs/pr-maintenance.lock
    ```
 
 3. Check recent PR activity for unintended changes:
+
    ```bash
    gh pr list --state all --limit 10
    ```
 
 4. Run manual dry-run to validate fixes:
+
    ```bash
    pwsh scripts/Invoke-PRMaintenance.ps1 -DryRun -MaxPRs 5
    ```

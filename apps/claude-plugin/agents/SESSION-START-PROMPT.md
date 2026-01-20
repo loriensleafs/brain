@@ -4,7 +4,7 @@ Read the contents of the `.agents` directory before starting work:
 
 1. **FIRST**: Read `.agents/AGENT-SYSTEM.md` - agent catalog and protocols
 2. **SECOND**: Read `.agents/AGENT-INSTRUCTIONS.md` - task execution protocol
-3. **THIRD**: Read `.agents/HANDOFF.md` - previous session context
+3. **THIRD**: Search Brain notes for cross-session context
 4. **FOURTH**: Read `.agents/planning/enhancement-PROJECT-PLAN.md` - project phases and tasks
 
 ## Project Context
@@ -25,7 +25,7 @@ Read the contents of the `.agents` directory before starting work:
 ## Session Protocol
 
 1. Create session log: `.agents/sessions/YYYY-MM-DD-session-NN.md`
-2. Review HANDOFF.md for previous session state
+2. Search Brain notes for previous session context
 3. Identify current phase and next task from PROJECT-PLAN.md
 4. Delegate task to orchestrator agent with full context
 5. Create feature branch if starting new phase: `feat/phase-N-description`
@@ -33,7 +33,7 @@ Read the contents of the `.agents` directory before starting work:
 7. Check off tasks in PROJECT-PLAN.md as completed
 8. Update session log with decisions and challenges
 9. Before completing, invoke retrospective agent
-10. Update HANDOFF.md with session summary
+10. Update Brain notes with session summary
 
 ## Build Commands
 
@@ -75,7 +75,8 @@ When delegating to orchestrator, provide:
 
 ## Current State
 
-Review HANDOFF.md for:
+Search Brain notes for:
+
 - Last completed phase/task
 - Open issues or blockers
 - Files changed in previous session

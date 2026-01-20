@@ -225,7 +225,7 @@ At $8.00 per bar, she will spend 6 × $8.00 = $48.00. The answer is $48.00.
 
 The example demonstrates ignoring the irrelevant sentence about the neighbor.
 
-2. **Explicit instruction**: Add to your prompt:
+1. **Explicit instruction**: Add to your prompt:
 
 ```
 Feel free to ignore irrelevant information given in the problem description.

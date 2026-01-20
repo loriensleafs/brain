@@ -1,13 +1,16 @@
 /**
  * Integration tests for embedding services.
  * Tests component interactions with mock Ollama responses.
+ *
+ * Note: generateEmbedding now has retry logic with exponential backoff.
+ * Tests simulating failures use 4xx errors (non-retryable) for immediate failure.
  */
 
 import { describe, test, expect, beforeEach, afterEach, mock, spyOn } from "bun:test";
 import { Database } from "bun:sqlite";
 import * as sqliteVec from "sqlite-vec";
 import * as connectionModule from "../../../db/connection";
-import { generateEmbedding } from "../generateEmbedding";
+import { generateEmbedding, resetOllamaClient } from "../generateEmbedding";
 import { batchGenerate } from "../batchGenerate";
 import {
   createEmbeddingQueueTable,
@@ -30,6 +33,9 @@ describe("Embedding Integration Tests", () => {
   let createVectorConnectionSpy: ReturnType<typeof spyOn>;
 
   beforeEach(() => {
+    // Reset singleton client before each test
+    resetOllamaClient();
+
     // Create fresh in-memory database for each test
     db = new Database(":memory:");
     sqliteVec.load(db);
@@ -63,6 +69,7 @@ describe("Embedding Integration Tests", () => {
   afterEach(() => {
     globalThis.fetch = originalFetch;
     createVectorConnectionSpy.mockRestore();
+    resetOllamaClient();
     db.close();
   });
 
@@ -125,7 +132,8 @@ describe("Embedding Integration Tests", () => {
       globalThis.fetch = createFetchMock(() => {
         callCount++;
         if (callCount === 2) {
-          return Promise.resolve({ ok: false, status: 500 } as Response);
+          // Use 400 (client error) which is non-retryable
+          return Promise.resolve({ ok: false, status: 400 } as Response);
         }
         return Promise.resolve({
           ok: true,
@@ -144,8 +152,9 @@ describe("Embedding Integration Tests", () => {
     });
 
     test("handles all failures gracefully", async () => {
+      // Use 400 (client error) which is non-retryable for immediate failure
       globalThis.fetch = createFetchMock(() =>
-        Promise.resolve({ ok: false, status: 503 } as Response)
+        Promise.resolve({ ok: false, status: 400 } as Response)
       );
 
       const texts = ["text1", "text2"];
@@ -260,9 +269,9 @@ describe("Embedding Integration Tests", () => {
       let callCount = 0;
       globalThis.fetch = createFetchMock(() => {
         callCount++;
-        // First call succeeds, second fails, third succeeds
+        // First call succeeds, second fails (400 = non-retryable), third succeeds
         if (callCount === 2) {
-          return Promise.resolve({ ok: false, status: 503 } as Response);
+          return Promise.resolve({ ok: false, status: 400 } as Response);
         }
         return Promise.resolve({
           ok: true,
@@ -283,9 +292,9 @@ describe("Embedding Integration Tests", () => {
     test("queue can track failed embeddings", async () => {
       createEmbeddingQueueTable();
 
-      // Simulate failure scenario
+      // Simulate failure scenario with 400 (non-retryable)
       globalThis.fetch = createFetchMock(() =>
-        Promise.resolve({ ok: false, status: 503 } as Response)
+        Promise.resolve({ ok: false, status: 400 } as Response)
       );
 
       // Queue notes that would fail

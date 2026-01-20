@@ -19,6 +19,7 @@ Design documents bridge requirements and implementation, providing:
 Pattern: `DESIGN-NNN-[kebab-case-name].md`
 
 Examples:
+
 - `DESIGN-001-oauth2-flow.md`
 - `DESIGN-002-token-storage.md`
 - `DESIGN-003-password-hashing.md`

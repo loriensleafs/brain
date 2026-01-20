@@ -64,6 +64,7 @@
 Analyze the synchronization strategy section (lines 286-437) in ADR-037 for evidence and feasibility.
 
 **Tasks**:
+
 1. Evidence check: Are performance targets realistic?
 2. Success metrics: How will they be measured?
 3. Implementation timeline: Is 3 weeks/5 milestones achievable?
@@ -75,6 +76,7 @@ Analyze the synchronization strategy section (lines 286-437) in ADR-037 for evid
 ## Initial Context
 
 **Current State**:
+
 - Branch: `feat/m009-bootstrap-forgetful`
 - ADR-037: Memory Router Architecture (lines 286-437 added in v2.0)
 - Planning doc: `.agents/planning/phase2b-memory-sync-strategy.md`
@@ -82,6 +84,7 @@ Analyze the synchronization strategy section (lines 286-437) in ADR-037 for evid
 - PR #746: M-009 Bootstrap + planning document
 
 **Related Artifacts**:
+
 - Memory-First Architecture (ADR-007)
 - Serena-primary memory architecture
 - Forgetful MCP integration
@@ -136,6 +139,7 @@ Analyze the synchronization strategy section (lines 286-437) in ADR-037 for evid
 ### API Capabilities (VERIFIED)
 
 **Forgetful mark-obsolete support**: YES
+
 - Tool: `mark_memory_obsolete`
 - Parameters: `memory_id` (int), `reason` (string), `superseded_by` (int, optional)
 - Returns: Boolean success
@@ -144,11 +148,13 @@ Analyze the synchronization strategy section (lines 286-437) in ADR-037 for evid
 ### Performance Benchmarks (MEASURED)
 
 **SHA-256 Hashing**:
+
 - Sequential: 500 hashes in 15ms (0.03ms per hash)
 - For 473 memories: ~14ms total (negligible)
 - **Conclusion**: Hashing is NOT a bottleneck
 
 **Parallel Processing**:
+
 - ForEach-Object -Parallel: 10 hashes in 3594ms (359.4ms per hash overhead)
 - Overhead: 12,000x slower than sequential
 - **Conclusion**: ADR correctly specifies sequential batch processing
@@ -156,6 +162,7 @@ Analyze the synchronization strategy section (lines 286-437) in ADR-037 for evid
 ### Git Hook Patterns (VERIFIED)
 
 **Current state**:
+
 - Claude Code hooks exist at `.claude/hooks/` (3 PowerShell SessionStart hooks)
 - No pre-commit git hook currently installed (greenfield)
 - Existing pattern: PowerShell with exit 0 = inject context
@@ -164,12 +171,14 @@ Analyze the synchronization strategy section (lines 286-437) in ADR-037 for evid
 ### Evidence Gaps (CRITICAL)
 
 **Missing measurements**:
+
 1. Forgetful API latency (create, update, query) - CRITICAL for <5s target
 2. Network overhead for localhost:8020 - Needed for <500ms hook target
 3. Git hook execution baseline - Needed to validate overhead target
 4. Batch sync end-to-end time - Needed for <60s manual sync target
 
 **Impact**:
+
 - Performance targets are REASONABLE but lack baseline evidence
 - Targets could be achieved OR could require revision after implementation
 - Risk: Implementation discovers targets are unrealistic
@@ -179,6 +188,7 @@ Analyze the synchronization strategy section (lines 286-437) in ADR-037 for evid
 **3 weeks / 5 milestones / 20 tasks**:
 
 **Feasibility**: MEDIUM
+
 - Clear task breakdown (4 tasks per milestone)
 - Existing PowerShell infrastructure (no new tooling)
 - No hard blockers identified
@@ -206,17 +216,20 @@ Analyze the synchronization strategy section (lines 286-437) in ADR-037 for evid
 ### Feasibility Assessment
 
 **Technical**: HIGH confidence
+
 - All APIs exist
 - PowerShell patterns proven
 - SHA-256 not a bottleneck
 - Graceful degradation well-specified
 
 **Performance**: MEDIUM confidence
+
 - Targets are reasonable
 - Sequential processing is optimal
 - BUT: Forgetful API latency unknown (critical gap)
 
 **Timeline**: MEDIUM confidence
+
 - 3 weeks is aggressive but achievable
 - No buffer for adr-review delays
 - No buffer for performance tuning
@@ -224,12 +237,14 @@ Analyze the synchronization strategy section (lines 286-437) in ADR-037 for evid
 ### Dependencies Identified
 
 **Hard Dependencies (ALL MET)**:
+
 - ✅ Forgetful MCP running
 - ✅ `mark_memory_obsolete` API
 - ✅ Serena memories exist (473 files)
 - ✅ PowerShell 7+
 
 **Soft Dependencies (MISSING)**:
+
 - ❓ Git hook installation docs
 - ❓ Pester mock fixtures for Forgetful
 - ❓ Performance baselines
@@ -274,6 +289,7 @@ Analyze the synchronization strategy section (lines 286-437) in ADR-037 for evid
 ### For Critic/Architect
 
 This analysis supports proceeding with implementation BUT requires:
+
 - Performance target caveats in ADR
 - Baseline measurements in Milestone 1
 - Timeline buffer for unknowns

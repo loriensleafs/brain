@@ -21,10 +21,12 @@
 Review the Local Guardrails spec and plan documents for completeness, gaps, and logical consistency.
 
 **Documents Under Review**:
+
 1. `.agents/specs/SPEC-local-guardrails.md` - Requirements specification
 2. `.agents/planning/PLAN-local-guardrails.md` - Implementation roadmap
 
 **Critique Focus**:
+
 - Requirements completeness and verifiability
 - Acceptance criteria measurability
 - Gaps between spec and plan
@@ -37,6 +39,7 @@ Review the Local Guardrails spec and plan documents for completeness, gaps, and 
 ### Analysis Phase
 
 **Memories Read**:
+
 - skills-critique (conflict escalation protocol)
 - skills-planning (task descriptions, self-contained design, parallel exploration)
 - skill-requirements-001-section-crossref (summary cross-references)
@@ -44,6 +47,7 @@ Review the Local Guardrails spec and plan documents for completeness, gaps, and 
 - skill-planning-001-checkbox-manifest (verification tracking)
 
 **Documents Reviewed**:
+
 - SPEC-local-guardrails.md (191 lines)
 - PLAN-local-guardrails.md (300 lines)
 
@@ -54,6 +58,7 @@ Review the Local Guardrails spec and plan documents for completeness, gaps, and 
 **Confidence**: HIGH (85%)
 
 **Key Findings**:
+
 - P1: FR-2 "major changes" definition ambiguous - needs quantifiable threshold
 - P1: FR-4 scope creep risk - needs explicit boundary and approval gate
 - P2: Success metric baseline unclear (60% from n=8 sample)
@@ -61,6 +66,7 @@ Review the Local Guardrails spec and plan documents for completeness, gaps, and 
 - P2: Pre-commit performance budget not cumulative
 
 **Strengths**:
+
 - Evidence-based requirements (8 PR analysis)
 - Phased implementation with clear dependencies
 - Proper reuse of existing validation infrastructure
@@ -68,12 +74,14 @@ Review the Local Guardrails spec and plan documents for completeness, gaps, and 
 - Comprehensive test strategy
 
 **Blocking Items for Phase 2**:
+
 1. Define "major changes" threshold
 2. Add FR-4 scope boundary
 3. Answer validation sequencing question
 4. Answer ignore file format question
 
 **Recommendations**:
+
 - Add checkbox manifest for implementation tracking
 - Add section cross-references to deliverables table
 - Define pedagogical error message template

@@ -152,11 +152,13 @@ $fileName = "${parentDir}-${baseName}"
 ```
 
 **Rationale:**
+
 - Simple and readable (no hashing required)
 - Defensive against future expansion to archive validation
 - Maintains debuggability of artifact names
 
 **Alternatives considered:**
+
 - Full path with slashes replaced: More verbose, harder to read
 - Hash of full path: Not human-readable
 - Matrix index: Not reliable for reruns

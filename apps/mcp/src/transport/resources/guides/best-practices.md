@@ -12,6 +12,7 @@ priority: 0.8
 ## 1. Knowledge Structure
 
 **Every note should have**:
+
 - Clear, descriptive title
 - 3-5 observations minimum
 - 2-3 relations minimum
@@ -39,11 +40,13 @@ else:
 ## 3. Use Exact Entity Titles in Relations
 
 **Wrong**:
+
 ```markdown
 - relates_to [[auth system]]  # Won't match "Authentication System"
 ```
 
 **Right**:
+
 ```python
 results = await search(query="Authentication System", project="main")
 exact_title = results["results"][0]["title"]
@@ -53,6 +56,7 @@ content = f"## Relations\n- relates_to [[{exact_title}]]"
 ## 4. Meaningful Categories
 
 **Use semantic categories**:
+
 - `[decision]` for choices made
 - `[fact]` for objective information
 - `[technique]` for methods
@@ -66,6 +70,7 @@ content = f"## Relations\n- relates_to [[{exact_title}]]"
 ## 5. Descriptive Relation Types
 
 **Use meaningful relation types**:
+
 - `implements` for implementation
 - `requires` for dependencies
 - `part_of` for hierarchy
@@ -76,6 +81,7 @@ content = f"## Relations\n- relates_to [[{exact_title}]]"
 ## 6. Progressive Elaboration
 
 **Build knowledge over time**:
+
 ```python
 # Session 1: Create foundation
 await write_note(title="Topic", content="Basic structure", ...)
@@ -90,6 +96,7 @@ await edit_note(identifier="Topic", operation="append", content="Relations", ...
 ## 7. Consistent Naming
 
 **Folder structure**:
+
 - specs/ - Specifications
 - decisions/ - Decision records
 - meetings/ - Meeting notes
@@ -99,6 +106,7 @@ await edit_note(identifier="Topic", operation="append", content="Relations", ...
 ## 8. Incremental Updates
 
 **Prefer editing over rewriting**:
+
 ```python
 # Good: Incremental update
 await edit_note(identifier="Note", operation="append", content="New info", ...)
@@ -109,6 +117,7 @@ await edit_note(identifier="Note", operation="append", content="New info", ...)
 ## 9. Tagging Strategy
 
 **Use tags strategically**:
+
 - Technology: #python #fastapi
 - Domain: #auth #security
 - Status: #wip #completed

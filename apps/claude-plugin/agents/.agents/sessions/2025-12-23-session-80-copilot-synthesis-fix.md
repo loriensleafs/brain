@@ -32,6 +32,7 @@ User reported that Issue #237, tagged with `copilot-ready`, did not trigger the 
 **Issue 1: Prompt Template Defect**
 
 The `copilot-synthesis.md` prompt had `VERDICT: PASS` at the end of the file (line 98), but:
+
 - It was outside the expected output format code block
 - The AI was not clearly instructed to include this token in its response
 - The AI generated valid synthesis content but didn't output `VERDICT: PASS`
@@ -51,6 +52,7 @@ This only posts if verdict is exactly `PASS`. If AI generates valid content but 
 ### Fix 1: Update Prompt Template
 
 Updated `.github/prompts/copilot-synthesis.md`:
+
 - Added explicit instruction: "Your response MUST end with `VERDICT: PASS` on its own line"
 - Added new section "Response Format" with clear requirements
 - Made VERDICT output part of Critical Instructions
@@ -60,16 +62,19 @@ Updated `.github/prompts/copilot-synthesis.md`:
 Updated `.github/workflows/copilot-context-synthesis.yml`:
 
 Before:
+
 ```yaml
 if: steps.synthesize.outputs.verdict == 'PASS'
 ```
 
 After:
+
 ```yaml
 if: steps.synthesize.outputs.verdict == 'PASS' || (steps.synthesize.outputs.findings != '' && steps.synthesize.outputs['copilot-exit-code'] == '0')
 ```
 
 This ensures:
+
 - Comment is posted if PASS verdict (ideal case)
 - Comment is also posted if AI generated findings and exited successfully (fallback)
 - Robustness against verdict parsing failures
@@ -109,6 +114,7 @@ The fix addresses both failure modes:
 ## Verification Logic
 
 Original run with current fix logic would have succeeded:
+
 - `verdict == 'PASS'` = false (was CRITICAL_FAIL)
 - `findings != ''` = true (2409 chars)
 - `copilot-exit-code == '0'` = true

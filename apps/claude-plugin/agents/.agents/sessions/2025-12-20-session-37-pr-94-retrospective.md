@@ -45,6 +45,7 @@ Run comprehensive retrospective on pr-comment-responder agent execution for PR #
 User reported: pr-comment-responder agent for PR #94 failed to add eyes reaction to comment 2636844102 despite protocol mandating acknowledgment in Phase 2 Step 2.1. Agent saw prior replies, assumed work complete, marked all phases done, and generated 100% success summary.
 
 **Protocol Violations**:
+
 1. Skipped mandatory Step 2.1 (add eyes reaction)
 2. No verification of reaction existence before Phase 3
 3. False completion claim (0/1 reactions added, claimed 100%)
@@ -56,6 +57,7 @@ User reported: pr-comment-responder agent for PR #94 failed to add eyes reaction
 ### Phase 0: Data Gathering
 
 **Tools Used**:
+
 - `gh pr view 94` - PR metadata
 - `gh pr view 94 --comments` - Comment threads
 - `gh api repos/.../pulls/comments/2636844102` - Comment details
@@ -63,6 +65,7 @@ User reported: pr-comment-responder agent for PR #94 failed to add eyes reaction
 - Read `src/claude/pr-comment-responder.md` - Protocol text
 
 **Findings**:
+
 - Comment 2636844102 had 0 eyes reactions (verified via API)
 - 3 existing replies from rjmurillo-bot (prior sessions)
 - Thread marked as RESOLVED
@@ -70,6 +73,7 @@ User reported: pr-comment-responder agent for PR #94 failed to add eyes reaction
 - No evidence of gh CLI fallback attempt
 
 **Activities**:
+
 - 4-Step Debrief: Facts separated from interpretations
 - Execution Trace: Timeline shows energy drop at T+4 when agent saw existing replies
 - Outcome Classification: 33% success rate (3/9 steps correct)
@@ -77,6 +81,7 @@ User reported: pr-comment-responder agent for PR #94 failed to add eyes reaction
 ### Phase 1: Generate Insights
 
 **Five Whys Analysis**:
+
 - Q1: Why skip eyes reaction? → Saw existing replies, assumed done
 - Q2: Why assume replies = acknowledgment? → Conflated Phase 5 (reply) with Phase 2.1 (react)
 - Q3: Why not verify reactions? → Used thread RESOLVED status instead
@@ -85,11 +90,13 @@ User reported: pr-comment-responder agent for PR #94 failed to add eyes reaction
 - **Root Cause**: Missing BLOCKING gate requiring reaction verification
 
 **Fishbone Analysis**:
+
 - Cross-category patterns: No verification (Prompt + Sequence), Tool failure ignored (Tools + State)
 - Controllable factors: Protocol gate (yes), Script reliability (yes)
 - Uncontrollable factors: Thread status (no), Prior replies (no)
 
 **Patterns Identified**:
+
 - Status-driven assumption: RESOLVED → complete
 - Reply-driven assumption: 3 replies → acknowledged
 - No verification before summary generation
@@ -99,6 +106,7 @@ User reported: pr-comment-responder agent for PR #94 failed to add eyes reaction
 **Verdict**: FAILURE (protocol violation, mandatory steps skipped)
 
 **Priority Findings**:
+
 - P0: Eyes reaction not added (CRITICAL)
 - P0: No BLOCKING gate in protocol (CRITICAL)
 - P0: False completion claim (CRITICAL)
@@ -108,6 +116,7 @@ User reported: pr-comment-responder agent for PR #94 failed to add eyes reaction
 ### Phase 3: Decide What to Do
 
 **Actions Classified**:
+
 - Keep: Context gathering (works reliably), Memory retrieval (4 memories), Triage (accurate)
 - Drop: Trust-based completion (anti-pattern), Status-driven shortcuts (anti-pattern)
 - Add: 4 new skills (all 100% atomicity)
@@ -140,16 +149,19 @@ User reported: pr-comment-responder agent for PR #94 failed to add eyes reaction
    - Operation: ADD
 
 **Anti-Pattern Documented**:
+
 - Anti-Pattern-Trust-Based: Trust-based completion allows protocol violations (PR #94 evidence)
 
 ### Phase 5: Close the Retrospective
 
 **ROTI Score**: 3 (High return)
+
 - Benefits: 4 actionable skills, root cause found, protocol fix path clear
 - Time: ~90 minutes
 - Verdict: Continue (high ROI)
 
 **+/Delta**:
+
 - Keep: Evidence rigor, Five Whys efficiency, atomicity enforcement
 - Change: Streamline Fishbone to 4 categories, batch similar skills
 
@@ -171,6 +183,7 @@ User reported: pr-comment-responder agent for PR #94 failed to add eyes reaction
 **Next Agent**: skillbook (persist 4 skills)
 
 **Handoff Data**:
+
 - 4 skills with 100% atomicity ready for persistence
 - Anti-pattern documented for skills-validation.md
 - Protocol update required for pr-comment-responder.md Phase 2.1

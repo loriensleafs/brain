@@ -23,6 +23,7 @@ PR #310 introduced ADR-017-model-routing-strategy.md and ADR-018-architecture-go
 ## Task
 
 Renumber the newly introduced ADRs to avoid conflicts:
+
 - ADR-017-model-routing-strategy.md → ADR-019-model-routing-strategy.md
 - ADR-017-debate-log.md → ADR-019-debate-log.md  
 - ADR-018-architecture-governance-split-criteria.md → ADR-020-architecture-governance-split-criteria.md
@@ -32,17 +33,20 @@ Renumber the newly introduced ADRs to avoid conflicts:
 ### 1. File Renaming
 
 **Architecture files:**
+
 - `ADR-017-model-routing-strategy.md` → `ADR-019-model-routing-strategy.md`
 - `ADR-017-debate-log.md` → `ADR-019-debate-log.md` → `.agents/critique/ADR-019-debate-log.md`
 - `ADR-018-architecture-governance-split-criteria.md` → `ADR-020-architecture-governance-split-criteria.md`
 
 **Serena memory files:**
+
 - `.serena/memories/adr-017-quantitative-analysis.md` → `adr-019-quantitative-analysis.md`
 - `.serena/memories/adr-017-split-execution.md` → `adr-019-split-execution.md`
 
 ### 2. Reference Updates
 
 **Files Updated:**
+
 1. **ADR-019-model-routing-strategy.md**
    - Updated title to ADR-019
    - Updated reference to ADR-020 (split criteria)
@@ -76,6 +80,7 @@ Renumber the newly introduced ADRs to avoid conflicts:
 ### 3. Additional Changes
 
 **Debate Log Location:**
+
 - Moved `ADR-019-debate-log.md` from `.agents/architecture/` to `.agents/critique/` per additional requirement
 
 ### 4. Verification
@@ -91,6 +96,7 @@ Renumber the newly introduced ADRs to avoid conflicts:
 **Commit**: `7522c2d` - "docs(adr): renumber ADR-017→019 and ADR-018→020 to resolve numbering conflicts"
 
 **Files Changed**: 10
+
 - 5 files renamed
 - 5 files modified with reference updates
 

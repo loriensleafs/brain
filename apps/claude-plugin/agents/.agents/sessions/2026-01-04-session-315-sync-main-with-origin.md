@@ -16,11 +16,13 @@ Origin main: 48a6d3b7 fix(security): restrict Claude workflow to trusted author 
 ## Investigation
 
 **Rogue commit**: f54d4ffa
+
 - Message: "fix: add id-token permission to Claude workflow for OIDC auth"
 - Files: `.agents/sessions/2026-01-04-session-312-claude-workflow-oidc-fix.md`, `.github/workflows/claude.yml`
 - Branch: Should be on `fix/claude-workflow-oidc-permission` (it already is there)
 
 **Branch status**:
+
 - `fix/claude-workflow-oidc-permission` contains this work plus additional commits
 - Latest on feature branch: 66032189 "fix: restore id-token permission required for OIDC authentication"
 

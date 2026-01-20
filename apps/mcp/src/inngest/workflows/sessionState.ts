@@ -47,18 +47,17 @@ async function ensureValidationInitialized(): Promise<void> {
 }
 
 /**
- * Get or create session state for a session ID.
+ * Get or create session state.
  * Uses consolidated session service as single source of truth.
  *
- * @param sessionId - Unique session identifier
  * @returns Session state (existing or newly created)
  */
-function getOrCreateState(sessionId: string): SessionState {
-  let state = getSession(sessionId);
+async function getOrCreateState(): Promise<SessionState> {
+  let state = await getSession();
   if (!state) {
-    state = createDefaultSessionState(sessionId);
-    setSession({}, sessionId); // Initialize in session service
-    logger.info({ sessionId }, "Created new session state via session service");
+    state = createDefaultSessionState();
+    await setSession({}); // Initialize in session service
+    logger.info("Created new session state via session service");
   }
   return state;
 }
@@ -84,10 +83,10 @@ export const sessionStateWorkflow = inngest.createFunction(
   },
   { event: "session/state.update" },
   async ({ event, step }) => {
-    const { sessionId, updateType, mode, feature, task } = event.data;
+    const { updateType, mode, feature, task } = event.data;
 
     logger.info(
-      { sessionId, updateType, mode, feature, task },
+      { updateType, mode, feature, task },
       "Processing session state update"
     );
 
@@ -102,7 +101,7 @@ export const sessionStateWorkflow = inngest.createFunction(
     const currentState = await step.run(
       "get-current-state",
       async (): Promise<SessionState> => {
-        return getOrCreateState(sessionId);
+        return getOrCreateState();
       }
     );
 
@@ -120,7 +119,7 @@ export const sessionStateWorkflow = inngest.createFunction(
 
           case "mode":
             if (!mode) {
-              logger.warn({ sessionId }, "Mode update requested but no mode provided");
+              logger.warn("Mode update requested but no mode provided");
               return currentState;
             }
             // Validate the mode before accepting the change
@@ -152,14 +151,14 @@ export const sessionStateWorkflow = inngest.createFunction(
                 .map((c) => c.message)
                 .join("; ");
               logger.error(
-                { sessionId, mode, checks: failedChecks, remediation: validationResult.remediation },
+                { mode, checks: failedChecks, remediation: validationResult.remediation },
                 "Mode change rejected: validation failed"
               );
               throw new Error(
                 `Invalid mode change: ${failedChecks}. ${validationResult.remediation ?? ""}`
               );
             }
-            logger.debug({ sessionId, mode }, "Mode validated successfully");
+            logger.debug({ mode }, "Mode validated successfully");
             return withModeChange(currentState, mode as WorkflowMode);
 
           case "feature":
@@ -171,7 +170,7 @@ export const sessionStateWorkflow = inngest.createFunction(
             return withTaskChange(currentState, task);
 
           default:
-            logger.warn({ sessionId, updateType }, "Unknown update type");
+            logger.warn({ updateType }, "Unknown update type");
             return currentState;
         }
       }
@@ -179,17 +178,13 @@ export const sessionStateWorkflow = inngest.createFunction(
 
     // Step 3: Persist the updated state via session service
     await step.run("persist-state", async (): Promise<void> => {
-      setSession(
-        {
-          mode: updatedState.currentMode,
-          feature: updatedState.activeFeature,
-          task: updatedState.activeTask,
-        },
-        sessionId
-      );
+      await setSession({
+        mode: updatedState.currentMode,
+        feature: updatedState.activeFeature,
+        task: updatedState.activeTask,
+      });
       logger.debug(
         {
-          sessionId,
           currentMode: updatedState.currentMode,
           activeFeature: updatedState.activeFeature,
           activeTask: updatedState.activeTask,
@@ -203,7 +198,6 @@ export const sessionStateWorkflow = inngest.createFunction(
       await step.sendEvent("emit-mode-changed", {
         name: "session/mode.changed",
         data: {
-          sessionId,
           previousMode,
           newMode: mode as WorkflowMode,
           changedAt: new Date().toISOString(),
@@ -212,14 +206,13 @@ export const sessionStateWorkflow = inngest.createFunction(
         },
       });
       logger.info(
-        { sessionId, previousMode, newMode: mode },
+        { previousMode, newMode: mode },
         "Emitted session/mode.changed event"
       );
     }
 
     logger.info(
       {
-        sessionId,
         updateType,
         currentMode: updatedState.currentMode,
         modeHistoryCount: updatedState.modeHistory.length,
@@ -249,15 +242,13 @@ export const sessionStateQueryWorkflow = inngest.createFunction(
     name: "Session State Query",
   },
   { event: "session/state.query" },
-  async ({ event, step }) => {
-    const { sessionId } = event.data;
-
-    logger.debug({ sessionId }, "Processing session state query");
+  async ({ step }) => {
+    logger.debug("Processing session state query");
 
     const state = await step.run(
       "get-state",
       async (): Promise<SessionState> => {
-        return getOrCreateState(sessionId);
+        return getOrCreateState();
       }
     );
 
@@ -269,56 +260,40 @@ export const sessionStateQueryWorkflow = inngest.createFunction(
  * Get session state directly (for non-workflow access).
  * Uses consolidated session service as single source of truth.
  *
- * @param sessionId - Session ID to query
  * @returns Current session state or undefined if not found
  */
-export function getSessionState(sessionId: string): SessionState | undefined {
-  return getSession(sessionId) ?? undefined;
+export async function getSessionState(): Promise<SessionState | undefined> {
+  return (await getSession()) ?? undefined;
 }
 
 /**
  * Check if a session state exists.
  * Checks consolidated session service.
  *
- * @param sessionId - Session ID to check
  * @returns True if session state exists
  */
-export function hasSessionState(sessionId: string): boolean {
-  return getSession(sessionId) !== null;
+export async function hasSessionState(): Promise<boolean> {
+  return (await getSession()) !== null;
 }
 
 /**
  * Get all active session IDs.
- * Note: This queries the session service, which may have different
- * sessions than workflow-initiated ones.
- *
- * @returns Array of active session IDs
- * @deprecated Use session service directly for session enumeration
+ * @deprecated No longer applicable - single session per project
  */
 export function getActiveSessionIds(): string[] {
-  // Return empty array - session enumeration should go through session service
-  // This maintains backward compatibility but encourages migration
   logger.warn(
-    "getActiveSessionIds is deprecated - use session service directly"
+    "getActiveSessionIds is deprecated - single session per project"
   );
   return [];
 }
 
 /**
  * Clear session state.
- * Note: This only affects workflow-local state.
- * For full cleanup, use session service's cleanupSession.
- *
- * @param sessionId - Session ID to clear
- * @returns True (always returns true for backward compatibility)
- * @deprecated Use session service cleanupSession for proper cleanup
+ * @deprecated No longer applicable - single session per project
  */
-export function clearSessionState(sessionId: string): boolean {
+export function clearSessionState(): boolean {
   logger.warn(
-    { sessionId },
-    "clearSessionState is deprecated - use session service cleanupSession"
+    "clearSessionState is deprecated - single session per project"
   );
-  // Session service handles cleanup via cleanupSession()
-  // This is a no-op for backward compatibility
   return true;
 }

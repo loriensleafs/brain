@@ -22,7 +22,7 @@ Session 85 discovered that PR #315 was already merged, but `gh pr view` returned
 
 ### 1. GitHub Issue #321
 
-**Created**: https://github.com/rjmurillo/ai-agents/issues/321
+**Created**: <https://github.com/rjmurillo/ai-agents/issues/321>
 
 **Title**: "feat: Add PR merge state verification to prevent wasted review effort"
 
@@ -35,11 +35,13 @@ Session 85 discovered that PR #315 was already merged, but `gh pr view` returned
 **Purpose**: Check PR merge state via GraphQL API (source of truth)
 
 **Exit Codes**:
+
 - `0`: PR is NOT merged (safe to proceed with review)
 - `1`: PR IS merged (skip review work)
 - `2`: Error occurred
 
 **Implementation**:
+
 ```powershell
 # Query GraphQL for merge state
 $query = @"
@@ -62,6 +64,7 @@ if ($pr.merged) { exit 1 } else { exit 0 }
 **Testing Results**:
 
 ✅ **Test 1: Merged PR #315**
+
 ```bash
 $ pwsh .claude/skills/github/scripts/pr/Test-PRMerged.ps1 -PullRequest 315
 [MERGED] PR #315 merged at 12/24/2025 05:45:21 by @rjmurillo
@@ -69,6 +72,7 @@ Exit code: 1
 ```
 
 ✅ **Test 2: Open PR #320**
+
 ```bash
 $ pwsh .claude/skills/github/scripts/pr/Test-PRMerged.ps1 -PullRequest 320
 [NOT MERGED] PR #320 is not merged (state: OPEN)
@@ -103,6 +107,7 @@ if ($merged) {
 Added comprehensive documentation for Skills PR-Review-004 and PR-Review-005:
 
 **Single Thread Resolution** (Skill-PR-Review-004):
+
 ```bash
 # Step 1: Reply to comment (handled by pr-comment-responder)
 # Step 2: Resolve thread (REQUIRED separate step)
@@ -115,6 +120,7 @@ mutation {
 ```
 
 **Batch Thread Resolution** (Skill-PR-Review-005):
+
 ```bash
 gh api graphql -f query='
 mutation {
@@ -128,6 +134,7 @@ mutation {
 ```
 
 **Benefits**:
+
 - 1 API call for N threads (vs N calls)
 - Reduced network latency (1 round trip vs N)
 - Atomic operation (all succeed or all fail)
@@ -145,6 +152,7 @@ Added new completion criterion:
 **File**: `.agents/planning/session-85-pr-review-improvements.md`
 
 Comprehensive plan with:
+
 - Exact code snippets to add
 - File locations for each change
 - Testing scenarios
@@ -152,11 +160,12 @@ Comprehensive plan with:
 
 ### 5. Pull Request #322
 
-**Created**: https://github.com/rjmurillo/ai-agents/pull/322
+**Created**: <https://github.com/rjmurillo/ai-agents/pull/322>
 
 **Title**: "feat: Implement PR merge state verification to prevent wasted review effort"
 
 **Changes**:
+
 - Test-PRMerged.ps1 script (96 lines)
 - pr-review.md updates (86 lines added across 3 sections)
 
@@ -232,8 +241,8 @@ Comprehensive plan with:
 ## References
 
 - **Session 85**: `.agents/sessions/2025-12-23-session-85-pr-315-post-merge-analysis.md`
-- **Issue #321**: https://github.com/rjmurillo/ai-agents/issues/321
-- **PR #322**: https://github.com/rjmurillo/ai-agents/pull/322
+- **Issue #321**: <https://github.com/rjmurillo/ai-agents/issues/321>
+- **PR #322**: <https://github.com/rjmurillo/ai-agents/pull/322>
 - **Skills**: `.serena/memories/pr-review-core-workflow.md`
 - **Implementation Plan**: `.agents/planning/session-85-pr-review-improvements.md`
 

@@ -54,11 +54,13 @@ Reduce bot review noise from 97 comments (PR #249) to <20 per PR by tuning CodeR
 ### Phase 1: Research Existing Configurations
 
 **Files Found**:
+
 - `.coderabbit.yaml` - Existing config with markdownlint disabled, path_instructions for agent prompts
 - `.gemini/config.yaml` - Existing config with ignore_patterns for `.agents/**` and `.serena/**`
 - No Copilot-specific config file (workflow-based integration)
 
 **Memory Context**:
+
 - `coderabbit-config-strategy`: Recommends `profile: chill`, path_instructions with IGNORE, path_filters
 - `gemini-path-exclusions`: Already implemented ignore_patterns correctly
 - `pr-review-bot-triage`: cursor 100%, Copilot 90%, CodeRabbit ~50%, gemini 0%

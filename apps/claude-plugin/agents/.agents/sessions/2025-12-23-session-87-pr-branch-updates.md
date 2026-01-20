@@ -66,6 +66,7 @@ gh pr update-branch <PR_NUMBER>
 ```
 
 This command:
+
 - Merges the base branch (main) into the PR branch
 - Pushes the updated branch to remote
 - Fails gracefully if there are merge conflicts
@@ -123,6 +124,7 @@ git push origin <branch>
 ## Benefits of Updates
 
 PRs updated with latest main:
+
 - ✅ Reduce CI/CD failures due to outdated dependencies
 - ✅ Ensure compatibility with recent changes
 - ✅ Make code review easier (reviewers see latest context)

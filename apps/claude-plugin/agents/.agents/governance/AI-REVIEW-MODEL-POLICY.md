@@ -33,11 +33,13 @@ All AI review workflows MUST use the model specified for each prompt type:
 **PASS is forbidden** when context is summary-only. Agents MUST output `WARN`, `CRITICAL_FAIL`, or `REJECTED` and explicitly request missing evidence.
 
 **Risk review contract** (what agents CAN do):
+
 - File pattern analysis (which files changed, rough scope)
 - Metadata checks (PR title quality, label presence, description completeness)
 - Risk flagging (large scope, sensitive paths like `.github/`, security-related files)
 
 **Code review contract** (what agents CANNOT do):
+
 - Line-level code review
 - Specific bug detection
 - Test coverage verification

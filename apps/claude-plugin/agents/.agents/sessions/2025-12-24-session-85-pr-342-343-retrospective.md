@@ -13,12 +13,14 @@ Extract actionable learnings from the session that shipped PR #342 (merged) and 
 SUCCESS - Comprehensive retrospective completed with 7 atomic skills extracted
 
 **Deliverables**:
+
 - Retrospective document: `.agents/retrospective/2025-12-24-pr-342-343-ci-workflow-fix.md`
 - 3 new Serena memory files created
 - 3 index files updated
 - Atomicity: 88-95% (all >= threshold)
 
 **Skills Extracted**:
+
 1. Skill-CI-Workflow-001: Required check path filter anti-pattern (95%)
 2. Skill-CI-Workflow-002a: Zero SHA handling (95%)
 3. Skill-CI-Workflow-002b: Missing commit handling (93%)
@@ -28,6 +30,7 @@ SUCCESS - Comprehensive retrospective completed with 7 atomic skills extracted
 7. Skill-Implementation-007: Fast iteration cycle (92%)
 
 **Key Learnings**:
+
 - Required checks + path filters = phantom blocking (remove filters, use internal skip)
 - Git diff in workflows needs edge case handling (zero SHA, missing commits, exit codes)
 - Fast iteration (<10min CI cycles) enabled 5 rounds in 20 minutes

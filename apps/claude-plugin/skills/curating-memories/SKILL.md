@@ -17,6 +17,7 @@ Active curation keeps the knowledge base accurate and connected. Outdated notes 
 ## When to Update a Note
 
 Use `edit_note` when:
+
 - Information needs correction or clarification
 - Content needs refinement
 - Observations or relations need updating
@@ -35,6 +36,7 @@ Operations: `append` (add to end), `prepend` (add to start), `find_replace`, `re
 ## When to Mark Obsolete
 
 Mark notes as obsolete when:
+
 - Note is outdated or contradicted by newer information
 - Decision has been reversed or superseded
 - Referenced code/feature no longer exists
@@ -59,6 +61,7 @@ Add `[OBSOLETE]` prefix to preserve for reference, or delete if no longer needed
 ## When to Link Notes
 
 Use relations when:
+
 - Concepts are related but not caught by search
 - Building explicit knowledge graph structure
 - Connecting decisions to their implementations
@@ -80,6 +83,7 @@ Use wiki-style `[[note-title]]` links in content for navigation.
 When creating new notes, check impact on existing knowledge:
 
 ### Step 1: Search Related Notes
+
 ```python
 # Brain MCP - search for related notes
 mcp__plugin_brain_brain__search_notes({
@@ -102,6 +106,7 @@ For each existing note, determine action:
 ### Step 3: Execute Curation Plan
 
 Present plan to user before executing:
+
 ```
 Curation plan:
 - Create: "New authentication approach" in analysis/
@@ -114,6 +119,7 @@ Proceed? (y/n)
 ### Step 4: Execute and Report
 
 After user confirms:
+
 1. Create new note with `write_note`
 2. Mark obsolete notes with `edit_note` (add [OBSOLETE] prefix)
 3. Add relation links in content
@@ -122,6 +128,7 @@ After user confirms:
 ## Signs of Poor Curation
 
 Watch for these indicators:
+
 - Multiple similar notes on same topic (deduplicate)
 - Notes referencing deleted code (mark obsolete)
 - Contradictory notes (resolve conflict)
@@ -130,6 +137,7 @@ Watch for these indicators:
 ## Semantic Search
 
 Brain uses semantic search to find related notes. Manual linking via `[[note-title]]` is for:
+
 - Explicit relationships search might miss
 - Cross-folder connections
 - Non-obvious conceptual links

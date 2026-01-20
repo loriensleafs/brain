@@ -56,6 +56,7 @@
 ### Review Comments Summary
 
 **Total Comments**:
+
 - Review comments: At least 4 visible (github-advanced-security: 2 code injection, gemini-code-assist: 2 bugs)
 - Issue comments: At least 1
 - **Full enumeration pending** (pagination required)
@@ -101,6 +102,7 @@
 This is the CRITICAL deliverable that agents will reference.
 
 **Plan Contents**:
+
 1. Executive summary of all findings
 2. Security analysis (code injection vulnerabilities)
 3. Bug analysis (logic bugs, portability issues)
@@ -110,6 +112,7 @@ This is the CRITICAL deliverable that agents will reference.
 7. Agent assignment recommendations
 
 **Plan Requirements** (per user instructions):
+
 - VERY detailed (agents only have artifacts as context)
 - Include specific file paths, line numbers, exact fixes
 - Document why each fix is needed (not just what)
@@ -121,12 +124,14 @@ This is the CRITICAL deliverable that agents will reference.
 **Agents Required**: qa, security, architect, high-level-advisor
 
 **Process**:
+
 1. Delegate plan to **security** agent first (code injection is P0)
 2. Delegate plan to **architect** agent (action/script design review)
 3. Delegate plan to **qa** agent (test coverage, regression prevention)
 4. Delegate plan to **high-level-advisor** (prioritization, blocking risk)
 
 **Outputs**:
+
 - `.agents/pr-comments/PR-60/security-review.md`
 - `.agents/pr-comments/PR-60/architect-review.md`
 - `.agents/pr-comments/PR-60/qa-review.md`
@@ -149,6 +154,7 @@ This is the CRITICAL deliverable that agents will reference.
 **Based on task dependencies**, spawn multiple implementer agents in parallel:
 
 **Example parallel groups**:
+
 - Group A: Security fixes (code injection) - CRITICAL, must complete first
 - Group B: Logic bugs (grep fallback, sed portability)
 - Group C: Race condition fix (comment editing)

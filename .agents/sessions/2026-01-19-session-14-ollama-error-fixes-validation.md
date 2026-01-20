@@ -65,4 +65,4 @@ Pre-existing test failures (unrelated to this PR):
 - [x] QA report created at `.agents/qa/003-ollama-error-fixes-validation.md`
 - [x] Session log complete
 - [x] Markdown linting passed (minor line length warnings acceptable)
-- [ ] Changes committed
+- [x] Changes committed (SHA: 39d45c2)

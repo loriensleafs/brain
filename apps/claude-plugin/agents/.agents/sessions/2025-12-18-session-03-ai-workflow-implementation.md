@@ -147,7 +147,7 @@ Created 14 files implementing the AI workflow system:
 | Artifact | Location |
 |----------|----------|
 | Plan document | `~/.claude/plans/parsed-growing-stroustrup.md` |
-| Pull request | https://github.com/rjmurillo/ai-agents/pull/60 |
+| Pull request | <https://github.com/rjmurillo/ai-agents/pull/60> |
 
 ---
 

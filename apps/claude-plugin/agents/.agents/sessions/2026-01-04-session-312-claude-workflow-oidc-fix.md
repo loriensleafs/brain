@@ -62,7 +62,7 @@ Error: Could not fetch an OIDC token. Did you remember to add `id-token: write` 
 Error message: Unable to get ACTIONS_ID_TOKEN_REQUEST_URL env variable
 ```
 
-**Failure URL**: https://github.com/rjmurillo/ai-agents/actions/runs/20702734101/job/59427723867
+**Failure URL**: <https://github.com/rjmurillo/ai-agents/actions/runs/20702734101/job/59427723867>
 
 **Root Cause**:
 The workflow had these permissions:

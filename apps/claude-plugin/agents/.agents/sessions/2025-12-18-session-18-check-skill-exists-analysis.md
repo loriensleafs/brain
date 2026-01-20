@@ -69,6 +69,7 @@ From Session 15:
 **Goal**: Define inputs, outputs, error cases
 
 **Questions**:
+
 - Input: Operation type? Keywords? Intent?
 - Output: Matching skill path? Usage instructions?
 - Error case: What if no skill exists?
@@ -78,6 +79,7 @@ From Session 15:
 ### Task 4: Implementation Approaches
 
 **Options to evaluate**:
+
 - Simple pattern matching on skill names?
 - Keyword search in SKILL.md?
 - Semantic matching?
@@ -88,6 +90,7 @@ From Session 15:
 ### Task 5: Integration Points
 
 **Questions**:
+
 - Called manually by agents?
 - Part of session initialization?
 - Integrated into orchestrator routing?
@@ -98,6 +101,7 @@ From Session 15:
 ### Task 6: Maintenance Burden
 
 **Questions**:
+
 - Does adding skills require updating this tool?
 - Self-documenting vs manual registry?
 - Version management?
@@ -123,10 +127,12 @@ From Session 15:
 **Location**: `.claude/skills/`
 
 **Skills Discovered**:
+
 - `github/` - Complete GitHub CLI operations skill (11 scripts)
 - `steering-matcher/` - Steering file pattern matching
 
 **Additional Utilities** (in `.agents/utilities/`):
+
 - `fix-markdown-fences/`
 - `metrics/`
 - `security-detection/`

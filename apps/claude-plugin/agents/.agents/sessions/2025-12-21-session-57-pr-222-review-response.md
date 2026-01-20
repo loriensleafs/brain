@@ -24,6 +24,7 @@
 ## Review Context
 
 ### Quality Gate Results
+
 - Security: PASS ✅
 - QA: CRITICAL_FAIL ❌ (Copilot CLI infrastructure issue - NOT actionable)
 - Analyst: PASS ✅
@@ -44,17 +45,21 @@
 ### Current Pattern Usage
 
 **Pattern 1: Relative with `./` prefix** (PR #222 fix)
+
 ```powershell
 Import-Module ./.github/scripts/AIReviewCommon.psm1
 ```
+
 - Used in: `ai-issue-triage.yml` (lines 61, 114)
 - Works: ✅ Yes (fixes module loading failure)
 - Relies on: Current working directory being repo root
 
 **Pattern 2: Absolute with `$env:GITHUB_WORKSPACE`** (existing workflows)
+
 ```powershell
 Import-Module "$env:GITHUB_WORKSPACE/.github/scripts/AIReviewCommon.psm1" -Force
 ```
+
 - Used in: `ai-pr-quality-gate.yml` (lines 223, 262), `ai-session-protocol.yml` (lines 166, 215), `ai-spec-validation.yml` (line 217)
 - Works: ✅ Yes
 - Relies on: GitHub Actions environment variable
@@ -63,6 +68,7 @@ Import-Module "$env:GITHUB_WORKSPACE/.github/scripts/AIReviewCommon.psm1" -Force
 ### Decision: Standardize on Pattern 2
 
 **Rationale**:
+
 1. **Consistency**: 5 existing usages vs 2 new ones
 2. **Reliability**: Explicit workspace root, independent of `cd` commands
 3. **Safety**: `-Force` flag prevents stale module state
@@ -116,9 +122,10 @@ All changes committed and pushed to fix/ai-triage branch (commit b0964c0)
 ### PR Comment Posted
 
 Comment ID: 3679638467
-URL: https://github.com/rjmurillo/ai-agents/pull/222#issuecomment-3679638467
+URL: <https://github.com/rjmurillo/ai-agents/pull/222#issuecomment-3679638467>
 
 Summary:
+
 - Addressed all 3 Copilot review comments (2638155904, 2638155905, 2638155906)
 - Standardized on `$env:GITHUB_WORKSPACE` pattern for consistency
 - Updated module documentation to reflect correct import syntax
@@ -127,11 +134,13 @@ Summary:
 ## Retrospective Notes
 
 ### What Went Well
+
 - Clear identification of inconsistency across workflows
 - Quick decision based on majority pattern usage
 - Comprehensive analysis of both approaches
 
 ### Learnings
+
 - GitHub Actions workflows benefit from explicit `$env:GITHUB_WORKSPACE` usage
 - Consistency across workflows reduces cognitive load for future changes
 - Documentation should reflect actual best practices, not just minimal working examples

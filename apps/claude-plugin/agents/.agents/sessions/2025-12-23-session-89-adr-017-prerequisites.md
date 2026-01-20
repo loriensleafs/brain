@@ -90,10 +90,12 @@ All 6 models referenced in ADR-017 are available in the Copilot CLI.
 ### P1-4: Cost Estimation [COMPLETE]
 
 **Data**:
+
 - PRs merged in December 2025: 74
 - Current default model: claude-opus-4.5 (most expensive)
 
 **Projected Impact**:
+
 - Issue triage: opus -> gpt-5-mini (-80% cost)
 - PR quality gate: opus -> sonnet with escalation (-40% cost)
 - Security reviews: opus -> opus (no change)
