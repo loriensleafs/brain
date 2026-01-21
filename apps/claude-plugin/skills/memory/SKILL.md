@@ -20,26 +20,37 @@ Memory operations for AI agents using Brain MCP.
 ## Quick Start
 
 ```typescript
-// Search memory (Tier 1 - Semantic)
+// Tier 1: Search memory (Semantic)
 mcp__plugin_brain_brain__search({
   query: "git hooks",
   limit: 10,
   mode: "auto"
 })
 
-// List available memories
+// Tier 1: List available memories
 mcp__plugin_brain_brain__list_directory({
   dir_name: "/",
   depth: 2
 })
 
-// Read specific memory
+// Tier 1: Read specific memory
 mcp__plugin_brain_brain__read_note({
   identifier: "usage-mandatory"
 })
 ```
 
-**Tier 2 (Episodic) and Tier 3 (Causal)**: Planned for future phases. See ADR-007 for architecture principles that will guide implementation.
+```bash
+# Tier 2: Extract episode from session (Episodic)
+bun run apps/claude-plugin/skills/memory/scripts/extract-episode.ts \
+  .agents/sessions/2026-01-20-session-06.md
+
+# Tier 3: Add pattern (Causal)
+bun run apps/claude-plugin/skills/memory/scripts/add-pattern.ts \
+  --name "Memory-First Investigation" \
+  --trigger "Agent wants to change existing system" \
+  --action "Search memory before making changes" \
+  --success-rate 0.95
+```
 
 ---
 
@@ -132,11 +143,11 @@ See ADR-007 for:
 | "what do we know about X" | Tier 1: `mcp__plugin_brain_brain__search()` |
 | "list memories" | Tier 1: `mcp__plugin_brain_brain__list_directory()` |
 | "read memory X" | Tier 1: `mcp__plugin_brain_brain__read_note()` |
-| "extract episode from session" | Tier 2: [FUTURE] |
-| "what happened in session X" | Tier 2: [FUTURE] |
-| "find sessions with failures" | Tier 2: [FUTURE] |
-| "update causal graph" | Tier 3: [FUTURE] |
-| "what patterns led to success" | Tier 3: [FUTURE] |
+| "extract episode from session" | Tier 2: `bun run scripts/extract-episode.ts [log-path]` |
+| "what happened in session X" | Tier 2: `mcp__plugin_brain_brain__read_note({ identifier: "EPISODE-X" })` |
+| "find sessions with failures" | Tier 2: `mcp__plugin_brain_brain__search({ query: "outcome:failure", folder: "episodes" })` |
+| "add pattern" | Tier 3: `bun run scripts/add-pattern.ts --name "..." --trigger "..."` |
+| "what patterns led to success" | Tier 3: `mcp__plugin_brain_brain__search({ query: "success_rate:>0.7", folder: "patterns" })` |
 
 ---
 
@@ -149,10 +160,12 @@ See ADR-007 for:
 | Read memory | `mcp__plugin_brain_brain__read_note` | `identifier` |
 | Write memory | `mcp__plugin_brain_brain__write_note` | `title`, `content`, `folder` |
 | Edit memory | `mcp__plugin_brain_brain__edit_note` | `identifier`, `operation`, `content` |
-| Get single session | [FUTURE] Tier 2 | - |
-| Find multiple sessions | [FUTURE] Tier 2 | - |
-| Trace causation | [FUTURE] Tier 3 | - |
-| Find success patterns | [FUTURE] Tier 3 | - |
+| Extract episode | `bun run scripts/extract-episode.ts` | `session-log-path`, `--force`, `--output` |
+| Query episodes | `mcp__plugin_brain_brain__search` | `query`, `folder: "episodes"` |
+| Read episode | `mcp__plugin_brain_brain__read_note` | `identifier: "EPISODE-{id}"` |
+| Add pattern | `bun run scripts/add-pattern.ts` | `--name`, `--trigger`, `--action`, `--success-rate` |
+| Query patterns | `mcp__plugin_brain_brain__search` | `query`, `folder: "patterns"` |
+| Get antipatterns | `mcp__plugin_brain_brain__search` | `query: "success_rate:<0.3"` |
 
 ---
 
@@ -170,23 +183,26 @@ What do you need?
 ├─► Read specific memory?
 │   └─► TIER 1: mcp__plugin_brain_brain__read_note()
 │
-├─► What happened in a specific session? [FUTURE]
-│   └─► TIER 2: Episode system (planned)
+├─► What happened in a specific session?
+│   ├─ Extract first: bun run scripts/extract-episode.ts [log-path]
+│   └─► TIER 2: mcp__plugin_brain_brain__read_note({ identifier: "EPISODE-X" })
 │
-├─► Recent sessions with specific outcome? [FUTURE]
-│   └─► TIER 2: Episode system (planned)
+├─► Recent sessions with specific outcome?
+│   └─► TIER 2: mcp__plugin_brain_brain__search({ query: "outcome:failure" })
 │
-├─► Why did decision X lead to outcome Y? [FUTURE]
-│   └─► TIER 3: Causal graph (planned)
+├─► Why did decision X lead to outcome Y?
+│   └─► TIER 3: Search related patterns, trace WikiLink relations
 │
-├─► What patterns have high success rate? [FUTURE]
-│   └─► TIER 3: Causal graph (planned)
+├─► What patterns have high success rate?
+│   └─► TIER 3: mcp__plugin_brain_brain__search({ query: "success_rate:>0.7" })
 │
 ├─► Need to store new knowledge?
-│   └─► mcp__plugin_brain_brain__write_note() or edit_note()
+│   ├─ Session complete? → bun run scripts/extract-episode.ts
+│   ├─ Pattern discovered? → bun run scripts/add-pattern.ts
+│   └─ Factual knowledge? → mcp__plugin_brain_brain__write_note()
 │
 └─► Not sure which tier?
-    └─► Start with TIER 1 (search), document gaps for future tiers
+    └─► Start with TIER 1 (search), escalate to Tier 2/3 if insufficient
 ```
 
 ---
@@ -207,8 +223,8 @@ What do you need?
 | Data | Location |
 |------|----------|
 | Brain notes | `~/memories/{project}/` or configured notes path |
-| Episodes | [FUTURE] Tier 2 |
-| Causal graph | [FUTURE] Tier 3 |
+| Episodes | `~/memories/{project}/episodes/EPISODE-*.md` |
+| Patterns | `~/memories/{project}/patterns/PATTERN-*.md` |
 
 ---
 
@@ -219,8 +235,9 @@ What do you need?
 | Search completed | Result count > 0 OR logged "no results" |
 | Memory read | Note content returned |
 | Memory written | Confirmation with permalink |
-| Episode extracted | [FUTURE] Tier 2 |
-| Graph updated | [FUTURE] Tier 3 |
+| Episode extracted | Markdown file created in `episodes/` folder |
+| Pattern added | Markdown file created in `patterns/` folder |
+| Pattern updated | Success rate recalculated, occurrences incremented |
 
 ---
 
@@ -233,28 +250,73 @@ What do you need?
 
 ---
 
-## Future Phases
+## Tier 2: Episodic Memory
 
-### Tier 2: Episodic Memory (Planned)
+Session replay via structured episode extraction. Reduces session logs from 10K-50K tokens to 500-2000 tokens.
 
-Session replay and structured episode extraction. See ADR-007 for architecture principles that will guide design.
-
-**Planned capabilities**:
-
-- Extract structured episodes from session logs
+**Capabilities**:
+- Extract structured episodes from completed session logs
 - Query past sessions by outcome/task/date
-- Replay decision sequences
+- Read decision sequences and event timelines
 - 95% token reduction vs full session logs
 
-### Tier 3: Causal Graph (Planned)
+**Architecture**: Markdown notes in `episodes/` folder with structured frontmatter, integrated with basic-memory knowledge graph.
 
-Decision pattern tracking with statistical validation. See ADR-007 for architecture principles.
+**Usage**:
 
-**Planned capabilities**:
+```bash
+# Extract episode from completed session
+bun run apps/claude-plugin/skills/memory/scripts/extract-episode.ts \
+  .agents/sessions/2026-01-20-session-06.md
 
-- Track cause-effect relationships across sessions
-- Success rate tracking for patterns
-- Anti-pattern detection
-- Root cause analysis with causal path tracing
+# Query episodes by outcome
+mcp__plugin_brain_brain__search({
+  query: "outcome:failure",
+  folder: "episodes",
+  limit: 10
+})
+
+# Read specific episode
+mcp__plugin_brain_brain__read_note({
+  identifier: "EPISODE-2026-01-20-session-06"
+})
+```
+
+### Tier 3: Causal Graph
+
+Decision pattern tracking with statistical validation. Prevents repeated mistakes through success rate tracking.
+
+**Capabilities**:
+- Track cause-effect relationships via WikiLink relations
+- Success rate tracking for patterns (running average)
+- Anti-pattern detection (low success rate patterns)
+- Pattern queries via semantic search
+
+**Architecture**: Pattern notes in `patterns/` folder with typed WikiLink relations (causes, enables, prevents, correlates).
+
+**Usage**:
+
+```bash
+# Add new pattern
+bun run apps/claude-plugin/skills/memory/scripts/add-pattern.ts \
+  --name "Memory-First Investigation" \
+  --trigger "Agent wants to change existing system" \
+  --action "Search memory before making changes" \
+  --success-rate 0.95
+
+# Query high success patterns
+mcp__plugin_brain_brain__search({
+  query: "success_rate:>0.7",
+  folder: "patterns"
+})
+
+# Find antipatterns
+mcp__plugin_brain_brain__search({
+  query: "success_rate:<0.3",
+  folder: "patterns"
+})
+```
+
+**Reference**: See ADR-018 for complete episodic and causal memory architecture.
 
 ---
