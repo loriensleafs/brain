@@ -1,39 +1,45 @@
 ---
 name: memory
-version: 0.2.0
-description: Unified four-tier memory system for AI agents. Tier 1 Semantic (Brain+Forgetful
-  search), Tier 2 Episodic (session replay), Tier 3 Causal (decision patterns). Enables
-  memory-first architecture per ADR-007.
+version: 0.1.0
+description: Memory system for AI agents. Tier 1 Semantic (Brain MCP search). Tier 2-3
+  (Episodic/Causal) planned for future phases. Enables memory-first architecture.
 license: MIT
 model: claude-sonnet-4-5
-agents:
-  - memory
-  - context-retrieval
 metadata:
-  adr: ADR-037, ADR-038
+  adr: ADR-007
+  reference: ai-agents memory skill v0.2.0
+  brain_version: 0.1.0
   timelessness: 8/10
 ---
 # Memory System Skill
 
-Unified memory operations across four tiers for AI agents.
+Memory operations for AI agents using Brain MCP.
 
 ---
 
 ## Quick Start
 
-```powershell
-# Check system health
-pwsh .claude/skills/memory/scripts/Test-MemoryHealth.ps1
+```typescript
+// Search memory (Tier 1 - Semantic)
+mcp__plugin_brain_brain__search({
+  query: "git hooks",
+  limit: 10,
+  mode: "auto"
+})
 
-# Search memory (Tier 1)
-pwsh .claude/skills/memory/scripts/Search-Memory.ps1 -Query "git hooks"
+// List available memories
+mcp__plugin_brain_brain__list_directory({
+  dir_name: "/",
+  depth: 2
+})
 
-# Extract episode from session (Tier 2)
-pwsh .claude/skills/memory/scripts/Extract-SessionEpisode.ps1 -SessionLogPath ".agents/sessions/2026-01-01-session-126.md"
-
-# Update causal graph (Tier 3)
-pwsh .claude/skills/memory/scripts/Update-CausalGraph.ps1
+// Read specific memory
+mcp__plugin_brain_brain__read_note({
+  identifier: "usage-mandatory"
+})
 ```
+
+**Tier 2 (Episodic) and Tier 3 (Causal)**: Planned for future phases. See ADR-007 for architecture principles that will guide implementation.
 
 ---
 
@@ -57,7 +63,7 @@ pwsh .claude/skills/memory/scripts/Update-CausalGraph.ps1
 **With memory search** (Chesterton's Fence investigation):
 
 - Agent encounters complex code
-- Searches memory: `Search-Memory.ps1 -Query "validation logic edge case"`
+- Searches memory: `mcp__plugin_brain_brain__search({ query: "validation logic edge case" })`
 - Finds past incident explaining why code exists
 - Makes informed decision: preserve, modify, or replace with equivalent safety
 
@@ -67,11 +73,11 @@ When you encounter something you want to change:
 
 | Change Type | Memory Search Required |
 |-------------|------------------------|
-| Remove ADR constraint | `Search-Memory.ps1 -Query "[constraint name]"` |
-| Bypass protocol | `Search-Memory.ps1 -Query "[protocol name] why"` |
-| Delete >100 lines | `Search-Memory.ps1 -Query "[component] purpose"` |
-| Refactor complex code | `Search-Memory.ps1 -Query "[component] edge case"` |
-| Change workflow | `Search-Memory.ps1 -Query "[workflow] rationale"` |
+| Remove ADR constraint | `mcp__plugin_brain_brain__search({ query: "[constraint name]" })` |
+| Bypass protocol | `mcp__plugin_brain_brain__search({ query: "[protocol name] why" })` |
+| Delete >100 lines | `mcp__plugin_brain_brain__search({ query: "[component] purpose" })` |
+| Refactor complex code | `mcp__plugin_brain_brain__search({ query: "[component] edge case" })` |
+| Change workflow | `mcp__plugin_brain_brain__search({ query: "[workflow] rationale" })` |
 
 ### What Memory Contains (Git Archaeology)
 
@@ -81,12 +87,12 @@ When you encounter something you want to change:
 - Why do skills exist instead of raw CLI? (usage-mandatory)
 - What incidents led to BLOCKING gates? (protocol-blocking-gates)
 
-**Tier 2 (Episodic)**: Past session outcomes
+**Tier 2 (Episodic)**: Past session outcomes [FUTURE]
 
 - What happened when we tried approach X? (session replay)
 - What edge cases did we encounter? (failure episodes)
 
-**Tier 3 (Causal)**: Decision patterns
+**Tier 3 (Causal)**: Decision patterns [FUTURE]
 
 - What decisions led to success? (causal paths)
 - What patterns should we repeat/avoid? (success/failure patterns)
@@ -95,9 +101,9 @@ When you encounter something you want to change:
 
 **Before changing existing systems, you MUST**:
 
-1. `pwsh .claude/skills/memory/scripts/Search-Memory.ps1 -Query "[topic]"`
+1. `mcp__plugin_brain_brain__search({ query: "[topic]" })`
 2. Review results for historical context
-3. If insufficient, escalate to Tier 2/3
+3. If insufficient, document gap (Tiers 2-3 not yet available)
 4. Document findings in decision rationale
 5. Only then proceed with change
 
@@ -107,12 +113,12 @@ When you encounter something you want to change:
 
 ### Connection to Chesterton's Fence Analysis
 
-See `.agents/analysis/chestertons-fence.md` for:
+See ADR-007 for:
 
-- 4-phase decision framework (Investigation → Understanding → Evaluation → Action)
-- Application to ai-agents project (ADR-037 recursion guard, skills-first violations)
-- Decision matrix for when to investigate
-- Implementation checklist
+- Memory-first architecture principles
+- Investigation protocol
+- Verification requirements
+- BLOCKING gate enforcement
 
 **Key takeaway**: Memory IS your investigation tool. It contains the "why" that Chesterton's Fence requires you to discover.
 
@@ -122,29 +128,31 @@ See `.agents/analysis/chestertons-fence.md` for:
 
 | Trigger Phrase | Maps To |
 |----------------|---------|
-| "search memory for X" | Tier 1: Search-Memory.ps1 |
-| "what do we know about X" | Tier 1: Search-Memory.ps1 |
-| "extract episode from session" | Tier 2: Extract-SessionEpisode.ps1 |
-| "what happened in session X" | Tier 2: Get-Episode -SessionId "X" |
-| "find sessions with failures" | Tier 2: Get-Episodes -Outcome "failure" |
-| "update causal graph" | Tier 3: Update-CausalGraph.ps1 |
-| "what patterns led to success" | Tier 3: Get-Patterns |
-| "check memory health" | Test-MemoryHealth.ps1 |
+| "search memory for X" | Tier 1: `mcp__plugin_brain_brain__search()` |
+| "what do we know about X" | Tier 1: `mcp__plugin_brain_brain__search()` |
+| "list memories" | Tier 1: `mcp__plugin_brain_brain__list_directory()` |
+| "read memory X" | Tier 1: `mcp__plugin_brain_brain__read_note()` |
+| "extract episode from session" | Tier 2: [FUTURE] |
+| "what happened in session X" | Tier 2: [FUTURE] |
+| "find sessions with failures" | Tier 2: [FUTURE] |
+| "update causal graph" | Tier 3: [FUTURE] |
+| "what patterns led to success" | Tier 3: [FUTURE] |
 
 ---
 
 ## Quick Reference
 
-| Operation | Name | Key Parameters |
+| Operation | Tool | Key Parameters |
 |-----------|------|----------------|
-| Search facts/patterns | `Search-Memory.ps1` | `-Query`, `-LexicalOnly`, `-MaxResults` |
-| Get single session | `Get-Episode` | `-SessionId` |
-| Find multiple sessions | `Get-Episodes` | `-Outcome`, `-Task`, `-Since` |
-| Trace causation | `Get-CausalPath` | `-FromLabel`, `-ToLabel` |
-| Find success patterns | `Get-Patterns` | `-MinSuccessRate` |
-| Extract episode | `Extract-SessionEpisode.ps1` | `-SessionLogPath` |
-| Update patterns | `Update-CausalGraph.ps1` | `-EpisodePath`, `-DryRun` |
-| Health check | `Test-MemoryHealth.ps1` | `-Format` (Json/Table) |
+| Search facts/patterns | `mcp__plugin_brain_brain__search` | `query`, `mode`, `limit` |
+| List memories | `mcp__plugin_brain_brain__list_directory` | `dir_name`, `depth` |
+| Read memory | `mcp__plugin_brain_brain__read_note` | `identifier` |
+| Write memory | `mcp__plugin_brain_brain__write_note` | `title`, `content`, `folder` |
+| Edit memory | `mcp__plugin_brain_brain__edit_note` | `identifier`, `operation`, `content` |
+| Get single session | [FUTURE] Tier 2 | - |
+| Find multiple sessions | [FUTURE] Tier 2 | - |
+| Trace causation | [FUTURE] Tier 3 | - |
+| Find success patterns | [FUTURE] Tier 3 | - |
 
 ---
 
@@ -154,26 +162,31 @@ See `.agents/analysis/chestertons-fence.md` for:
 What do you need?
 │
 ├─► Current facts, patterns, or rules?
-│   └─► TIER 1: Search-Memory.ps1
+│   └─► TIER 1: mcp__plugin_brain_brain__search()
 │
-├─► What happened in a specific session?
-│   └─► TIER 2: Get-Episode -SessionId "..."
+├─► List available memories?
+│   └─► TIER 1: mcp__plugin_brain_brain__list_directory()
 │
-├─► Recent sessions with specific outcome?
-│   └─► TIER 2: Get-Episodes -Outcome "failure" -Since 7days
+├─► Read specific memory?
+│   └─► TIER 1: mcp__plugin_brain_brain__read_note()
 │
-├─► Why did decision X lead to outcome Y?
-│   └─► TIER 3: Get-CausalPath -FromLabel "..." -ToLabel "..."
+├─► What happened in a specific session? [FUTURE]
+│   └─► TIER 2: Episode system (planned)
 │
-├─► What patterns have high success rate?
-│   └─► TIER 3: Get-Patterns -MinSuccessRate 0.7
+├─► Recent sessions with specific outcome? [FUTURE]
+│   └─► TIER 2: Episode system (planned)
+│
+├─► Why did decision X lead to outcome Y? [FUTURE]
+│   └─► TIER 3: Causal graph (planned)
+│
+├─► What patterns have high success rate? [FUTURE]
+│   └─► TIER 3: Causal graph (planned)
 │
 ├─► Need to store new knowledge?
-│   ├─ From completed session? → Extract-SessionEpisode.ps1
-│   └─ Factual knowledge? → using-forgetful-memory skill
+│   └─► mcp__plugin_brain_brain__write_note() or edit_note()
 │
 └─► Not sure which tier?
-    └─► Start with TIER 1 (Search-Memory), escalate if insufficient
+    └─► Start with TIER 1 (search), document gaps for future tiers
 ```
 
 ---
@@ -183,25 +196,9 @@ What do you need?
 | Anti-Pattern | Do This Instead |
 |--------------|-----------------|
 | Skipping memory search | Always search before multi-step reasoning |
-| Tier confusion | Follow decision tree explicitly |
-| Forgetful dependency | Use `-LexicalOnly` fallback |
-| Stale causal graph | Run `Update-CausalGraph.ps1` after extractions |
-| Incomplete extraction | Only extract from COMPLETED sessions |
-
----
-
-## See Also
-
-| Document | Content |
-|----------|---------|
-| [quick-start.md](references/quick-start.md) | Common workflows |
-| [skill-reference.md](references/skill-reference.md) | Detailed script parameters |
-| [tier-selection-guide.md](references/tier-selection-guide.md) | When to use each tier |
-| [memory-router.md](references/memory-router.md) | ADR-037 router architecture |
-| [reflexion-memory.md](references/reflexion-memory.md) | ADR-038 episode/causal schemas |
-| [troubleshooting.md](references/troubleshooting.md) | Error recovery |
-| [benchmarking.md](references/benchmarking.md) | Performance targets |
-| [agent-integration.md](references/agent-integration.md) | Multi-agent patterns |
+| Using old Serena/Forgetful tools | Use Brain MCP tools (`mcp__plugin_brain_brain__*`) |
+| Expecting Tier 2-3 features | Document needs, these are planned for future |
+| Not documenting memory gaps | When memory lacks info, note it for future enhancement |
 
 ---
 
@@ -209,10 +206,9 @@ What do you need?
 
 | Data | Location |
 |------|----------|
-| Brain notes | `notes/*.md` |
-| Forgetful memories | HTTP MCP (vector DB) |
-| Episodes | `.agents/memory/episodes/*.json` |
-| Causal graph | `.agents/memory/causality/causal-graph.json` |
+| Brain notes | `~/memories/{project}/` or configured notes path |
+| Episodes | [FUTURE] Tier 2 |
+| Causal graph | [FUTURE] Tier 3 |
 
 ---
 
@@ -221,13 +217,10 @@ What do you need?
 | Operation | Verification |
 |-----------|--------------|
 | Search completed | Result count > 0 OR logged "no results" |
-| Episode extracted | JSON file in `.agents/memory/episodes/` |
-| Graph updated | Stats show nodes/edges added |
-| Health check | All tiers show "available: true" |
-
-```powershell
-pwsh .claude/skills/memory/scripts/Test-MemoryHealth.ps1 -Format Table
-```
+| Memory read | Note content returned |
+| Memory written | Confirmation with permalink |
+| Episode extracted | [FUTURE] Tier 2 |
+| Graph updated | [FUTURE] Tier 3 |
 
 ---
 
@@ -235,6 +228,33 @@ pwsh .claude/skills/memory/scripts/Test-MemoryHealth.ps1 -Format Table
 
 | Skill | When to Use Instead |
 |-------|---------------------|
-| `using-forgetful-memory` | Deep Forgetful operations (create, update, link) |
-| `curating-memories` | Memory maintenance (obsolete, deduplicate) |
-| `exploring-knowledge-graph` | Multi-hop graph traversal |
+| `curating-memories` | Memory maintenance (if available) |
+| `exploring-knowledge-graph` | Multi-hop graph traversal (if available) |
+
+---
+
+## Future Phases
+
+### Tier 2: Episodic Memory (Planned)
+
+Session replay and structured episode extraction. See ADR-007 for architecture principles that will guide design.
+
+**Planned capabilities**:
+
+- Extract structured episodes from session logs
+- Query past sessions by outcome/task/date
+- Replay decision sequences
+- 95% token reduction vs full session logs
+
+### Tier 3: Causal Graph (Planned)
+
+Decision pattern tracking with statistical validation. See ADR-007 for architecture principles.
+
+**Planned capabilities**:
+
+- Track cause-effect relationships across sessions
+- Success rate tracking for patterns
+- Anti-pattern detection
+- Root cause analysis with causal path tracing
+
+---
