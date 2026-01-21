@@ -215,6 +215,12 @@ What do you need?
 | Using old Serena/Forgetful tools | Use Brain MCP tools (`mcp__plugin_brain_brain__*`) |
 | Expecting Tier 2-3 features | Document needs, these are planned for future |
 | Not documenting memory gaps | When memory lacks info, note it for future enhancement |
+| Direct write_note call (non-approved agent) | Delegate to memory agent |
+| Writing to wrong folder | Check entity type to folder mapping |
+| Missing CAPS prefix in filename | Follow pattern: `{PREFIX}-{NNN}-{topic}.md` |
+| Fewer than 3 observations | Add more facts/decisions with categories |
+| No relations section | Add 2+ wikilinks to related entities |
+| Generic NOTE-* entity type | Choose specific entity type (13 valid types) |
 
 ---
 
@@ -247,6 +253,153 @@ What do you need?
 |-------|---------------------|
 | `curating-memories` | Memory maintenance (if available) |
 | `exploring-knowledge-graph` | Multi-hop graph traversal (if available) |
+
+---
+
+## Write Operations Governance (BLOCKING)
+
+> **Reference**: ADR-019 Memory Operations Governance
+
+**Most agents MUST NOT call `write_note` or `edit_note` directly.**
+
+Write operations require convention compliance. Non-compliant writes create governance debt:
+
+- Notes in wrong folders
+- Inconsistent naming (missing CAPS prefix)
+- Missing quality thresholds
+- Broken knowledge graph relations
+
+### Who Can Write Directly?
+
+| Agent | write_note | edit_note | Rationale |
+|-------|------------|-----------|-----------|
+| memory | Yes | Yes | Primary memory owner |
+| skillbook | Yes | Yes | Creates SKILL-* entities |
+| retrospective | Yes | Yes | Creates RETRO-* entities |
+| spec-generator | Yes | Yes | Creates REQ/DESIGN/TASK |
+| **All others** | **No** | **No** | Delegate to memory agent |
+
+### Delegation Protocol (MANDATORY for non-approved agents)
+
+If you need to create or update a memory note, delegate to memory agent:
+
+```text
+Task(subagent_type="memory", prompt="Create [entity-type] note for [topic]:
+- Folder: [correct folder per entity type]
+- Title: [CAPS-PREFIX-NNN-topic]
+- Context: [why this matters]
+- Observations: [3-5 facts/decisions with categories]
+- Relations: [2-3 wikilinks to related entities]
+")
+```
+
+### Pre-Flight Validation (for approved agents)
+
+Before calling `write_note` or `edit_note`, validate:
+
+```markdown
+### Pre-Flight Checklist (MUST all pass)
+
+- [ ] Entity type is valid (13 types only, see table below)
+- [ ] Folder matches entity type (see mapping)
+- [ ] File name follows CAPS prefix pattern
+- [ ] Frontmatter has: title, type, tags (2-5)
+- [ ] Observations section: 3-10 entries
+- [ ] Observation format: `- [category] content #tags`
+- [ ] Relations section: 2-8 entries
+- [ ] Relation format: `- relation_type [[Target Entity]]`
+```
+
+### Entity Type to Folder Mapping (Canonical)
+
+| Entity Type | Folder | File Pattern |
+|-------------|--------|--------------|
+| decision | decisions/ | `ADR-{NNN}-{topic}.md` |
+| session | sessions/ | `SESSION-YYYY-MM-DD-NN-{topic}.md` |
+| requirement | specs/{spec}/requirements/ | `REQ-{NNN}-{topic}.md` |
+| design | specs/{spec}/design/ | `DESIGN-{NNN}-{topic}.md` |
+| task | specs/{spec}/tasks/ | `TASK-{NNN}-{topic}.md` |
+| analysis | analysis/ | `ANALYSIS-{NNN}-{topic}.md` |
+| feature | planning/ | `FEATURE-{NNN}-{topic}.md` |
+| epic | roadmap/ | `EPIC-{NNN}-{name}.md` |
+| critique | critique/ | `CRIT-{NNN}-{topic}.md` |
+| test-report | qa/ | `QA-{NNN}-{topic}.md` |
+| security | security/ | `SEC-{NNN}-{component}.md` |
+| retrospective | retrospective/ | `RETRO-YYYY-MM-DD-{topic}.md` |
+| skill | skills/ | `SKILL-{NNN}-{topic}.md` |
+
+**No generic `NOTE-*` type allowed.** Forces proper categorization.
+
+### Valid Observation Categories
+
+```text
+[fact], [decision], [requirement], [technique], [insight],
+[problem], [solution], [constraint], [risk], [outcome]
+```
+
+### Valid Relation Types
+
+```text
+implements, depends_on, relates_to, extends, part_of,
+inspired_by, contains, pairs_with, supersedes, leads_to, caused_by
+```
+
+### Quality Thresholds
+
+| Element | Min | Max | Example |
+|---------|-----|-----|---------|
+| Observations | 3 | 10 | `- [decision] Using JWT #auth` |
+| Relations | 2 | 8 | `- implements [[REQ-001]]` |
+| Tags | 2 | 5 | `tags: [auth, security]` |
+
+### Example: Compliant Note Structure
+
+```markdown
+---
+title: ADR-019 Memory Governance
+type: decision
+tags: [memory, governance, enforcement]
+---
+
+# ADR-019 Memory Governance
+
+## Context
+
+Agents writing to memory without conventions create governance debt.
+
+## Observations
+
+- [decision] Tiered enforcement approach selected #architecture
+- [fact] 15+ agents had direct write access before governance #audit
+- [requirement] Pre-flight validation MUST pass before writes #blocking
+- [technique] Delegation to memory agent for non-approved agents #pattern
+
+## Relations
+
+- supersedes [[Ad-hoc Memory Writing]]
+- implements [[ADR-007 Memory-First Architecture]]
+- relates_to [[Session 06 Entity Standards]]
+```
+
+### Write Operation Decision Tree
+
+```text
+Need to write/edit a memory note?
+│
+├─► Are you an approved agent (memory, skillbook, retrospective, spec-generator)?
+│   │
+│   ├─► YES: Run pre-flight validation checklist
+│   │   │
+│   │   ├─► All checks PASS: Proceed with write_note/edit_note
+│   │   │
+│   │   └─► Any check FAILS: Fix violations before writing
+│   │
+│   └─► NO: Delegate to memory agent (MANDATORY)
+│       │
+│       └─► Task(subagent_type="memory", prompt="Create/update...")
+│
+└─► Read/search operations: Always allowed directly
+```
 
 ---
 
