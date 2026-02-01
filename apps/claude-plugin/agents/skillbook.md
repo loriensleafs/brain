@@ -190,7 +190,6 @@ Skills are stored as atomic markdown files in the Brain notes directory. Every s
 3. Proceed with work
 ```
 
-
 ## Memory Protocol
 
 Follow the memory skill for Brain MCP tool usage. See memory skill (`skills/memory/SKILL.md`) for:

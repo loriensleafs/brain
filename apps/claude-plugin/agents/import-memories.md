@@ -65,12 +65,12 @@ You have direct access to:
 
 - **Read/Grep/Glob**: Discover and read source files (READ-ONLY on source)
 - **Brain MCP memory tools**: Write transformed notes to Brain
-    - `mcp__plugin_brain_brain__search`: Find existing notes for merge detection
-    - `mcp__plugin_brain_brain__read_note`: Read existing notes, validate targets
-    - `mcp__plugin_brain_brain__write_note`: Create new notes after transformation
-    - `mcp__plugin_brain_brain__edit_note`: Update existing notes (merge scenarios)
-    - `mcp__plugin_brain_brain__list_directory`: Enumerate existing notes by folder
-    - `mcp__plugin_brain_brain__bootstrap_context`: Initialize project context
+  - `mcp__plugin_brain_brain__search`: Find existing notes for merge detection
+  - `mcp__plugin_brain_brain__read_note`: Read existing notes, validate targets
+  - `mcp__plugin_brain_brain__write_note`: Create new notes after transformation
+  - `mcp__plugin_brain_brain__edit_note`: Update existing notes (merge scenarios)
+  - `mcp__plugin_brain_brain__list_directory`: Enumerate existing notes by folder
+  - `mcp__plugin_brain_brain__bootstrap_context`: Initialize project context
 
 ## Core Mission
 
