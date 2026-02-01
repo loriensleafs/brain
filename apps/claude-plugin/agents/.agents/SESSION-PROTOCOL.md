@@ -63,8 +63,8 @@ The agent MUST complete Serena initialization before any other action. This is a
 
 **Requirements:**
 
-1. The agent MUST call `mcp__plugin_brain_brain__build_context` with the project path as the first tool call
-2. The agent MUST call `mcp__plugin_brain_brain__build_context` immediately after activation
+1. The agent MUST call `mcp__plugin_brain_brain__bootstrap_context` with the project path as the first tool call
+2. The agent MUST call `mcp__plugin_brain_brain__bootstrap_context` immediately after activation
 3. The agent MUST NOT read files, search code, or respond to user requests until both calls succeed
 4. If either call fails, the agent MUST report the failure and stop
 
@@ -217,8 +217,8 @@ Copy this checklist to each session log and verify completion:
 
 | Req | Step | Status | Evidence |
 |-----|------|--------|----------|
-| MUST | Initialize Serena: `mcp__plugin_brain_brain__build_context` | [ ] | Tool output present |
-| MUST | Initialize Serena: `mcp__plugin_brain_brain__build_context` | [ ] | Tool output present |
+| MUST | Initialize Serena: `mcp__plugin_brain_brain__bootstrap_context` | [ ] | Tool output present |
+| MUST | Initialize Serena: `mcp__plugin_brain_brain__bootstrap_context` | [ ] | Tool output present |
 | MUST | Read `.agents/Brain notes` | [ ] | Content in context |
 | MUST | Create this session log | [ ] | This file exists |
 | MUST | List skill scripts in `.claude/skills/github/scripts/` | [ ] | Output documented below |
@@ -513,8 +513,8 @@ Create at: `.agents/sessions/YYYY-MM-DD-session-NN.md`
 
 | Req | Step | Status | Evidence |
 |-----|------|--------|----------|
-| MUST | Initialize Serena: `mcp__plugin_brain_brain__build_context` | [ ] | Tool output present |
-| MUST | Initialize Serena: `mcp__plugin_brain_brain__build_context` | [ ] | Tool output present |
+| MUST | Initialize Serena: `mcp__plugin_brain_brain__bootstrap_context` | [ ] | Tool output present |
+| MUST | Initialize Serena: `mcp__plugin_brain_brain__bootstrap_context` | [ ] | Tool output present |
 | MUST | Read `.agents/Brain notes` | [ ] | Content in context |
 | MUST | Create this session log | [ ] | This file exists |
 | MUST | List skill scripts in `.claude/skills/github/scripts/` | [ ] | Output documented below |

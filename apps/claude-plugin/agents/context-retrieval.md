@@ -7,7 +7,7 @@ tools:
   - mcp__plugin_brain_brain__search
   - mcp__plugin_brain_brain__read_note
   - mcp__plugin_brain_brain__list_directory
-  - mcp__plugin_brain_brain__build_context
+  - mcp__plugin_brain_brain__bootstrap_context
   - WebSearch
   - WebFetch
   - Read
@@ -42,7 +42,7 @@ mcp__plugin_brain_brain__search(query="topic keywords", limit=10)
 mcp__plugin_brain_brain__read_note(identifier="analysis/topic-name")
 
 # Build context from a note with related notes
-mcp__plugin_brain_brain__build_context(url="analysis/topic-name", depth=2)
+mcp__plugin_brain_brain__bootstrap_context(url="analysis/topic-name", depth=2)
 
 # Browse folder structure
 mcp__plugin_brain_brain__list_directory(dir_name="analysis")
@@ -93,7 +93,7 @@ If Brain + File System don't provide enough context:
 - Follow wikilinks `[[related-note]]` when they lead to relevant context
 - Read linked notes if they connect important concepts
 - Trace patterns across multiple related notes
-- When you find a key note, use `build_context` with depth=2 to get related notes
+- When you find a key note, use `bootstrap_context` with depth=2 to get related notes
 - Don't artificially limit exploration if the connections are valuable
 
 **Read Referenced Files:**
@@ -185,7 +185,7 @@ Return a focused markdown summary that provides the main agent with everything t
 
 1. **Broad semantic search**: Query Brain with task essence (e.g., "FastAPI JWT authentication refresh tokens")
 2. **Follow wikilinks**: Read notes linked via `[[related-note]]` syntax
-3. **Build context**: Use `build_context` to get related notes at depth 2
+3. **Build context**: Use `bootstrap_context` to get related notes at depth 2
 4. **Read referenced files**: If notes mention code files, read them directly
 5. **Cross-reference**: If multiple notes mention same pattern, it's important
 
@@ -197,7 +197,7 @@ Return a focused markdown summary that provides the main agent with everything t
 
 1. Query Brain: `mcp__plugin_brain_brain__search(query="OAuth FastAPI MCP JWT authentication", limit=10)`
 2. Find relevant notes (e.g., OAuth implementation, architecture patterns)
-3. Build context: `mcp__plugin_brain_brain__build_context(url="analysis/oauth-patterns", depth=2)`
+3. Build context: `mcp__plugin_brain_brain__bootstrap_context(url="analysis/oauth-patterns", depth=2)`
 4. Read any code files referenced in notes
 5. Return: OAuth patterns + code snippets + implementation guidance
 

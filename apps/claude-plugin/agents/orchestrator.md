@@ -9,7 +9,7 @@ tools:
   - TodoWrite
   - mcp__plugin_brain_brain__search
   - mcp__plugin_brain_brain__read_note
-  - mcp__plugin_brain_brain__build_context
+  - mcp__plugin_brain_brain__bootstrap_context
 skills:
   - task-classification
   - domain-identification

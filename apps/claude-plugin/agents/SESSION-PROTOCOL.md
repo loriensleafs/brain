@@ -218,7 +218,7 @@ Copy this checklist to each session log and verify completion:
 
 | Req | Step | Status | Evidence |
 |-----|------|--------|----------|
-| MUST | Initialize Brain: `mcp__plugin_brain_brain__build_context` | [ ] | Tool output present |
+| MUST | Initialize Brain: `mcp__plugin_brain_brain__bootstrap_context` | [ ] | Tool output present |
 | MUST | Load initial context: `mcp__plugin_brain_brain__read_note` | [ ] | Tool output present |
 | MUST | Search Brain for cross-session context | [ ] | Search results in context |
 | MUST | Create this session log | [ ] | This file exists |
@@ -513,7 +513,7 @@ tags: [session, YYYY-MM-DD]
 
 | Req | Step | Status | Evidence |
 |-----|------|--------|----------|
-| MUST | Initialize Brain: `mcp__plugin_brain_brain__build_context` | [ ] | Tool output present |
+| MUST | Initialize Brain: `mcp__plugin_brain_brain__bootstrap_context` | [ ] | Tool output present |
 | MUST | Load initial context: `mcp__plugin_brain_brain__read_note` | [ ] | Tool output present |
 | MUST | Search Brain for cross-session context | [ ] | Search results in context |
 | MUST | Create this session log | [ ] | This file exists |

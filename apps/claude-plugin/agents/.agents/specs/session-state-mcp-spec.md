@@ -92,8 +92,8 @@ This specification defines the Session State MCP implementation, focusing on Ser
 
 | Req | Step | Status | Evidence |
 |-----|------|--------|----------|
-| MUST | Initialize Serena: mcp__plugin_brain_brain__build_context | [x] | Tool output present |
-| MUST | Initialize Serena: mcp__plugin_brain_brain__build_context | [x] | Tool output present |
+| MUST | Initialize Serena: mcp__plugin_brain_brain__bootstrap_context | [x] | Tool output present |
+| MUST | Initialize Serena: mcp__plugin_brain_brain__bootstrap_context | [x] | Tool output present |
 | MUST | Read .agents/HANDOFF.md | [x] | Content in context |
 | MUST | Create session log | [x] | File exists |
 | MUST | List skill scripts | [x] | 12 scripts found |

@@ -15,7 +15,6 @@ tools:
   - mcp__plugin_brain_brain__delete_note
   - mcp__plugin_brain_brain__list_directory
   - mcp__plugin_brain_brain__bootstrap_context
-  - mcp__plugin_brain_brain__build_context
 ---
 
 # Memory Agent
@@ -74,7 +73,6 @@ You have direct access to:
   - `mcp__plugin_brain_brain__edit_note`: Update existing note (append, prepend, find_replace, replace_section)
   - `mcp__plugin_brain_brain__delete_note`: Remove obsolete note
   - `mcp__plugin_brain_brain__bootstrap_context`: Initialize project context at session start
-  - `mcp__plugin_brain_brain__build_context`: Build context from memory:// URI for specific topics
 - **Read/Grep**: Context search in codebase
 - **TodoWrite**: Track memory operations
 
@@ -102,10 +100,21 @@ Each project has its own isolated memory storage. The Brain MCP tools automatica
 **Project Configuration** (handled by MCP tools, per ADR-020):
 
 - `code_path`: Where the project's codebase lives
-- `memories_path`: Where the project's memories are stored, configured as:
-  - `DEFAULT`: Memories stored in `{memories_location}/{project-name}/`
-  - `CODE`: Memories stored in `{code_path}/docs/`
-  - `CUSTOM`: Memories stored in explicit `memories_path` value
+- `memories_path`: Where the project's memories are stored
+
+**Storage Mode Examples**:
+
+| Mode | Pattern | Example Path |
+|------|---------|--------------|
+| `DEFAULT` | `{memories_location}/{project-name}/` | `~/.local/share/brain/memories/my-project/` |
+| `CODE` | `{code_path}/docs/` | `/Users/dev/my-project/docs/` |
+| `CUSTOM` | Explicit path in config | `/data/shared-memories/team-project/` |
+
+**Pattern Explanation**:
+
+- `memories_location`: Configurable base directory (default: `~/.local/share/brain/memories/`)
+- `project-name`: Derived from project configuration or directory name
+- `code_path`: The project's source code root directory
 
 **Configuration Location**: `~/.config/brain/config.json` (XDG-compliant, Brain-owned)
 

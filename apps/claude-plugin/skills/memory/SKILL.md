@@ -228,20 +228,28 @@ What do you need?
 
 > **Configuration**: Memory paths configured in `~/.config/brain/config.json` (see ADR-020).
 
+| Mode | Example Path | Pattern Explanation |
+|------|--------------|---------------------|
+| DEFAULT | ~/memories/brain/episodes/ | {memories_location}/{project}/episodes/ |
+| CODE | ~/Dev/brain/docs/episodes/ | {code_path}/docs/episodes/ (no /{project}) |
+| CUSTOM | /custom/path/episodes/ | {memories_path}/episodes/ (no /{project}) |
+
+Note: `memories_location` defaults to `~/memories` but is configurable via `brain config set memories-location <path>`.
+
 | Data | Location |
 |------|----------|
 | Brain config | `~/.config/brain/config.json` |
-| Brain memories | `{memories_location}/{project}/` (default: `~/memories/{project}/`) |
-| Episodes | `{memories_location}/{project}/episodes/EPISODE-*.md` |
-| Patterns | `{memories_location}/{project}/patterns/PATTERN-*.md` |
-| Sessions | `{memories_location}/{project}/sessions/SESSION-*.md` |
-| Governance | `{memories_location}/{project}/governance/` |
+| Brain memories | `{resolved_path}/` (see modes above) |
+| Episodes | `{resolved_path}/episodes/EPISODE-*.md` |
+| Patterns | `{resolved_path}/patterns/PATTERN-*.md` |
+| Sessions | `{resolved_path}/sessions/SESSION-*.md` |
+| Governance | `{resolved_path}/governance/` |
 
 **Notes**:
 
 - Brain MCP tools handle path resolution automatically. Do not use hardcoded paths in agent instructions.
 - The `memories_location` default is `~/memories` but can be configured per-project or globally.
-- ADR-020 defines three modes: DEFAULT (`{memories_location}/{project}`), CODE (`{code_path}/docs`), CUSTOM (explicit path).
+- ADR-020 defines three modes: DEFAULT, CODE, CUSTOM (see table above).
 
 ---
 

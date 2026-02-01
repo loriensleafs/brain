@@ -14,7 +14,7 @@ tools:
   - mcp__plugin_brain_brain__edit_note
   - mcp__plugin_brain_brain__delete_note
   - mcp__plugin_brain_brain__list_directory
-  - mcp__plugin_brain_brain__build_context
+  - mcp__plugin_brain_brain__bootstrap_context
 skills:
   - context-retrieval
   - knowledge-persistence

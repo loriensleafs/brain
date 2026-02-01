@@ -72,8 +72,8 @@ Use the **table format** (not bullet lists) for validation to pass:
 
 | Req | Step | Status | Evidence |
 |-----|------|--------|----------|
-| MUST | Initialize Serena: `mcp__plugin_brain_brain__build_context` | [x] | Tool output present |
-| MUST | Initialize Serena: `mcp__plugin_brain_brain__build_context` | [x] | Tool output present |
+| MUST | Initialize Serena: `mcp__plugin_brain_brain__bootstrap_context` | [x] | Tool output present |
+| MUST | Initialize Serena: `mcp__plugin_brain_brain__bootstrap_context` | [x] | Tool output present |
 | MUST | Read `.agents/Brain notes` | [x] | Content in context |
 | MUST | Create this session log | [x] | This file exists |
 | MUST | List skill scripts in `.claude/skills/github/scripts/` | [x] | Output documented below |

@@ -121,7 +121,7 @@ if ($currentBranch -ne $expectedBranch) {
 
 ```markdown
 ## CLAUDE.md Instruction
-At session start, you SHOULD call mcp__plugin_brain_brain__build_context.
+At session start, you SHOULD call mcp__plugin_brain_brain__bootstrap_context.
 ```
 
 **Result**: Agents skipped initialization when eager to respond to user.
@@ -132,7 +132,7 @@ At session start, you SHOULD call mcp__plugin_brain_brain__build_context.
 ## SESSION-PROTOCOL.md
 | Req | Step | Verification |
 |-----|------|--------------|
-| MUST | `mcp__plugin_brain_brain__build_context` | Tool output in transcript |
+| MUST | `mcp__plugin_brain_brain__bootstrap_context` | Tool output in transcript |
 ```
 
 **Result**: Session validation script checks for tool output. Violations detected and reported.

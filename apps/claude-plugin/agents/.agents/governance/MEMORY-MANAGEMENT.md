@@ -55,8 +55,8 @@ This document describes the unified memory management workflow across three memo
 
 ```markdown
 ### Phase 1: Serena Initialization (BLOCKING)
-1. `mcp__plugin_brain_brain__build_context`
-2. `mcp__plugin_brain_brain__build_context`
+1. `mcp__plugin_brain_brain__bootstrap_context`
+2. `mcp__plugin_brain_brain__bootstrap_context`
 
 ### Phase 2: Context Retrieval (BLOCKING)
 1. Read `.agents/HANDOFF.md` (read-only reference)
