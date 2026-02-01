@@ -1,16 +1,18 @@
 /**
- * Project resolution with 3-level hierarchy.
+ * Project resolution with hierarchy.
  *
  * Resolution priority:
  * 1. Explicit parameter
  * 2. Session state (in-memory)
  * 3. BM_PROJECT env var
  * 4. BM_ACTIVE_PROJECT env var (legacy)
- * 5. null → caller shows error
+ * 5. CWD matching against Brain config code_paths
+ * 6. null → caller shows error
  *
- * CWD matching was removed to make resolution more explicit and less confusing.
+ * @see ADR-020 for configuration architecture
  */
 
+import { resolveProject as resolveProjectFromCwd } from "@brain/utils";
 import { logger } from "../utils/internal/logger";
 
 // Session state (in-memory, per-process)
@@ -20,9 +22,10 @@ let activeProject: string | null = null;
  * Resolve project using the hierarchy.
  *
  * @param explicit - Explicitly specified project name (highest priority)
+ * @param cwd - Working directory for CWD-based resolution (optional)
  * @returns Resolved project name or null if none found
  */
-export function resolveProject(explicit?: string): string | null {
+export function resolveProject(explicit?: string, cwd?: string): string | null {
   // 1. Explicit parameter always wins
   if (explicit) {
     logger.debug({ project: explicit }, "Project from explicit parameter");
@@ -49,7 +52,14 @@ export function resolveProject(explicit?: string): string | null {
     return envActive;
   }
 
-  // 5. No project resolved
+  // 5. CWD matching against Brain config code_paths
+  const cwdProject = resolveProjectFromCwd(cwd);
+  if (cwdProject) {
+    logger.debug({ project: cwdProject }, "Project from CWD matching");
+    return cwdProject;
+  }
+
+  // 6. No project resolved
   logger.debug("No project resolved");
   return null;
 }
@@ -89,6 +99,7 @@ export function getResolutionHierarchy(): string[] {
     `2. Session state: ${activeProject || "none"}`,
     `3. BM_PROJECT env: ${process.env.BM_PROJECT || "none"}`,
     `4. BM_ACTIVE_PROJECT env: ${process.env.BM_ACTIVE_PROJECT || "none"}`,
-    "5. null (error)",
+    "5. CWD matching against Brain config",
+    "6. null (error)",
   ];
 }

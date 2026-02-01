@@ -59,24 +59,16 @@ type WorkflowStateInfo struct {
 var ExecCommandSession = exec.Command
 
 // identifyProject attempts to identify the active project for session start.
-// Uses the 5-level resolution hierarchy:
+// Uses the resolution hierarchy:
 // 1. BM_PROJECT env var
 // 2. BM_ACTIVE_PROJECT env var (legacy)
 // 3. BRAIN_PROJECT env var (Go-specific, backwards compatibility)
-// 4. CWD match against code_paths from ~/.basic-memory/brain-config.json
+// 4. CWD match against code_paths from ~/.config/brain/config.json
 // 5. Returns error (caller should prompt user)
 //
-// NOTE: CWD matching is ONLY used here in session_start, not in CLI commands.
 // The cwd parameter allows overriding the working directory for project resolution.
 // When empty, falls back to os.Getwd().
 func identifyProject(cwd string) (string, error) {
-	// First try env vars via resolveProject (no CWD matching there)
-	project := resolveProject("", "")
-	if project != "" {
-		return project, nil
-	}
-
-	// Session start gets special CWD matching
 	// Resolve CWD if not provided
 	if cwd == "" {
 		var err error
@@ -86,14 +78,8 @@ func identifyProject(cwd string) (string, error) {
 		}
 	}
 
-	// Load brain config for CWD matching
-	config, err := loadBrainConfig()
-	if err != nil {
-		return "", fmt.Errorf("could not load brain config: %w", err)
-	}
-
-	// Try CWD matching against configured code paths
-	project = matchCwdToProject(cwd, config.CodePaths)
+	// Use unified resolution with CWD matching
+	project := resolveProjectWithCwd("", cwd)
 	if project != "" {
 		return project, nil
 	}

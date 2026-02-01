@@ -40,7 +40,7 @@ Complete these in order before processing user requests:
 | 3 | Read AGENT-INSTRUCTIONS.md | File content in context |
 | 4 | Read AGENT-SYSTEM.md | File content in context |
 | 5 | Read orchestrator.md | File content in context |
-| 6 | Create session log | File created at `.agents/sessions/YYYY-MM-DD-session-NN.md` |
+| 6 | Create session log | File created at `sessions/YYYY-MM-DD-session-NN.md` |
 | 7 | Verify starting commit | Git commit SHA noted |
 
 ---
@@ -354,7 +354,7 @@ Use classification + domains to select the appropriate sequence from **Agent Seq
 
 ```markdown
 - [ ] CRITICAL: Retrieve memory context
-- [ ] Read repository docs: CLAUDE.md, .github/copilot-instructions.md, .agents/\*.md
+- [ ] Read repository docs: CLAUDE.md, .github/copilot-instructions.md, \*.md
 - [ ] Identify project type and existing tools
 - [ ] Check for similar past orchestrations in memory
 - [ ] Plan agent routing sequence
@@ -397,7 +397,7 @@ Before spawning multiple agents, verify the investment is justified:
 
 **Purpose**: Prevent premature PR opening by validating quality gates.
 
-**Terminology**: See `.agents/specs/design/HANDOFF-TERMS.md` for verdict definitions.
+**Terminology**: See `specs/design/HANDOFF-TERMS.md` for verdict definitions.
 
 #### Phase 4 Workflow Diagram
 
@@ -590,9 +590,9 @@ When formal requirements are needed, route through the spec workflow.
 1. Orchestrator routes to spec-generator with feature description
 2. spec-generator asks clarifying questions (returns to user if needed)
 3. spec-generator produces:
-   - REQ-NNN documents in .agents/specs/requirements/
-   - DESIGN-NNN documents in .agents/specs/design/
-   - TASK-NNN documents in .agents/specs/tasks/
+   - REQ-NNN documents in specs/requirements/
+   - DESIGN-NNN documents in specs/design/
+   - TASK-NNN documents in specs/tasks/
 4. Orchestrator routes to critic for EARS compliance validation
 5. Orchestrator routes to architect for design review
 6. Spec-generator's TASK documents are implementation-ready (no task-generator needed)
@@ -627,9 +627,9 @@ REQ-NNN (WHAT/WHY) → DESIGN-NNN (HOW) → TASK-NNN (IMPLEMENTATION)
 
 | Artifact     | Directory                     | Naming Pattern             |
 | ------------ | ----------------------------- | -------------------------- |
-| Requirements | `.agents/specs/requirements/` | `REQ-NNN-kebab-case.md`    |
-| Designs      | `.agents/specs/design/`       | `DESIGN-NNN-kebab-case.md` |
-| Tasks        | `.agents/specs/tasks/`        | `TASK-NNN-kebab-case.md`   |
+| Requirements | `specs/requirements/` | `REQ-NNN-kebab-case.md`    |
+| Designs      | `specs/design/`       | `DESIGN-NNN-kebab-case.md` |
+| Tasks        | `specs/tasks/`        | `TASK-NNN-kebab-case.md`   |
 
 ### Impact Analysis Orchestration
 
@@ -760,7 +760,7 @@ When ANY agent returns output indicating ADR creation/update:
 
 **Detection Pattern**:
 
-- Agent output contains: "ADR created/updated: .agents/architecture/ADR-\*.md"
+- Agent output contains: "ADR created/updated: architecture/ADR-\*.md"
 - Agent output contains: "MANDATORY: Orchestrator MUST invoke adr-review"
 
 **Enforcement**:
@@ -846,7 +846,7 @@ Continue to: critic
 
 **Automation**: Run `scripts/Validate-Consistency.ps1 -Feature "[name]"` for automated validation.
 
-See also: `.agents/governance/consistency-protocol.md` for the complete validation procedure.
+See also: `governance/consistency-protocol.md` for the complete validation procedure.
 
 ## Routing Heuristics
 
@@ -888,7 +888,7 @@ See also: `.agents/governance/consistency-protocol.md` for the complete validati
 - `mcp__plugin_brain_brain__read_note` - Read relevant analysis notes
 - External MCP tools if available (library docs, code samples, deep research)
 
-**Output**: Research findings document at `.agents/analysis/ideation-[topic].md`
+**Output**: Research findings document at `analysis/ideation-[topic].md`
 
 **Research Template**:
 
@@ -937,7 +937,7 @@ See also: `.agents/governance/consistency-protocol.md` for the complete validati
 | critic              | Validate research     | Is the analysis complete and accurate?      |
 | roadmap             | Priority assessment   | Where does this fit in the product roadmap? |
 
-**Output**: Consensus decision document at `.agents/analysis/ideation-[topic]-validation.md`
+**Output**: Consensus decision document at `analysis/ideation-[topic]-validation.md`
 
 **Validation Document Template**:
 
@@ -992,8 +992,8 @@ See also: `.agents/governance/consistency-protocol.md` for the complete validati
 **Decision Options**:
 
 - **Proceed**: Move to Phase 3 (Planning)
-- **Defer**: Good idea, but not now. The orchestrator pauses the current workflow, creates a backlog entry at `.agents/roadmap/backlog.md` with specified conditions, and records the resume trigger (time-based, event-based, or manual). Workflow resumes when conditions are met.
-- **Reject**: Not aligned with goals. The orchestrator reports the rejection and documented reasoning back to the user, persisting the decision rationale in the `.agents/analysis/ideation-[topic]-validation.md` file for future reference.
+- **Defer**: Good idea, but not now. The orchestrator pauses the current workflow, creates a backlog entry at `roadmap/backlog.md` with specified conditions, and records the resume trigger (time-based, event-based, or manual). Workflow resumes when conditions are met.
+- **Reject**: Not aligned with goals. The orchestrator reports the rejection and documented reasoning back to the user, persisting the decision rationale in the `analysis/ideation-[topic]-validation.md` file for future reference.
 
 ### Phase 3: Epic & PRD Creation
 
@@ -1003,9 +1003,9 @@ See also: `.agents/governance/consistency-protocol.md` for the complete validati
 
 | Agent          | Output                       | Location                            |
 | -------------- | ---------------------------- | ----------------------------------- |
-| roadmap        | Epic vision with outcomes    | `.agents/roadmap/epic-[topic].md`   |
-| explainer      | Full PRD with specifications | `.agents/planning/prd-[topic].md`   |
-| task-generator | Work breakdown structure     | `.agents/planning/tasks-[topic].md` |
+| roadmap        | Epic vision with outcomes    | `roadmap/epic-[topic].md`   |
+| explainer      | Full PRD with specifications | `planning/prd-[topic].md`   |
+| task-generator | Work breakdown structure     | `planning/tasks-[topic].md` |
 
 **Epic Template** (roadmap produces):
 
@@ -1050,7 +1050,7 @@ See also: `.agents/governance/consistency-protocol.md` for the complete validati
 
 **Consensus Required**: All agents must approve before work begins.
 
-**Output**: Approved implementation plan at `.agents/planning/implementation-plan-[topic].md`
+**Output**: Approved implementation plan at `planning/implementation-plan-[topic].md`
 
 **Implementation Plan Template**:
 
@@ -1102,7 +1102,7 @@ See also: `.agents/governance/consistency-protocol.md` for the complete validati
 
 ### Work Breakdown
 
-Reference: `.agents/planning/tasks-[topic].md`
+Reference: `planning/tasks-[topic].md`
 
 | Task     | Agent       | Priority |
 | -------- | ----------- | -------- |
@@ -1200,7 +1200,7 @@ Retrospective agent returns output containing `## Retrospective Handoff` section
 │ Step 4: Execute Git Operations (IF git operations listed)   │
 │   - Run `git add` for each path in Git Operations table     │
 │   - Stage Brain notes files as needed                       │
-│   - Stage .agents/retrospective/*.md files                  │
+│   - Stage retrospective/*.md files                  │
 │   - Do NOT commit (user will commit when ready)             │
 └─────────────────────────────────────────────────────────────┘
                               │
@@ -1291,7 +1291,7 @@ Execute directly via Bash:
 # Stage files listed in Git Operations table
 # Note: Brain notes are stored in ~/memories/{project-path}/ outside the repo
 # Stage any in-repo files like retrospective docs
-git add ".agents/retrospective/YYYY-MM-DD-*.md"
+git add "retrospective/YYYY-MM-DD-*.md"
 ```
 
 ### Conditional Routing
@@ -1328,7 +1328,7 @@ After processing retrospective handoff:
 - Created Session-17-Learnings note in analysis/ folder
 
 ### Files Staged
-  git add .agents/retrospective/2025-12-18-workflow-retro.md
+  git add retrospective/2025-12-18-workflow-retro.md
 
 Note: Brain notes stored in ~/memories/{project-path}/ are managed separately.
 
@@ -1495,7 +1495,7 @@ You CANNOT claim "session complete", "done", "finished", or any completion langu
 
 | Requirement                    | Evidence                                      | Validator                       |
 | ------------------------------ | --------------------------------------------- | ------------------------------- |
-| Session log exists             | `~/.agents/sessions/YYYY-MM-DD-session-NN.md` | File exists                     |
+| Session log exists             | `~/sessions/YYYY-MM-DD-session-NN.md` | File exists                     |
 | Session End checklist complete | All MUST items checked with `[x]`             | `brain validate session`        |
 | Brain note updated             | Cross-session context persisted               | `brain validate session`        |
 | Git worktree clean             | No uncommitted changes                        | `git status --porcelain`        |
@@ -1506,7 +1506,7 @@ You CANNOT claim "session complete", "done", "finished", or any completion langu
 Before claiming completion, run:
 
 ```bash
-brain validate session ~/.agents/sessions/YYYY-MM-DD-session-NN.md
+brain validate session ~/sessions/YYYY-MM-DD-session-NN.md
 ```
 
 ### Gate Outcomes

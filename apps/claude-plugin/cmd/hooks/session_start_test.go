@@ -14,6 +14,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/peterkloss/brain/packages/utils"
 )
 
 // mockExecCommandForSession creates a mock exec.Command that returns the provided output.
@@ -86,10 +88,10 @@ func TestIdentifyProject_FromEnvironment(t *testing.T) {
 func TestIdentifyProject_FromCwdMatch(t *testing.T) {
 	// Save and restore originals
 	origGetEnv := GetEnv
-	origBrainConfigPath := brainConfigPath
+	origBrainConfigPath := utils.GetBrainConfigPath
 	defer func() {
 		GetEnv = origGetEnv
-		brainConfigPath = origBrainConfigPath
+		utils.SetBrainConfigPath(origBrainConfigPath)
 	}()
 
 	// No environment variable set
@@ -97,16 +99,16 @@ func TestIdentifyProject_FromCwdMatch(t *testing.T) {
 
 	// Create temp config file with matching path
 	tmpDir := t.TempDir()
-	configPath := filepath.Join(tmpDir, "brain-config.json")
+	configPath := filepath.Join(tmpDir, "config.json")
 	cwd, _ := os.Getwd()
 	// Escape backslashes for JSON on Windows
 	escapedCwd := strings.ReplaceAll(cwd, "\\", "\\\\")
-	configContent := `{"code_paths": {"test-project": "` + escapedCwd + `"}}`
+	configContent := `{"version": "2.0.0", "projects": {"test-project": {"code_path": "` + escapedCwd + `"}}}`
 	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
 		t.Fatalf("Failed to write test config: %v", err)
 	}
 
-	brainConfigPath = func() string { return configPath }
+	utils.SetBrainConfigPath(func() string { return configPath })
 
 	// Test with empty CWD (falls back to os.Getwd())
 	project, err := identifyProject("")
@@ -122,10 +124,10 @@ func TestIdentifyProject_FromCwdMatch(t *testing.T) {
 func TestIdentifyProject_NoCwdMatch_ReturnsError(t *testing.T) {
 	// Save and restore originals
 	origGetEnv := GetEnv
-	origBrainConfigPath := brainConfigPath
+	origBrainConfigPath := utils.GetBrainConfigPath
 	defer func() {
 		GetEnv = origGetEnv
-		brainConfigPath = origBrainConfigPath
+		utils.SetBrainConfigPath(origBrainConfigPath)
 	}()
 
 	// No environment variable set
@@ -133,13 +135,13 @@ func TestIdentifyProject_NoCwdMatch_ReturnsError(t *testing.T) {
 
 	// Create temp config file with non-matching path
 	tmpDir := t.TempDir()
-	configPath := filepath.Join(tmpDir, "brain-config.json")
-	configContent := `{"code_paths": {"other-project": "/some/other/path"}}`
+	configPath := filepath.Join(tmpDir, "config.json")
+	configContent := `{"version": "2.0.0", "projects": {"other-project": {"code_path": "/some/other/path"}}}`
 	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
 		t.Fatalf("Failed to write test config: %v", err)
 	}
 
-	brainConfigPath = func() string { return configPath }
+	utils.SetBrainConfigPath(func() string { return configPath })
 
 	_, err := identifyProject("")
 
@@ -151,39 +153,39 @@ func TestIdentifyProject_NoCwdMatch_ReturnsError(t *testing.T) {
 func TestIdentifyProject_EmptyConfig_ReturnsError(t *testing.T) {
 	// Save and restore originals
 	origGetEnv := GetEnv
-	origBrainConfigPath := brainConfigPath
+	origBrainConfigPath := utils.GetBrainConfigPath
 	defer func() {
 		GetEnv = origGetEnv
-		brainConfigPath = origBrainConfigPath
+		utils.SetBrainConfigPath(origBrainConfigPath)
 	}()
 
 	// No environment variable set
 	GetEnv = func(key string) string { return "" }
 
-	// Create temp config file with empty code_paths
+	// Create temp config file with empty projects
 	tmpDir := t.TempDir()
-	configPath := filepath.Join(tmpDir, "brain-config.json")
-	configContent := `{"code_paths": {}}`
+	configPath := filepath.Join(tmpDir, "config.json")
+	configContent := `{"version": "2.0.0", "projects": {}}`
 	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
 		t.Fatalf("Failed to write test config: %v", err)
 	}
 
-	brainConfigPath = func() string { return configPath }
+	utils.SetBrainConfigPath(func() string { return configPath })
 
 	_, err := identifyProject("")
 
 	if err == nil {
-		t.Error("identifyProject() should return error when config has no code_paths")
+		t.Error("identifyProject() should return error when config has no projects")
 	}
 }
 
 func TestIdentifyProject_WithExplicitCwd(t *testing.T) {
 	// Save and restore originals
 	origGetEnv := GetEnv
-	origBrainConfigPath := brainConfigPath
+	origBrainConfigPath := utils.GetBrainConfigPath
 	defer func() {
 		GetEnv = origGetEnv
-		brainConfigPath = origBrainConfigPath
+		utils.SetBrainConfigPath(origBrainConfigPath)
 	}()
 
 	// No environment variable set
@@ -192,16 +194,16 @@ func TestIdentifyProject_WithExplicitCwd(t *testing.T) {
 	// Create temp project dir and config
 	projectDir := t.TempDir()
 	configDir := t.TempDir()
-	configPath := filepath.Join(configDir, "brain-config.json")
+	configPath := filepath.Join(configDir, "config.json")
 
 	// Escape backslashes for JSON on Windows
 	escapedProjectDir := strings.ReplaceAll(projectDir, "\\", "\\\\")
-	configContent := `{"code_paths": {"explicit-project": "` + escapedProjectDir + `"}}`
+	configContent := `{"version": "2.0.0", "projects": {"explicit-project": {"code_path": "` + escapedProjectDir + `"}}}`
 	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
 		t.Fatalf("Failed to write test config: %v", err)
 	}
 
-	brainConfigPath = func() string { return configPath }
+	utils.SetBrainConfigPath(func() string { return configPath })
 
 	// Pass explicit CWD that matches the project path
 	project, err := identifyProject(projectDir)
@@ -481,23 +483,23 @@ func TestBuildSessionOutput_ProjectIdentificationFails_ReturnsNoProjectFlag(t *t
 	// Save and restore originals
 	origExecCommand := ExecCommandSession
 	origGetEnv := GetEnv
-	origBrainConfigPath := brainConfigPath
+	origBrainConfigPath := utils.GetBrainConfigPath
 	defer func() {
 		ExecCommandSession = origExecCommand
 		GetEnv = origGetEnv
-		brainConfigPath = origBrainConfigPath
+		utils.SetBrainConfigPath(origBrainConfigPath)
 	}()
 
 	// No environment variable
 	GetEnv = func(key string) string { return "" }
 
-	// Empty config (no code_paths to match against)
+	// Empty config (no projects to match against)
 	tmpDir := t.TempDir()
-	configPath := filepath.Join(tmpDir, "brain-config.json")
-	if err := os.WriteFile(configPath, []byte(`{"code_paths": {}}`), 0644); err != nil {
+	configPath := filepath.Join(tmpDir, "config.json")
+	if err := os.WriteFile(configPath, []byte(`{"version": "2.0.0", "projects": {}}`), 0644); err != nil {
 		t.Fatalf("Failed to write test config: %v", err)
 	}
-	brainConfigPath = func() string { return configPath }
+	utils.SetBrainConfigPath(func() string { return configPath })
 
 	result := buildSessionOutput("")
 
@@ -518,11 +520,11 @@ func TestBuildSessionOutput_WithExplicitCwd(t *testing.T) {
 	// Save and restore originals
 	origExecCommand := ExecCommandSession
 	origGetEnv := GetEnv
-	origBrainConfigPath := brainConfigPath
+	origBrainConfigPath := utils.GetBrainConfigPath
 	defer func() {
 		ExecCommandSession = origExecCommand
 		GetEnv = origGetEnv
-		brainConfigPath = origBrainConfigPath
+		utils.SetBrainConfigPath(origBrainConfigPath)
 	}()
 
 	// No environment variable
@@ -531,14 +533,14 @@ func TestBuildSessionOutput_WithExplicitCwd(t *testing.T) {
 	// Create project dir and config
 	projectDir := t.TempDir()
 	configDir := t.TempDir()
-	configPath := filepath.Join(configDir, "brain-config.json")
+	configPath := filepath.Join(configDir, "config.json")
 
 	escapedProjectDir := strings.ReplaceAll(projectDir, "\\", "\\\\")
-	configContent := `{"code_paths": {"cwd-project": "` + escapedProjectDir + `"}}`
+	configContent := `{"version": "2.0.0", "projects": {"cwd-project": {"code_path": "` + escapedProjectDir + `"}}}`
 	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
 		t.Fatalf("Failed to write test config: %v", err)
 	}
-	brainConfigPath = func() string { return configPath }
+	utils.SetBrainConfigPath(func() string { return configPath })
 
 	ExecCommandSession = func(name string, args ...string) *exec.Cmd {
 		cmd := exec.Command(os.Args[0], "-test.run=TestHelperProcessSession", "--")
