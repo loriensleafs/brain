@@ -39,6 +39,8 @@ import * as manageBacklog from "./manage-backlog";
 import * as search from "./search";
 import * as embed from "./embed";
 import * as workflow from "./workflow";
+import * as migrateAgents from "./migrate-agents";
+import * as configTools from "./config";
 
 /**
  * Wrapper tool registry - maps tool name to handler and definition
@@ -236,6 +238,70 @@ const WRAPPER_TOOLS: Map<string, WrapperTool> = new Map([
     {
       definition: projects.deleteProject.toolDefinition,
       handler: projects.deleteProject.handler as (
+        args: Record<string, unknown>
+      ) => Promise<CallToolResult>,
+    },
+  ],
+  [
+    "migrate_agents",
+    {
+      definition: migrateAgents.toolDefinition,
+      handler: migrateAgents.handler as (
+        args: Record<string, unknown>
+      ) => Promise<CallToolResult>,
+    },
+  ],
+  // Config tools
+  [
+    "config_get",
+    {
+      definition: configTools.configGet.toolDefinition,
+      handler: configTools.configGet.handler as (
+        args: Record<string, unknown>
+      ) => Promise<CallToolResult>,
+    },
+  ],
+  [
+    "config_set",
+    {
+      definition: configTools.configSet.toolDefinition,
+      handler: configTools.configSet.handler as (
+        args: Record<string, unknown>
+      ) => Promise<CallToolResult>,
+    },
+  ],
+  [
+    "config_reset",
+    {
+      definition: configTools.configReset.toolDefinition,
+      handler: configTools.configReset.handler as (
+        args: Record<string, unknown>
+      ) => Promise<CallToolResult>,
+    },
+  ],
+  [
+    "config_rollback",
+    {
+      definition: configTools.configRollback.toolDefinition,
+      handler: configTools.configRollback.handler as (
+        args: Record<string, unknown>
+      ) => Promise<CallToolResult>,
+    },
+  ],
+  [
+    "config_update_project",
+    {
+      definition: configTools.configUpdateProject.toolDefinition,
+      handler: configTools.configUpdateProject.handler as (
+        args: Record<string, unknown>
+      ) => Promise<CallToolResult>,
+    },
+  ],
+  [
+    "config_update_global",
+    {
+      definition: configTools.configUpdateGlobal.toolDefinition,
+      handler: configTools.configUpdateGlobal.handler as (
         args: Record<string, unknown>
       ) => Promise<CallToolResult>,
     },
