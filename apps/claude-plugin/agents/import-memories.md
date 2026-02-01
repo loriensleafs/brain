@@ -70,7 +70,7 @@ You have direct access to:
     - `mcp__plugin_brain_brain__write_note`: Create new notes after transformation
     - `mcp__plugin_brain_brain__edit_note`: Update existing notes (merge scenarios)
     - `mcp__plugin_brain_brain__list_directory`: Enumerate existing notes by folder
-    - `mcp__plugin_brain_brain__build_context`: Initialize project context
+    - `mcp__plugin_brain_brain__bootstrap_context`: Initialize project context
 
 ## Core Mission
 
@@ -120,38 +120,38 @@ During ANALYZE phase, detect files in non-canonical directories.
 
 ### Canonical Directory Mapping (13 Entity Types)
 
-| Entity Type | Canonical Folder | Filename Pattern |
-|-------------|-----------------|------------------|
-| decision | **decisions/** | ADR-{NNN}-{topic}.md |
-| session | sessions/ | SESSION-YYYY-MM-DD-NN-{topic}.md |
-| requirement | specs/{spec}/requirements/ | REQ-{NNN}-{topic}.md |
-| design | specs/{spec}/design/ | DESIGN-{NNN}-{topic}.md |
-| task | specs/{spec}/tasks/ | TASK-{NNN}-{topic}.md |
-| analysis | analysis/ | ANALYSIS-{NNN}-{topic}.md |
-| feature | planning/ | FEATURE-{NNN}-{topic}.md |
-| epic | roadmap/ | EPIC-{NNN}-{name}.md |
-| critique | critique/ | CRIT-{NNN}-{topic}.md |
-| test-report | qa/ | QA-{NNN}-{topic}.md |
-| security | security/ | SEC-{NNN}-{component}.md |
-| retrospective | retrospectives/ | RETRO-YYYY-MM-DD-{topic}.md |
-| skill | skills/ | SKILL-{NNN}-{topic}.md |
+| Entity Type   | Canonical Folder           | Filename Pattern                 |
+| ------------- | -------------------------- | -------------------------------- |
+| decision      | **decisions/**             | ADR-{NNN}-{topic}.md             |
+| session       | sessions/                  | SESSION-YYYY-MM-DD-NN-{topic}.md |
+| requirement   | specs/{spec}/requirements/ | REQ-{NNN}-{topic}.md             |
+| design        | specs/{spec}/design/       | DESIGN-{NNN}-{topic}.md          |
+| task          | specs/{spec}/tasks/        | TASK-{NNN}-{topic}.md            |
+| analysis      | analysis/                  | ANALYSIS-{NNN}-{topic}.md        |
+| feature       | planning/                  | FEATURE-{NNN}-{topic}.md         |
+| epic          | roadmap/                   | EPIC-{NNN}-{name}.md             |
+| critique      | critique/                  | CRIT-{NNN}-{topic}.md            |
+| test-report   | qa/                        | QA-{NNN}-{topic}.md              |
+| security      | security/                  | SEC-{NNN}-{component}.md         |
+| retrospective | retrospectives/            | RETRO-YYYY-MM-DD-{topic}.md      |
+| skill         | skills/                    | SKILL-{NNN}-{topic}.md           |
 
 ### Deprecated Directories to Detect
 
-| Deprecated Path | Canonical Target | Entity Type |
-|-----------------|------------------|-------------|
-| architecture/ | decisions/ | decision |
-| architecture/decision/ | decisions/ | decision |
-| architecture/decisions/ | decisions/ | decision |
-| plans/ | planning/ | feature |
-| features/ | planning/ | feature |
-| epics/ | roadmap/ | epic |
-| reviews/ | critique/ | critique |
-| test-reports/ | qa/ | test-report |
-| retrospective/ | retrospectives/ | retrospective |
-| requirements/ | specs/{name}/requirements/ | requirement |
-| design/ | specs/{name}/design/ | design |
-| tasks/ | specs/{name}/tasks/ | task |
+| Deprecated Path         | Canonical Target           | Entity Type   |
+| ----------------------- | -------------------------- | ------------- |
+| architecture/           | decisions/                 | decision      |
+| architecture/decision/  | decisions/                 | decision      |
+| architecture/decisions/ | decisions/                 | decision      |
+| plans/                  | planning/                  | feature       |
+| features/               | planning/                  | feature       |
+| epics/                  | roadmap/                   | epic          |
+| reviews/                | critique/                  | critique      |
+| test-reports/           | qa/                        | test-report   |
+| retrospective/          | retrospectives/            | retrospective |
+| requirements/           | specs/{name}/requirements/ | requirement   |
+| design/                 | specs/{name}/design/       | design        |
+| tasks/                  | specs/{name}/tasks/        | task          |
 
 ### Detection Logic
 
@@ -159,6 +159,7 @@ During ANALYZE phase, detect files in non-canonical directories.
 2. Identify files in deprecated directories
 3. Determine canonical target per ADR-024 mapping
 4. Generate migration report showing:
+
    - [N] files in deprecated `architecture/` (target: `decisions/`)
    - [N] files in deprecated `plans/` (target: `planning/`)
    - etc.
@@ -171,12 +172,12 @@ During PLAN phase, validate filenames match entity type patterns.
 
 ### Deprecated Filename Patterns
 
-| Deprecated Pattern | Current Pattern | Migration Action |
-|-------------------|-----------------|------------------|
-| Skill-Category-NNN.md | SKILL-NNN-{topic}.md | Rename during import |
-| YYYY-MM-DD-session-NN.md | SESSION-YYYY-MM-DD-NN-{topic}.md | Rename during import |
-| TM-NNN-*.md | SEC-{NNN}-{component}.md | Rename during import |
-| YYYY-MM-DD-topic.md (retro) | RETRO-YYYY-MM-DD-{topic}.md | Rename during import |
+| Deprecated Pattern          | Current Pattern                  | Migration Action     |
+| --------------------------- | -------------------------------- | -------------------- |
+| Skill-Category-NNN.md       | SKILL-NNN-{topic}.md             | Rename during import |
+| YYYY-MM-DD-session-NN.md    | SESSION-YYYY-MM-DD-NN-{topic}.md | Rename during import |
+| TM-NNN-*.md                 | SEC-NNN-{component}.md           | Rename during import |
+| YYYY-MM-DD-topic.md (retro) | RETRO-YYYY-MM-DD-{topic}.md      | Rename during import |
 
 ### Validation Process
 
@@ -184,6 +185,7 @@ During PLAN phase, validate filenames match entity type patterns.
 2. Detect entity type from content/path heuristics
 3. Validate filename against `@brain/validation` naming patterns
 4. If deprecated pattern detected:
+
    - Log: "Found deprecated pattern: [old] for entity type [type]"
    - Suggest: "Rename to: [new format]"
 5. Present batch correction summary to user
@@ -206,6 +208,7 @@ During EXECUTE phase, maintain link integrity.
 
 1. Parse imported content for wikilinks: `[[Target Entity]]`
 2. For each wikilink:
+
    - Check if target exists in Brain
    - If target was migrated from deprecated path, update link
    - If target does not exist, flag as broken link
@@ -214,11 +217,11 @@ During EXECUTE phase, maintain link integrity.
 
 ### Link Update Examples
 
-| Original Link | Updated Link | Reason |
-|---------------|--------------|--------|
-| `[[architecture/ADR-001]]` | `[[decisions/ADR-001-topic]]` | Directory normalized |
-| `[[plans/feature-x]]` | `[[planning/FEATURE-001-feature-x]]` | Directory + filename normalized |
-| `[[sessions/2025-01-01-session-01]]` | `[[sessions/SESSION-2025-01-01-01-topic]]` | Filename normalized |
+| Original Link                        | Updated Link                               | Reason                          |
+| ------------------------------------ | ------------------------------------------ | ------------------------------- |
+| `[[architecture/ADR-001]]`           | `[[decisions/ADR-001-topic]]`              | Directory normalized            |
+| `[[plans/feature-x]]`                | `[[planning/FEATURE-001-feature-x]]`       | Directory + filename normalized |
+| `[[sessions/2025-01-01-session-01]]` | `[[sessions/SESSION-2025-01-01-01-topic]]` | Filename normalized             |
 
 ### Broken Link Handling
 
@@ -235,18 +238,20 @@ During VERIFY phase, after user approves import validation.
 ### Cleanup Protocol
 
 1. Present import validation results:
+
    - Files imported: [N]
    - Quality checks: [PASS/FAIL]
    - Indexing status: [N]% indexed
-2. Ask: "Remove source files from [source path]? (y/N)"
-3. **ONLY execute if explicit 'y' confirmation received**
-4. Before deletion, offer: "Create git backup branch? (Y/n)"
-5. If backup requested:
+1. Ask: "Remove source files from [source path]? (y/N)"
+1. **ONLY execute if explicit 'y' confirmation received**
+1. Before deletion, offer: "Create git backup branch? (Y/n)"
+1. If backup requested:
+
    - Create branch: `backup/pre-import-YYYY-MM-DD`
    - Commit source files to backup branch
    - Return to original branch
-6. Execute deletion of migrated source files
-7. Report: "Removed [N] files from [source path]"
+1. Execute deletion of migrated source files
+1. Report: "Removed [N] files from [source path]"
 
 ### Safety Constraints
 
@@ -311,14 +316,14 @@ During VERIFY phase, after user approves import validation.
 
 **Operation Types**:
 
-| Type   | When                                         | Action                                 |
-| ------ | -------------------------------------------- | -------------------------------------- |
-| CREATE | New note, no existing match                  | Transform and write new note           |
-| MERGE  | Title similarity >0.8 or bidirectional links | Combine into single note               |
-| UPDATE | Existing note covers topic                   | Add observations/relations to existing |
-| SPLIT  | Oversized note (>300 lines)                  | Break into focused subtopics           |
-| MIGRATE | File in deprecated directory                | Import to canonical directory          |
-| RENAME | Filename uses deprecated pattern             | Import with corrected filename         |
+| Type    | When                                         | Action                                 |
+| ------- | -------------------------------------------- | -------------------------------------- |
+| CREATE  | New note, no existing match                  | Transform and write new note           |
+| MERGE   | Title similarity >0.8 or bidirectional links | Combine into single note               |
+| UPDATE  | Existing note covers topic                   | Add observations/relations to existing |
+| SPLIT   | Oversized note (>300 lines)                  | Break into focused subtopics           |
+| MIGRATE | File in deprecated directory                 | Import to canonical directory          |
+| RENAME  | Filename uses deprecated pattern             | Import with corrected filename         |
 
 ### Phase 3: EXECUTE
 

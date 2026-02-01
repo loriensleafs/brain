@@ -167,7 +167,7 @@ Brain uses **semantic search with vector embeddings**:
 
 ### Folder Organization
 
-Memories organized in standardized semantic folders via Brain MCP. Per ADR-020, these replace the deprecated `.agents/` directory pattern:
+Memories organized in standardized semantic folders via Brain MCP. Per ADR-020:
 
 - `analysis/` - Research, investigation, findings
 - `architecture/` - ADRs and architectural decisions

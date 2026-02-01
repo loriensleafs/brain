@@ -27,7 +27,7 @@ var validateSessionCmd = &cobra.Command{
 - Confirms workflow state is persisted
 
 If --session-log is provided, also validates the session log file:
-- File exists with correct naming (YYYY-MM-DD-session-NN.md)
+- File exists with correct naming (SESSION-YYYY-MM-DD-NN-{topic}.md)
 - Required sections present (Session Start, Session End)
 - All checklist items completed
 
@@ -36,8 +36,8 @@ Used by Stop hook to enforce session completion.
 
 Examples:
   brain validate session
-  brain validate session --session-log .agents/sessions/2026-01-14-session-01.md
-  brain validate session .agents/sessions/2026-01-14-session-01.md`,
+  brain validate session --session-log sessions/SESSION-2026-01-20-06-memory.md
+  brain validate session sessions/SESSION-2026-01-20-06-memory.md`,
 	RunE: runValidateSession,
 }
 
