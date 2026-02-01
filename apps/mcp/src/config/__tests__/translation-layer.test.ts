@@ -339,8 +339,10 @@ describe("syncConfigToBasicMemory", () => {
 
     await syncConfigToBasicMemory(DEFAULT_BRAIN_CONFIG);
 
-    expect(writtenConfig?.default_project).toBe("shared");
-    expect(writtenConfig?.kebab_filenames).toBe(true);
+    expect(writtenConfig).not.toBeNull();
+    const config = writtenConfig as unknown as BasicMemoryConfig;
+    expect(config.default_project).toBe("shared");
+    expect(config.kebab_filenames).toBe(true);
   });
 
   test("uses atomic write pattern", async () => {

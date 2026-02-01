@@ -213,11 +213,11 @@ describe("embedding queue", () => {
       const item = dequeueEmbedding();
       expect(item).not.toBeNull();
 
-      markEmbeddingProcessed(item?.id);
+      markEmbeddingProcessed(item!.id);
 
       const result = db
         .query("SELECT * FROM embedding_queue WHERE id = ?")
-        .get(item?.id);
+        .get(item!.id);
       expect(result).toBeNull();
     });
 
@@ -230,7 +230,8 @@ describe("embedding queue", () => {
       enqueueEmbedding("note-2");
 
       const item = dequeueEmbedding();
-      markEmbeddingProcessed(item?.id);
+      expect(item).not.toBeNull();
+      markEmbeddingProcessed(item!.id);
 
       const count = db
         .query("SELECT COUNT(*) as count FROM embedding_queue")
@@ -247,51 +248,55 @@ describe("embedding queue", () => {
     test("increments attempt count", () => {
       enqueueEmbedding("note-1");
       const item = dequeueEmbedding();
+      expect(item).not.toBeNull();
 
-      incrementAttempts(item?.id);
-      incrementAttempts(item?.id);
+      incrementAttempts(item!.id);
+      incrementAttempts(item!.id);
 
       const result = db
         .query("SELECT attempts FROM embedding_queue WHERE id = ?")
-        .get(item?.id) as { attempts: number } | null;
+        .get(item!.id) as { attempts: number } | null;
       expect(result?.attempts).toBe(2);
     });
 
     test("records error message", () => {
       enqueueEmbedding("note-1");
       const item = dequeueEmbedding();
+      expect(item).not.toBeNull();
 
-      incrementAttempts(item?.id, "Connection refused");
+      incrementAttempts(item!.id, "Connection refused");
 
       const result = db
         .query("SELECT last_error FROM embedding_queue WHERE id = ?")
-        .get(item?.id) as { last_error: string | null } | null;
+        .get(item!.id) as { last_error: string | null } | null;
       expect(result?.last_error).toBe("Connection refused");
     });
 
     test("updates error message on subsequent attempts", () => {
       enqueueEmbedding("note-1");
       const item = dequeueEmbedding();
+      expect(item).not.toBeNull();
 
-      incrementAttempts(item?.id, "First error");
-      incrementAttempts(item?.id, "Second error");
+      incrementAttempts(item!.id, "First error");
+      incrementAttempts(item!.id, "Second error");
 
       const result = db
         .query("SELECT last_error FROM embedding_queue WHERE id = ?")
-        .get(item?.id) as { last_error: string | null } | null;
+        .get(item!.id) as { last_error: string | null } | null;
       expect(result?.last_error).toBe("Second error");
     });
 
     test("sets null error when not provided", () => {
       enqueueEmbedding("note-1");
       const item = dequeueEmbedding();
+      expect(item).not.toBeNull();
 
-      incrementAttempts(item?.id, "Some error");
-      incrementAttempts(item?.id); // No error
+      incrementAttempts(item!.id, "Some error");
+      incrementAttempts(item!.id); // No error
 
       const result = db
         .query("SELECT last_error FROM embedding_queue WHERE id = ?")
-        .get(item?.id) as { last_error: string | null } | null;
+        .get(item!.id) as { last_error: string | null } | null;
       expect(result?.last_error).toBeNull();
     });
 
@@ -325,7 +330,8 @@ describe("embedding queue", () => {
       expect(getQueueLength()).toBe(2);
 
       const item = dequeueEmbedding();
-      markEmbeddingProcessed(item?.id);
+      expect(item).not.toBeNull();
+      markEmbeddingProcessed(item!.id);
 
       expect(getQueueLength()).toBe(1);
     });

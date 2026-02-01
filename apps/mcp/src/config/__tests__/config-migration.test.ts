@@ -270,8 +270,9 @@ describe("transformOldToNew", () => {
 
     const newConfig = transformOldToNew(oldConfig);
 
-    expect(newConfig.projects.myproject.memories_path).toBe("~/custom/notes");
-    expect(newConfig.projects.myproject.memories_mode).toBe("CUSTOM");
+    expect(newConfig.projects.myproject).toBeDefined();
+    expect(newConfig.projects.myproject!.memories_path).toBe("~/custom/notes");
+    expect(newConfig.projects.myproject!.memories_mode).toBe("CUSTOM");
   });
 
   test("transforms project mode to memories_mode", () => {
@@ -284,8 +285,10 @@ describe("transformOldToNew", () => {
 
     const newConfig = transformOldToNew(oldConfig);
 
-    expect(newConfig.projects.codemode.memories_mode).toBe("CODE");
-    expect(newConfig.projects.defaultmode.memories_mode).toBe("DEFAULT");
+    expect(newConfig.projects.codemode).toBeDefined();
+    expect(newConfig.projects.codemode!.memories_mode).toBe("CODE");
+    expect(newConfig.projects.defaultmode).toBeDefined();
+    expect(newConfig.projects.defaultmode!.memories_mode).toBe("DEFAULT");
   });
 
   test("sets version to 2.0.0", () => {
@@ -601,7 +604,8 @@ describe("schema transformation edge cases", () => {
 
     const newConfig = transformOldToNew(oldConfig);
 
-    expect(newConfig.projects.uppercase.memories_mode).toBe("CODE");
+    expect(newConfig.projects.uppercase).toBeDefined();
+    expect(newConfig.projects.uppercase!.memories_mode).toBe("CODE");
   });
 
   test("handles unknown mode values", () => {
@@ -614,7 +618,8 @@ describe("schema transformation edge cases", () => {
     const newConfig = transformOldToNew(oldConfig);
 
     // Should default to DEFAULT for unknown modes
-    expect(newConfig.projects.unknown.memories_mode).toBe("DEFAULT");
+    expect(newConfig.projects.unknown).toBeDefined();
+    expect(newConfig.projects.unknown!.memories_mode).toBe("DEFAULT");
   });
 
   test("preserves code_path in project config", () => {
@@ -626,6 +631,7 @@ describe("schema transformation edge cases", () => {
 
     const newConfig = transformOldToNew(oldConfig);
 
-    expect(newConfig.projects.myproject.code_path).toBe("/specific/path");
+    expect(newConfig.projects.myproject).toBeDefined();
+    expect(newConfig.projects.myproject!.code_path).toBe("/specific/path");
   });
 });

@@ -264,12 +264,12 @@ describe("isSymlink", () => {
   });
 
   test("returns true for symlinks", () => {
-    mockFs.lstatSync.mockReturnValue({ isSymbolicLink: () => true });
+    mockFs.lstatSync.mockReturnValue({ isSymbolicLink: () => true } as unknown as ReturnType<typeof import("fs").lstatSync>);
     expect(isSymlink("/some/link")).toBe(true);
   });
 
   test("returns false for regular files", () => {
-    mockFs.lstatSync.mockReturnValue({ isSymbolicLink: () => false });
+    mockFs.lstatSync.mockReturnValue({ isSymbolicLink: () => false } as unknown as ReturnType<typeof import("fs").lstatSync>);
     expect(isSymlink("/some/file")).toBe(false);
   });
 

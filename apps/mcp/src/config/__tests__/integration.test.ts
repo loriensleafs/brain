@@ -748,7 +748,7 @@ describe("Schema Validation", () => {
       const result = validateBrainConfig(invalidConfig);
 
       expect(result.success).toBe(false);
-      expect(result.error).toBeDefined();
+      expect(result.errors).toBeDefined();
     });
 
     test("rejects invalid memories_mode", async () => {
@@ -769,7 +769,7 @@ describe("Schema Validation", () => {
       const result = validateBrainConfig(invalidConfig);
 
       expect(result.success).toBe(false);
-      expect(result.error).toBeDefined();
+      expect(result.errors).toBeDefined();
     });
 
     test("rejects invalid log level", async () => {
@@ -790,7 +790,7 @@ describe("Schema Validation", () => {
       const result = validateBrainConfig(invalidConfig);
 
       expect(result.success).toBe(false);
-      expect(result.error).toBeDefined();
+      expect(result.errors).toBeDefined();
     });
 
     test("accepts optional fields with defaults", async () => {

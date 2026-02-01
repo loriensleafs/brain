@@ -240,10 +240,12 @@ describe("ConfigRollbackManager", () => {
       const snapshot = manager.snapshot(config, "Test");
 
       // Mutate original
-      config.projects.test.code_path = "/dev/mutated";
+      expect(config.projects.test).toBeDefined();
+      config.projects.test!.code_path = "/dev/mutated";
 
       // Snapshot should be unchanged
-      expect(snapshot.config.projects.test.code_path).toBe("/dev/test");
+      expect(snapshot.config.projects.test).toBeDefined();
+      expect(snapshot.config.projects.test!.code_path).toBe("/dev/test");
     });
 
     test("adds to rollback history", () => {

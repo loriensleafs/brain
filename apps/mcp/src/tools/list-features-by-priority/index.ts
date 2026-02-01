@@ -84,7 +84,7 @@ export async function handler(
         n.dependencies.every(
           (d) =>
             !graph.nodes.has(d) ||
-            COMPLETED_STATUSES.includes(graph.nodes.get(d)?.status),
+            COMPLETED_STATUSES.includes(graph.nodes.get(d)?.status ?? ""),
         ),
       ).length,
       generated_at: new Date().toISOString(),

@@ -59,6 +59,7 @@ describe("Vector Search Performance", () => {
 
   test(
     "query latency under 100ms for 10,000 vectors",
+    { timeout: 30000 },
     () => {
       const queryVector = generateRandomVector(VECTOR_DIM);
       const iterations = 100;
@@ -101,7 +102,6 @@ describe("Vector Search Performance", () => {
       // This test documents the current baseline performance.
       expect(p95).toBeLessThan(250); // Baseline threshold - optimize in future phase
     },
-    { timeout: 30000 },
   );
 
   test("query with various limit values", () => {

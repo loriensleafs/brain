@@ -237,7 +237,8 @@ describe("Embedding Integration Tests", () => {
       const item = dequeueEmbedding();
       expect(item).not.toBeNull();
 
-      markEmbeddingProcessed(item?.id);
+      expect(item).not.toBeNull();
+      markEmbeddingProcessed(item!.id);
 
       expect(getQueueLength()).toBe(0);
     });
@@ -307,7 +308,8 @@ describe("Embedding Integration Tests", () => {
       expect(item?.noteId).toBe("failed-note-1");
 
       // Mark as processed to remove from queue
-      markEmbeddingProcessed(item?.id);
+      expect(item).not.toBeNull();
+      markEmbeddingProcessed(item!.id);
       expect(getQueueLength()).toBe(1);
     });
 
