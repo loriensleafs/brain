@@ -12,17 +12,20 @@
  * - Metrics (duration, file counts)
  * - Lessons learned
  *
+ * Resolves project paths from Brain MCP config (~/.basic-memory/config.json)
+ * and writes episode files directly to the project's episodes folder.
+ *
  * Usage:
- *   bun run extract-episode.ts <session-log-path> [--force] [--output <path>]
+ *   bun run extract-episode.ts <session-log-path> [--force] [--project <name>]
  *
  * Example:
- *   bun run extract-episode.ts .agents/sessions/2026-01-20-session-06.md
+ *   bun run extract-episode.ts .agents/sessions/2026-01-20-session-06.md --project brain
  */
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
-import { join, basename } from "path";
-import { homedir } from "os";
+import { readFileSync, existsSync, writeFileSync, mkdirSync } from "fs";
+import { basename, join } from "path";
 import { parseArgs } from "util";
+import { getProjectMemoriesPath } from "../../../../../packages/brain-utils/src";
 
 // Types
 interface Decision {
@@ -618,7 +621,7 @@ function renderTemplate(episode: Episode, template: string): string {
 
 // Main Execution
 
-function main(): void {
+async function main(): Promise<void> {
   const args = parseArgs({
     args: Bun.argv.slice(2),
     options: {
@@ -627,9 +630,10 @@ function main(): void {
         short: "f",
         default: false,
       },
-      output: {
+      project: {
         type: "string",
-        short: "o",
+        short: "p",
+        default: "brain",
       },
       help: {
         type: "boolean",
@@ -645,20 +649,21 @@ function main(): void {
 Usage: bun run extract-episode.ts <session-log-path> [options]
 
 Options:
-  -f, --force        Overwrite existing episode file
-  -o, --output PATH  Output directory (default: ~/memories/brain/episodes)
-  -h, --help         Show this help message
+  -f, --force          Overwrite existing episode file
+  -p, --project NAME   Brain project name (default: brain)
+  -h, --help           Show this help message
 
 Example:
-  bun run extract-episode.ts .agents/sessions/2026-01-20-session-06.md
+  bun run extract-episode.ts .agents/sessions/2026-01-20-session-06.md --project brain
+
+Resolves project paths from ~/.basic-memory/config.json and writes episode
+files directly to the project's episodes folder as EPISODE-{session-id}.md.
 `);
     process.exit(args.values.help ? 0 : 1);
   }
 
   const sessionLogPath = args.positionals[0];
-  const force = args.values.force;
-  const outputPath =
-    args.values.output || join(homedir(), "memories", "brain", "episodes");
+  const project = args.values.project ?? "brain";
 
   // Validate input file
   if (!existsSync(sessionLogPath)) {
@@ -709,7 +714,7 @@ Example:
 
   // Build episode
   const episode: Episode = {
-    id: `episode-${sessionId}`,
+    id: `EPISODE-${sessionId}`,
     session: sessionId,
     timestamp,
     outcome,
@@ -721,25 +726,35 @@ Example:
     lessons,
   };
 
-  // Ensure output directory exists
-  if (!existsSync(outputPath)) {
-    mkdirSync(outputPath, { recursive: true });
-  }
-
   // Generate markdown from template
   const template = loadTemplate();
   const markdown = renderTemplate(episode, template);
 
-  // Write episode file
-  const episodeFile = join(outputPath, `EPISODE-${sessionId}.md`);
-
-  if (existsSync(episodeFile) && !force) {
-    console.error(`Error: Episode file already exists: ${episodeFile}`);
-    console.error("Use --force to overwrite.");
+  // Resolve project path and write episode file directly
+  let memoriesPath: string;
+  try {
+    memoriesPath = await getProjectMemoriesPath(project);
+  } catch (error) {
+    console.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
     process.exit(1);
   }
 
-  writeFileSync(episodeFile, markdown, "utf-8");
+  const episodesDir = join(memoriesPath, "episodes");
+  const episodeFileName = `EPISODE-${sessionId}.md`;
+  const episodePath = join(episodesDir, episodeFileName);
+
+  // Ensure episodes directory exists
+  mkdirSync(episodesDir, { recursive: true });
+
+  // Check for existing file unless --force
+  if (existsSync(episodePath) && !args.values.force) {
+    console.error(`Error: Episode file already exists: ${episodePath}`);
+    console.error("Use --force to overwrite");
+    process.exit(1);
+  }
+
+  console.log(`  Writing to ${episodePath}...`);
+  writeFileSync(episodePath, markdown, "utf-8");
 
   // Summary
   console.log(`
@@ -750,7 +765,7 @@ Episode extracted:
   Decisions: ${decisions.length}
   Events:    ${events.length}
   Lessons:   ${lessons.length}
-  Output:    ${episodeFile}
+  Path:      ${episodePath}
 `);
 }
 

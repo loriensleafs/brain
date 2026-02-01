@@ -11,22 +11,26 @@
  * - Calculates running average for success rate
  * - Links patterns to episode evidence
  *
+ * Resolves project paths directly from Brain MCP config (~/.basic-memory/config.json)
+ * and writes pattern files directly to the filesystem.
+ *
  * Usage:
  *   bun run add-pattern.ts --name "Pattern Name" --trigger "When X happens" \
- *     --action "Do Y" --evidence "episode-id" [--success-rate 0.85]
+ *     --action "Do Y" --evidence "episode-id" [--success-rate 0.85] [--project brain]
  *
  * Example:
  *   bun run add-pattern.ts --name "Markdownlint Before Edit" \
  *     --trigger "Editing markdown files with spacing issues" \
  *     --action "Run markdownlint --fix before manual edits" \
  *     --evidence "episode-2026-01-20-session-06" \
- *     --success-rate 0.95
+ *     --success-rate 0.95 \
+ *     --project brain
  */
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from "fs";
-import { join, basename } from "path";
-import { homedir } from "os";
+import { readFileSync, existsSync, writeFileSync, mkdirSync, readdirSync } from "fs";
+import { join } from "path";
 import { parseArgs } from "util";
+import { getProjectMemoriesPath } from "../../../../../packages/brain-utils/src";
 
 // Types
 interface Pattern {
@@ -53,25 +57,101 @@ interface PatternFrontmatter {
   last_used: string;
 }
 
-// Helper Functions
+/**
+ * Read note content from filesystem.
+ *
+ * @param identifier - Note identifier (path like "patterns/PATTERN-p001-name")
+ * @param projectPath - Absolute path to the project directory
+ * @returns Note content or null if not found
+ */
+function readNote(identifier: string, projectPath: string): string | null {
+  const notePath = join(projectPath, `${identifier}.md`);
 
-function getNextPatternId(outputPath: string): string {
-  if (!existsSync(outputPath)) {
+  if (!existsSync(notePath)) {
+    return null;
+  }
+
+  return readFileSync(notePath, "utf-8");
+}
+
+/**
+ * Write note content to filesystem.
+ *
+ * @param title - Note title (used as filename without extension)
+ * @param folder - Folder within the project (e.g., "patterns")
+ * @param content - Markdown content to write
+ * @param projectPath - Absolute path to the project directory
+ */
+function writeNote(
+  title: string,
+  folder: string,
+  content: string,
+  projectPath: string
+): void {
+  const folderPath = join(projectPath, folder);
+
+  // Ensure folder exists
+  if (!existsSync(folderPath)) {
+    mkdirSync(folderPath, { recursive: true });
+  }
+
+  const notePath = join(folderPath, `${title}.md`);
+  writeFileSync(notePath, content, "utf-8");
+}
+
+/**
+ * Search for patterns in the patterns directory.
+ *
+ * @param query - Search query (slug to match in filename)
+ * @param projectPath - Absolute path to the project directory
+ * @returns Array of matching pattern identifiers (e.g., "patterns/PATTERN-p001-name")
+ */
+function searchPatterns(query: string, projectPath: string): string[] {
+  const patternsDir = join(projectPath, "patterns");
+
+  if (!existsSync(patternsDir)) {
+    return [];
+  }
+
+  const files = readdirSync(patternsDir);
+  const queryLower = query.toLowerCase();
+
+  return files
+    .filter(
+      (f) =>
+        /^pattern-p/i.test(f) &&
+        f.endsWith(".md") &&
+        f.toLowerCase().includes(queryLower)
+    )
+    .map((f) => `patterns/${f.replace(".md", "")}`);
+}
+
+/**
+ * Get next available pattern ID by scanning existing patterns.
+ *
+ * @param projectPath - Absolute path to the project directory
+ * @returns Next pattern ID like "p001", "p002", etc.
+ */
+function getNextPatternId(projectPath: string): string {
+  const patternsDir = join(projectPath, "patterns");
+
+  if (!existsSync(patternsDir)) {
     return "p001";
   }
 
-  const files = readdirSync(outputPath).filter(
-    (f) => f.startsWith("PATTERN-") && f.endsWith(".md")
+  const files = readdirSync(patternsDir);
+  const patternFiles = files.filter(
+    (f) => /^pattern-p/i.test(f) && f.endsWith(".md")
   );
 
-  if (files.length === 0) {
+  if (patternFiles.length === 0) {
     return "p001";
   }
 
-  // Extract pattern numbers
-  const numbers = files
+  // Extract pattern numbers (case-insensitive)
+  const numbers = patternFiles
     .map((f) => {
-      const match = f.match(/PATTERN-p(\d+)-/);
+      const match = f.match(/pattern-p(\d+)/i);
       return match ? parseInt(match[1], 10) : 0;
     })
     .filter((n) => n > 0);
@@ -117,9 +197,14 @@ function categorizePattern(trigger: string, action: string): string {
   return "general";
 }
 
-function parseExistingPattern(filePath: string): Pattern | null {
+/**
+ * Parse pattern data from markdown content.
+ *
+ * @param content - Markdown content with frontmatter
+ * @returns Parsed Pattern or null if parsing fails
+ */
+function parsePatternFromContent(content: string): Pattern | null {
   try {
-    const content = readFileSync(filePath, "utf-8");
     const lines = content.split("\n");
 
     // Parse frontmatter
@@ -188,25 +273,29 @@ function parseExistingPattern(filePath: string): Pattern | null {
   }
 }
 
+/**
+ * Find existing pattern by name in the patterns directory.
+ *
+ * @param name - Pattern name to search for
+ * @param projectPath - Absolute path to the project directory
+ * @returns Pattern data and identifier or null if not found
+ */
 function findExistingPattern(
-  outputPath: string,
-  name: string
-): { path: string; pattern: Pattern } | null {
-  if (!existsSync(outputPath)) {
-    return null;
-  }
-
+  name: string,
+  projectPath: string
+): { identifier: string; pattern: Pattern } | null {
   const slug = slugify(name);
-  const files = readdirSync(outputPath).filter(
-    (f) => f.startsWith("PATTERN-") && f.endsWith(".md")
-  );
 
-  for (const file of files) {
-    if (file.toLowerCase().includes(slug)) {
-      const filePath = join(outputPath, file);
-      const pattern = parseExistingPattern(filePath);
+  // Search for patterns matching the slug
+  const matches = searchPatterns(slug, projectPath);
+
+  for (const identifier of matches) {
+    // Read the full note content
+    const content = readNote(identifier, projectPath);
+    if (content) {
+      const pattern = parsePatternFromContent(content);
       if (pattern) {
-        return { path: filePath, pattern };
+        return { identifier, pattern };
       }
     }
   }
@@ -351,7 +440,7 @@ function calculateRunningAverage(
 
 // Main Execution
 
-function main(): void {
+async function main(): Promise<void> {
   const args = parseArgs({
     args: Bun.argv.slice(2),
     options: {
@@ -375,9 +464,10 @@ function main(): void {
         type: "string",
         short: "s",
       },
-      output: {
+      project: {
         type: "string",
-        short: "o",
+        short: "p",
+        default: "brain",
       },
       help: {
         type: "boolean",
@@ -398,7 +488,7 @@ Options:
   -a, --action ACTION       Recommended action (required)
   -e, --evidence EPISODE    Episode ID as evidence (required)
   -s, --success-rate RATE   Success rate 0-1 (default: 1.0)
-  -o, --output PATH         Output directory (default: ~/memories/brain/patterns)
+  -p, --project NAME        Brain project name (default: brain)
   -h, --help                Show this help message
 
 Example:
@@ -407,7 +497,11 @@ Example:
     --trigger "Editing markdown files with spacing issues" \\
     --action "Run markdownlint --fix before manual edits" \\
     --evidence "episode-2026-01-20-session-06" \\
-    --success-rate 0.95
+    --success-rate 0.95 \\
+    --project brain
+
+Note: Reads project paths from ~/.basic-memory/config.json and writes
+pattern files directly to the filesystem.
 `);
     process.exit(0);
   }
@@ -417,6 +511,7 @@ Example:
   const trigger = args.values.trigger;
   const action = args.values.action;
   const evidence = args.values.evidence;
+  const project = args.values.project ?? "brain";
 
   if (!name || !trigger || !action || !evidence) {
     console.error("Error: --name, --trigger, --action, and --evidence are required");
@@ -433,23 +528,26 @@ Example:
     process.exit(1);
   }
 
-  const outputPath =
-    args.values.output || join(homedir(), "memories", "brain", "patterns");
-
-  // Ensure output directory exists
-  if (!existsSync(outputPath)) {
-    mkdirSync(outputPath, { recursive: true });
+  // Resolve project path from Brain config
+  let projectPath: string;
+  try {
+    projectPath = await getProjectMemoriesPath(project);
+    console.log(`Project '${project}' resolved to: ${projectPath}`);
+  } catch (error) {
+    console.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
+    process.exit(1);
   }
 
   // Check for existing pattern
-  const existing = findExistingPattern(outputPath, name);
+  console.log(`Searching for existing pattern...`);
+  const existing = findExistingPattern(name, projectPath);
 
   let pattern: Pattern;
-  let outputFile: string;
+  let noteTitle: string;
 
   if (existing) {
     // Update existing pattern
-    console.log(`Updating existing pattern: ${existing.path}`);
+    console.log(`Updating existing pattern: ${existing.identifier}`);
 
     const newSuccessRate = calculateRunningAverage(
       existing.pattern.success_rate,
@@ -465,10 +563,11 @@ Example:
       evidence: [...existing.pattern.evidence, evidence],
     };
 
-    outputFile = existing.path;
+    // Extract title from identifier (patterns/PATTERN-p001-name -> PATTERN-p001-name)
+    noteTitle = existing.identifier.split("/").pop() || `PATTERN-${pattern.id}-${slugify(name)}`;
   } else {
     // Create new pattern
-    const id = getNextPatternId(outputPath);
+    const id = getNextPatternId(projectPath);
     const category = categorizePattern(trigger, action);
 
     console.log(`Creating new pattern with ID: ${id}`);
@@ -485,15 +584,25 @@ Example:
       evidence: [evidence],
     };
 
-    outputFile = join(outputPath, `PATTERN-${id}-${slugify(name)}.md`);
+    noteTitle = `PATTERN-${id}-${slugify(name)}`;
   }
 
   // Generate markdown
   const template = loadTemplate();
   const markdown = renderTemplate(pattern, template);
 
-  // Write file
-  writeFileSync(outputFile, markdown, "utf-8");
+  // Write pattern file
+  const patternsDir = join(projectPath, "patterns");
+  const patternPath = join(patternsDir, `${noteTitle}.md`);
+  console.log(`  Writing to: ${patternPath}`);
+
+  try {
+    writeNote(noteTitle, "patterns", markdown, projectPath);
+  } catch (error) {
+    console.error(`Error: Failed to write pattern file`);
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exit(1);
+  }
 
   // Summary
   console.log(`
@@ -503,7 +612,7 @@ Pattern ${existing ? "updated" : "created"}:
   Category:     ${pattern.category}
   Success Rate: ${(pattern.success_rate * 100).toFixed(1)}%
   Occurrences:  ${pattern.occurrences}
-  Output:       ${outputFile}
+  File:         ${patternPath}
 `);
 }
 
