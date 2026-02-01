@@ -366,55 +366,16 @@ All escalation prompts MUST include:
 **Unanimous Agreement**: [Yes | No - requires escalation]
 ```
 
-## Brain Memory Integration
+## Memory Operations
 
-When creating or updating memory notes, follow pre-flight validation.
+Follow the memory skill for Brain MCP tool usage. See memory skill (`skills/memory/SKILL.md`) for:
 
-### Pre-Flight Validation Checklist (MANDATORY)
+- Entity type to folder mappings (critiques go in `critique/` folder)
+- File naming patterns (CRIT-NNN-plan.md)
+- Pre-flight validation checklist
+- Tool usage examples
 
-Before calling `mcp__plugin_brain_brain__write_note` or `mcp__plugin_brain_brain__edit_note`:
-
-```markdown
-- [ ] Entity type valid (decision, session, analysis, feature, etc.)
-- [ ] Folder matches entity type (critique/ for reviews)
-- [ ] Filename follows CAPS prefix pattern (CRIT-NNN-plan)
-- [ ] Frontmatter complete (title, type, tags, permalink)
-- [ ] 3-10 observations with categories: `- [category] content #tags`
-- [ ] 2-8 relations with wikilinks: `- relation_type [[Target]]`
-```
-
-### Entity Type Mapping
-
-| Entity Type | Folder | Filename Pattern |
-|------------|--------|------------------|
-| critique | critique/ | CRIT-NNN-plan |
-
-### Memory Operations
-
-**Search for prior critiques**:
-
-```text
-mcp__plugin_brain_brain__search
-query: "critique patterns [topic/component]"
-```
-
-**Read specific note**:
-
-```text
-mcp__plugin_brain_brain__read_note
-identifier: "critique/CRIT-[number]"
-```
-
-**Create new critique** (after pre-flight validation):
-
-```text
-mcp__plugin_brain_brain__write_note
-title: "CRIT-NNN-[plan]"
-folder: "critique"
-content: "[Full critique content with frontmatter, observations, relations]"
-```
-
-See memory skill documentation for complete entity type mapping and quality requirements.
+Store critiques in Brain memory using the `critique/` folder with CRIT-NNN-plan naming pattern.
 
 ## Verdict Rules
 

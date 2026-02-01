@@ -75,20 +75,12 @@ mcp__cloudmcp-manager__memory-add_observations
 }
 ```
 
-### Pre-Flight Validation Checklist (MANDATORY)
+Follow the memory skill for Brain MCP tool usage. See memory skill for:
 
-Before writing memory notes:
-
-```markdown
-- [ ] Entity type valid (decision, session, analysis, feature, etc.)
-- [ ] Folder matches entity type (planning/ for plans and PRDs)
-- [ ] Filename follows CAPS prefix pattern (PLAN-NNN-feature or PRD-feature)
-- [ ] Frontmatter complete (title, type, tags, permalink)
-- [ ] 3-10 observations with categories: `- [category] content #tags`
-- [ ] 2-8 relations with wikilinks: `- relation_type [[Target]]`
-```
-
-See memory skill documentation for complete entity type mapping and quality requirements.
+- Entity type to folder mappings (plans go in `planning/` folder)
+- File naming patterns (PLAN-NNN-feature.md, PRD-feature.md)
+- Pre-flight validation checklist
+- Tool usage examples
 
 ## Planning Process
 

@@ -494,3 +494,205 @@ describe("edge cases", () => {
     expect(result.valid).toBe(true);
   });
 });
+
+describe("CanonicalDirectories", () => {
+  test("contains single path per entity (not array)", () => {
+    // Import at top level already done
+    const { CanonicalDirectories } = require("../naming-pattern");
+
+    // Verify each value is a string, not an array
+    for (const [key, value] of Object.entries(CanonicalDirectories)) {
+      expect(typeof value).toBe("string");
+      expect(Array.isArray(value)).toBe(false);
+    }
+  });
+
+  test("contains all 13 pattern types", () => {
+    const { CanonicalDirectories } = require("../naming-pattern");
+    const keys = Object.keys(CanonicalDirectories);
+    expect(keys).toHaveLength(13);
+    expect(keys).toContain("decision");
+    expect(keys).toContain("session");
+    expect(keys).toContain("requirement");
+    expect(keys).toContain("design");
+    expect(keys).toContain("task");
+    expect(keys).toContain("analysis");
+    expect(keys).toContain("feature");
+    expect(keys).toContain("epic");
+    expect(keys).toContain("critique");
+    expect(keys).toContain("test-report");
+    expect(keys).toContain("security");
+    expect(keys).toContain("retrospective");
+    expect(keys).toContain("skill");
+  });
+
+  test("has correct canonical paths", () => {
+    const { CanonicalDirectories } = require("../naming-pattern");
+    expect(CanonicalDirectories.decision).toBe("decisions");
+    expect(CanonicalDirectories.session).toBe("sessions");
+    expect(CanonicalDirectories.requirement).toBe("specs/{name}/requirements");
+    expect(CanonicalDirectories.design).toBe("specs/{name}/design");
+    expect(CanonicalDirectories.task).toBe("specs/{name}/tasks");
+    expect(CanonicalDirectories.analysis).toBe("analysis");
+    expect(CanonicalDirectories.feature).toBe("planning");
+    expect(CanonicalDirectories.epic).toBe("roadmap");
+    expect(CanonicalDirectories.critique).toBe("critique");
+    expect(CanonicalDirectories["test-report"]).toBe("qa");
+    expect(CanonicalDirectories.security).toBe("security");
+    expect(CanonicalDirectories.retrospective).toBe("retrospectives");
+    expect(CanonicalDirectories.skill).toBe("skills");
+  });
+});
+
+describe("DeprecatedDirectories", () => {
+  test("contains all deprecated paths", () => {
+    const { DeprecatedDirectories } = require("../naming-pattern");
+
+    // Architecture paths
+    expect(DeprecatedDirectories["architecture/decision"]).toBe("decisions");
+    expect(DeprecatedDirectories["architecture/decisions"]).toBe("decisions");
+    expect(DeprecatedDirectories["architecture"]).toBe("decisions");
+
+    // Old requirement/design/task paths
+    expect(DeprecatedDirectories["requirements"]).toBe(
+      "specs/{name}/requirements",
+    );
+    expect(DeprecatedDirectories["specs/requirements"]).toBe(
+      "specs/{name}/requirements",
+    );
+    expect(DeprecatedDirectories["design"]).toBe("specs/{name}/design");
+    expect(DeprecatedDirectories["specs/design"]).toBe("specs/{name}/design");
+    expect(DeprecatedDirectories["tasks"]).toBe("specs/{name}/tasks");
+    expect(DeprecatedDirectories["specs/tasks"]).toBe("specs/{name}/tasks");
+
+    // Other deprecated paths
+    expect(DeprecatedDirectories["features"]).toBe("planning");
+    expect(DeprecatedDirectories["epics"]).toBe("roadmap");
+    expect(DeprecatedDirectories["reviews"]).toBe("critique");
+    expect(DeprecatedDirectories["test-reports"]).toBe("qa");
+    expect(DeprecatedDirectories["retrospective"]).toBe("retrospectives");
+  });
+});
+
+describe("validateDirectory", () => {
+  const { validateDirectory } = require("../naming-pattern");
+
+  describe("canonical paths (accepted)", () => {
+    test("accepts decisions for decision", () => {
+      const result = validateDirectory("decisions", "decision");
+      expect(result.valid).toBe(true);
+    });
+
+    test("accepts sessions for session", () => {
+      const result = validateDirectory("sessions", "session");
+      expect(result.valid).toBe(true);
+    });
+
+    test("accepts specs/myproject/requirements for requirement", () => {
+      const result = validateDirectory(
+        "specs/myproject/requirements",
+        "requirement",
+      );
+      expect(result.valid).toBe(true);
+    });
+
+    test("accepts specs/any-name/design for design", () => {
+      const result = validateDirectory("specs/any-name/design", "design");
+      expect(result.valid).toBe(true);
+    });
+
+    test("accepts specs/project_name/tasks for task", () => {
+      const result = validateDirectory("specs/project_name/tasks", "task");
+      expect(result.valid).toBe(true);
+    });
+
+    test("accepts planning for feature", () => {
+      const result = validateDirectory("planning", "feature");
+      expect(result.valid).toBe(true);
+    });
+
+    test("accepts roadmap for epic", () => {
+      const result = validateDirectory("roadmap", "epic");
+      expect(result.valid).toBe(true);
+    });
+
+    test("accepts retrospectives for retrospective", () => {
+      const result = validateDirectory("retrospectives", "retrospective");
+      expect(result.valid).toBe(true);
+    });
+  });
+
+  describe("deprecated paths (rejected)", () => {
+    test("rejects architecture/decision for decision", () => {
+      const result = validateDirectory("architecture/decision", "decision");
+      expect(result.valid).toBe(false);
+      expect(result.isDeprecated).toBe(true);
+      expect(result.canonicalDirectory).toBe("decisions");
+    });
+
+    test("rejects requirements for requirement", () => {
+      const result = validateDirectory("requirements", "requirement");
+      expect(result.valid).toBe(false);
+      expect(result.isDeprecated).toBe(true);
+      expect(result.canonicalDirectory).toBe("specs/{name}/requirements");
+    });
+
+    test("rejects design for design", () => {
+      const result = validateDirectory("design", "design");
+      expect(result.valid).toBe(false);
+      expect(result.isDeprecated).toBe(true);
+      expect(result.canonicalDirectory).toBe("specs/{name}/design");
+    });
+
+    test("rejects features for feature", () => {
+      const result = validateDirectory("features", "feature");
+      expect(result.valid).toBe(false);
+      expect(result.isDeprecated).toBe(true);
+      expect(result.canonicalDirectory).toBe("planning");
+    });
+
+    test("rejects epics for epic", () => {
+      const result = validateDirectory("epics", "epic");
+      expect(result.valid).toBe(false);
+      expect(result.isDeprecated).toBe(true);
+      expect(result.canonicalDirectory).toBe("roadmap");
+    });
+
+    test("rejects reviews for critique", () => {
+      const result = validateDirectory("reviews", "critique");
+      expect(result.valid).toBe(false);
+      expect(result.isDeprecated).toBe(true);
+      expect(result.canonicalDirectory).toBe("critique");
+    });
+
+    test("rejects test-reports for test-report", () => {
+      const result = validateDirectory("test-reports", "test-report");
+      expect(result.valid).toBe(false);
+      expect(result.isDeprecated).toBe(true);
+      expect(result.canonicalDirectory).toBe("qa");
+    });
+
+    test("rejects retrospective for retrospective", () => {
+      const result = validateDirectory("retrospective", "retrospective");
+      expect(result.valid).toBe(false);
+      expect(result.isDeprecated).toBe(true);
+      expect(result.canonicalDirectory).toBe("retrospectives");
+    });
+  });
+
+  describe("wrong directory for type (rejected)", () => {
+    test("rejects qa for decision", () => {
+      const result = validateDirectory("qa", "decision");
+      expect(result.valid).toBe(false);
+      expect(result.error).toContain("not valid for decision");
+      expect(result.canonicalDirectory).toBe("decisions");
+    });
+
+    test("rejects decisions for session", () => {
+      const result = validateDirectory("decisions", "session");
+      expect(result.valid).toBe(false);
+      expect(result.error).toContain("not valid for session");
+      expect(result.canonicalDirectory).toBe("sessions");
+    });
+  });
+});

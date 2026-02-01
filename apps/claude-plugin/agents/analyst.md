@@ -275,56 +275,16 @@ WebSearch, WebFetch
 # External documentation services if available
 ```
 
-## Brain Memory Integration
+## Memory Operations
 
-When creating or updating memory notes, follow pre-flight validation.
+Follow the memory skill for Brain MCP tool usage. See memory skill (`skills/memory/SKILL.md`) for:
 
-### Pre-Flight Validation Checklist (MANDATORY)
+- Entity type to folder mappings (analysis goes in `analysis/` folder)
+- File naming patterns (ANALYSIS-NNN-topic.md)
+- Pre-flight validation checklist
+- Tool usage examples
 
-Before calling `mcp__plugin_brain_brain__write_note` or `mcp__plugin_brain_brain__edit_note`:
-
-```markdown
-- [ ] Entity type valid (decision, session, analysis, feature, etc.)
-- [ ] Folder matches entity type (analysis/ for research findings)
-- [ ] Filename follows CAPS prefix pattern (ANALYSIS-NNN-topic)
-- [ ] Frontmatter complete (title, type, tags, permalink)
-- [ ] 3-10 observations with categories: `- [category] content #tags`
-- [ ] 2-8 relations with wikilinks: `- relation_type [[Target]]`
-```
-
-### Entity Type Mapping
-
-| Entity Type | Folder | Filename Pattern |
-|------------|--------|------------------|
-| analysis | analysis/ | ANALYSIS-NNN-topic |
-| research | analysis/ | RESEARCH-NNN-topic |
-
-### Memory Operations
-
-**Search for prior research**:
-
-```text
-mcp__plugin_brain_brain__search
-query: "[research topic] analysis patterns"
-```
-
-**Read specific note**:
-
-```text
-mcp__plugin_brain_brain__read_note
-identifier: "analysis/ANALYSIS-[number]"
-```
-
-**Create new analysis** (after pre-flight validation):
-
-```text
-mcp__plugin_brain_brain__write_note
-title: "ANALYSIS-NNN-[topic]"
-folder: "analysis"
-content: "[Full analysis content with frontmatter, observations, relations]"
-```
-
-See memory skill documentation for complete entity type mapping and quality requirements.
+Store analysis findings in Brain memory using the `analysis/` folder with ANALYSIS-NNN-topic naming pattern.
 
 ## Handoff Protocol
 

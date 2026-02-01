@@ -209,43 +209,12 @@ These are normal occurrences. Continue orchestrating.
 
 ## Memory Protocol
 
-Use Serena memory tools for cross-session context:
+Follow the memory skill for cross-session context. See memory skill for:
 
-**Before multi-step reasoning:**
-
-```python
-# Search for relevant memories
-mcp__serena__list_memories()
-
-# Read specific orchestration patterns
-mcp__serena__read_memory(memory_file_name="orchestration-[relevant-pattern]")
-```
-
-**At milestones (or every 5 turns):**
-
-```python
-# Store orchestration decisions
-mcp__serena__write_memory(
-    memory_file_name="orchestration-[topic]",
-    content="""
-## Orchestration Decision: [Topic]
-
-**Agent Performance:**
-- Success patterns: [what worked]
-- Failure modes: [what failed]
-
-**Routing Decisions:**
-- Effective: [what worked]
-- Ineffective: [what failed]
-
-**Solutions:**
-- Recurring problems resolved: [solutions]
-
-**Conventions:**
-- Project patterns discovered: [patterns]
-"""
-)
-```
+- Search operations before multi-step reasoning
+- Storage at milestones (or every 5 turns)
+- Entity type to folder mappings
+- Pre-flight validation checklist
 
 ## Execution Protocol
 

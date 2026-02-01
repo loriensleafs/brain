@@ -604,7 +604,22 @@ async function callProxiedTool(
 
 /**
  * Map folder paths to pattern types for validation.
- * Based on ADR-023 naming patterns and storage categories.
+ * Based on ADR-023/ADR-024 naming patterns - ONLY canonical paths.
+ *
+ * Canonical mappings (single path per entity):
+ *   decision → decisions
+ *   session → sessions
+ *   requirement → specs/{name}/requirements
+ *   design → specs/{name}/design
+ *   task → specs/{name}/tasks
+ *   analysis → analysis
+ *   feature → planning
+ *   epic → roadmap
+ *   critique → critique
+ *   test-report → qa
+ *   security → security
+ *   retrospective → retrospectives
+ *   skill → skills
  *
  * @param folder - Folder path from write_note args
  * @returns Pattern type for validation, or undefined if no validation applies
@@ -619,46 +634,37 @@ function folderToPatternType(
   // Normalize folder path (remove trailing slashes, lowercase for comparison)
   const normalized = folder.replace(/\/+$/, "").toLowerCase();
 
-  const mapping: Record<string, PatternType> = {
-    // Architecture decisions
-    "architecture/decision": "decision",
-    "architecture/decisions": "decision",
+  // Simple exact-match canonical paths
+  const exactMapping: Record<string, PatternType> = {
     decisions: "decision",
-    // Sessions
     sessions: "session",
-    // Requirements
-    requirements: "requirement",
-    "specs/requirements": "requirement",
-    // Design
-    design: "design",
-    "specs/design": "design",
-    // Tasks
-    tasks: "task",
-    "specs/tasks": "task",
-    // Analysis
     analysis: "analysis",
-    // Features/Planning
     planning: "feature",
-    features: "feature",
-    // Epics
     roadmap: "epic",
-    epics: "epic",
-    // Critique
     critique: "critique",
-    reviews: "critique",
-    // QA/Test reports
     qa: "test-report",
-    "test-reports": "test-report",
-    // Security
     security: "security",
-    // Retrospectives
-    retrospective: "retrospective",
     retrospectives: "retrospective",
-    // Skills
     skills: "skill",
   };
 
-  return mapping[normalized];
+  if (exactMapping[normalized]) {
+    return exactMapping[normalized];
+  }
+
+  // Parameterized specs/{name}/* paths
+  // Match: specs/anything/requirements, specs/anything/design, specs/anything/tasks
+  if (normalized.startsWith("specs/") && normalized.split("/").length === 3) {
+    const suffix = normalized.split("/")[2];
+    const specsMapping: Record<string, PatternType> = {
+      requirements: "requirement",
+      design: "design",
+      tasks: "task",
+    };
+    return specsMapping[suffix];
+  }
+
+  return undefined;
 }
 
 /**

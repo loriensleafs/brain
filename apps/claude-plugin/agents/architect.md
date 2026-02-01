@@ -398,56 +398,16 @@ Add this section to all ADRs that introduce external dependencies:
 - [ ] Record lessons learned
 ```
 
-## Brain Memory Integration
+## Memory Operations
 
-When creating or updating memory notes, follow pre-flight validation.
+Follow the memory skill for Brain MCP tool usage. See memory skill (`skills/memory/SKILL.md`) for:
 
-### Pre-Flight Validation Checklist (MANDATORY)
+- Entity type to folder mappings (decisions go in `decisions/` folder)
+- File naming patterns (ADR-NNN-topic.md)
+- Pre-flight validation checklist
+- Tool usage examples
 
-Before calling `mcp__plugin_brain_brain__write_note` or `mcp__plugin_brain_brain__edit_note`:
-
-```markdown
-- [ ] Entity type valid (decision, session, analysis, feature, etc.)
-- [ ] Folder matches entity type (architecture/ for decisions)
-- [ ] Filename follows CAPS prefix pattern (ADR-NNN-topic)
-- [ ] Frontmatter complete (title, type, tags, permalink)
-- [ ] 3-10 observations with categories: `- [category] content #tags`
-- [ ] 2-8 relations with wikilinks: `- relation_type [[Target]]`
-```
-
-### Entity Type Mapping
-
-| Entity Type | Folder | Filename Pattern |
-|------------|--------|------------------|
-| decision | architecture/ | ADR-NNN-topic |
-| design-review | architecture/ | DESIGN-REVIEW-topic |
-
-### Memory Operations
-
-**Search for prior decisions**:
-
-```text
-mcp__plugin_brain_brain__search
-query: "architecture decisions [component/topic]"
-```
-
-**Read specific note**:
-
-```text
-mcp__plugin_brain_brain__read_note
-identifier: "architecture/ADR-[number]"
-```
-
-**Create new decision** (after pre-flight validation):
-
-```text
-mcp__plugin_brain_brain__write_note
-title: "ADR-NNNN-[decision-name]"
-folder: "architecture"
-content: "[Full ADR content with frontmatter, observations, relations]"
-```
-
-See memory skill documentation for complete entity type mapping and quality requirements.
+Store architectural decisions in Brain memory using the `decisions/` folder with ADR-NNNN-topic naming pattern.
 
 ## Architectural Principles
 

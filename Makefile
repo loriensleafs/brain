@@ -74,11 +74,13 @@ build-plugin: build-plugin-hooks
 
 # Install Claude plugin via symlinks for development
 # Use ln -sfn to avoid creating symlinks inside existing symlinked directories
+# For agents: selectively symlink only .md files, excluding .agents/, build/, templates/
 install-plugin:
 	mkdir -p $(PLUGIN_PATH)
+	mkdir -p $(PLUGIN_PATH)/agents
 	ln -sfn $(PLUGIN_SRC)/.claude-plugin $(PLUGIN_PATH)/.claude-plugin
 	ln -sfn $(PLUGIN_SRC)/mcp.json $(PLUGIN_PATH)/mcp.json
-	ln -sfn $(PLUGIN_SRC)/agents $(PLUGIN_PATH)/agents
+	@for f in $(PLUGIN_SRC)/agents/*.md; do ln -sfn "$$f" $(PLUGIN_PATH)/agents/; done
 	ln -sfn $(PLUGIN_SRC)/hooks $(PLUGIN_PATH)/hooks
 	ln -sfn $(PLUGIN_SRC)/commands $(PLUGIN_PATH)/commands
 	ln -sfn $(PLUGIN_SRC)/skills $(PLUGIN_PATH)/skills
@@ -90,12 +92,14 @@ uninstall-plugin:
 	@echo "Plugin uninstalled"
 
 # Install plugin to cache directory (replacing existing)
+# For agents: copy only .md files, excluding .agents/, build/, templates/ subdirectories
 install-plugin-cache:
 	@echo "Installing plugin to cache..."
 	rm -rf $(PLUGIN_CACHE_PATH)
 	mkdir -p $(PLUGIN_CACHE_PATH)/brain/1.0.0
 	cp -R apps/claude-plugin/.claude-plugin $(PLUGIN_CACHE_PATH)/brain/1.0.0/
-	cp -R apps/claude-plugin/agents $(PLUGIN_CACHE_PATH)/brain/1.0.0/
+	mkdir -p $(PLUGIN_CACHE_PATH)/brain/1.0.0/agents
+	cp apps/claude-plugin/agents/*.md $(PLUGIN_CACHE_PATH)/brain/1.0.0/agents/
 	cp -R apps/claude-plugin/commands $(PLUGIN_CACHE_PATH)/brain/1.0.0/
 	cp -R apps/claude-plugin/hooks $(PLUGIN_CACHE_PATH)/brain/1.0.0/
 	cp -R apps/claude-plugin/skills $(PLUGIN_CACHE_PATH)/brain/1.0.0/

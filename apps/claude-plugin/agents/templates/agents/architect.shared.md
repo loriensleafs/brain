@@ -320,33 +320,12 @@ mcp__cloudmcp-manager__memory-search_nodes
 Query: "architecture decisions [component/topic]"
 ```
 
-**After design:**
+Follow the memory skill for Brain MCP tool usage. See memory skill for:
 
-```json
-mcp__cloudmcp-manager__memory-create_entities
-{
-  "entities": [{
-    "name": "ADR-[Number]",
-    "entityType": "Decision",
-    "observations": ["[Decision rationale and context]"]
-  }]
-}
-```
-
-### Pre-Flight Validation Checklist (MANDATORY)
-
-Before writing memory notes:
-
-```markdown
-- [ ] Entity type valid (decision, session, analysis, feature, etc.)
-- [ ] Folder matches entity type (architecture/ for decisions)
-- [ ] Filename follows CAPS prefix pattern (ADR-NNN-topic)
-- [ ] Frontmatter complete (title, type, tags, permalink)
-- [ ] 3-10 observations with categories: `- [category] content #tags`
-- [ ] 2-8 relations with wikilinks: `- relation_type [[Target]]`
-```
-
-See memory skill documentation for complete entity type mapping and quality requirements.
+- Entity type to folder mappings (decisions go in `decisions/` folder)
+- File naming patterns (ADR-NNN-topic.md)
+- Pre-flight validation checklist
+- Tool usage examples
 
 ## Architecture Review Process
 

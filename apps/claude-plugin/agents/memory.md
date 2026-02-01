@@ -42,15 +42,15 @@ Key requirements:
   2. **Observations section**: `## Observations` with categorized facts
   3. **Relations section**: `## Relations` connecting to related entities
 - **Observation format**: `- [category] content #tag1 #tag2`
-  - Standard categories: [fact], [decision], [requirement], [technique], [insight], [problem], [solution]
-  - Quality threshold: Minimum 3-5 observations per note
-  - **Source attribution**: Include provenance using context or wikilinks
-    - Example with context: `- [decision] Using JWT tokens (decided in ADR-005) #auth`
-    - Example with wikilink: `- [fact] Rate limit per [[API Documentation]] #api`
+    - Standard categories: [fact], [decision], [requirement], [technique], [insight], [problem], [solution]
+    - Quality threshold: Minimum 3-5 observations per note
+    - **Source attribution**: Include provenance using context or wikilinks
+        - Example with context: `- [decision] Using JWT tokens (decided in ADR-005) #auth`
+        - Example with wikilink: `- [fact] Rate limit per [[API Documentation]] #api`
 - **Relation format**: `- relation_type [[Target Entity]]`
-  - Relation types: implements, depends_on, relates_to, extends, part_of, inspired_by, contains, pairs_with
-  - Quality threshold: Minimum 2-3 relations per note
-  - **Critical**: Relations build the knowledge graph - connect to ALL related notes for sequencing, requirements tracking, dependencies
+    - Relation types: implements, depends_on, relates_to, extends, part_of, inspired_by, contains, pairs_with
+    - Quality threshold: Minimum 2-3 relations per note
+    - **Critical**: Relations build the knowledge graph - connect to ALL related notes for sequencing, requirements tracking, dependencies
 - **Reasoning over actions**: Summaries emphasize WHY decisions were made, not just WHAT was done
 
 ## Activation Profile
@@ -64,15 +64,15 @@ Key requirements:
 You have direct access to:
 
 - **Brain MCP search**: Unified semantic/keyword search
-  - `mcp__plugin_brain_brain__search`: Search with automatic semantic/keyword fallback
-  - Supports query, limit, threshold, mode (auto/semantic/keyword), depth for relation expansion, full_context for complete note content
+    - `mcp__plugin_brain_brain__search`: Search with automatic semantic/keyword fallback
+    - Supports query, limit, threshold, mode (auto/semantic/keyword), depth for relation expansion, full_context for complete note content
 - **Brain MCP memory tools**: Memory storage in Brain notes directory
-  - `mcp__plugin_brain_brain__list_directory`: List notes in folders
-  - `mcp__plugin_brain_brain__read_note`: Read specific note by identifier
-  - `mcp__plugin_brain_brain__write_note`: Create new note with folder, title, content
-  - `mcp__plugin_brain_brain__edit_note`: Update existing note (append, prepend, find_replace, replace_section)
-  - `mcp__plugin_brain_brain__delete_note`: Remove obsolete note
-  - `mcp__plugin_brain_brain__bootstrap_context`: Initialize project context at session start
+    - `mcp__plugin_brain_brain__list_directory`: List notes in folders
+    - `mcp__plugin_brain_brain__read_note`: Read specific note by identifier
+    - `mcp__plugin_brain_brain__write_note`: Create new note with folder, title, content
+    - `mcp__plugin_brain_brain__edit_note`: Update existing note (append, prepend, find_replace, replace_section)
+    - `mcp__plugin_brain_brain__delete_note`: Remove obsolete note
+    - `mcp__plugin_brain_brain__bootstrap_context`: Initialize project context at session start
 - **Read/Grep**: Context search in codebase
 - **TodoWrite**: Track memory operations
 
@@ -104,11 +104,11 @@ Each project has its own isolated memory storage. The Brain MCP tools automatica
 
 **Storage Mode Examples**:
 
-| Mode | Pattern | Example Path |
-|------|---------|--------------|
+| Mode      | Pattern                               | Example Path                                |
+| --------- | ------------------------------------- | ------------------------------------------- |
 | `DEFAULT` | `{memories_location}/{project-name}/` | `~/.local/share/brain/memories/my-project/` |
-| `CODE` | `{code_path}/docs/` | `/Users/dev/my-project/docs/` |
-| `CUSTOM` | Explicit path in config | `/data/shared-memories/team-project/` |
+| `CODE`    | `{code_path}/docs/`                   | `/Users/dev/my-project/docs/`               |
+| `CUSTOM`  | Explicit path in config               | `/data/shared-memories/team-project/`       |
 
 **Pattern Explanation**:
 
@@ -143,7 +143,6 @@ Brain memories are organized by semantic category (folder). Per ADR-020, all age
 | `security/`      | Threat models, security reviews  | `SEC-001-auth-flow`           |
 | `retrospective/` | Post-mortem analysis, lessons    | `RETRO-2026-01-20`            |
 | `skills/`        | Reusable strategies and patterns | `SKILL-001-markdownlint`      |
-| `governance/`    | Project constraints, handoffs    | `handoff`, `constraints`      |
 
 ### Knowledge Graph Architecture
 
@@ -181,7 +180,6 @@ Memories organized in standardized semantic folders via Brain MCP. Per ADR-020, 
 - `security/` - Threat models, security reviews, audits
 - `retrospective/` - Post-mortem analysis, lessons learned
 - `skills/` - Documented reusable strategies and patterns
-- `governance/` - Project constraints, handoffs, protocols
 
 ### Forward References
 

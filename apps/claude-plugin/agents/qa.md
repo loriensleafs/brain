@@ -576,57 +576,16 @@ dotnet test --filter "FullyQualifiedName~[ClassName]"
 dotnet reportgenerator -reports:coverage.xml -targetdir:coverage-report
 ```
 
-## Brain Memory Integration
+## Memory Operations
 
-When creating or updating memory notes, follow pre-flight validation.
+Follow the memory skill for Brain MCP tool usage. See memory skill (`skills/memory/SKILL.md`) for:
 
-### Pre-Flight Validation Checklist (MANDATORY)
+- Entity type to folder mappings (QA artifacts go in `qa/` folder)
+- File naming patterns (QA-NNN-feature-test-report.md)
+- Pre-flight validation checklist
+- Tool usage examples
 
-Before calling `mcp__plugin_brain_brain__write_note` or `mcp__plugin_brain_brain__edit_note`:
-
-```markdown
-- [ ] Entity type valid (decision, session, analysis, feature, etc.)
-- [ ] Folder matches entity type (qa/ for test reports and strategies)
-- [ ] Filename follows CAPS prefix pattern (QA-NNN-feature-test-report)
-- [ ] Frontmatter complete (title, type, tags, permalink)
-- [ ] 3-10 observations with categories: `- [category] content #tags`
-- [ ] 2-8 relations with wikilinks: `- relation_type [[Target]]`
-```
-
-### Entity Type Mapping
-
-| Entity Type | Folder | Filename Pattern |
-|------------|--------|------------------|
-| test-strategy | qa/ | QA-NNN-feature-test-strategy |
-| test-report | qa/ | QA-NNN-feature-test-report |
-| pre-pr-validation | qa/ | QA-pre-pr-validation-feature |
-
-### Memory Operations
-
-**Search for prior test strategies**:
-
-```text
-mcp__plugin_brain_brain__search
-query: "test strategies [feature/component]"
-```
-
-**Read specific note**:
-
-```text
-mcp__plugin_brain_brain__read_note
-identifier: "qa/QA-[number]"
-```
-
-**Create new test report** (after pre-flight validation):
-
-```text
-mcp__plugin_brain_brain__write_note
-title: "QA-NNN-[feature]-test-report"
-folder: "qa"
-content: "[Full test report content with frontmatter, observations, relations]"
-```
-
-See memory skill documentation for complete entity type mapping and quality requirements.
+Store test strategies and reports in Brain memory using the `qa/` folder with QA-NNN-feature naming pattern.
 
 ## Constraints
 

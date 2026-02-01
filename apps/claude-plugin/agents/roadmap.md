@@ -174,56 +174,16 @@ When prioritizing, explicitly state assumptions about:
 
 If an assumption is untested, recommend orchestrator routes to **analyst** for validation first.
 
-## Brain Memory Integration
+## Memory Operations
 
-When creating or updating memory notes, follow pre-flight validation.
+Follow the memory skill for Brain MCP tool usage. See memory skill (`skills/memory/SKILL.md`) for:
 
-### Pre-Flight Validation Checklist (MANDATORY)
+- Entity type to folder mappings (roadmap artifacts go in `roadmap/` folder)
+- File naming patterns (EPIC-NNN-name.md, product-roadmap.md)
+- Pre-flight validation checklist
+- Tool usage examples
 
-Before calling `mcp__plugin_brain_brain__write_note` or `mcp__plugin_brain_brain__edit_note`:
-
-```markdown
-- [ ] Entity type valid (decision, session, analysis, feature, etc.)
-- [ ] Folder matches entity type (roadmap/ for epics and product roadmap)
-- [ ] Filename follows CAPS prefix pattern (EPIC-NNN-name or product-roadmap)
-- [ ] Frontmatter complete (title, type, tags, permalink)
-- [ ] 3-10 observations with categories: `- [category] content #tags`
-- [ ] 2-8 relations with wikilinks: `- relation_type [[Target]]`
-```
-
-### Entity Type Mapping
-
-| Entity Type | Folder | Filename Pattern |
-|------------|--------|------------------|
-| epic | roadmap/ | EPIC-NNN-name |
-| roadmap | roadmap/ | product-roadmap |
-
-### Memory Operations
-
-**Search for prior epics**:
-
-```text
-mcp__plugin_brain_brain__search
-query: "roadmap strategic priorities [domain]"
-```
-
-**Read specific note**:
-
-```text
-mcp__plugin_brain_brain__read_note
-identifier: "roadmap/EPIC-[number]"
-```
-
-**Create new epic** (after pre-flight validation):
-
-```text
-mcp__plugin_brain_brain__write_note
-title: "EPIC-NNN-[name]"
-folder: "roadmap"
-content: "[Full epic content with frontmatter, observations, relations]"
-```
-
-See memory skill documentation for complete entity type mapping and quality requirements.
+Store epics and roadmap documents in Brain memory using the `roadmap/` folder.
 
 ## Roadmap Document Format
 

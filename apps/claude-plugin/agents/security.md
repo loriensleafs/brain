@@ -362,57 +362,16 @@ Save to Brain memory: `planning/ANALYSIS-impact-security-[feature]`
 - **Total**: [Hours/Days]
 ```
 
-## Brain Memory Integration
+## Memory Operations
 
-When creating or updating memory notes, follow pre-flight validation.
+Follow the memory skill for Brain MCP tool usage. See memory skill (`skills/memory/SKILL.md`) for:
 
-### Pre-Flight Validation Checklist (MANDATORY)
+- Entity type to folder mappings (security artifacts go in `security/` folder)
+- File naming patterns (TM-NNN-feature.md, SR-NNN-scope.md, PIV-feature.md)
+- Pre-flight validation checklist
+- Tool usage examples
 
-Before calling `mcp__plugin_brain_brain__write_note` or `mcp__plugin_brain_brain__edit_note`:
-
-```markdown
-- [ ] Entity type valid (decision, session, analysis, feature, etc.)
-- [ ] Folder matches entity type (security/ for threat models and reports)
-- [ ] Filename follows CAPS prefix pattern (TM-NNN-feature or SR-NNN-scope or PIV-feature)
-- [ ] Frontmatter complete (title, type, tags, permalink)
-- [ ] 3-10 observations with categories: `- [category] content #tags`
-- [ ] 2-8 relations with wikilinks: `- relation_type [[Target]]`
-```
-
-### Entity Type Mapping
-
-| Entity Type | Folder | Filename Pattern |
-|------------|--------|------------------|
-| threat-model | security/ | TM-NNN-feature |
-| security-report | security/ | SR-NNN-scope |
-| piv | security/ | PIV-feature |
-
-### Memory Operations
-
-**Search for prior security findings**:
-
-```text
-mcp__plugin_brain_brain__search
-query: "security patterns vulnerabilities [component]"
-```
-
-**Read specific note**:
-
-```text
-mcp__plugin_brain_brain__read_note
-identifier: "security/TM-[number]"
-```
-
-**Create new threat model** (after pre-flight validation):
-
-```text
-mcp__plugin_brain_brain__write_note
-title: "TM-NNN-[feature]"
-folder: "security"
-content: "[Full threat model content with frontmatter, observations, relations]"
-```
-
-See memory skill documentation for complete entity type mapping and quality requirements.
+Store threat models, security reports, and PIV documents in Brain memory using the `security/` folder.
 
 ## Security Checklist
 

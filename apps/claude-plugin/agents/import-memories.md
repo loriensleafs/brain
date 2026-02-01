@@ -15,6 +15,7 @@ tools:
   - mcp__plugin_brain_brain__list_directory
   - mcp__plugin_brain_brain__build_context
 skills:
+  - memory
   - content-transformation
   - merge-detection
   - progress-tracking

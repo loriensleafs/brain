@@ -107,41 +107,14 @@ git log -p --all -S "[function]"
 
 ## Memory Protocol
 
-Use cloudmcp-manager memory tools directly for cross-session context:
+Follow the memory skill for cross-session context. See memory skill for:
 
-**Before analysis:**
+- Entity type to folder mappings (analysis goes in `analysis/` folder)
+- File naming patterns (ANALYSIS-NNN-topic.md)
+- Pre-flight validation checklist
+- Tool usage examples
 
-```text
-mcp__cloudmcp-manager__memory-search_nodes
-Query: "[research topic] analysis patterns"
-```
-
-**After analysis:**
-
-```json
-mcp__cloudmcp-manager__memory-add_observations
-{
-  "observations": [{
-    "entityName": "Analysis-[Topic]",
-    "contents": ["[Key findings and recommendations]"]
-  }]
-}
-```
-
-### Pre-Flight Validation Checklist (MANDATORY)
-
-Before writing memory notes:
-
-```markdown
-- [ ] Entity type valid (decision, session, analysis, feature, etc.)
-- [ ] Folder matches entity type (analysis/ for research findings)
-- [ ] Filename follows CAPS prefix pattern (ANALYSIS-NNN-topic)
-- [ ] Frontmatter complete (title, type, tags, permalink)
-- [ ] 3-10 observations with categories: `- [category] content #tags`
-- [ ] 2-8 relations with wikilinks: `- relation_type [[Target]]`
-```
-
-See memory skill documentation for complete entity type mapping and quality requirements.
+Store analysis findings in Brain memory using the `analysis/` folder with ANALYSIS-NNN-topic naming pattern.
 
 ## Analysis Types
 

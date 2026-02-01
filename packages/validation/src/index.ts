@@ -120,6 +120,8 @@ export {
 
 // Naming pattern validators
 export {
+  CanonicalDirectories,
+  DeprecatedDirectories,
   DeprecatedPatterns,
   getMatchingPatterns,
   getPatternRegex,
@@ -127,7 +129,9 @@ export {
   isValidNamingPattern,
   NamingPatterns,
   parseNamingPattern,
+  validateDirectory,
   validateNamingPattern,
+  type DirectoryValidationResult,
   type NamingPatternResult,
   type PatternType,
 } from "./naming-pattern";

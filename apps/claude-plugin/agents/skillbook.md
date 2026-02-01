@@ -139,51 +139,9 @@ mcp__plugin_brain_brain__read_note    # Read specific domain index
 
 ## File Naming Convention
 
-Skill files use `{domain}-{topic}.md` format for index discoverability:
+Skills use the standard entity pattern: `SKILL-NNN-topic.md` in the `skills/` folder.
 
-```text
-~/memories/{project-path}/
-├── skills-{domain}-index.md    # L2: Domain index (routing table)
-└── {domain}-{topic}.md         # L3: Atomic skill file(s)
-```
-
-### CRITICAL: Index File Format
-
-**Index files MUST contain ONLY the table. No headers, no descriptions, no metadata.**
-
-Correct format (maximum token efficiency):
-
-```markdown
-| Keywords | File |
-|----------|------|
-| keyword1 keyword2 keyword3 | file-name-1 |
-| keyword4 keyword5 | file-name-2 |
-```
-
-**NEVER add**:
-
-- Title headers (`# Domain Index`)
-- Purpose statements
-- Statistics sections
-- See Also references
-- Any content outside the table
-
-### Naming Rules
-
-| Component | Pattern | Examples |
-|-----------|---------|----------|
-| Domain | Lowercase, hyphenated | `pr-review`, `session-init`, `github-cli` |
-| Topic | Descriptive noun/verb | `security`, `acknowledgment`, `api-patterns` |
-| Full name | `{domain}-{topic}.md` | `pr-review-security.md`, `pester-test-isolation.md` |
-
-**Internal Skill ID**: The `Skill-{Category}-{NNN}` identifier goes INSIDE the file, not in the filename.
-
-### File vs Index Decision
-
-| File Type | Purpose | Example |
-|-----------|---------|---------|
-| `skills-{domain}-index.md` | L2 routing table | `skills-pr-review-index.md` |
-| `{domain}-{topic}.md` | L3 atomic content | `pr-review-security.md` |
+See memory skill for complete entity type to folder mapping and naming conventions.
 
 ## Skill File Format (ADR-017)
 
@@ -232,156 +190,17 @@ Skills are stored as atomic markdown files in the Brain notes directory. Every s
 3. Proceed with work
 ```
 
-### Index Selection
-
-1. Check `memory-index.md` for matching domain keywords
-2. Add skill to existing domain index if keywords overlap >50%
-3. Create new domain index only if 5+ skills exist AND no domain covers topic
-
-### Activation Vocabulary Rules
-
-When adding a skill to a domain index, select 4-8 keywords:
-
-| Keyword Type | Required | Example |
-|--------------|----------|---------|
-| Primary noun | YES | `security`, `isolation`, `mutation` |
-| Action verb | YES | `validate`, `resolve`, `triage` |
-| Tool/context | If applicable | `gh`, `pester`, `graphql` |
-| Synonyms | Recommended | `check`/`verify`, `error`/`failure` |
-
-**Uniqueness requirement**: Minimum 40% unique keywords vs other skills in same domain.
-
-### Domain-to-Index Mapping
-
-To find the correct index for a new skill, consult `memory-index.md`:
-
-```text
-mcp__plugin_brain_brain__read_note
-identifier: "memory-index"
-```
-
-Match skill keywords against the Task Keywords column. The Essential Memories column shows which index to use.
-
-**Creating new domains**: Only create `skills-{domain}-index.md` when:
-
-1. 5+ skills exist or are planned for the topic
-2. No existing domain covers the topic adequately
-3. Keywords are distinct from all existing domains
-
-### Skill Naming Convention
-
-Use descriptive kebab-case names **without** the `skill-` prefix:
-
-| Domain | Example Filename | Description |
-|--------|------------------|-------------|
-| session-init | `session-init-brain` | Session initialization |
-| pr-review | `pr-enum-001` | Pull request workflows |
-| git | `git-worktree-parallel` | Git operations |
-| security | `security-toctou-defense` | Security patterns |
-| ci | `ci-quality-gates` | CI/CD patterns |
-| workflow | `workflow-shell-safety` | Workflow patterns |
-
-**Naming rules:**
-
-- Use `{domain}-{description}` or `{domain}-{description}-{NNN}` format
-- Descriptive names preferred over numeric IDs (e.g., `git-worktree-parallel` not `git-001`)
-- Use numeric suffix only when multiple skills are closely related (e.g., `pr-enum-001`, `pr-status-001`)
-- All lowercase with hyphens (kebab-case)
-- No `skill-` or `Skill-` prefix
-
-### Index Update Procedure
-
-After creating a skill file, update the domain index:
-
-**Step 1**: Read current index to find insertion point
-
-```text
-mcp__plugin_brain_brain__read_note
-identifier: "skills-[domain]-index"
-```
-
-**Step 2**: Insert new row in Activation Vocabulary table
-
-```text
-mcp__plugin_brain_brain__edit_note
-identifier: "skills-[domain]-index"
-operation: "find_replace"
-find_text: "| [last-existing-keywords] | [last-existing-file] |"
-content: "| [last-existing-keywords] | [last-existing-file] |\n| [new-keywords] | [new-file-name] |"
-```
-
-**Step 3**: Validate
-
-```text
-mcp__plugin_brain_brain__analyze_project
-# Or use mcp__plugin_brain_brain__maintain_knowledge_graph
-```
 
 ## Memory Protocol
 
-Skills are stored in the **Brain semantic knowledge graph** (ADR-017) in the Brain notes directory.
+Follow the memory skill for Brain MCP tool usage. See memory skill (`skills/memory/SKILL.md`) for:
 
-### Folder Organization
+- Entity type to folder mappings
+- File naming patterns (SKILL-NNN-topic.md)
+- Pre-flight validation checklist
+- Tool usage examples
 
-Skills are organized in semantic folders within the Brain notes directory:
-
-```text
-~/memories/{project-path}/
-├── skills/           # Skill definitions
-├── analysis/         # Research and investigation
-├── features/         # Feature planning
-├── decisions/        # ADRs and decisions
-└── specs/            # Specifications
-```
-
-### Skill Lookup (Read)
-
-1. **Search** for skills by topic or keywords
-2. **Browse** the skills folder if needed
-3. **Read** specific skill file for detailed guidance
-
-```text
-# Search for relevant skills
-mcp__plugin_brain_brain__search
-query: "powershell testing patterns"
-limit: 5
-
-# Or browse skills folder
-mcp__plugin_brain_brain__list_directory
-dir_name: "skills"
-
-# Read specific skill
-mcp__plugin_brain_brain__read_note
-identifier: "skills/powershell-testing-patterns"
-```
-
-### Skill Creation (Write)
-
-New skills go into atomic files following domain naming:
-
-```text
-mcp__plugin_brain_brain__write_note
-title: "[skill-name]"
-folder: "[domain]"
-content: "[skill content in standard format]"
-```
-
-Skills are automatically indexed by Brain's semantic search - no manual index updates needed.
-
-### Validation
-
-After creating skills, run validation:
-
-```text
-mcp__plugin_brain_brain__analyze_project
-# Or for knowledge graph health:
-mcp__plugin_brain_brain__maintain_knowledge_graph
-```
-
-Requirements:
-
-- All files referenced in indexes must exist
-- Keyword uniqueness within domain: minimum 40%
+Skills are stored in the `skills/` folder within Brain memory.
 
 ## Contradiction Resolution
 

@@ -8,9 +8,24 @@ import { describe, expect, test } from "vitest";
 
 /**
  * Map folder paths to pattern types for validation.
- * Based on ADR-023 naming patterns and storage categories.
+ * Based on ADR-023/ADR-024 naming patterns - ONLY canonical paths.
  *
  * This is a copy of the function from index.ts for testing purposes.
+ *
+ * Canonical mappings (single path per entity):
+ *   decision → decisions
+ *   session → sessions
+ *   requirement → specs/{name}/requirements
+ *   design → specs/{name}/design
+ *   task → specs/{name}/tasks
+ *   analysis → analysis
+ *   feature → planning
+ *   epic → roadmap
+ *   critique → critique
+ *   test-report → qa
+ *   security → security
+ *   retrospective → retrospectives
+ *   skill → skills
  */
 function folderToPatternType(
   folder: string | undefined,
@@ -22,164 +37,147 @@ function folderToPatternType(
   // Normalize folder path (remove trailing slashes, lowercase for comparison)
   const normalized = folder.replace(/\/+$/, "").toLowerCase();
 
-  const mapping: Record<string, PatternType> = {
-    // Architecture decisions
-    "architecture/decision": "decision",
-    "architecture/decisions": "decision",
+  // Simple exact-match canonical paths
+  const exactMapping: Record<string, PatternType> = {
     decisions: "decision",
-    // Sessions
     sessions: "session",
-    // Requirements
-    requirements: "requirement",
-    "specs/requirements": "requirement",
-    // Design
-    design: "design",
-    "specs/design": "design",
-    // Tasks
-    tasks: "task",
-    "specs/tasks": "task",
-    // Analysis
     analysis: "analysis",
-    // Features/Planning
     planning: "feature",
-    features: "feature",
-    // Epics
     roadmap: "epic",
-    epics: "epic",
-    // Critique
     critique: "critique",
-    reviews: "critique",
-    // QA/Test reports
     qa: "test-report",
-    "test-reports": "test-report",
-    // Security
     security: "security",
-    // Retrospectives
-    retrospective: "retrospective",
     retrospectives: "retrospective",
-    // Skills
     skills: "skill",
   };
 
-  return mapping[normalized];
+  if (exactMapping[normalized]) {
+    return exactMapping[normalized];
+  }
+
+  // Parameterized specs/{name}/* paths
+  // Match: specs/anything/requirements, specs/anything/design, specs/anything/tasks
+  if (normalized.startsWith("specs/") && normalized.split("/").length === 3) {
+    const suffix = normalized.split("/")[2];
+    const specsMapping: Record<string, PatternType> = {
+      requirements: "requirement",
+      design: "design",
+      tasks: "task",
+    };
+    return specsMapping[suffix];
+  }
+
+  return undefined;
 }
 
 describe("folderToPatternType mapping", () => {
-  describe("architecture decisions", () => {
-    test("maps architecture/decision to decision", () => {
-      expect(folderToPatternType("architecture/decision")).toBe("decision");
-    });
-
-    test("maps architecture/decisions to decision", () => {
-      expect(folderToPatternType("architecture/decisions")).toBe("decision");
-    });
-
-    test("maps decisions to decision", () => {
+  describe("canonical paths (accepted)", () => {
+    test("decisions -> decision", () => {
       expect(folderToPatternType("decisions")).toBe("decision");
     });
-  });
 
-  describe("sessions", () => {
-    test("maps sessions to session", () => {
+    test("sessions -> session", () => {
       expect(folderToPatternType("sessions")).toBe("session");
     });
-  });
 
-  describe("requirements", () => {
-    test("maps requirements to requirement", () => {
-      expect(folderToPatternType("requirements")).toBe("requirement");
+    test("specs/myproject/requirements -> requirement", () => {
+      expect(folderToPatternType("specs/myproject/requirements")).toBe(
+        "requirement",
+      );
     });
 
-    test("maps specs/requirements to requirement", () => {
-      expect(folderToPatternType("specs/requirements")).toBe("requirement");
-    });
-  });
-
-  describe("design", () => {
-    test("maps design to design", () => {
-      expect(folderToPatternType("design")).toBe("design");
+    test("specs/myproject/design -> design", () => {
+      expect(folderToPatternType("specs/myproject/design")).toBe("design");
     });
 
-    test("maps specs/design to design", () => {
-      expect(folderToPatternType("specs/design")).toBe("design");
-    });
-  });
-
-  describe("tasks", () => {
-    test("maps tasks to task", () => {
-      expect(folderToPatternType("tasks")).toBe("task");
+    test("specs/myproject/tasks -> task", () => {
+      expect(folderToPatternType("specs/myproject/tasks")).toBe("task");
     });
 
-    test("maps specs/tasks to task", () => {
-      expect(folderToPatternType("specs/tasks")).toBe("task");
-    });
-  });
-
-  describe("analysis", () => {
-    test("maps analysis to analysis", () => {
+    test("analysis -> analysis", () => {
       expect(folderToPatternType("analysis")).toBe("analysis");
     });
-  });
 
-  describe("features/planning", () => {
-    test("maps planning to feature", () => {
+    test("planning -> feature", () => {
       expect(folderToPatternType("planning")).toBe("feature");
     });
 
-    test("maps features to feature", () => {
-      expect(folderToPatternType("features")).toBe("feature");
-    });
-  });
-
-  describe("epics", () => {
-    test("maps roadmap to epic", () => {
+    test("roadmap -> epic", () => {
       expect(folderToPatternType("roadmap")).toBe("epic");
     });
 
-    test("maps epics to epic", () => {
-      expect(folderToPatternType("epics")).toBe("epic");
-    });
-  });
-
-  describe("critique", () => {
-    test("maps critique to critique", () => {
+    test("critique -> critique", () => {
       expect(folderToPatternType("critique")).toBe("critique");
     });
 
-    test("maps reviews to critique", () => {
-      expect(folderToPatternType("reviews")).toBe("critique");
-    });
-  });
-
-  describe("test reports", () => {
-    test("maps qa to test-report", () => {
+    test("qa -> test-report", () => {
       expect(folderToPatternType("qa")).toBe("test-report");
     });
 
-    test("maps test-reports to test-report", () => {
-      expect(folderToPatternType("test-reports")).toBe("test-report");
-    });
-  });
-
-  describe("security", () => {
-    test("maps security to security", () => {
+    test("security -> security", () => {
       expect(folderToPatternType("security")).toBe("security");
     });
-  });
 
-  describe("retrospectives", () => {
-    test("maps retrospective to retrospective", () => {
-      expect(folderToPatternType("retrospective")).toBe("retrospective");
-    });
-
-    test("maps retrospectives to retrospective", () => {
+    test("retrospectives -> retrospective", () => {
       expect(folderToPatternType("retrospectives")).toBe("retrospective");
     });
+
+    test("skills -> skill", () => {
+      expect(folderToPatternType("skills")).toBe("skill");
+    });
   });
 
-  describe("skills", () => {
-    test("maps skills to skill", () => {
-      expect(folderToPatternType("skills")).toBe("skill");
+  describe("deprecated paths (rejected)", () => {
+    test("architecture/decision -> undefined (deprecated)", () => {
+      expect(folderToPatternType("architecture/decision")).toBeUndefined();
+    });
+
+    test("architecture/decisions -> undefined (deprecated)", () => {
+      expect(folderToPatternType("architecture/decisions")).toBeUndefined();
+    });
+
+    test("requirements -> undefined (deprecated, use specs/{name}/requirements)", () => {
+      expect(folderToPatternType("requirements")).toBeUndefined();
+    });
+
+    test("specs/requirements -> undefined (deprecated, missing project name)", () => {
+      expect(folderToPatternType("specs/requirements")).toBeUndefined();
+    });
+
+    test("design -> undefined (deprecated, use specs/{name}/design)", () => {
+      expect(folderToPatternType("design")).toBeUndefined();
+    });
+
+    test("specs/design -> undefined (deprecated, missing project name)", () => {
+      expect(folderToPatternType("specs/design")).toBeUndefined();
+    });
+
+    test("tasks -> undefined (deprecated, use specs/{name}/tasks)", () => {
+      expect(folderToPatternType("tasks")).toBeUndefined();
+    });
+
+    test("specs/tasks -> undefined (deprecated, missing project name)", () => {
+      expect(folderToPatternType("specs/tasks")).toBeUndefined();
+    });
+
+    test("features -> undefined (deprecated, use planning)", () => {
+      expect(folderToPatternType("features")).toBeUndefined();
+    });
+
+    test("epics -> undefined (deprecated, use roadmap)", () => {
+      expect(folderToPatternType("epics")).toBeUndefined();
+    });
+
+    test("reviews -> undefined (deprecated, use critique)", () => {
+      expect(folderToPatternType("reviews")).toBeUndefined();
+    });
+
+    test("test-reports -> undefined (deprecated, use qa)", () => {
+      expect(folderToPatternType("test-reports")).toBeUndefined();
+    });
+
+    test("retrospective -> undefined (deprecated, use retrospectives)", () => {
+      expect(folderToPatternType("retrospective")).toBeUndefined();
     });
   });
 
@@ -198,6 +196,14 @@ describe("folderToPatternType mapping", () => {
 
     test("handles uppercase folders (case insensitive)", () => {
       expect(folderToPatternType("SESSIONS")).toBe("session");
+    });
+
+    test("specs path with any project name works", () => {
+      expect(folderToPatternType("specs/brain/requirements")).toBe(
+        "requirement",
+      );
+      expect(folderToPatternType("specs/my-project/design")).toBe("design");
+      expect(folderToPatternType("specs/another_one/tasks")).toBe("task");
     });
   });
 });

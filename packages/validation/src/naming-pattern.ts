@@ -59,6 +59,56 @@ export const NamingPatterns: Record<PatternType, RegExp> = {
 };
 
 /**
+ * Canonical directory paths for each pattern type.
+ * ADR-024: Only ONE canonical directory per entity type.
+ * No backward compatibility - old paths are rejected.
+ */
+export const CanonicalDirectories: Record<PatternType, string> = {
+  decision: "decisions",
+  session: "sessions",
+  requirement: "specs/{name}/requirements",
+  design: "specs/{name}/design",
+  task: "specs/{name}/tasks",
+  analysis: "analysis",
+  feature: "planning",
+  epic: "roadmap",
+  critique: "critique",
+  "test-report": "qa",
+  security: "security",
+  retrospective: "retrospectives",
+  skill: "skills",
+};
+
+/**
+ * Deprecated directory paths that are explicitly rejected.
+ * ADR-024: These paths were previously supported but are now invalid.
+ * Maps deprecated path -> canonical path for migration guidance.
+ */
+export const DeprecatedDirectories: Record<string, string> = {
+  // Architecture paths - all deprecated in favor of decisions/
+  "architecture/decision": "decisions",
+  "architecture/decisions": "decisions",
+  architecture: "decisions",
+  // Old requirement/design/task paths without specs/{name}/ prefix
+  requirements: "specs/{name}/requirements",
+  "specs/requirements": "specs/{name}/requirements",
+  design: "specs/{name}/design",
+  "specs/design": "specs/{name}/design",
+  tasks: "specs/{name}/tasks",
+  "specs/tasks": "specs/{name}/tasks",
+  // Old feature/planning paths
+  features: "planning",
+  // Old epic paths
+  epics: "roadmap",
+  // Old critique paths
+  reviews: "critique",
+  // Old test-report paths
+  "test-reports": "qa",
+  // Old retrospective paths
+  retrospective: "retrospectives",
+};
+
+/**
  * Deprecated patterns that should be rejected.
  * These are old formats that were used before ADR-023.
  */
@@ -87,6 +137,90 @@ export interface NamingPatternResult {
   isDeprecated?: boolean;
   /** The deprecated pattern that matched */
   deprecatedPattern?: string;
+  /** Whether the directory path is deprecated (ADR-024) */
+  isDeprecatedDirectory?: boolean;
+  /** The canonical directory to use instead */
+  canonicalDirectory?: string;
+}
+
+/**
+ * Result of directory validation.
+ */
+export interface DirectoryValidationResult {
+  /** Whether the directory is valid for the pattern type */
+  valid: boolean;
+  /** Error message if invalid */
+  error?: string;
+  /** Whether the directory is deprecated */
+  isDeprecated?: boolean;
+  /** The canonical directory to migrate to */
+  canonicalDirectory?: string;
+}
+
+/**
+ * Validate that a directory is valid for a pattern type.
+ * ADR-024: Enforces canonical directories with no backward compatibility.
+ *
+ * @param directory - Directory path to validate
+ * @param patternType - Pattern type that should be in this directory
+ * @returns Validation result
+ */
+export function validateDirectory(
+  directory: string,
+  patternType: PatternType,
+): DirectoryValidationResult {
+  if (!directory) {
+    return { valid: true }; // No directory to validate
+  }
+
+  // Normalize directory (remove trailing slashes, lowercase)
+  const normalized = directory.replace(/\/+$/, "").toLowerCase();
+
+  // Check if directory is deprecated
+  const canonicalReplacement = DeprecatedDirectories[normalized];
+  if (canonicalReplacement) {
+    return {
+      valid: false,
+      error: `Directory '${directory}' is deprecated. Use '${canonicalReplacement}' instead.`,
+      isDeprecated: true,
+      canonicalDirectory: canonicalReplacement,
+    };
+  }
+
+  // Check if directory is valid for pattern type
+  const canonicalDir = CanonicalDirectories[patternType];
+  if (!canonicalDir) {
+    return { valid: true }; // Unknown pattern type, skip directory validation
+  }
+
+  // For specs/{name}/* paths, check prefix match (allows any project name)
+  const isSpecsPath = canonicalDir.includes("{name}");
+  if (isSpecsPath) {
+    // Extract the pattern prefix and suffix (e.g., "specs/" and "/requirements")
+    const [prefix, suffix] = canonicalDir.split("{name}");
+    const isAllowed =
+      normalized.startsWith(prefix.toLowerCase()) &&
+      normalized.endsWith(suffix.toLowerCase());
+    if (!isAllowed) {
+      return {
+        valid: false,
+        error: `Directory '${directory}' is not valid for ${patternType}. Use '${canonicalDir}' (replace {name} with project name).`,
+        canonicalDirectory: canonicalDir,
+      };
+    }
+  } else {
+    // Exact match for non-parameterized paths
+    const isAllowed = canonicalDir.toLowerCase() === normalized;
+    if (!isAllowed) {
+      return {
+        valid: false,
+        error: `Directory '${directory}' is not valid for ${patternType}. Use '${canonicalDir}'.`,
+        canonicalDirectory: canonicalDir,
+      };
+    }
+  }
+
+  return { valid: true };
 }
 
 /**

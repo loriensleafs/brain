@@ -184,57 +184,16 @@ How we know the plan is complete:
 - [ ] [Criterion]
 ```
 
-## Brain Memory Integration
+## Memory Operations
 
-When creating or updating memory notes, follow pre-flight validation.
+Follow the memory skill for Brain MCP tool usage. See memory skill (`skills/memory/SKILL.md`) for:
 
-### Pre-Flight Validation Checklist (MANDATORY)
+- Entity type to folder mappings (plans go in `planning/` folder)
+- File naming patterns (PLAN-NNN-feature.md, PRD-feature.md)
+- Pre-flight validation checklist
+- Tool usage examples
 
-Before calling `mcp__plugin_brain_brain__write_note` or `mcp__plugin_brain_brain__edit_note`:
-
-```markdown
-- [ ] Entity type valid (decision, session, analysis, feature, etc.)
-- [ ] Folder matches entity type (planning/ for plans and PRDs)
-- [ ] Filename follows CAPS prefix pattern (PLAN-NNN-feature or PRD-feature)
-- [ ] Frontmatter complete (title, type, tags, permalink)
-- [ ] 3-10 observations with categories: `- [category] content #tags`
-- [ ] 2-8 relations with wikilinks: `- relation_type [[Target]]`
-```
-
-### Entity Type Mapping
-
-| Entity Type | Folder | Filename Pattern |
-|------------|--------|------------------|
-| plan | planning/ | PLAN-NNN-feature |
-| prd | planning/ | PRD-feature |
-| feature | planning/ | FEATURE-NNN-topic |
-
-### Memory Operations
-
-**Search for prior plans**:
-
-```text
-mcp__plugin_brain_brain__search
-query: "planning patterns [feature/epic]"
-```
-
-**Read specific note**:
-
-```text
-mcp__plugin_brain_brain__read_note
-identifier: "planning/PLAN-[number]"
-```
-
-**Create new plan** (after pre-flight validation):
-
-```text
-mcp__plugin_brain_brain__write_note
-title: "PLAN-NNN-[feature]"
-folder: "planning"
-content: "[Full plan content with frontmatter, observations, relations]"
-```
-
-See memory skill documentation for complete entity type mapping and quality requirements.
+Store plans and PRDs in Brain memory using the `planning/` folder.
 
 ## Planning Principles
 

@@ -51,6 +51,43 @@ var DeprecatedPatterns = map[string]*regexp.Regexp{
 	"oldRetro":       regexp.MustCompile(`^\d{4}-\d{2}-\d{2}-[\w-]+\.md$`),
 }
 
+// CanonicalDirectories defines the single canonical directory for each pattern type.
+// ADR-024: Only ONE canonical directory per entity type. No backward compatibility.
+var CanonicalDirectories = map[string]string{
+	"decision":      "decisions",
+	"session":       "sessions",
+	"requirement":   "specs/{name}/requirements",
+	"design":        "specs/{name}/design",
+	"task":          "specs/{name}/tasks",
+	"analysis":      "analysis",
+	"feature":       "planning",
+	"epic":          "roadmap",
+	"critique":      "critique",
+	"test-report":   "qa",
+	"security":      "security",
+	"retrospective": "retrospectives",
+	"skill":         "skills",
+}
+
+// DeprecatedDirectories maps deprecated directory paths to their canonical replacements.
+// ADR-024: These paths were previously supported but are now invalid.
+var DeprecatedDirectories = map[string]string{
+	"architecture/decision":  "decisions",
+	"architecture/decisions": "decisions",
+	"architecture":           "decisions",
+	"requirements":           "specs/{name}/requirements",
+	"specs/requirements":     "specs/{name}/requirements",
+	"design":                 "specs/{name}/design",
+	"specs/design":           "specs/{name}/design",
+	"tasks":                  "specs/{name}/tasks",
+	"specs/tasks":            "specs/{name}/tasks",
+	"features":               "planning",
+	"epics":                  "roadmap",
+	"reviews":                "critique",
+	"test-reports":           "qa",
+	"retrospective":          "retrospectives",
+}
+
 // ValidationResult represents the output of naming pattern validation.
 type ValidationResult struct {
 	Valid             bool   `json:"valid"`
