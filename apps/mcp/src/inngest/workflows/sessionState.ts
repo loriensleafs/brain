@@ -25,7 +25,7 @@ import {
   validateWorkflow,
   initValidation,
   isInitialized,
-} from "@brain/validation";
+} from "@brain/validation-wasm";
 
 /**
  * Initialize WASM validation module.

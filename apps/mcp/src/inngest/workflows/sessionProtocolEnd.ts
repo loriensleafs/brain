@@ -40,7 +40,7 @@ import {
   validateConsistency,
   type SessionProtocolValidationResult as WasmValidationResult,
   type ConsistencyValidationResult,
-} from "@brain/validation";
+} from "@brain/validation-wasm";
 
 const execAsync = promisify(exec);
 

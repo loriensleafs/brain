@@ -1,5 +1,5 @@
 {
-  "name": "@brain/validation",
+  "name": "@brain/validation-wasm",
   "version": "0.1.0",
   "description": "Brain validation package - TinyGo WASM build with TypeScript wrapper",
   "main": "dist/index.js",

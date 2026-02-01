@@ -17,7 +17,7 @@ import {
 } from "./services/session";
 import { initInngestService, isWorkflowAvailable } from "./services/inngest";
 import { ensureOllama } from "./services/ollama";
-import { initValidation } from "@brain/validation";
+import { initValidation } from "@brain/validation-wasm";
 import { createVectorConnection } from "./db/connection";
 import { createEmbeddingsTable } from "./db/schema";
 

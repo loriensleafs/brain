@@ -25,7 +25,8 @@
   },
   "dependencies": {
     "@brain/utils": "workspace:*",
-    "@brain/validation": "workspace:*"
+    "@brain/validation": "workspace:*",
+    "@brain/validation-wasm": "workspace:*"
   },
   "devDependencies": {
     "@types/bun": "latest",

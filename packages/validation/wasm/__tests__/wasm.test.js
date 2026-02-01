@@ -1,4 +1,4 @@
-// Simple test for @brain/validation WASM module
+// Simple test for @brain/validation-wasm module
 const {
   initValidation,
   validateSession,
@@ -9,7 +9,7 @@ const {
 } = require('../dist/index.js');
 
 async function runTests() {
-  console.log('Testing @brain/validation WASM module\n');
+  console.log('Testing @brain/validation-wasm module\n');
 
   // Test 1: Initialize
   console.log('1. Initializing WASM...');

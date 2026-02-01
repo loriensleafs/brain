@@ -29,7 +29,7 @@ import {
   createNonRetriableError,
   WorkflowErrorType,
 } from "../errors";
-import { checkTasks, type Task } from "@brain/validation";
+import { checkTasks, type Task } from "@brain/validation-wasm";
 
 /**
  * Workflow result structure.

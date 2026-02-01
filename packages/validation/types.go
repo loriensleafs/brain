@@ -15,6 +15,15 @@ type Check struct {
 	Message string `json:"message"`
 }
 
+// ValidationError represents a structured validation error.
+// Matches the TypeScript ValidationError interface from validate.ts.
+// Does not expose raw input values for security.
+type ValidationError struct {
+	Field      string `json:"field"`
+	Constraint string `json:"constraint"`
+	Message    string `json:"message"`
+}
+
 // WorkflowState represents the current workflow/mode state.
 // This is a simplified view for basic validation. For full state, use SessionState.
 type WorkflowState struct {

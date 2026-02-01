@@ -17,9 +17,12 @@
   "dependencies": {
     "@brain/utils": "workspace:*",
     "@brain/validation": "workspace:*",
+    "@brain/validation-wasm": "workspace:*",
     "@braindb/remark-wiki-link": "^2.0.0",
     "@hono/mcp": "0.2.3",
     "@modelcontextprotocol/sdk": "^1.25.1",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
     "chokidar": "5.0.0",
     "fastest-levenshtein": "^1.0.16",
     "fetch-to-node": "2.1.0",
@@ -38,6 +41,7 @@
     "@types/bun": "latest",
     "@types/node": "^25.0.8",
     "bun-types": "^1.3.8",
+    "json-schema-to-typescript": "^15.0.3",
     "typescript": "^5.7.0",
     "vitest": "4.0.18"
   },
