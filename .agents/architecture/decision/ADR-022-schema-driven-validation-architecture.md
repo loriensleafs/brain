@@ -1,9 +1,11 @@
 ---
-status: proposed
+status: accepted
 date: 2026-02-01
+adr_review_date: 2026-02-01
 decision-makers: [architect, planner]
-consulted: [analyst, implementer, security]
+consulted: [analyst, implementer, security, critic, independent-thinker, high-level-advisor]
 informed: [orchestrator, all agents]
+consensus: 6/6 ACCEPT (unanimous)
 ---
 
 # ADR-022: Schema-Driven Validation Architecture with Zod to AJV Migration
