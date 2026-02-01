@@ -1,3 +1,0 @@
-# Generated TypeScript types from JSON Schema
-# Do not edit manually - regenerate with:
-# npx json-schema-to-typescript ../schemas/*.json -o .

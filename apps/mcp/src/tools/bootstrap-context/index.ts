@@ -7,7 +7,10 @@
  */
 
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
-import { resolveProject } from "../../project/resolve";
+import {
+  resolveProject,
+  setActiveProject,
+} from "../../project/resolve";
 import { createDefaultSessionState, getSession } from "../../services/session";
 import { logger } from "../../utils/internal/logger";
 import { triggerCatchupEmbedding } from "./catchupTrigger";
@@ -44,6 +47,10 @@ export async function handler(
       isError: true,
     };
   }
+
+  // Set as active project for subsequent tool calls
+  setActiveProject(project);
+  logger.debug({ project }, "Set active project from bootstrap_context");
 
   const timeframe = args.timeframe || "5d";
   const includeReferenced = args.include_referenced ?? true;
