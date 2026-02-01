@@ -10,11 +10,10 @@
   "scripts": {
     "build:wasm": "GOOS=js GOARCH=wasm go build -o dist/validation.wasm ./main.go",
     "build:js": "tsc && cp src/wasm_exec.js dist/",
-    "build": "yarn build:wasm && yarn build:js",
+    "build": "bun run build:wasm && bun run build:js",
+    "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist",
-    "prepublish": "yarn build",
-    "test": "node --test tests/*.test.js",
-    "test:ts": "tsc --noEmit && node --test tests/*.test.js"
+    "test": "node --test tests/*.test.js"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

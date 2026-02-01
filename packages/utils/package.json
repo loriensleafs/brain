@@ -7,9 +7,11 @@
     ".": "./src/index.ts"
   },
   "scripts": {
+    "build": "bun build src/index.ts --outdir dist --target node",
     "typecheck": "tsc --noEmit",
     "test": "bun test",
-    "test:coverage": "bun test --coverage --coverage-reporter=text"
+    "test:coverage": "bun test --coverage --coverage-reporter=text",
+    "clean": "rm -rf dist"
   },
   "devDependencies": {
     "@types/bun": "latest",

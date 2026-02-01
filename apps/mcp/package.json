@@ -1,5 +1,5 @@
 {
-  "name": "🧠 brain-mcp",
+  "name": "@brain/mcp",
   "version": "1.0.0",
   "type": "module",
   "main": "src/index.ts",
@@ -11,10 +11,12 @@
     "build": "bun build src/index.ts --outdir dist --target node",
     "typecheck": "tsc --noEmit",
     "test": "bun test",
-    "test:coverage": "bun test --coverage --coverage-reporter=text"
+    "test:coverage": "bun test --coverage --coverage-reporter=text",
+    "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@brain/validation": "file:../../packages/validation/wasm",
+    "@brain/utils": "workspace:*",
+    "@brain/validation": "workspace:*",
     "@braindb/remark-wiki-link": "^2.0.0",
     "@hono/mcp": "0.2.3",
     "@modelcontextprotocol/sdk": "^1.25.1",
