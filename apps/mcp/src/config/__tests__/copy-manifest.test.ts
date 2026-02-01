@@ -18,30 +18,18 @@ let mockChecksumValue = "abc123def456";
 
 // Mock filesystem
 const mockFs = {
-	existsSync: vi.fn(() => false) as ReturnType<
-		typeof mock<(p: string) => boolean>
-	>,
-	mkdirSync: vi.fn(() => undefined) as ReturnType<
-		typeof mock<(p: string, opts: unknown) => void>
-	>,
-	writeFileSync: vi.fn(() => undefined) as ReturnType<
-		typeof mock<(p: string, content: string, opts: unknown) => void>
-	>,
-	readFileSync: vi.fn(() => Buffer.from("test content")) as ReturnType<
-		typeof mock<(p: string | Buffer, encoding?: string) => string | Buffer>
-	>,
-	renameSync: vi.fn(() => undefined) as ReturnType<
-		typeof mock<(from: string, to: string) => void>
-	>,
-	unlinkSync: vi.fn(() => undefined) as ReturnType<
-		typeof mock<(p: string) => void>
-	>,
-	rmdirSync: vi.fn(() => undefined) as ReturnType<
-		typeof mock<(p: string) => void>
-	>,
-	readdirSync: vi.fn(() => [] as string[]) as ReturnType<
-		typeof mock<(p: string) => string[]>
-	>,
+	existsSync: vi.fn<(p: string) => boolean>(() => false),
+	mkdirSync: vi.fn<(p: string, opts: unknown) => void>(() => undefined),
+	writeFileSync: vi.fn<(p: string, content: string, opts: unknown) => void>(
+		() => undefined,
+	),
+	readFileSync: vi.fn<(p: string | Buffer, encoding?: string) => string | Buffer>(
+		() => Buffer.from("test content"),
+	),
+	renameSync: vi.fn<(from: string, to: string) => void>(() => undefined),
+	unlinkSync: vi.fn<(p: string) => void>(() => undefined),
+	rmdirSync: vi.fn<(p: string) => void>(() => undefined),
+	readdirSync: vi.fn<(p: string) => string[]>(() => [] as string[]),
 	createReadStream: vi.fn(() => {
 		// Create a simple event emitter-like object for streams
 		const handlers: Record<string, ((...args: unknown[]) => void)[]> = {};

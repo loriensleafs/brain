@@ -15,30 +15,16 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 // Mock filesystem
 const mockFs = {
-	existsSync: vi.fn(() => false) as ReturnType<
-		typeof mock<(p: string) => boolean>
-	>,
-	mkdirSync: vi.fn(() => undefined) as ReturnType<
-		typeof mock<(p: string, opts: unknown) => void>
-	>,
-	openSync: vi.fn(() => 3) as ReturnType<
-		typeof mock<(p: string, flags: number, mode?: number) => number>
-	>,
-	writeSync: vi.fn(() => undefined) as ReturnType<
-		typeof mock<(fd: number, content: string) => void>
-	>,
-	closeSync: vi.fn(() => undefined) as ReturnType<
-		typeof mock<(fd: number) => void>
-	>,
-	unlinkSync: vi.fn(() => undefined) as ReturnType<
-		typeof mock<(p: string) => void>
-	>,
-	statSync: vi.fn(() => ({ mtimeMs: Date.now() })) as ReturnType<
-		typeof mock<(p: string) => { mtimeMs: number }>
-	>,
-	readdirSync: vi.fn(() => [] as string[]) as ReturnType<
-		typeof mock<(p: string) => string[]>
-	>,
+	existsSync: vi.fn<(p: string) => boolean>(() => false),
+	mkdirSync: vi.fn<(p: string, opts: unknown) => void>(() => undefined),
+	openSync: vi.fn<(p: string, flags: number, mode?: number) => number>(() => 3),
+	writeSync: vi.fn<(fd: number, content: string) => void>(() => undefined),
+	closeSync: vi.fn<(fd: number) => void>(() => undefined),
+	unlinkSync: vi.fn<(p: string) => void>(() => undefined),
+	statSync: vi.fn<(p: string) => { mtimeMs: number }>(() => ({
+		mtimeMs: Date.now(),
+	})),
+	readdirSync: vi.fn<(p: string) => string[]>(() => [] as string[]),
 	constants: {
 		O_CREAT: 0x0200,
 		O_EXCL: 0x0800,

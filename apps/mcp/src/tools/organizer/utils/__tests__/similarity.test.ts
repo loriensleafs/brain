@@ -2,7 +2,7 @@
  * Unit tests for similarity utilities
  */
 
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { levenshteinDistance, similarity } from "../similarity";
 
 describe("levenshteinDistance", () => {

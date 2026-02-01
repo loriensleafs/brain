@@ -39,18 +39,10 @@ function getResponseText(content: ToolResultContent[]): string {
 
 // Mock filesystem operations
 const mockFs = {
-	existsSync: vi.fn(() => false) as ReturnType<
-		typeof mock<(p: unknown) => boolean>
-	>,
-	readFileSync: vi.fn(() => "{}") as ReturnType<
-		typeof mock<(p: unknown) => string>
-	>,
-	writeFileSync: vi.fn(() => undefined) as ReturnType<
-		typeof mock<(p: unknown, data: unknown) => void>
-	>,
-	mkdirSync: vi.fn(() => undefined) as ReturnType<
-		typeof mock<(p: unknown, opts: unknown) => void>
-	>,
+	existsSync: vi.fn<(p: unknown) => boolean>(() => false),
+	readFileSync: vi.fn<(p: unknown) => string>(() => "{}"),
+	writeFileSync: vi.fn<(p: unknown, data: unknown) => void>(() => undefined),
+	mkdirSync: vi.fn<(p: unknown, opts: unknown) => void>(() => undefined),
 };
 
 vi.mock("fs", () => mockFs);
@@ -83,12 +75,12 @@ vi.mock("@brain/utils", () => ({
 }));
 
 // Mock config module
-const mockSetCodePath = vi.fn(() => undefined) as ReturnType<
-	typeof mock<(name: unknown, path: unknown) => void>
->;
-const mockGetCodePath = vi.fn(
+const mockSetCodePath = vi.fn<(name: unknown, path: unknown) => void>(
+	() => undefined,
+);
+const mockGetCodePath = vi.fn<(name: unknown) => string | undefined>(
 	() => undefined as string | undefined,
-) as ReturnType<typeof mock<(name: unknown) => string | undefined>>;
+);
 
 vi.mock("../../../project/config", () => ({
 	setCodePath: mockSetCodePath,
@@ -121,7 +113,7 @@ describe("create_project tool", () => {
 	});
 
 	afterEach(() => {
-		mock.restore();
+		vi.restoreAllMocks();
 	});
 
 	describe("DEFAULT mode (memories_path omitted)", () => {

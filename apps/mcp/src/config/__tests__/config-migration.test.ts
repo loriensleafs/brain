@@ -23,41 +23,39 @@ let deletedFiles: Set<string>;
 
 // Mock filesystem
 const mockFs = {
-	existsSync: vi.fn((p: string) => fileSystem.has(p)) as ReturnType<
-		typeof mock<(p: string) => boolean>
-	>,
-	readFileSync: vi.fn((p: string) => {
+	existsSync: vi.fn<(p: string) => boolean>((p: string) => fileSystem.has(p)),
+	readFileSync: vi.fn<(p: string, enc: string) => string>((p: string) => {
 		const content = fileSystem.get(p);
 		if (!content) throw new Error(`ENOENT: no such file: ${p}`);
 		return content;
-	}) as ReturnType<typeof mock<(p: string, enc: string) => string>>,
-	writeFileSync: vi.fn((p: string, content: string) => {
-		fileSystem.set(p, content);
-	}) as ReturnType<
-		typeof mock<(p: string, content: string, opts: unknown) => void>
-	>,
-	mkdirSync: vi.fn(() => undefined) as ReturnType<
-		typeof mock<(p: string, opts: unknown) => void>
-	>,
-	copyFileSync: vi.fn((src: string, dest: string) => {
-		const content = fileSystem.get(src);
-		if (!content) throw new Error(`ENOENT: no such file: ${src}`);
-		fileSystem.set(dest, content);
-	}) as ReturnType<typeof mock<(src: string, dest: string) => void>>,
-	unlinkSync: vi.fn((p: string) => {
+	}),
+	writeFileSync: vi.fn<(p: string, content: string, opts: unknown) => void>(
+		(p: string, content: string) => {
+			fileSystem.set(p, content);
+		},
+	),
+	mkdirSync: vi.fn<(p: string, opts: unknown) => void>(() => undefined),
+	copyFileSync: vi.fn<(src: string, dest: string) => void>(
+		(src: string, dest: string) => {
+			const content = fileSystem.get(src);
+			if (!content) throw new Error(`ENOENT: no such file: ${src}`);
+			fileSystem.set(dest, content);
+		},
+	),
+	unlinkSync: vi.fn<(p: string) => void>((p: string) => {
 		fileSystem.delete(p);
 		deletedFiles.add(p);
-	}) as ReturnType<typeof mock<(p: string) => void>>,
-	chmodSync: vi.fn(() => undefined) as ReturnType<
-		typeof mock<(p: string, mode: number) => void>
-	>,
-	renameSync: vi.fn((from: string, to: string) => {
-		const content = fileSystem.get(from);
-		if (content) {
-			fileSystem.set(to, content);
-			fileSystem.delete(from);
-		}
-	}) as ReturnType<typeof mock<(from: string, to: string) => void>>,
+	}),
+	chmodSync: vi.fn<(p: string, mode: number) => void>(() => undefined),
+	renameSync: vi.fn<(from: string, to: string) => void>(
+		(from: string, to: string) => {
+			const content = fileSystem.get(from);
+			if (content) {
+				fileSystem.set(to, content);
+				fileSystem.delete(from);
+			}
+		},
+	),
 };
 
 vi.mock("fs", () => mockFs);

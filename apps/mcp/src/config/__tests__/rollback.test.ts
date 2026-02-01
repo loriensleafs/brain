@@ -17,21 +17,13 @@ import { DEFAULT_BRAIN_CONFIG } from "../schema";
 
 // Mock filesystem
 const mockFs = {
-	existsSync: vi.fn(() => false) as ReturnType<
-		typeof mock<(p: string) => boolean>
-	>,
-	readFileSync: vi.fn(() => "") as ReturnType<
-		typeof mock<(p: string, enc: string) => string>
-	>,
-	writeFileSync: vi.fn(() => undefined) as ReturnType<
-		typeof mock<(p: string, content: string, opts: unknown) => void>
-	>,
-	mkdirSync: vi.fn(() => undefined) as ReturnType<
-		typeof mock<(p: string, opts: unknown) => void>
-	>,
-	unlinkSync: vi.fn(() => undefined) as ReturnType<
-		typeof mock<(p: string) => void>
-	>,
+	existsSync: vi.fn<(p: string) => boolean>(() => false),
+	readFileSync: vi.fn<(p: string, enc: string) => string>(() => ""),
+	writeFileSync: vi.fn<(p: string, content: string, opts: unknown) => void>(
+		() => undefined,
+	),
+	mkdirSync: vi.fn<(p: string, opts: unknown) => void>(() => undefined),
+	unlinkSync: vi.fn<(p: string) => void>(() => undefined),
 };
 
 vi.mock("fs", () => mockFs);

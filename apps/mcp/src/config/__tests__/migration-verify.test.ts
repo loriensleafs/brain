@@ -12,18 +12,16 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 import type { SearchResponse } from "../../services/search/types";
 
 // Mock SearchService
-const mockSearch = vi.fn(
-	async (): Promise<SearchResponse> => ({
-		results: [],
-		total: 0,
-		query: "",
-		mode: "auto",
-		depth: 0,
-		actualSource: "keyword",
-	}),
-) as ReturnType<
-	typeof mock<(query: string, opts: unknown) => Promise<SearchResponse>>
->;
+const mockSearch = vi.fn<
+	(query: string, opts: unknown) => Promise<SearchResponse>
+>(async (): Promise<SearchResponse> => ({
+	results: [],
+	total: 0,
+	query: "",
+	mode: "auto",
+	depth: 0,
+	actualSource: "keyword",
+}));
 
 const MockSearchService = vi.fn(() => ({
 	search: mockSearch,
@@ -34,13 +32,11 @@ vi.mock("../../services/search", () => ({
 }));
 
 // Mock proxy client
-const mockCallTool = vi.fn(async () => ({
+const mockCallTool = vi.fn<
+	(args: unknown) => Promise<{ content: { type: string; text: string }[] }>
+>(async () => ({
 	content: [{ type: "text", text: "Test content for memory" }],
-})) as ReturnType<
-	typeof mock<
-		(args: unknown) => Promise<{ content: { type: string; text: string }[] }>
-	>
->;
+}));
 
 vi.mock("../../proxy/client", () => ({
 	getBasicMemoryClient: async () => ({

@@ -2,7 +2,7 @@
  * Unit tests for markdown utilities
  */
 
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { extractFrontmatter, extractTitle } from "../markdown";
 
 describe("extractTitle", () => {

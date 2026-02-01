@@ -55,32 +55,20 @@ interface MockDirEntry {
 
 // Mock filesystem operations before any imports
 const mockFs = {
-	existsSync: vi.fn(() => false) as ReturnType<
-		typeof mock<(p: unknown) => boolean>
-	>,
-	readFileSync: vi.fn(() => "{}") as ReturnType<
-		typeof mock<(p: unknown) => string>
-	>,
-	writeFileSync: vi.fn(() => undefined) as ReturnType<
-		typeof mock<(p: unknown, data: unknown) => void>
-	>,
-	readdirSync: vi.fn(() => [] as MockDirEntry[]) as ReturnType<
-		typeof mock<(p: unknown, opts?: unknown) => MockDirEntry[]>
-	>,
-	statSync: vi.fn(() => ({ size: 0 })) as ReturnType<
-		typeof mock<(p: unknown) => { size: number }>
-	>,
-	cpSync: vi.fn(() => {
+	existsSync: vi.fn<(p: unknown) => boolean>(() => false),
+	readFileSync: vi.fn<(p: unknown) => string>(() => "{}"),
+	writeFileSync: vi.fn<(p: unknown, data: unknown) => void>(() => undefined),
+	readdirSync: vi.fn<(p: unknown, opts?: unknown) => MockDirEntry[]>(
+		() => [] as MockDirEntry[],
+	),
+	statSync: vi.fn<(p: unknown) => { size: number }>(() => ({ size: 0 })),
+	cpSync: vi.fn<(src: unknown, dest: unknown, opts?: unknown) => void>(() => {
 		// Track copy operation
-	}) as ReturnType<
-		typeof mock<(src: unknown, dest: unknown, opts?: unknown) => void>
-	>,
-	rmSync: vi.fn(() => {
+	}),
+	rmSync: vi.fn<(p: unknown, opts?: unknown) => void>(() => {
 		// Track delete operation
-	}) as ReturnType<typeof mock<(p: unknown, opts?: unknown) => void>>,
-	realpathSync: vi.fn((p: unknown) => String(p)) as ReturnType<
-		typeof mock<(p: unknown) => string>
-	>,
+	}),
+	realpathSync: vi.fn<(p: unknown) => string>((p: unknown) => String(p)),
 };
 
 vi.mock("fs", () => mockFs);
@@ -147,7 +135,7 @@ describe("edit_project tool", () => {
 	});
 
 	afterEach(() => {
-		mock.restore();
+		vi.restoreAllMocks();
 	});
 
 	/**

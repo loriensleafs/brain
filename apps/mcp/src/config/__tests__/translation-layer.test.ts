@@ -17,33 +17,17 @@ import { type BrainConfig, DEFAULT_BRAIN_CONFIG } from "../schema";
 
 // Mock filesystem
 const mockFs = {
-	existsSync: vi.fn(() => false) as ReturnType<
-		typeof mock<(p: string) => boolean>
-	>,
-	readFileSync: vi.fn(() => "") as ReturnType<
-		typeof mock<(p: string, enc: string) => string>
-	>,
-	writeFileSync: vi.fn(() => undefined) as ReturnType<
-		typeof mock<(p: string, content: string, opts: unknown) => void>
-	>,
-	mkdirSync: vi.fn(() => undefined) as ReturnType<
-		typeof mock<(p: string, opts?: unknown) => void>
-	>,
-	chmodSync: vi.fn(() => undefined) as ReturnType<
-		typeof mock<(p: string, mode: number) => void>
-	>,
-	renameSync: vi.fn(() => undefined) as ReturnType<
-		typeof mock<(from: string, to: string) => void>
-	>,
-	unlinkSync: vi.fn(() => undefined) as ReturnType<
-		typeof mock<(p: string) => void>
-	>,
-	openSync: vi.fn(() => 1) as ReturnType<
-		typeof mock<(p: string, flags: number) => number>
-	>,
-	closeSync: vi.fn(() => undefined) as ReturnType<
-		typeof mock<(fd: number) => void>
-	>,
+	existsSync: vi.fn<(p: string) => boolean>(() => false),
+	readFileSync: vi.fn<(p: string, enc: string) => string>(() => ""),
+	writeFileSync: vi.fn<(p: string, content: string, opts: unknown) => void>(
+		() => undefined,
+	),
+	mkdirSync: vi.fn<(p: string, opts?: unknown) => void>(() => undefined),
+	chmodSync: vi.fn<(p: string, mode: number) => void>(() => undefined),
+	renameSync: vi.fn<(from: string, to: string) => void>(() => undefined),
+	unlinkSync: vi.fn<(p: string) => void>(() => undefined),
+	openSync: vi.fn<(p: string, flags: number) => number>(() => 1),
+	closeSync: vi.fn<(fd: number) => void>(() => undefined),
 	constants: {
 		O_CREAT: 0x0200,
 		O_EXCL: 0x0800,
@@ -72,14 +56,10 @@ vi.mock("../path-validator", () => ({
 
 // Mock configLock
 const mockLock = {
-	acquireConfigLock: vi.fn(async () => ({ acquired: true })) as ReturnType<
-		typeof mock<
-			(opts: unknown) => Promise<{ acquired: boolean; error?: string }>
-		>
-	>,
-	releaseConfigLock: vi.fn(() => true) as ReturnType<
-		typeof mock<() => boolean>
-	>,
+	acquireConfigLock: vi.fn<
+		(opts: unknown) => Promise<{ acquired: boolean; error?: string }>
+	>(async () => ({ acquired: true })),
+	releaseConfigLock: vi.fn<() => boolean>(() => true),
 };
 
 vi.mock("../../utils/security/configLock", () => mockLock);
