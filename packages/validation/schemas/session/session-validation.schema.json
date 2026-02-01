@@ -4,9 +4,9 @@
 	"title": "SessionValidation",
 	"description": "Schema for session validation parameters. Validates session state, QA skip eligibility, and memory evidence.",
 	"definitions": {
-		"WorkflowState": {
+		"SessionWorkflowState": {
 			"type": "object",
-			"description": "Simplified workflow state for basic validation",
+			"description": "Simplified workflow state for session validation",
 			"properties": {
 				"mode": {
 					"type": "string",
@@ -145,7 +145,7 @@
 	"type": "object",
 	"properties": {
 		"workflowState": {
-			"$ref": "#/definitions/WorkflowState"
+			"$ref": "#/definitions/SessionWorkflowState"
 		},
 		"qaSkipType": {
 			"$ref": "#/definitions/QASkipType"

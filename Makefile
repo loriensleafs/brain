@@ -10,7 +10,10 @@ PLUGIN_CACHE_PATH = $(HOME)/.claude/plugins/cache/brain
 # Default target - build all apps
 all: build-all
 build: build-all
-build-all: build-mcp build-tui build-plugin
+build-all: build-tui build-plugin
+	@echo "🧠 Building all TypeScript packages (via Turborepo)..."
+	bun run build
+	@echo "🧠 All components built"
 
 #############################################################################
 # MCP Server (TypeScript/Bun)
@@ -18,8 +21,8 @@ build-all: build-mcp build-tui build-plugin
 
 mcp: build-mcp
 build-mcp:
-	@echo "🧠 Building MCP server..."
-	cd apps/mcp && bun install && bun run build
+	@echo "🧠 Building MCP server (via Turborepo)..."
+	bun run build --filter=@brain/mcp
 	@echo "🧠 MCP server built"
 
 mcp-dev:
@@ -130,9 +133,10 @@ dev: mcp-dev
 
 # Clean build artifacts
 clean:
-	rm -rf apps/mcp/dist
-	rm -rf apps/mcp/node_modules
+	@echo "🧹 Cleaning build artifacts..."
+	bun run clean
 	rm -f apps/tui/$(BINARY_NAME)
+	@echo "🧹 Clean complete"
 
 # Type checking
 typecheck:

@@ -7,7 +7,7 @@
  * To regenerate: bun run generate:types
  * Source schemas: packages/validation/schemas/*.schema.json
  *
- * Generated: 2026-02-01T15:18:31.853Z
+ * Generated: 2026-02-01T15:28:39.223Z
  */
 
 // Source: schemas/config/brain-config.schema.json
@@ -644,7 +644,7 @@ export type QASkipType = "" | "docs-only" | "investigation-only";
  * Schema for session validation parameters. Validates session state, QA skip eligibility, and memory evidence.
  */
 export interface SessionValidation {
-  workflowState?: WorkflowState;
+  workflowState?: SessionWorkflowState;
   qaSkipType?: QASkipType;
   /**
    * List of changed files for QA skip eligibility check
@@ -656,9 +656,9 @@ export interface SessionValidation {
   checklistRows?: ChecklistRow[];
 }
 /**
- * Simplified workflow state for basic validation
+ * Simplified workflow state for session validation
  */
-export interface WorkflowState {
+export interface SessionWorkflowState {
   /**
    * Current workflow mode
    */
