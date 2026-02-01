@@ -253,6 +253,64 @@ Before marking implementation complete:
 
 ---
 
+---
+
+## Round 2: File-Watching Capability Review
+
+**Date**: 2026-01-31
+**Trigger**: User requirements for manual config edit detection and safe config change migrations
+
+### User Requirements Added
+
+1. Config change protocol (live reconfiguration)
+2. File-watching capability (detect manual edits)
+3. Automatic migration on config changes
+4. **Runtime correction**: Bun, not Node.js
+
+### Phase 1: Independent Reviews (Round 2)
+
+**architect**: ACCEPT - File-watching integrates cleanly
+
+**critic**: CONCERNS - 5 P0 issues:
+- Partial write race, lastKnownGood init, partial copy tracking, shutdown hooks, config deletion
+
+**independent-thinker**: DISAGREE-AND-COMMIT - Automatic migration may surprise users, cloud sync conflicts unaddressed
+
+**security**: CONDITIONAL - 2 High-severity: TOCTOU vulnerability, multi-project race condition
+
+**analyst**: CONCERNS - Effort estimates missing, queue behavior undefined, runtime was Node.js (should be Bun)
+
+**high-level-advisor**: ACCEPT - Always-on with opt-out is correct default
+
+### Phase 2: P0 Issues (8 blocking)
+
+All issues addressed by architect in comprehensive update.
+
+### Phase 3: Final Convergence (Round 2)
+
+**Final Votes**:
+- architect: ✅ ACCEPT
+- critic: ✅ ACCEPT
+- independent-thinker: ⚠️ DISAGREE-AND-COMMIT
+- security: ✅ APPROVED (risk 5.8 → 3.2)
+- analyst: ✅ ACCEPT
+- high-level-advisor: ✅ ACCEPT
+
+**Consensus**: 5 ACCEPT + 1 D&C = ✅ **APPROVED**
+
+**Total Effort**: 113 hours (~14 person-days)
+
+---
+
+## Final Decision
+
+**ADR-020 Status**: proposed → **accepted**
+**Consensus Rounds**: 2
+**Total Issues**: 47 (12 P0, 12 P1, 23 P2) - All P0 resolved
+**Implementation Ready**: ✅ Yes
+
+---
+
 ## Related Documents
 
 - ADR-020: `/Users/peter.kloss/Dev/brain/.agents/architecture/decision/ADR-020-configuration-architecture-refactoring.md`
