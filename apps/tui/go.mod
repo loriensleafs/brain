@@ -11,7 +11,10 @@ require (
 	github.com/spf13/cobra v1.8.1
 )
 
-replace github.com/peterkloss/brain/packages/validation => ../../packages/validation
+replace (
+	github.com/peterkloss/brain/packages/utils => ../../packages/utils
+	github.com/peterkloss/brain/packages/validation => ../../packages/validation
+)
 
 require (
 	github.com/alecthomas/chroma/v2 v2.14.0 // indirect
@@ -33,6 +36,7 @@ require (
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/muesli/reflow v0.3.0 // indirect
 	github.com/muesli/termenv v0.15.3-0.20240618155329-98d742f6907a // indirect
+	github.com/peterkloss/brain/packages/utils v0.0.0 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/sahilm/fuzzy v0.1.1 // indirect
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.1 // indirect

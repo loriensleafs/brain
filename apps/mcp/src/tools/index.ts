@@ -14,7 +14,7 @@ import {
   type Tool,
 } from "@modelcontextprotocol/sdk/types.js";
 import { config } from "../config";
-import { resolveProject } from "../project/resolve";
+import { resolveProject, setActiveProject } from "../project/resolve";
 import { getBasicMemoryClient } from "../proxy/client";
 import { triggerEmbedding } from "../services/embedding/triggerEmbedding";
 import { logger } from "../utils/internal/logger";
@@ -684,6 +684,9 @@ async function injectProject(
     return args;
   }
 
-  logger.debug({ project: resolved }, "Injected resolved project");
+  // Auto-promote resolved project to active for session
+  setActiveProject(resolved);
+
+  logger.debug({ project: resolved }, "Injected and set active project");
   return { ...args, project: resolved };
 }

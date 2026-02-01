@@ -1,76 +1,35 @@
 /**
  * Project resolution with hierarchy.
  *
- * Resolution priority:
+ * Resolution is delegated to @brain/utils which implements:
  * 1. Explicit parameter
- * 2. Session state (in-memory)
- * 3. BM_PROJECT env var
- * 4. BM_ACTIVE_PROJECT env var (legacy)
+ * 2. Brain CLI active project (via "brain config get active-project")
+ * 3. BRAIN_PROJECT env var
+ * 4. BM_PROJECT env var
  * 5. CWD matching against Brain config code_paths
  * 6. null → caller shows error
+ *
+ * This module adds MCP-specific session state management on top.
  *
  * @see ADR-020 for configuration architecture
  */
 
-import { resolveProject as resolveProjectFromCwd } from "@brain/utils";
+// Re-export from utils - this is the canonical implementation
+export { resolveProject, type ResolveOptions } from "@brain/utils";
+
 import { logger } from "../utils/internal/logger";
 
 // Session state (in-memory, per-process)
+// This is MCP-server specific and augments the utils resolution.
 let activeProject: string | null = null;
 
 /**
- * Resolve project using the hierarchy.
- *
- * @param explicit - Explicitly specified project name (highest priority)
- * @param cwd - Working directory for CWD-based resolution (optional)
- * @returns Resolved project name or null if none found
- */
-export function resolveProject(explicit?: string, cwd?: string): string | null {
-  // 1. Explicit parameter always wins
-  if (explicit) {
-    logger.debug({ project: explicit }, "Project from explicit parameter");
-    return explicit;
-  }
-
-  // 2. Session state
-  if (activeProject) {
-    logger.debug({ project: activeProject }, "Project from session state");
-    return activeProject;
-  }
-
-  // 3. BM_PROJECT env var (preferred)
-  const envProject = process.env.BM_PROJECT;
-  if (envProject) {
-    logger.debug({ project: envProject }, "Project from BM_PROJECT env");
-    return envProject;
-  }
-
-  // 4. BM_ACTIVE_PROJECT env var (legacy/internal)
-  const envActive = process.env.BM_ACTIVE_PROJECT;
-  if (envActive) {
-    logger.debug({ project: envActive }, "Project from BM_ACTIVE_PROJECT env");
-    return envActive;
-  }
-
-  // 5. CWD matching against Brain config code_paths
-  const cwdProject = resolveProjectFromCwd(cwd);
-  if (cwdProject) {
-    logger.debug({ project: cwdProject }, "Project from CWD matching");
-    return cwdProject;
-  }
-
-  // 6. No project resolved
-  logger.debug("No project resolved");
-  return null;
-}
-
-/**
  * Set the active project for this session.
- * Also sets BM_ACTIVE_PROJECT env var for child processes.
+ * Sets BM_PROJECT env var so utils resolveProject() picks it up at level 4.
  */
 export function setActiveProject(project: string): void {
   activeProject = project;
-  process.env.BM_ACTIVE_PROJECT = project;
+  process.env.BM_PROJECT = project;
   logger.info({ project }, "Active project set");
 }
 
@@ -79,7 +38,7 @@ export function setActiveProject(project: string): void {
  */
 export function clearActiveProject(): void {
   activeProject = null;
-  delete process.env.BM_ACTIVE_PROJECT;
+  delete process.env.BM_PROJECT;
   logger.info("Active project cleared");
 }
 
@@ -96,9 +55,9 @@ export function getActiveProject(): string | null {
 export function getResolutionHierarchy(): string[] {
   return [
     "1. Explicit parameter",
-    `2. Session state: ${activeProject || "none"}`,
-    `3. BM_PROJECT env: ${process.env.BM_PROJECT || "none"}`,
-    `4. BM_ACTIVE_PROJECT env: ${process.env.BM_ACTIVE_PROJECT || "none"}`,
+    "2. Brain CLI active project",
+    `3. BRAIN_PROJECT env: ${process.env.BRAIN_PROJECT || "none"}`,
+    `4. BM_PROJECT env: ${process.env.BM_PROJECT || "none"} (session: ${activeProject || "none"})`,
     "5. CWD matching against Brain config",
     "6. null (error)",
   ];
