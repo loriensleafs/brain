@@ -18,7 +18,6 @@
   "dependencies": {
     "@brain/utils": "workspace:*",
     "@brain/validation": "workspace:*",
-    "@brain/validation-wasm": "workspace:*",
     "@braindb/remark-wiki-link": "^2.0.0",
     "@hono/mcp": "0.2.3",
     "@modelcontextprotocol/sdk": "^1.25.1",

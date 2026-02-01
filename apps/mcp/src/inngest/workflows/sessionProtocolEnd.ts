@@ -9,8 +9,8 @@
  * 2. Update Brain memory notes
  * 3. Run markdown lint
  * 4. Verify all changes committed
- * 5. Run Go validation package (WASM) - session protocol validation
- * 6. Run Go validation package (WASM) - consistency validation (Checkpoint 2)
+ * 5. Run session protocol validation
+ * 6. Run consistency validation (Checkpoint 2)
  * 7. Update session state to "closed"
  *
  * Triggered by "session/protocol.end" event.
@@ -34,18 +34,8 @@ import * as fs from "fs";
 import * as path from "path";
 import { exec } from "child_process";
 import { promisify } from "util";
-import {
-  initValidation,
-  validateSessionProtocol,
-  validateConsistency,
-  type SessionProtocolValidationResult as WasmValidationResult,
-  type ConsistencyValidationResult,
-} from "@brain/validation-wasm";
 
 const execAsync = promisify(exec);
-
-// Track WASM initialization state
-let wasmInitialized = false;
 
 // ============================================================================
 // Types
@@ -296,19 +286,106 @@ async function runMarkdownLint(workingDirectory: string): Promise<{ passed: bool
 }
 
 /**
- * Ensure WASM validation module is initialized.
- * Safe to call multiple times - subsequent calls are no-ops.
+ * Session protocol validation result.
  */
-async function ensureWasmInitialized(): Promise<void> {
-  if (!wasmInitialized) {
-    await initValidation();
-    wasmInitialized = true;
-    logger.info("WASM validation module initialized");
-  }
+interface SessionProtocolValidationResult {
+  valid: boolean;
+  checks: Array<{ name: string; passed: boolean; message: string }>;
+  message: string;
 }
 
 /**
- * Run session protocol validation using Go WASM package.
+ * Validate session protocol compliance from session log content.
+ * Pure TypeScript implementation (no WASM dependency).
+ *
+ * @param content - Session log file content
+ * @param sessionLogPath - Optional path for filename format validation
+ * @returns Validation result
+ */
+function validateSessionProtocolContent(
+  content: string,
+  sessionLogPath?: string
+): SessionProtocolValidationResult {
+  const checks: Array<{ name: string; passed: boolean; message: string }> = [];
+
+  // Check filename format if path provided
+  if (sessionLogPath) {
+    const filename = path.basename(sessionLogPath);
+    const filenameValid = /^\d{4}-\d{2}-\d{2}-session-\d+.*\.md$/.test(filename);
+    checks.push({
+      name: "filename-format",
+      passed: filenameValid,
+      message: filenameValid
+        ? "Filename follows YYYY-MM-DD-session-NN.md format"
+        : `Invalid filename format: ${filename}`,
+    });
+  }
+
+  // Check required sections
+  const hasSessionInfo = /##\s*Session\s*Info/i.test(content);
+  checks.push({
+    name: "session-info-section",
+    passed: hasSessionInfo,
+    message: hasSessionInfo
+      ? "Session Info section present"
+      : "Missing Session Info section",
+  });
+
+  const hasSessionStart = /##\s*Session\s*Start/i.test(content);
+  checks.push({
+    name: "session-start-section",
+    passed: hasSessionStart,
+    message: hasSessionStart
+      ? "Session Start section present"
+      : "Missing Session Start section",
+  });
+
+  const hasSessionEnd = /##\s*Session\s*End/i.test(content);
+  checks.push({
+    name: "session-end-section",
+    passed: hasSessionEnd,
+    message: hasSessionEnd
+      ? "Session End section present"
+      : "Missing Session End section",
+  });
+
+  // Check Brain MCP initialization
+  const hasBrainInit = /mcp__plugin_brain_brain__build_context|Brain MCP.*initializ/i.test(content);
+  checks.push({
+    name: "brain-initialized",
+    passed: hasBrainInit,
+    message: hasBrainInit
+      ? "Brain MCP initialization evidence found"
+      : "No Brain MCP initialization evidence",
+  });
+
+  // Check for MUST items completion in Session End
+  if (hasSessionEnd) {
+    const sessionEndMatch = content.match(/##\s*Session\s*End[\s\S]*?(?=##|$)/i);
+    if (sessionEndMatch) {
+      const sessionEndContent = sessionEndMatch[0];
+      const incompleteItems = (sessionEndContent.match(/- \[ \]/g) || []).length;
+      const mustItemsComplete = incompleteItems === 0;
+      checks.push({
+        name: "session-end-checklist",
+        passed: mustItemsComplete,
+        message: mustItemsComplete
+          ? "All Session End checklist items complete"
+          : `${incompleteItems} incomplete checklist items`,
+      });
+    }
+  }
+
+  const allPassed = checks.every((c) => c.passed);
+  return {
+    valid: allPassed,
+    checks,
+    message: allPassed ? "Session protocol validation passed" : "Session protocol validation failed",
+  };
+}
+
+/**
+ * Run session protocol validation.
  *
  * @param sessionLogPath - Path to session log
  * @returns Validation result
@@ -317,9 +394,6 @@ async function runProtocolValidation(
   sessionLogPath: string
 ): Promise<ProtocolValidationResult> {
   try {
-    // Ensure WASM is initialized
-    await ensureWasmInitialized();
-
     // Read session log content
     if (!fs.existsSync(sessionLogPath)) {
       return {
@@ -332,10 +406,10 @@ async function runProtocolValidation(
 
     const content = fs.readFileSync(sessionLogPath, "utf-8");
 
-    // Run WASM validation
-    const result: WasmValidationResult = validateSessionProtocol(content, sessionLogPath);
+    // Run TypeScript validation
+    const result = validateSessionProtocolContent(content, sessionLogPath);
 
-    // Convert WASM result to ProtocolValidationResult
+    // Convert result to ProtocolValidationResult
     const errors: string[] = [];
     for (const check of result.checks) {
       if (!check.passed) {
@@ -351,15 +425,68 @@ async function runProtocolValidation(
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error({ error: errorMessage }, "WASM validation failed");
+    logger.error({ error: errorMessage }, "Protocol validation failed");
 
     return {
       exitCode: 1,
       passed: false,
       output: "",
-      errors: [`WASM validation error: ${errorMessage}`],
+      errors: [`Validation error: ${errorMessage}`],
     };
   }
+}
+
+/**
+ * Validate consistency for a feature's artifacts.
+ * Pure TypeScript implementation (no WASM dependency).
+ *
+ * @param prdContent - PRD document content
+ * @param tasksContent - Tasks document content
+ * @param featureName - Feature name being validated
+ * @param checkpoint - Validation checkpoint (1 = Pre-Critic, 2 = Post-Implementation)
+ * @returns Validation result
+ */
+function validateConsistencyContent(
+  prdContent: string,
+  tasksContent: string,
+  featureName: string,
+  checkpoint: number
+): { valid: boolean; checks: Array<{ name: string; passed: boolean; message: string }> } {
+  const checks: Array<{ name: string; passed: boolean; message: string }> = [];
+
+  // Check PRD exists and has content
+  const hasPrd = prdContent.trim().length > 0;
+  checks.push({
+    name: "prd-exists",
+    passed: hasPrd,
+    message: hasPrd ? "PRD document found" : `Missing PRD for feature: ${featureName}`,
+  });
+
+  // Check tasks file exists for checkpoint 2
+  if (checkpoint >= 2) {
+    const hasTasks = tasksContent.trim().length > 0;
+    checks.push({
+      name: "tasks-exists",
+      passed: hasTasks,
+      message: hasTasks ? "Tasks document found" : `Missing tasks for feature: ${featureName}`,
+    });
+
+    // Check for incomplete P0 tasks
+    if (hasTasks) {
+      const p0Incomplete = (tasksContent.match(/P0.*- \[ \]/gi) || []).length;
+      const p0Complete = p0Incomplete === 0;
+      checks.push({
+        name: "p0-tasks-complete",
+        passed: p0Complete,
+        message: p0Complete
+          ? "All P0 tasks complete"
+          : `${p0Incomplete} incomplete P0 tasks`,
+      });
+    }
+  }
+
+  const allPassed = checks.every((c) => c.passed);
+  return { valid: allPassed, checks };
 }
 
 /**
@@ -378,9 +505,6 @@ async function runConsistencyValidation(
   checkpoint: number = 1
 ): Promise<{ passed: boolean; errors: string[]; features: string[] }> {
   try {
-    // Ensure WASM is initialized
-    await ensureWasmInitialized();
-
     const planningDir = path.join(workingDirectory, ".agents", "planning");
     if (!fs.existsSync(planningDir)) {
       // No planning directory - validation passes (nothing to validate)
@@ -412,46 +536,10 @@ async function runConsistencyValidation(
         ? fs.readFileSync(tasksPath, "utf-8")
         : "";
 
-      // Try to find epic (in roadmap directory)
-      const roadmapDir = path.join(workingDirectory, ".agents", "roadmap");
-      let epicContent = "";
-      if (fs.existsSync(roadmapDir)) {
-        const epicFiles = fs.readdirSync(roadmapDir);
-        const epicFile = epicFiles.find(
-          (f) => f.includes(featureName) && f.startsWith("EPIC-")
-        );
-        if (epicFile) {
-          epicContent = fs.readFileSync(path.join(roadmapDir, epicFile), "utf-8");
-        }
-      }
-
-      // Try to find plan
-      let planContent = "";
-      const planPatterns = [
-        `plan-${featureName}.md`,
-        `implementation-plan-${featureName}.md`,
-      ];
-      for (const pattern of planPatterns) {
-        const planPath = path.join(planningDir, pattern);
-        if (fs.existsSync(planPath)) {
-          planContent = fs.readFileSync(planPath, "utf-8");
-          break;
-        }
-      }
-      // Also check numbered plans
-      const numberedPlan = files.find(
-        (f) => f.includes(featureName) && f.endsWith("-plan.md")
-      );
-      if (!planContent && numberedPlan) {
-        planContent = fs.readFileSync(path.join(planningDir, numberedPlan), "utf-8");
-      }
-
-      // Run WASM validation
-      const result: ConsistencyValidationResult = validateConsistency(
-        epicContent,
+      // Run TypeScript validation
+      const result = validateConsistencyContent(
         prdContent,
         tasksContent,
-        planContent,
         featureName,
         checkpoint
       );

@@ -17,16 +17,11 @@ import {
 } from "./services/session";
 import { initInngestService, isWorkflowAvailable } from "./services/inngest";
 import { ensureOllama } from "./services/ollama";
-import { initValidation } from "@brain/validation-wasm";
 import { createVectorConnection } from "./db/connection";
 import { createEmbeddingsTable } from "./db/schema";
 
 async function main(): Promise<void> {
   logStartup();
-
-  // Initialize WASM validation module
-  await initValidation();
-  logger.info("Validation WASM module initialized");
 
   // Initialize embeddings table for semantic search
   try {

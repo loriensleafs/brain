@@ -1,0 +1,622 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Test fixtures for cross-language validation parity. Each schema has valid and invalid test cases.",
+  "search": {
+    "valid": [
+      {
+        "name": "minimal valid",
+        "data": { "query": "test" }
+      },
+      {
+        "name": "full valid",
+        "data": {
+          "query": "test query",
+          "limit": 50,
+          "threshold": 0.5,
+          "mode": "semantic",
+          "depth": 2,
+          "project": "brain",
+          "full_context": true
+        }
+      },
+      {
+        "name": "all modes",
+        "data": [
+          { "query": "test", "mode": "auto" },
+          { "query": "test", "mode": "semantic" },
+          { "query": "test", "mode": "keyword" },
+          { "query": "test", "mode": "hybrid" }
+        ]
+      },
+      {
+        "name": "boundary limit minimum",
+        "data": { "query": "test", "limit": 1 }
+      },
+      {
+        "name": "boundary limit maximum",
+        "data": { "query": "test", "limit": 100 }
+      },
+      {
+        "name": "boundary threshold minimum",
+        "data": { "query": "test", "threshold": 0 }
+      },
+      {
+        "name": "boundary threshold maximum",
+        "data": { "query": "test", "threshold": 1 }
+      },
+      {
+        "name": "boundary depth minimum",
+        "data": { "query": "test", "depth": 0 }
+      },
+      {
+        "name": "boundary depth maximum",
+        "data": { "query": "test", "depth": 3 }
+      }
+    ],
+    "invalid": [
+      {
+        "name": "missing query",
+        "data": {},
+        "expectedConstraint": "required"
+      },
+      {
+        "name": "empty query",
+        "data": { "query": "" },
+        "expectedConstraint": "minLength"
+      },
+      {
+        "name": "limit below minimum",
+        "data": { "query": "test", "limit": 0 },
+        "expectedConstraint": "minimum"
+      },
+      {
+        "name": "limit above maximum",
+        "data": { "query": "test", "limit": 101 },
+        "expectedConstraint": "maximum"
+      },
+      {
+        "name": "threshold below minimum",
+        "data": { "query": "test", "threshold": -0.1 },
+        "expectedConstraint": "minimum"
+      },
+      {
+        "name": "threshold above maximum",
+        "data": { "query": "test", "threshold": 1.1 },
+        "expectedConstraint": "maximum"
+      },
+      {
+        "name": "invalid mode",
+        "data": { "query": "test", "mode": "invalid" },
+        "expectedConstraint": "enum"
+      },
+      {
+        "name": "depth below minimum",
+        "data": { "query": "test", "depth": -1 },
+        "expectedConstraint": "minimum"
+      },
+      {
+        "name": "depth above maximum",
+        "data": { "query": "test", "depth": 4 },
+        "expectedConstraint": "maximum"
+      },
+      {
+        "name": "additional properties",
+        "data": { "query": "test", "unknownProp": "value" },
+        "expectedConstraint": "additionalProperties"
+      },
+      {
+        "name": "wrong type query",
+        "data": { "query": 123 },
+        "expectedConstraint": "type"
+      },
+      {
+        "name": "wrong type limit",
+        "data": { "query": "test", "limit": "fifty" },
+        "expectedConstraint": "type"
+      },
+      {
+        "name": "wrong type threshold",
+        "data": { "query": "test", "threshold": "high" },
+        "expectedConstraint": "type"
+      },
+      {
+        "name": "wrong type full_context",
+        "data": { "query": "test", "full_context": "yes" },
+        "expectedConstraint": "type"
+      }
+    ]
+  },
+  "bootstrap-context": {
+    "valid": [
+      {
+        "name": "empty object",
+        "data": {}
+      },
+      {
+        "name": "with project",
+        "data": { "project": "my-project" }
+      },
+      {
+        "name": "with timeframe",
+        "data": { "timeframe": "7d" }
+      },
+      {
+        "name": "with include_referenced true",
+        "data": { "include_referenced": true }
+      },
+      {
+        "name": "with include_referenced false",
+        "data": { "include_referenced": false }
+      },
+      {
+        "name": "full valid",
+        "data": {
+          "project": "my-project",
+          "timeframe": "7d",
+          "include_referenced": false
+        }
+      }
+    ],
+    "invalid": [
+      {
+        "name": "wrong type project",
+        "data": { "project": 123 },
+        "expectedConstraint": "type"
+      },
+      {
+        "name": "wrong type timeframe",
+        "data": { "timeframe": 123 },
+        "expectedConstraint": "type"
+      },
+      {
+        "name": "wrong type include_referenced",
+        "data": { "include_referenced": "yes" },
+        "expectedConstraint": "type"
+      },
+      {
+        "name": "additional properties",
+        "data": { "unknownProp": "value" },
+        "expectedConstraint": "additionalProperties"
+      }
+    ]
+  },
+  "session-state": {
+    "valid": [
+      {
+        "name": "minimal valid",
+        "data": {
+          "currentMode": "analysis",
+          "modeHistory": [{ "mode": "analysis", "timestamp": "2026-01-18T10:00:00.000Z" }],
+          "protocolStartComplete": false,
+          "protocolEndComplete": false,
+          "protocolStartEvidence": {},
+          "protocolEndEvidence": {},
+          "orchestratorWorkflow": null,
+          "version": 1,
+          "createdAt": "2026-01-18T10:00:00.000Z",
+          "updatedAt": "2026-01-18T10:00:00.000Z"
+        }
+      },
+      {
+        "name": "with optional fields",
+        "data": {
+          "currentMode": "planning",
+          "modeHistory": [
+            { "mode": "analysis", "timestamp": "2026-01-18T10:00:00.000Z" },
+            { "mode": "planning", "timestamp": "2026-01-18T11:00:00.000Z" }
+          ],
+          "protocolStartComplete": true,
+          "protocolEndComplete": false,
+          "protocolStartEvidence": { "branch": "feature/test" },
+          "protocolEndEvidence": {},
+          "orchestratorWorkflow": null,
+          "activeFeature": "feature-123",
+          "activeTask": "task-456",
+          "version": 2,
+          "createdAt": "2026-01-18T10:00:00.000Z",
+          "updatedAt": "2026-01-18T11:00:00.000Z"
+        }
+      },
+      {
+        "name": "all workflow modes",
+        "data": [
+          {
+            "currentMode": "analysis",
+            "modeHistory": [],
+            "protocolStartComplete": false,
+            "protocolEndComplete": false,
+            "protocolStartEvidence": {},
+            "protocolEndEvidence": {},
+            "orchestratorWorkflow": null,
+            "version": 0,
+            "createdAt": "2026-01-18T10:00:00.000Z",
+            "updatedAt": "2026-01-18T10:00:00.000Z"
+          },
+          {
+            "currentMode": "planning",
+            "modeHistory": [],
+            "protocolStartComplete": false,
+            "protocolEndComplete": false,
+            "protocolStartEvidence": {},
+            "protocolEndEvidence": {},
+            "orchestratorWorkflow": null,
+            "version": 0,
+            "createdAt": "2026-01-18T10:00:00.000Z",
+            "updatedAt": "2026-01-18T10:00:00.000Z"
+          },
+          {
+            "currentMode": "coding",
+            "modeHistory": [],
+            "protocolStartComplete": false,
+            "protocolEndComplete": false,
+            "protocolStartEvidence": {},
+            "protocolEndEvidence": {},
+            "orchestratorWorkflow": null,
+            "version": 0,
+            "createdAt": "2026-01-18T10:00:00.000Z",
+            "updatedAt": "2026-01-18T10:00:00.000Z"
+          },
+          {
+            "currentMode": "disabled",
+            "modeHistory": [],
+            "protocolStartComplete": false,
+            "protocolEndComplete": false,
+            "protocolStartEvidence": {},
+            "protocolEndEvidence": {},
+            "orchestratorWorkflow": null,
+            "version": 0,
+            "createdAt": "2026-01-18T10:00:00.000Z",
+            "updatedAt": "2026-01-18T10:00:00.000Z"
+          }
+        ]
+      },
+      {
+        "name": "with orchestrator workflow",
+        "data": {
+          "currentMode": "coding",
+          "modeHistory": [],
+          "protocolStartComplete": true,
+          "protocolEndComplete": false,
+          "protocolStartEvidence": {},
+          "protocolEndEvidence": {},
+          "orchestratorWorkflow": {
+            "activeAgent": "implementer",
+            "workflowPhase": "implementation",
+            "agentHistory": [],
+            "decisions": [],
+            "verdicts": [],
+            "pendingHandoffs": [],
+            "compactionHistory": [],
+            "startedAt": "2026-01-18T10:00:00.000Z",
+            "lastAgentChange": "2026-01-18T10:00:00.000Z"
+          },
+          "version": 1,
+          "createdAt": "2026-01-18T10:00:00.000Z",
+          "updatedAt": "2026-01-18T10:00:00.000Z"
+        }
+      }
+    ],
+    "invalid": [
+      {
+        "name": "missing required fields",
+        "data": { "currentMode": "analysis" },
+        "expectedConstraint": "required"
+      },
+      {
+        "name": "invalid mode",
+        "data": {
+          "currentMode": "invalid-mode",
+          "modeHistory": [],
+          "protocolStartComplete": false,
+          "protocolEndComplete": false,
+          "protocolStartEvidence": {},
+          "protocolEndEvidence": {},
+          "orchestratorWorkflow": null,
+          "version": 0,
+          "createdAt": "2026-01-18T10:00:00.000Z",
+          "updatedAt": "2026-01-18T10:00:00.000Z"
+        },
+        "expectedConstraint": "enum"
+      },
+      {
+        "name": "invalid timestamp format",
+        "data": {
+          "currentMode": "analysis",
+          "modeHistory": [],
+          "protocolStartComplete": false,
+          "protocolEndComplete": false,
+          "protocolStartEvidence": {},
+          "protocolEndEvidence": {},
+          "orchestratorWorkflow": null,
+          "version": 0,
+          "createdAt": "not-a-timestamp",
+          "updatedAt": "2026-01-18T10:00:00.000Z"
+        },
+        "expectedConstraint": "format"
+      },
+      {
+        "name": "negative version",
+        "data": {
+          "currentMode": "analysis",
+          "modeHistory": [],
+          "protocolStartComplete": false,
+          "protocolEndComplete": false,
+          "protocolStartEvidence": {},
+          "protocolEndEvidence": {},
+          "orchestratorWorkflow": null,
+          "version": -1,
+          "createdAt": "2026-01-18T10:00:00.000Z",
+          "updatedAt": "2026-01-18T10:00:00.000Z"
+        },
+        "expectedConstraint": "minimum"
+      },
+      {
+        "name": "invalid agent type in workflow",
+        "data": {
+          "currentMode": "coding",
+          "modeHistory": [],
+          "protocolStartComplete": false,
+          "protocolEndComplete": false,
+          "protocolStartEvidence": {},
+          "protocolEndEvidence": {},
+          "orchestratorWorkflow": {
+            "activeAgent": "invalid-agent",
+            "workflowPhase": "planning",
+            "agentHistory": [],
+            "decisions": [],
+            "verdicts": [],
+            "pendingHandoffs": [],
+            "compactionHistory": [],
+            "startedAt": "2026-01-18T10:00:00.000Z",
+            "lastAgentChange": "2026-01-18T10:00:00.000Z"
+          },
+          "version": 0,
+          "createdAt": "2026-01-18T10:00:00.000Z",
+          "updatedAt": "2026-01-18T10:00:00.000Z"
+        },
+        "expectedConstraint": "enum"
+      }
+    ]
+  },
+  "brain-config": {
+    "valid": [
+      {
+        "name": "minimal valid",
+        "data": {
+          "version": "2.0.0",
+          "defaults": {
+            "memories_location": "~/memories"
+          },
+          "projects": {},
+          "sync": {
+            "enabled": true,
+            "delay_ms": 500
+          },
+          "logging": {
+            "level": "info"
+          },
+          "watcher": {
+            "enabled": true,
+            "debounce_ms": 2000
+          }
+        }
+      },
+      {
+        "name": "with projects",
+        "data": {
+          "version": "2.0.0",
+          "defaults": {
+            "memories_location": "~/memories",
+            "memories_mode": "DEFAULT"
+          },
+          "projects": {
+            "brain": {
+              "code_path": "/Users/test/brain"
+            },
+            "other": {
+              "code_path": "/Users/test/other",
+              "memories_path": "/custom/path",
+              "memories_mode": "CUSTOM"
+            }
+          },
+          "sync": {
+            "enabled": true,
+            "delay_ms": 500
+          },
+          "logging": {
+            "level": "debug"
+          },
+          "watcher": {
+            "enabled": true,
+            "debounce_ms": 2000
+          }
+        }
+      },
+      {
+        "name": "all log levels",
+        "data": [
+          {
+            "version": "2.0.0",
+            "defaults": { "memories_location": "~/memories" },
+            "projects": {},
+            "sync": { "enabled": true, "delay_ms": 500 },
+            "logging": { "level": "trace" },
+            "watcher": { "enabled": true, "debounce_ms": 2000 }
+          },
+          {
+            "version": "2.0.0",
+            "defaults": { "memories_location": "~/memories" },
+            "projects": {},
+            "sync": { "enabled": true, "delay_ms": 500 },
+            "logging": { "level": "debug" },
+            "watcher": { "enabled": true, "debounce_ms": 2000 }
+          },
+          {
+            "version": "2.0.0",
+            "defaults": { "memories_location": "~/memories" },
+            "projects": {},
+            "sync": { "enabled": true, "delay_ms": 500 },
+            "logging": { "level": "info" },
+            "watcher": { "enabled": true, "debounce_ms": 2000 }
+          },
+          {
+            "version": "2.0.0",
+            "defaults": { "memories_location": "~/memories" },
+            "projects": {},
+            "sync": { "enabled": true, "delay_ms": 500 },
+            "logging": { "level": "warn" },
+            "watcher": { "enabled": true, "debounce_ms": 2000 }
+          },
+          {
+            "version": "2.0.0",
+            "defaults": { "memories_location": "~/memories" },
+            "projects": {},
+            "sync": { "enabled": true, "delay_ms": 500 },
+            "logging": { "level": "error" },
+            "watcher": { "enabled": true, "debounce_ms": 2000 }
+          }
+        ]
+      },
+      {
+        "name": "all memories modes",
+        "data": [
+          {
+            "version": "2.0.0",
+            "defaults": { "memories_location": "~/memories", "memories_mode": "DEFAULT" },
+            "projects": {},
+            "sync": { "enabled": true, "delay_ms": 500 },
+            "logging": { "level": "info" },
+            "watcher": { "enabled": true, "debounce_ms": 2000 }
+          },
+          {
+            "version": "2.0.0",
+            "defaults": { "memories_location": "~/memories", "memories_mode": "CODE" },
+            "projects": {},
+            "sync": { "enabled": true, "delay_ms": 500 },
+            "logging": { "level": "info" },
+            "watcher": { "enabled": true, "debounce_ms": 2000 }
+          },
+          {
+            "version": "2.0.0",
+            "defaults": { "memories_location": "~/memories", "memories_mode": "CUSTOM" },
+            "projects": {},
+            "sync": { "enabled": true, "delay_ms": 500 },
+            "logging": { "level": "info" },
+            "watcher": { "enabled": true, "debounce_ms": 2000 }
+          }
+        ]
+      }
+    ],
+    "invalid": [
+      {
+        "name": "missing version",
+        "data": {
+          "defaults": { "memories_location": "~/memories" },
+          "projects": {},
+          "sync": { "enabled": true, "delay_ms": 500 },
+          "logging": { "level": "info" },
+          "watcher": { "enabled": true, "debounce_ms": 2000 }
+        },
+        "expectedConstraint": "required"
+      },
+      {
+        "name": "wrong version",
+        "data": {
+          "version": "1.0.0",
+          "defaults": { "memories_location": "~/memories" },
+          "projects": {},
+          "sync": { "enabled": true, "delay_ms": 500 },
+          "logging": { "level": "info" },
+          "watcher": { "enabled": true, "debounce_ms": 2000 }
+        },
+        "expectedConstraint": "const"
+      },
+      {
+        "name": "missing defaults",
+        "data": {
+          "version": "2.0.0",
+          "projects": {},
+          "sync": { "enabled": true, "delay_ms": 500 },
+          "logging": { "level": "info" },
+          "watcher": { "enabled": true, "debounce_ms": 2000 }
+        },
+        "expectedConstraint": "required"
+      },
+      {
+        "name": "invalid log level",
+        "data": {
+          "version": "2.0.0",
+          "defaults": { "memories_location": "~/memories" },
+          "projects": {},
+          "sync": { "enabled": true, "delay_ms": 500 },
+          "logging": { "level": "verbose" },
+          "watcher": { "enabled": true, "debounce_ms": 2000 }
+        },
+        "expectedConstraint": "enum"
+      },
+      {
+        "name": "invalid memories mode",
+        "data": {
+          "version": "2.0.0",
+          "defaults": { "memories_location": "~/memories", "memories_mode": "INVALID" },
+          "projects": {},
+          "sync": { "enabled": true, "delay_ms": 500 },
+          "logging": { "level": "info" },
+          "watcher": { "enabled": true, "debounce_ms": 2000 }
+        },
+        "expectedConstraint": "enum"
+      },
+      {
+        "name": "negative delay_ms",
+        "data": {
+          "version": "2.0.0",
+          "defaults": { "memories_location": "~/memories" },
+          "projects": {},
+          "sync": { "enabled": true, "delay_ms": -1 },
+          "logging": { "level": "info" },
+          "watcher": { "enabled": true, "debounce_ms": 2000 }
+        },
+        "expectedConstraint": "minimum"
+      },
+      {
+        "name": "empty memories_location",
+        "data": {
+          "version": "2.0.0",
+          "defaults": { "memories_location": "" },
+          "projects": {},
+          "sync": { "enabled": true, "delay_ms": 500 },
+          "logging": { "level": "info" },
+          "watcher": { "enabled": true, "debounce_ms": 2000 }
+        },
+        "expectedConstraint": "minLength"
+      },
+      {
+        "name": "project missing code_path",
+        "data": {
+          "version": "2.0.0",
+          "defaults": { "memories_location": "~/memories" },
+          "projects": {
+            "brain": {}
+          },
+          "sync": { "enabled": true, "delay_ms": 500 },
+          "logging": { "level": "info" },
+          "watcher": { "enabled": true, "debounce_ms": 2000 }
+        },
+        "expectedConstraint": "required"
+      },
+      {
+        "name": "additional properties",
+        "data": {
+          "version": "2.0.0",
+          "defaults": { "memories_location": "~/memories" },
+          "projects": {},
+          "sync": { "enabled": true, "delay_ms": 500 },
+          "logging": { "level": "info" },
+          "watcher": { "enabled": true, "debounce_ms": 2000 },
+          "unknownProp": "value"
+        },
+        "expectedConstraint": "additionalProperties"
+      }
+    ]
+  }
+}

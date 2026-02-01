@@ -21,29 +21,47 @@ import {
   withFeatureChange,
   withTaskChange,
 } from "../../services/session";
-import {
-  validateWorkflow,
-  initValidation,
-  isInitialized,
-} from "@brain/validation-wasm";
+import { isWorkflowMode } from "@brain/validation";
 
 /**
- * Initialize WASM validation module.
- * Called lazily on first validation request.
- * Safe to call multiple times.
+ * Validate workflow state (basic validation without WASM).
+ *
+ * @param state - Workflow state to validate
+ * @returns Validation result with checks
  */
-async function ensureValidationInitialized(): Promise<void> {
-  if (!isInitialized()) {
-    try {
-      await initValidation();
-      logger.info("WASM validation module initialized");
-    } catch (error) {
-      logger.warn(
-        { error },
-        "Failed to initialize WASM validation - falling back to basic validation"
-      );
-    }
+function validateWorkflow(state: { mode: string; task?: string }): {
+  valid: boolean;
+  checks: Array<{ name: string; passed: boolean; message: string }>;
+  message: string;
+  remediation?: string;
+} {
+  const validModes = ["analysis", "planning", "coding", "disabled"];
+  const checks: Array<{ name: string; passed: boolean; message: string }> = [];
+
+  // Check mode validity
+  const modeValid = validModes.includes(state.mode);
+  checks.push({
+    name: "mode-valid",
+    passed: modeValid,
+    message: modeValid ? "Mode is valid" : `Invalid mode: ${state.mode}`,
+  });
+
+  // Check task requirement in coding mode
+  if (state.mode === "coding" && !state.task) {
+    checks.push({
+      name: "task-required",
+      passed: false,
+      message: "Task is required in coding mode",
+    });
   }
+
+  const allPassed = checks.every((c) => c.passed);
+  return {
+    valid: allPassed,
+    checks,
+    message: allPassed ? "Valid" : "Validation failed",
+    remediation: allPassed ? undefined : "Ensure mode is valid and task is set for coding mode",
+  };
 }
 
 /**
@@ -90,13 +108,6 @@ export const sessionStateWorkflow = inngest.createFunction(
       "Processing session state update"
     );
 
-    // Step 0: Initialize WASM validation (for mode changes)
-    if (updateType === "mode") {
-      await step.run("init-validation", async (): Promise<void> => {
-        await ensureValidationInitialized();
-      });
-    }
-
     // Step 1: Get current state from session service
     const currentState = await step.run(
       "get-current-state",
@@ -123,28 +134,7 @@ export const sessionStateWorkflow = inngest.createFunction(
               return currentState;
             }
             // Validate the mode before accepting the change
-            // Uses WASM validation if available, otherwise falls back
-            let validationResult;
-            try {
-              validationResult = validateWorkflow({ mode, task: task ?? currentState.activeTask });
-            } catch (error) {
-              // WASM not initialized - perform basic validation
-              logger.debug({ error }, "WASM validation unavailable, using basic validation");
-              const validModes = ["analysis", "planning", "coding", "disabled"];
-              validationResult = {
-                valid: validModes.includes(mode),
-                checks: [
-                  {
-                    name: "mode-valid",
-                    passed: validModes.includes(mode),
-                    message: validModes.includes(mode)
-                      ? "Mode is valid"
-                      : `Invalid mode: ${mode}`,
-                  },
-                ],
-                message: validModes.includes(mode) ? "Valid" : "Invalid mode",
-              };
-            }
+            const validationResult = validateWorkflow({ mode, task: task ?? currentState.activeTask });
             if (!validationResult.valid) {
               const failedChecks = validationResult.checks
                 .filter((c) => !c.passed)

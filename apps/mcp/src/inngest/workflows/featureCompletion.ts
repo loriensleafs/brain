@@ -29,7 +29,49 @@ import {
   createNonRetriableError,
   WorkflowErrorType,
 } from "../errors";
-import { checkTasks, type Task } from "@brain/validation-wasm";
+/**
+ * Task status for validation.
+ */
+interface Task {
+  name?: string;
+  status?: string;
+  completed?: boolean;
+}
+
+/**
+ * Validate that no IN_PROGRESS tasks are incomplete.
+ * Pure TypeScript implementation (no WASM dependency).
+ *
+ * @param tasks - Array of task status objects
+ * @returns Validation result with checks for each incomplete task
+ */
+function checkTasks(tasks: Task[]): {
+  valid: boolean;
+  checks: Array<{ name: string; passed: boolean; message: string }>;
+  remediation?: string;
+} {
+  const checks: Array<{ name: string; passed: boolean; message: string }> = [];
+
+  for (const task of tasks) {
+    const isInProgress = task.status === "IN_PROGRESS";
+    const isIncomplete = !task.completed;
+
+    if (isInProgress && isIncomplete) {
+      checks.push({
+        name: `task-${task.name || "unnamed"}`,
+        passed: false,
+        message: `Task "${task.name || "unnamed"}" is IN_PROGRESS but not complete`,
+      });
+    }
+  }
+
+  const allPassed = checks.length === 0 || checks.every((c) => c.passed);
+  return {
+    valid: allPassed,
+    checks: checks.length > 0 ? checks : [{ name: "tasks-check", passed: true, message: "All tasks valid" }],
+    remediation: allPassed ? undefined : "Complete all IN_PROGRESS tasks before proceeding",
+  };
+}
 
 /**
  * Workflow result structure.

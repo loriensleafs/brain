@@ -6,27 +6,23 @@
   "packageManager": "bun@1.3.8",
   "workspaces": [
     "packages/*",
-    "packages/validation/wasm",
     "apps/mcp",
     "scripts",
     "apps/claude-plugin/skills/memory/scripts"
   ],
   "scripts": {
     "build": "turbo run build",
-    "build:wasm": "turbo run build:wasm",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "test:coverage": "turbo run test:coverage",
     "lint": "turbo run lint",
     "dev": "turbo run dev",
     "clean": "turbo run clean",
-    "build:validation": "cd packages/validation && GOOS=js GOARCH=wasm go build -o wasm/dist/validation.wasm ./wasm/main.go",
     "build:tui": "cd apps/tui && go build -o brain ./main.go"
   },
   "dependencies": {
     "@brain/utils": "workspace:*",
-    "@brain/validation": "workspace:*",
-    "@brain/validation-wasm": "workspace:*"
+    "@brain/validation": "workspace:*"
   },
   "devDependencies": {
     "@types/bun": "latest",
