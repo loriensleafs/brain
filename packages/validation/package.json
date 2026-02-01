@@ -5,10 +5,10 @@
   "description": "JSON Schema definitions and TypeScript type generation for Brain validation",
   "type": "module",
   "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "types": "dist/src/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
+      "types": "./dist/src/index.d.ts",
       "import": "./dist/index.js"
     },
     "./schemas/*": "./schemas/*",
@@ -16,7 +16,7 @@
   },
   "scripts": {
     "generate:types": "bun run scripts/generate-types.ts",
-    "build": "bun run generate:types && bun build index.ts --outdir dist --target node",
+    "build": "bun run generate:types && bun build src/index.ts --outdir dist --target node && tsc --emitDeclarationOnly",
     "build:go": "go build -o dist/ ./...",
     "typecheck": "tsc --noEmit",
     "test": "bun test",

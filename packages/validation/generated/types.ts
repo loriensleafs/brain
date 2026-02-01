@@ -7,7 +7,7 @@
  * To regenerate: bun run generate:types
  * Source schemas: packages/validation/schemas/*.schema.json
  *
- * Generated: 2026-02-01T12:28:23.287Z
+ * Generated: 2026-02-01T12:38:59.536Z
  */
 
 // Source: schemas/tools/bootstrap-context.schema.json

@@ -17,10 +17,10 @@
 import Ajv, { type ValidateFunction, type ErrorObject } from "ajv";
 import addFormats from "ajv-formats";
 
-import bootstrapContextSchema from "./schemas/tools/bootstrap-context.schema.json";
-import searchSchema from "./schemas/tools/search.schema.json";
+import bootstrapContextSchema from "../schemas/tools/bootstrap-context.schema.json";
+import searchSchema from "../schemas/tools/search.schema.json";
 
-import type { BootstrapContextArgs, SearchArgs } from "./generated/types";
+import type { BootstrapContextArgs, SearchArgs } from "../generated/types";
 
 // Export generated types
 export type { BootstrapContextArgs, SearchArgs };
