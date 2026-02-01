@@ -1,0 +1,9 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://brain.dev/schemas/tools/list-workflows.json",
+  "title": "ListWorkflowsArgs",
+  "description": "Schema for list_workflows tool arguments. Lists all available workflow functions and their event triggers.",
+  "type": "object",
+  "properties": {},
+  "additionalProperties": false
+}

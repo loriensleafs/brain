@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://brain.dev/schemas/tools/projects/delete-project.json",
+  "title": "DeleteProjectArgs",
+  "description": "Schema for delete_project tool arguments. Two-stage deletion with safety controls: Stage 1 removes config entries (reversible), Stage 2 deletes notes directory (irreversible, only if delete_notes=true).",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Project name to delete"
+    },
+    "delete_notes": {
+      "type": "boolean",
+      "default": false,
+      "description": "If true, also delete the notes directory. DESTRUCTIVE - defaults to false for safety."
+    }
+  },
+  "required": ["project"],
+  "additionalProperties": false
+}

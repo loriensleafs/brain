@@ -1,0 +1,9 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://brain.dev/schemas/tools/projects/list-projects.json",
+  "title": "ListProjectsArgs",
+  "description": "Schema for list_projects tool arguments. Lists all available Brain memory projects. Returns a simple array of project names. Use get_project_details for detailed information about a specific project.",
+  "type": "object",
+  "properties": {},
+  "additionalProperties": false
+}

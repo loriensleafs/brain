@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://brain.dev/schemas/tools/projects/active-project.json",
+  "title": "ActiveProjectArgs",
+  "description": "Schema for active_project tool arguments. Unified tool for getting, setting, and clearing the active project. Operations: get (returns current), set (requires project param), clear (resets selection).",
+  "type": "object",
+  "properties": {
+    "operation": {
+      "type": "string",
+      "enum": ["get", "set", "clear"],
+      "default": "get",
+      "description": "Operation to perform: get (default), set, or clear"
+    },
+    "project": {
+      "type": "string",
+      "description": "Project name (required for set operation)"
+    }
+  },
+  "additionalProperties": false
+}

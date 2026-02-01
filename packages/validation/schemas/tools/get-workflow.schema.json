@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://brain.dev/schemas/tools/get-workflow.json",
+  "title": "GetWorkflowArgs",
+  "description": "Schema for get_workflow tool arguments. Gets full workflow run details including status, timing, steps, and output.",
+  "type": "object",
+  "properties": {
+    "run_id": {
+      "type": "string",
+      "description": "The workflow run ID to get details for"
+    }
+  },
+  "required": ["run_id"],
+  "additionalProperties": false
+}

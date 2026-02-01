@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://brain.dev/schemas/tools/projects/edit-project.json",
+  "title": "EditProjectArgs",
+  "description": "Schema for edit_project tool arguments. Edits project metadata and configuration including code path and memories path.",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Project name to edit"
+    },
+    "code_path": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Code directory path (use ~ for home). Required for editing."
+    },
+    "memories_path": {
+      "type": "string",
+      "description": "Memories directory path. Options: 'DEFAULT' (${default_memories_location}/${name}), 'CODE' (${code_path}/docs), or absolute path. Defaults to 'DEFAULT' when not specified, except auto-updates to new code_path/docs if was ${old_code_path}/docs."
+    }
+  },
+  "required": ["name", "code_path"],
+  "additionalProperties": false
+}

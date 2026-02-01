@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://brain.dev/schemas/tools/projects/create-project.json",
+  "title": "CreateProjectArgs",
+  "description": "Schema for create_project tool arguments. Creates a new Brain memory project with required code_path and optional memories_path.",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Project name to create"
+    },
+    "code_path": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Code directory path (use ~ for home). Required."
+    },
+    "memories_path": {
+      "type": "string",
+      "description": "Memories directory path. Options: 'DEFAULT' (${default_memories_location}/${name}), 'CODE' (${code_path}/docs), or absolute path. Defaults to 'DEFAULT'."
+    }
+  },
+  "required": ["name", "code_path"],
+  "additionalProperties": false
+}

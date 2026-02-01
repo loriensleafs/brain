@@ -11,6 +11,15 @@ import {
   validateBootstrapContextArgs,
   parseBootstrapContextArgs,
   getBootstrapContextArgsErrors,
+  validateListProjectsArgs,
+  parseListProjectsArgs,
+  getListProjectsArgsErrors,
+  validateDeleteProjectArgs,
+  parseDeleteProjectArgs,
+  getDeleteProjectArgsErrors,
+  validateActiveProjectArgs,
+  parseActiveProjectArgs,
+  getActiveProjectArgsErrors,
 } from "../validate";
 
 describe("SearchArgs validation", () => {
@@ -268,6 +277,189 @@ describe("BootstrapContextArgs validation", () => {
 
     test("returns structured errors for invalid data", () => {
       const errors = getBootstrapContextArgsErrors({ project: 123 });
+      expect(errors.length).toBeGreaterThan(0);
+    });
+  });
+});
+
+describe("ListProjectsArgs validation", () => {
+  describe("parseListProjectsArgs", () => {
+    test("accepts empty object", () => {
+      const result = parseListProjectsArgs({});
+      expect(result).toEqual({});
+    });
+
+    test("rejects additional properties", () => {
+      expect(() =>
+        parseListProjectsArgs({
+          unknownProp: "value",
+        })
+      ).toThrow();
+    });
+  });
+
+  describe("validateListProjectsArgs", () => {
+    test("returns true for empty object", () => {
+      expect(validateListProjectsArgs({})).toBe(true);
+    });
+
+    test("returns false for object with unknown properties", () => {
+      expect(validateListProjectsArgs({ unknown: "prop" })).toBe(false);
+    });
+  });
+
+  describe("getListProjectsArgsErrors", () => {
+    test("returns empty array for valid data", () => {
+      const errors = getListProjectsArgsErrors({});
+      expect(errors).toEqual([]);
+    });
+
+    test("returns errors for invalid data", () => {
+      const errors = getListProjectsArgsErrors({ unknown: "prop" });
+      expect(errors.length).toBeGreaterThan(0);
+    });
+  });
+});
+
+describe("DeleteProjectArgs validation", () => {
+  describe("parseDeleteProjectArgs", () => {
+    test("requires project parameter", () => {
+      expect(() => parseDeleteProjectArgs({})).toThrow();
+    });
+
+    test("accepts project parameter", () => {
+      const result = parseDeleteProjectArgs({ project: "my-project" });
+      expect(result.project).toBe("my-project");
+    });
+
+    test("applies default for delete_notes", () => {
+      const result = parseDeleteProjectArgs({ project: "my-project" });
+      expect(result.delete_notes).toBe(false);
+    });
+
+    test("accepts delete_notes parameter", () => {
+      const withTrue = parseDeleteProjectArgs({
+        project: "my-project",
+        delete_notes: true,
+      });
+      expect(withTrue.delete_notes).toBe(true);
+
+      const withFalse = parseDeleteProjectArgs({
+        project: "my-project",
+        delete_notes: false,
+      });
+      expect(withFalse.delete_notes).toBe(false);
+    });
+
+    test("rejects empty project name", () => {
+      expect(() => parseDeleteProjectArgs({ project: "" })).toThrow();
+    });
+
+    test("rejects additional properties", () => {
+      expect(() =>
+        parseDeleteProjectArgs({
+          project: "my-project",
+          unknownProp: "value",
+        })
+      ).toThrow();
+    });
+  });
+
+  describe("validateDeleteProjectArgs", () => {
+    test("returns true for valid data", () => {
+      expect(validateDeleteProjectArgs({ project: "test" })).toBe(true);
+      expect(
+        validateDeleteProjectArgs({ project: "test", delete_notes: true })
+      ).toBe(true);
+    });
+
+    test("returns false for missing project", () => {
+      expect(validateDeleteProjectArgs({})).toBe(false);
+    });
+
+    test("returns false for empty project", () => {
+      expect(validateDeleteProjectArgs({ project: "" })).toBe(false);
+    });
+  });
+
+  describe("getDeleteProjectArgsErrors", () => {
+    test("returns empty array for valid data", () => {
+      const errors = getDeleteProjectArgsErrors({ project: "test" });
+      expect(errors).toEqual([]);
+    });
+
+    test("returns errors for missing project", () => {
+      const errors = getDeleteProjectArgsErrors({});
+      expect(errors.length).toBeGreaterThan(0);
+    });
+  });
+});
+
+describe("ActiveProjectArgs validation", () => {
+  describe("parseActiveProjectArgs", () => {
+    test("accepts empty object with default operation", () => {
+      const result = parseActiveProjectArgs({});
+      expect(result.operation).toBe("get");
+    });
+
+    test("accepts get operation", () => {
+      const result = parseActiveProjectArgs({ operation: "get" });
+      expect(result.operation).toBe("get");
+    });
+
+    test("accepts set operation with project", () => {
+      const result = parseActiveProjectArgs({
+        operation: "set",
+        project: "my-project",
+      });
+      expect(result.operation).toBe("set");
+      expect(result.project).toBe("my-project");
+    });
+
+    test("accepts clear operation", () => {
+      const result = parseActiveProjectArgs({ operation: "clear" });
+      expect(result.operation).toBe("clear");
+    });
+
+    test("rejects invalid operation", () => {
+      expect(() =>
+        parseActiveProjectArgs({ operation: "invalid" })
+      ).toThrow();
+    });
+
+    test("rejects additional properties", () => {
+      expect(() =>
+        parseActiveProjectArgs({
+          operation: "get",
+          unknownProp: "value",
+        })
+      ).toThrow();
+    });
+  });
+
+  describe("validateActiveProjectArgs", () => {
+    test("returns true for valid data", () => {
+      expect(validateActiveProjectArgs({})).toBe(true);
+      expect(validateActiveProjectArgs({ operation: "get" })).toBe(true);
+      expect(validateActiveProjectArgs({ operation: "set", project: "test" })).toBe(
+        true
+      );
+      expect(validateActiveProjectArgs({ operation: "clear" })).toBe(true);
+    });
+
+    test("returns false for invalid operation", () => {
+      expect(validateActiveProjectArgs({ operation: "invalid" })).toBe(false);
+    });
+  });
+
+  describe("getActiveProjectArgsErrors", () => {
+    test("returns empty array for valid data", () => {
+      const errors = getActiveProjectArgsErrors({});
+      expect(errors).toEqual([]);
+    });
+
+    test("returns errors for invalid operation", () => {
+      const errors = getActiveProjectArgsErrors({ operation: "invalid" });
       expect(errors.length).toBeGreaterThan(0);
     });
   });
