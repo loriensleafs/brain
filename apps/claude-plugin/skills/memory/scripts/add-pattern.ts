@@ -30,7 +30,7 @@
 import { readFileSync, existsSync, writeFileSync, mkdirSync, readdirSync } from "fs";
 import { join } from "path";
 import { parseArgs } from "util";
-import { getProjectMemoriesPath } from "../../../../../packages/brain-utils/src";
+import { getProjectMemoriesPath } from "@brain/utils";
 
 // Types
 interface Pattern {

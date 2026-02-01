@@ -1,16 +1,17 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
+    "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "lib": ["ESNext", "DOM"],
-    "types": [],
+    "lib": ["ES2022", "DOM"],
+    "types": ["bun-types"],
     "strict": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "allowImportingTsExtensions": true,
     "noEmit": true,
-    "allowJs": true
+    "allowJs": true,
+    "resolveJsonModule": true
   },
   "include": ["*.ts"],
   "exclude": ["node_modules"]

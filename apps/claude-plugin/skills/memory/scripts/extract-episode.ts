@@ -25,7 +25,7 @@
 import { readFileSync, existsSync, writeFileSync, mkdirSync } from "fs";
 import { basename, join } from "path";
 import { parseArgs } from "util";
-import { getProjectMemoriesPath } from "../../../../../packages/brain-utils/src";
+import { getProjectMemoriesPath } from "@brain/utils";
 
 // Types
 interface Decision {
