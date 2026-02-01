@@ -11,7 +11,7 @@
  * This test file provides basic validation of error paths.
  */
 
-import { describe, it, expect } from "bun:test";
+import { describe, it, expect } from "vitest";
 import { getMissingEmbeddingsCount } from "../catchupTrigger";
 
 describe("getMissingEmbeddingsCount", () => {

@@ -8,7 +8,7 @@
  * @see TASK-011: Implement session-protocol-start Workflow
  */
 
-import { describe, test, expect, beforeAll, afterAll, mock } from "bun:test";
+import { describe, test, expect, beforeAll, afterAll, vi } from "vitest";
 import * as fs from "fs/promises";
 import * as path from "path";
 import * as os from "os";

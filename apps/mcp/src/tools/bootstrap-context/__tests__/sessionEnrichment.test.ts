@@ -11,15 +11,15 @@
  * - Feature task enrichment
  */
 
-import { describe, test, expect, mock, beforeEach } from "bun:test";
+import { describe, test, expect, vi, beforeEach } from "vitest";
 import { createDefaultSessionState, createEmptyWorkflow } from "../../../services/session/types";
 import type { AgentInvocation } from "../../../services/session/types";
 import { buildSessionEnrichment, extractTaskWikilinks } from "../sessionEnrichment";
 
 // Mock the basic-memory client
-const mockCallTool = mock(() => Promise.resolve({ content: [{ type: "text", text: '{"results":[]}' }] }));
+const mockCallTool = vi.fn(() => Promise.resolve({ content: [{ type: "text", text: '{"results":[]}' }] }));
 
-mock.module("../../../proxy/client", () => ({
+vi.mock("../../../proxy/client", () => ({
   getBasicMemoryClient: () => Promise.resolve({
     callTool: mockCallTool,
   }),

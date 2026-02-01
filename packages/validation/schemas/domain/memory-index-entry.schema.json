@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://brain.dev/schemas/domain/memory-index-entry.json",
+  "title": "MemoryIndexEntry",
+  "description": "Schema for memory index entry validation. Validates entries in domain index files (skills-*-index.md).",
+  "type": "object",
+  "properties": {
+    "keywords": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^[a-z0-9-]+$"
+      },
+      "minItems": 1,
+      "description": "Keywords for this entry (space-separated in table, parsed to array)"
+    },
+    "fileName": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$",
+      "minLength": 1,
+      "maxLength": 128,
+      "description": "File name without .md extension"
+    },
+    "rawKeywords": {
+      "type": "string",
+      "description": "Original space-separated keywords string"
+    }
+  },
+  "required": ["keywords", "fileName"],
+  "additionalProperties": false,
+  "$defs": {
+    "validationRules": {
+      "type": "object",
+      "description": "Validation rules applied to memory index entries",
+      "properties": {
+        "minimumKeywords": {
+          "const": 5,
+          "description": "P2: Minimum keywords per entry"
+        },
+        "uniquenessThreshold": {
+          "const": 0.40,
+          "description": "P0: Minimum 40% unique keywords per entry"
+        },
+        "fileNamePattern": {
+          "const": "^[a-z0-9]+-[a-z0-9-]+$",
+          "description": "{domain}-{description} naming convention"
+        },
+        "deprecatedPrefixes": {
+          "type": "array",
+          "items": { "const": "skill-" },
+          "description": "Prefixes that violate ADR-017"
+        }
+      }
+    },
+    "indexFormat": {
+      "type": "object",
+      "description": "Index file format requirements per ADR-017",
+      "properties": {
+        "allowedContent": {
+          "type": "array",
+          "items": {
+            "enum": ["table_rows", "empty_lines"]
+          },
+          "description": "Only markdown table rows and empty lines allowed"
+        },
+        "prohibitedContent": {
+          "type": "array",
+          "items": {
+            "enum": ["titles", "metadata_blocks", "navigation_sections", "non_table_content"]
+          },
+          "description": "Content types prohibited in index files"
+        }
+      }
+    }
+  }
+}

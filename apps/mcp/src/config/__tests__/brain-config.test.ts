@@ -10,35 +10,35 @@
  * - Default config generation on first run
  */
 
-import { describe, test, expect, beforeEach, mock } from "bun:test";
+import { describe, test, expect, beforeEach, vi } from "vitest";
 import * as os from "os";
 import * as path from "path";
 import { DEFAULT_BRAIN_CONFIG, BrainConfig } from "../schema";
 
 // Mock filesystem
 const mockFs = {
-  existsSync: mock(() => false) as ReturnType<typeof mock<(p: string) => boolean>>,
-  readFileSync: mock(() => "") as ReturnType<typeof mock<(p: string, enc: string) => string>>,
-  writeFileSync: mock(() => undefined) as ReturnType<
+  existsSync: vi.fn(() => false) as ReturnType<typeof mock<(p: string) => boolean>>,
+  readFileSync: vi.fn(() => "") as ReturnType<typeof mock<(p: string, enc: string) => string>>,
+  writeFileSync: vi.fn(() => undefined) as ReturnType<
     typeof mock<(p: string, content: string, opts: unknown) => void>
   >,
-  mkdirSync: mock(() => undefined) as ReturnType<
+  mkdirSync: vi.fn(() => undefined) as ReturnType<
     typeof mock<(p: string, opts: unknown) => void>
   >,
-  chmodSync: mock(() => undefined) as ReturnType<
+  chmodSync: vi.fn(() => undefined) as ReturnType<
     typeof mock<(p: string, mode: number) => void>
   >,
-  renameSync: mock(() => undefined) as ReturnType<
+  renameSync: vi.fn(() => undefined) as ReturnType<
     typeof mock<(from: string, to: string) => void>
   >,
-  unlinkSync: mock(() => undefined) as ReturnType<typeof mock<(p: string) => void>>,
-  statSync: mock(() => ({ mode: 0o700 })) as ReturnType<
+  unlinkSync: vi.fn(() => undefined) as ReturnType<typeof mock<(p: string) => void>>,
+  statSync: vi.fn(() => ({ mode: 0o700 })) as ReturnType<
     typeof mock<(p: string) => { mode: number }>
   >,
-  openSync: mock(() => 1) as ReturnType<
+  openSync: vi.fn(() => 1) as ReturnType<
     typeof mock<(p: string, flags: number) => number>
   >,
-  closeSync: mock(() => undefined) as ReturnType<typeof mock<(fd: number) => void>>,
+  closeSync: vi.fn(() => undefined) as ReturnType<typeof mock<(fd: number) => void>>,
   constants: {
     O_CREAT: 0x0200,
     O_EXCL: 0x0800,
@@ -46,10 +46,10 @@ const mockFs = {
   },
 };
 
-mock.module("fs", () => mockFs);
+vi.mock("fs", () => mockFs);
 
 // Mock path-validator
-mock.module("../path-validator", () => ({
+vi.mock("../path-validator", () => ({
   validatePathOrThrow: (p: string) => p,
   validatePath: (p: string) => ({ valid: true, normalizedPath: p }),
   expandTilde: (p: string) => p.replace(/^~/, os.homedir()),
@@ -58,13 +58,13 @@ mock.module("../path-validator", () => ({
 
 // Mock configLock
 const mockLock = {
-  acquireConfigLock: mock(async () => ({ acquired: true })) as ReturnType<
+  acquireConfigLock: vi.fn(async () => ({ acquired: true })) as ReturnType<
     typeof mock<(opts: unknown) => Promise<{ acquired: boolean; error?: string }>>
   >,
-  releaseConfigLock: mock(() => true) as ReturnType<typeof mock<() => boolean>>,
+  releaseConfigLock: vi.fn(() => true) as ReturnType<typeof mock<() => boolean>>,
 };
 
-mock.module("../../utils/security/configLock", () => mockLock);
+vi.mock("../../utils/security/configLock", () => mockLock);
 
 import {
   loadBrainConfig,

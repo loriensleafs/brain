@@ -3,24 +3,24 @@
  * Tests health check logic with mocked fetch.
  */
 
-import { describe, test, expect, mock, afterEach, beforeEach, spyOn } from "bun:test";
+import { describe, test, expect, vi, afterEach, beforeEach } from "vitest";
 import { checkOllamaHealth } from "../checkHealth";
 import { logger } from "../../../utils/internal/logger";
 
 // Helper to create a typed mock for fetch
 const createFetchMock = (impl: () => unknown) => {
-  const mockFn = mock(impl);
+  const mockFn = vi.fn(impl);
   return mockFn as unknown as typeof fetch;
 };
 
 describe("checkOllamaHealth", () => {
   const originalFetch = globalThis.fetch;
-  let warnSpy: ReturnType<typeof spyOn>;
-  let infoSpy: ReturnType<typeof spyOn>;
+  let warnSpy: ReturnType<typeof vi.spyOn>;
+  let infoSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    warnSpy = spyOn(logger, "warn");
-    infoSpy = spyOn(logger, "info");
+    warnSpy = vi.spyOn(logger, "warn");
+    infoSpy = vi.spyOn(logger, "info");
   });
 
   afterEach(() => {

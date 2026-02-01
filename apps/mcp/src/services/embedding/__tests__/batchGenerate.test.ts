@@ -7,7 +7,7 @@
  * consistently fail all retry attempts for 5xx errors.
  */
 
-import { describe, test, expect, mock, afterEach, beforeEach } from "bun:test";
+import { describe, test, expect, vi, afterEach, beforeEach } from "vitest";
 import { batchGenerate } from "../batchGenerate";
 import { resetOllamaClient } from "../generateEmbedding";
 
@@ -16,7 +16,7 @@ describe("batchGenerate", () => {
 
   // Helper to create mock fetch response
   const mockFetchSuccess = (embedding: number[]) => {
-    globalThis.fetch = mock(() =>
+    globalThis.fetch = vi.fn(() =>
       Promise.resolve({
         ok: true,
         status: 200,
@@ -33,7 +33,7 @@ describe("batchGenerate", () => {
   ) => {
     // Track which text index we're processing based on successful calls
     let textIndex = 0;
-    globalThis.fetch = mock(() => {
+    globalThis.fetch = vi.fn(() => {
       const currentTextIndex = textIndex++;
       if (failTextIndices.has(currentTextIndex)) {
         return Promise.resolve({
@@ -128,7 +128,7 @@ describe("batchGenerate", () => {
   describe("batch size handling", () => {
     test("respects custom batch size", async () => {
       const mockEmbedding = [0.1];
-      const mockFetch = mock(() =>
+      const mockFetch = vi.fn(() =>
         Promise.resolve({
           ok: true,
           status: 200,

@@ -4,7 +4,7 @@
  * Verifies embedding trigger integration after successful writes.
  */
 
-import { describe, test, expect, mock, beforeEach, afterEach, spyOn } from "bun:test";
+import { describe, test, expect, vi, beforeEach, afterEach } from "vitest";
 import * as fs from "fs/promises";
 import * as path from "path";
 
@@ -17,10 +17,10 @@ import { handler } from "../index";
 
 describe("migrate-agents handler", () => {
   let tempDir: string;
-  let mockCallTool: ReturnType<typeof mock>;
-  let getBasicMemoryClientSpy: ReturnType<typeof spyOn>;
-  let triggerEmbeddingSpy: ReturnType<typeof spyOn>;
-  let resolveProjectSpy: ReturnType<typeof spyOn>;
+  let mockCallTool: ReturnType<typeof vi.fn>;
+  let getBasicMemoryClientSpy: ReturnType<typeof vi.spyOn>;
+  let triggerEmbeddingSpy: ReturnType<typeof vi.spyOn>;
+  let resolveProjectSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(async () => {
     // Create temp directory with test file
@@ -46,7 +46,7 @@ Some detailed content here.
     await fs.writeFile(path.join(tempDir, "test-note.md"), testContent);
 
     // Setup mock callTool
-    mockCallTool = mock(() =>
+    mockCallTool = vi.fn(() =>
       Promise.resolve({
         content: [{ text: "Note written successfully" }],
         isError: false,
@@ -54,15 +54,15 @@ Some detailed content here.
     );
 
     // Spy on getBasicMemoryClient
-    getBasicMemoryClientSpy = spyOn(clientModule, "getBasicMemoryClient").mockResolvedValue({
+    getBasicMemoryClientSpy = vi.spyOn(clientModule, "getBasicMemoryClient").mockResolvedValue({
       callTool: mockCallTool,
     } as any);
 
     // Spy on triggerEmbedding
-    triggerEmbeddingSpy = spyOn(embeddingModule, "triggerEmbedding").mockImplementation(() => {});
+    triggerEmbeddingSpy = vi.spyOn(embeddingModule, "triggerEmbedding").mockImplementation(() => {});
 
     // Spy on resolveProject
-    resolveProjectSpy = spyOn(resolveModule, "resolveProject").mockReturnValue("test-project");
+    resolveProjectSpy = vi.spyOn(resolveModule, "resolveProject").mockReturnValue("test-project");
   });
 
   afterEach(async () => {

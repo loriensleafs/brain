@@ -10,8 +10,9 @@
     "dev:http": "BRAIN_TRANSPORT=http bun run --watch src/index.ts",
     "build": "bun build src/index.ts --outdir dist --target node",
     "typecheck": "tsc --noEmit",
-    "test": "bun test",
-    "test:coverage": "bun test --coverage --coverage-reporter=text",
+    "test": "bun run --bun vitest run",
+    "test:watch": "bun run --bun vitest",
+    "test:coverage": "bun run --bun vitest run --coverage",
     "clean": "rm -rf dist"
   },
   "dependencies": {

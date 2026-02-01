@@ -3,7 +3,7 @@
  * Tests empty input handling, truncation, retry logic, and Ollama integration.
  */
 
-import { describe, test, expect, mock, afterEach, beforeEach } from "bun:test";
+import { describe, test, expect, vi, afterEach, beforeEach } from "vitest";
 import { generateEmbedding, resetOllamaClient } from "../generateEmbedding";
 import { OllamaError } from "../../ollama/types";
 
@@ -12,7 +12,7 @@ describe("generateEmbedding", () => {
 
   // Helper to create mock fetch response
   const mockFetchSuccess = (embedding: number[]) => {
-    globalThis.fetch = mock(() =>
+    globalThis.fetch = vi.fn(() =>
       Promise.resolve({
         ok: true,
         status: 200,
@@ -73,7 +73,7 @@ describe("generateEmbedding", () => {
   describe("model selection", () => {
     test("passes nomic-embed-text model to OllamaClient", async () => {
       const mockEmbedding = [0.1, 0.2, 0.3];
-      const mockFetch = mock(() =>
+      const mockFetch = vi.fn(() =>
         Promise.resolve({
           ok: true,
           status: 200,
@@ -101,7 +101,7 @@ describe("generateEmbedding", () => {
     test("passes long text directly to Ollama without truncation", async () => {
       // Create text longer than typical chunk size
       const longText = "a".repeat(35000);
-      const mockFetch = mock(() =>
+      const mockFetch = vi.fn(() =>
         Promise.resolve({
           ok: true,
           status: 200,
@@ -123,7 +123,7 @@ describe("generateEmbedding", () => {
 
     test("passes short text directly to Ollama", async () => {
       const shortText = "a".repeat(1000);
-      const mockFetch = mock(() =>
+      const mockFetch = vi.fn(() =>
         Promise.resolve({
           ok: true,
           status: 200,
@@ -144,7 +144,7 @@ describe("generateEmbedding", () => {
 
     test("handles arbitrary length text", async () => {
       const exactText = "a".repeat(32000);
-      const mockFetch = mock(() =>
+      const mockFetch = vi.fn(() =>
         Promise.resolve({
           ok: true,
           status: 200,
@@ -167,7 +167,7 @@ describe("generateEmbedding", () => {
   describe("error propagation", () => {
     test("retries on 5xx errors and eventually throws after max retries", async () => {
       let callCount = 0;
-      globalThis.fetch = mock(() => {
+      globalThis.fetch = vi.fn(() => {
         callCount++;
         return Promise.resolve({
           ok: false,
@@ -183,7 +183,7 @@ describe("generateEmbedding", () => {
     test("succeeds after transient 5xx error", async () => {
       const mockEmbedding = [0.1, 0.2, 0.3];
       let callCount = 0;
-      globalThis.fetch = mock(() => {
+      globalThis.fetch = vi.fn(() => {
         callCount++;
         if (callCount < 2) {
           return Promise.resolve({
@@ -205,7 +205,7 @@ describe("generateEmbedding", () => {
 
     test("does not retry on 4xx client errors", async () => {
       let callCount = 0;
-      globalThis.fetch = mock(() => {
+      globalThis.fetch = vi.fn(() => {
         callCount++;
         return Promise.resolve({
           ok: false,
@@ -225,7 +225,7 @@ describe("generateEmbedding", () => {
 
     test("propagates network errors without retry", async () => {
       let callCount = 0;
-      globalThis.fetch = mock(() => {
+      globalThis.fetch = vi.fn(() => {
         callCount++;
         throw new Error("Network error");
       }) as unknown as typeof fetch;
@@ -244,7 +244,7 @@ describe("generateEmbedding", () => {
       await generateEmbedding("test2");
 
       // Both calls should use the same URL pattern (same client)
-      const mockFn = globalThis.fetch as unknown as ReturnType<typeof mock>;
+      const mockFn = globalThis.fetch as unknown as ReturnType<typeof vi.fn>;
       expect(mockFn).toHaveBeenCalledTimes(2);
     });
   });

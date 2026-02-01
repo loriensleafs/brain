@@ -7,7 +7,7 @@
  * - Error handling when Inngest is unavailable
  */
 
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
+import { describe, test, expect, beforeEach, afterEach } from "vitest";
 
 // Store original fetch
 const originalFetch = globalThis.fetch;

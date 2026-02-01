@@ -19,7 +19,8 @@
     "build": "bun run generate:types && bun build src/index.ts --outdir dist --target node && tsc --emitDeclarationOnly",
     "build:go": "go build -o dist/ ./...",
     "typecheck": "tsc --noEmit",
-    "test": "bun test",
+    "test": "bun run --bun vitest run",
+    "test:watch": "bun run --bun vitest",
     "test:go": "go test -v ./...",
     "clean": "rm -rf dist generated"
   },
@@ -30,6 +31,7 @@
   "devDependencies": {
     "json-schema-to-typescript": "^15.0.3",
     "@types/bun": "latest",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "vitest": "^4.0.18"
   }
 }

@@ -2,7 +2,7 @@
  * Tests for agent step functions error handling.
  */
 
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect } from "vitest";
 import { NonRetriableError } from "inngest";
 import { runQaAgent } from "../agents/qa";
 import { runAnalystAgent } from "../agents/analyst";

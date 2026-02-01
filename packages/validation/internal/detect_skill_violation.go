@@ -2,11 +2,16 @@ package internal
 
 import (
 	"bufio"
+	"encoding/json"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
+
+	"github.com/santhosh-tekuri/jsonschema/v6"
 )
 
 // SkillViolation represents a detected violation of skill usage policy.
@@ -14,7 +19,7 @@ type SkillViolation struct {
 	File    string `json:"file"`
 	Line    int    `json:"line"`
 	Pattern string `json:"pattern"`
-	Command string `json:"command"`
+	Command string `json:"command,omitempty"`
 }
 
 // SkillViolationResult represents the result of skill violation detection.
@@ -24,6 +29,100 @@ type SkillViolationResult struct {
 	FilesChecked   int              `json:"filesChecked"`
 	Violations     []SkillViolation `json:"violations,omitempty"`
 	CapabilityGaps []string         `json:"capabilityGaps,omitempty"`
+}
+
+var (
+	skillViolationSchemaOnce     sync.Once
+	skillViolationSchemaCompiled *jsonschema.Schema
+	skillViolationSchemaErr      error
+	skillViolationSchemaData     []byte
+)
+
+// SetSkillViolationSchemaData sets the schema data for skill violation result validation.
+func SetSkillViolationSchemaData(data []byte) {
+	skillViolationSchemaData = data
+}
+
+// getSkillViolationSchema returns the compiled skill violation schema.
+func getSkillViolationSchema() (*jsonschema.Schema, error) {
+	skillViolationSchemaOnce.Do(func() {
+		if skillViolationSchemaData == nil {
+			skillViolationSchemaErr = fmt.Errorf("skill violation schema data not set; call SetSkillViolationSchemaData first")
+			return
+		}
+
+		var schemaDoc any
+		if err := json.Unmarshal(skillViolationSchemaData, &schemaDoc); err != nil {
+			skillViolationSchemaErr = fmt.Errorf("failed to parse skill violation schema: %w", err)
+			return
+		}
+
+		c := jsonschema.NewCompiler()
+		if err := c.AddResource("skill-violation.schema.json", schemaDoc); err != nil {
+			skillViolationSchemaErr = fmt.Errorf("failed to add skill violation schema resource: %w", err)
+			return
+		}
+
+		skillViolationSchemaCompiled, skillViolationSchemaErr = c.Compile("skill-violation.schema.json")
+	})
+	return skillViolationSchemaCompiled, skillViolationSchemaErr
+}
+
+// ValidateSkillViolationResult validates a SkillViolationResult against the JSON Schema.
+func ValidateSkillViolationResult(result SkillViolationResult) bool {
+	schema, err := getSkillViolationSchema()
+	if err != nil {
+		return false
+	}
+
+	data, err := json.Marshal(result)
+	if err != nil {
+		return false
+	}
+
+	var resultMap any
+	if err := json.Unmarshal(data, &resultMap); err != nil {
+		return false
+	}
+
+	return schema.Validate(resultMap) == nil
+}
+
+// GetSkillViolationResultErrors returns validation errors for a SkillViolationResult.
+func GetSkillViolationResultErrors(result SkillViolationResult) []ValidationError {
+	schema, err := getSkillViolationSchema()
+	if err != nil {
+		return []ValidationError{{
+			Field:      "",
+			Constraint: "schema",
+			Message:    err.Error(),
+		}}
+	}
+
+	data, err := json.Marshal(result)
+	if err != nil {
+		return []ValidationError{{
+			Field:      "",
+			Constraint: "marshal",
+			Message:    err.Error(),
+		}}
+	}
+
+	var resultMap any
+	if err := json.Unmarshal(data, &resultMap); err != nil {
+		return []ValidationError{{
+			Field:      "",
+			Constraint: "unmarshal",
+			Message:    err.Error(),
+		}}
+	}
+
+	err = schema.Validate(resultMap)
+	if err == nil {
+		return []ValidationError{}
+	}
+
+	return ExtractValidationErrors(err)
 }
 
 // GhCommandPatterns defines regex patterns for detecting raw gh CLI usage.

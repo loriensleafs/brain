@@ -2,7 +2,7 @@
  * Tests for Inngest error handling utilities.
  */
 
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect } from "vitest";
 import { NonRetriableError } from "inngest";
 import {
   createNonRetriableError,

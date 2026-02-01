@@ -10,7 +10,7 @@
  * - recoverIncompleteMigrations(): Startup recovery
  */
 
-import { describe, test, expect, beforeEach, mock } from "bun:test";
+import { describe, test, expect, beforeEach, vi } from "vitest";
 import * as path from "path";
 
 // Track mock checksum value
@@ -18,25 +18,25 @@ let mockChecksumValue = "abc123def456";
 
 // Mock filesystem
 const mockFs = {
-  existsSync: mock(() => false) as ReturnType<typeof mock<(p: string) => boolean>>,
-  mkdirSync: mock(() => undefined) as ReturnType<
+  existsSync: vi.fn(() => false) as ReturnType<typeof mock<(p: string) => boolean>>,
+  mkdirSync: vi.fn(() => undefined) as ReturnType<
     typeof mock<(p: string, opts: unknown) => void>
   >,
-  writeFileSync: mock(() => undefined) as ReturnType<
+  writeFileSync: vi.fn(() => undefined) as ReturnType<
     typeof mock<(p: string, content: string, opts: unknown) => void>
   >,
-  readFileSync: mock(() => Buffer.from("test content")) as ReturnType<
+  readFileSync: vi.fn(() => Buffer.from("test content")) as ReturnType<
     typeof mock<(p: string | Buffer, encoding?: string) => string | Buffer>
   >,
-  renameSync: mock(() => undefined) as ReturnType<
+  renameSync: vi.fn(() => undefined) as ReturnType<
     typeof mock<(from: string, to: string) => void>
   >,
-  unlinkSync: mock(() => undefined) as ReturnType<typeof mock<(p: string) => void>>,
-  rmdirSync: mock(() => undefined) as ReturnType<typeof mock<(p: string) => void>>,
-  readdirSync: mock(() => [] as string[]) as ReturnType<
+  unlinkSync: vi.fn(() => undefined) as ReturnType<typeof mock<(p: string) => void>>,
+  rmdirSync: vi.fn(() => undefined) as ReturnType<typeof mock<(p: string) => void>>,
+  readdirSync: vi.fn(() => [] as string[]) as ReturnType<
     typeof mock<(p: string) => string[]>
   >,
-  createReadStream: mock(() => {
+  createReadStream: vi.fn(() => {
     // Create a simple event emitter-like object for streams
     const handlers: Record<string, ((...args: unknown[]) => void)[]> = {};
     const stream = {
@@ -59,7 +59,7 @@ const mockFs = {
   }),
 };
 
-mock.module("fs", () => mockFs);
+vi.mock("fs", () => mockFs);
 
 // Mock crypto with controllable checksum
 const mockCrypto = {
@@ -72,17 +72,17 @@ const mockCrypto = {
   randomBytes: () => Buffer.from("12345678", "hex"),
 };
 
-mock.module("crypto", () => mockCrypto);
+vi.mock("crypto", () => mockCrypto);
 
 // Mock logger
 const mockLogger = {
-  debug: mock(() => undefined),
-  info: mock(() => undefined),
-  warn: mock(() => undefined),
-  error: mock(() => undefined),
+  debug: vi.fn(() => undefined),
+  info: vi.fn(() => undefined),
+  warn: vi.fn(() => undefined),
+  error: vi.fn(() => undefined),
 };
 
-mock.module("../../utils/internal/logger", () => ({
+vi.mock("../../utils/internal/logger", () => ({
   logger: mockLogger,
 }));
 

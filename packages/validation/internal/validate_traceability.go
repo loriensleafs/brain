@@ -2,10 +2,14 @@ package internal
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
+
+	"github.com/santhosh-tekuri/jsonschema/v6"
 )
 
 // TraceabilityValidationResult extends ValidationResult with traceability-specific fields.
@@ -41,8 +45,114 @@ type SpecFrontmatter struct {
 	Type     string   `json:"type"`
 	ID       string   `json:"id"`
 	Status   string   `json:"status"`
-	Related  []string `json:"related"`
-	FilePath string   `json:"filePath"`
+	Related  []string `json:"related,omitempty"`
+	FilePath string   `json:"filePath,omitempty"`
+}
+
+var (
+	specFrontmatterSchemaOnce     sync.Once
+	specFrontmatterSchemaCompiled *jsonschema.Schema
+	specFrontmatterSchemaErr      error
+	specFrontmatterSchemaData     []byte
+)
+
+// SetSpecFrontmatterSchemaData sets the schema data for spec frontmatter validation.
+func SetSpecFrontmatterSchemaData(data []byte) {
+	specFrontmatterSchemaData = data
+}
+
+// getSpecFrontmatterSchema returns the compiled spec frontmatter schema.
+func getSpecFrontmatterSchema() (*jsonschema.Schema, error) {
+	specFrontmatterSchemaOnce.Do(func() {
+		if specFrontmatterSchemaData == nil {
+			specFrontmatterSchemaErr = fmt.Errorf("spec frontmatter schema data not set; call SetSpecFrontmatterSchemaData first")
+			return
+		}
+
+		var schemaDoc any
+		if err := json.Unmarshal(specFrontmatterSchemaData, &schemaDoc); err != nil {
+			specFrontmatterSchemaErr = fmt.Errorf("failed to parse spec frontmatter schema: %w", err)
+			return
+		}
+
+		c := jsonschema.NewCompiler()
+		if err := c.AddResource("spec-frontmatter.schema.json", schemaDoc); err != nil {
+			specFrontmatterSchemaErr = fmt.Errorf("failed to add spec frontmatter schema resource: %w", err)
+			return
+		}
+
+		specFrontmatterSchemaCompiled, specFrontmatterSchemaErr = c.Compile("spec-frontmatter.schema.json")
+	})
+	return specFrontmatterSchemaCompiled, specFrontmatterSchemaErr
+}
+
+// ValidateSpecFrontmatter validates a SpecFrontmatter against the JSON Schema.
+func ValidateSpecFrontmatter(spec *SpecFrontmatter) bool {
+	if spec == nil {
+		return false
+	}
+
+	schema, err := getSpecFrontmatterSchema()
+	if err != nil {
+		return false
+	}
+
+	data, err := json.Marshal(spec)
+	if err != nil {
+		return false
+	}
+
+	var specMap any
+	if err := json.Unmarshal(data, &specMap); err != nil {
+		return false
+	}
+
+	return schema.Validate(specMap) == nil
+}
+
+// GetSpecFrontmatterErrors returns validation errors for a SpecFrontmatter.
+func GetSpecFrontmatterErrors(spec *SpecFrontmatter) []ValidationError {
+	if spec == nil {
+		return []ValidationError{{
+			Field:      "",
+			Constraint: "required",
+			Message:    "spec cannot be nil",
+		}}
+	}
+
+	schema, err := getSpecFrontmatterSchema()
+	if err != nil {
+		return []ValidationError{{
+			Field:      "",
+			Constraint: "schema",
+			Message:    err.Error(),
+		}}
+	}
+
+	data, err := json.Marshal(spec)
+	if err != nil {
+		return []ValidationError{{
+			Field:      "",
+			Constraint: "marshal",
+			Message:    err.Error(),
+		}}
+	}
+
+	var specMap any
+	if err := json.Unmarshal(data, &specMap); err != nil {
+		return []ValidationError{{
+			Field:      "",
+			Constraint: "unmarshal",
+			Message:    err.Error(),
+		}}
+	}
+
+	err = schema.Validate(specMap)
+	if err == nil {
+		return []ValidationError{}
+	}
+
+	return ExtractValidationErrors(err)
 }
 
 // SpecCollection holds all loaded specifications organized by type.

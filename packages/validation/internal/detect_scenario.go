@@ -1,15 +1,206 @@
 package internal
 
 import (
+	"encoding/json"
+	"fmt"
 	"strings"
+	"sync"
+
+	"github.com/santhosh-tekuri/jsonschema/v6"
 )
 
 // ScenarioConfig holds configuration for a scenario
 type ScenarioConfig struct {
-	Keywords    []string
-	Recommended string
-	Directory   string
-	NoteType    string
+	Keywords    []string `json:"keywords"`
+	Recommended string   `json:"recommended"`
+	Directory   string   `json:"directory"`
+	NoteType    string   `json:"noteType"`
+}
+
+var (
+	scenarioConfigSchemaOnce     sync.Once
+	scenarioConfigSchemaCompiled *jsonschema.Schema
+	scenarioConfigSchemaErr      error
+	scenarioConfigSchemaData     []byte
+
+	scenarioResultSchemaOnce     sync.Once
+	scenarioResultSchemaCompiled *jsonschema.Schema
+	scenarioResultSchemaErr      error
+	scenarioResultSchemaData     []byte
+)
+
+// SetScenarioConfigSchemaData sets the schema data for scenario config validation.
+func SetScenarioConfigSchemaData(data []byte) {
+	scenarioConfigSchemaData = data
+}
+
+// SetScenarioResultSchemaData sets the schema data for scenario result validation.
+func SetScenarioResultSchemaData(data []byte) {
+	scenarioResultSchemaData = data
+}
+
+// getScenarioConfigSchema returns the compiled scenario config schema.
+func getScenarioConfigSchema() (*jsonschema.Schema, error) {
+	scenarioConfigSchemaOnce.Do(func() {
+		if scenarioConfigSchemaData == nil {
+			scenarioConfigSchemaErr = fmt.Errorf("scenario config schema data not set; call SetScenarioConfigSchemaData first")
+			return
+		}
+
+		var schemaDoc any
+		if err := json.Unmarshal(scenarioConfigSchemaData, &schemaDoc); err != nil {
+			scenarioConfigSchemaErr = fmt.Errorf("failed to parse scenario config schema: %w", err)
+			return
+		}
+
+		c := jsonschema.NewCompiler()
+		if err := c.AddResource("scenario-config.schema.json", schemaDoc); err != nil {
+			scenarioConfigSchemaErr = fmt.Errorf("failed to add scenario config schema resource: %w", err)
+			return
+		}
+
+		scenarioConfigSchemaCompiled, scenarioConfigSchemaErr = c.Compile("scenario-config.schema.json")
+	})
+	return scenarioConfigSchemaCompiled, scenarioConfigSchemaErr
+}
+
+// getScenarioResultSchema returns the compiled scenario result schema.
+func getScenarioResultSchema() (*jsonschema.Schema, error) {
+	scenarioResultSchemaOnce.Do(func() {
+		if scenarioResultSchemaData == nil {
+			scenarioResultSchemaErr = fmt.Errorf("scenario result schema data not set; call SetScenarioResultSchemaData first")
+			return
+		}
+
+		var schemaDoc any
+		if err := json.Unmarshal(scenarioResultSchemaData, &schemaDoc); err != nil {
+			scenarioResultSchemaErr = fmt.Errorf("failed to parse scenario result schema: %w", err)
+			return
+		}
+
+		c := jsonschema.NewCompiler()
+		if err := c.AddResource("scenario-result.schema.json", schemaDoc); err != nil {
+			scenarioResultSchemaErr = fmt.Errorf("failed to add scenario result schema resource: %w", err)
+			return
+		}
+
+		scenarioResultSchemaCompiled, scenarioResultSchemaErr = c.Compile("scenario-result.schema.json")
+	})
+	return scenarioResultSchemaCompiled, scenarioResultSchemaErr
+}
+
+// ValidateScenarioConfig validates a ScenarioConfig against the JSON Schema.
+func ValidateScenarioConfig(config ScenarioConfig) bool {
+	schema, err := getScenarioConfigSchema()
+	if err != nil {
+		return false
+	}
+
+	data, err := json.Marshal(config)
+	if err != nil {
+		return false
+	}
+
+	var configMap any
+	if err := json.Unmarshal(data, &configMap); err != nil {
+		return false
+	}
+
+	return schema.Validate(configMap) == nil
+}
+
+// GetScenarioConfigErrors returns validation errors for a ScenarioConfig.
+func GetScenarioConfigErrors(config ScenarioConfig) []ValidationError {
+	schema, err := getScenarioConfigSchema()
+	if err != nil {
+		return []ValidationError{{
+			Field:      "",
+			Constraint: "schema",
+			Message:    err.Error(),
+		}}
+	}
+
+	data, err := json.Marshal(config)
+	if err != nil {
+		return []ValidationError{{
+			Field:      "",
+			Constraint: "marshal",
+			Message:    err.Error(),
+		}}
+	}
+
+	var configMap any
+	if err := json.Unmarshal(data, &configMap); err != nil {
+		return []ValidationError{{
+			Field:      "",
+			Constraint: "unmarshal",
+			Message:    err.Error(),
+		}}
+	}
+
+	err = schema.Validate(configMap)
+	if err == nil {
+		return []ValidationError{}
+	}
+
+	return ExtractValidationErrors(err)
+}
+
+// ValidateScenarioResult validates a ScenarioResult against the JSON Schema.
+func ValidateScenarioResult(result ScenarioResult) bool {
+	schema, err := getScenarioResultSchema()
+	if err != nil {
+		return false
+	}
+
+	data, err := json.Marshal(result)
+	if err != nil {
+		return false
+	}
+
+	var resultMap any
+	if err := json.Unmarshal(data, &resultMap); err != nil {
+		return false
+	}
+
+	return schema.Validate(resultMap) == nil
+}
+
+// GetScenarioResultErrors returns validation errors for a ScenarioResult.
+func GetScenarioResultErrors(result ScenarioResult) []ValidationError {
+	schema, err := getScenarioResultSchema()
+	if err != nil {
+		return []ValidationError{{
+			Field:      "",
+			Constraint: "schema",
+			Message:    err.Error(),
+		}}
+	}
+
+	data, err := json.Marshal(result)
+	if err != nil {
+		return []ValidationError{{
+			Field:      "",
+			Constraint: "marshal",
+			Message:    err.Error(),
+		}}
+	}
+
+	var resultMap any
+	if err := json.Unmarshal(data, &resultMap); err != nil {
+		return []ValidationError{{
+			Field:      "",
+			Constraint: "unmarshal",
+			Message:    err.Error(),
+		}}
+	}
+
+	err = schema.Validate(resultMap)
+	if err == nil {
+		return []ValidationError{}
+	}
+
+	return ExtractValidationErrors(err)
 }
 
 // scenarioConfigs maps scenario names to their configurations

@@ -9,7 +9,7 @@
  * - FIFO eviction when >10 snapshots
  */
 
-import { describe, test, expect, beforeEach, mock } from "bun:test";
+import { describe, test, expect, beforeEach, vi } from "vitest";
 import * as os from "os";
 import * as path from "path";
 import type { BrainConfig } from "../schema";
@@ -17,34 +17,34 @@ import { DEFAULT_BRAIN_CONFIG } from "../schema";
 
 // Mock filesystem
 const mockFs = {
-  existsSync: mock(() => false) as ReturnType<typeof mock<(p: string) => boolean>>,
-  readFileSync: mock(() => "") as ReturnType<typeof mock<(p: string, enc: string) => string>>,
-  writeFileSync: mock(() => undefined) as ReturnType<
+  existsSync: vi.fn(() => false) as ReturnType<typeof mock<(p: string) => boolean>>,
+  readFileSync: vi.fn(() => "") as ReturnType<typeof mock<(p: string, enc: string) => string>>,
+  writeFileSync: vi.fn(() => undefined) as ReturnType<
     typeof mock<(p: string, content: string, opts: unknown) => void>
   >,
-  mkdirSync: mock(() => undefined) as ReturnType<
+  mkdirSync: vi.fn(() => undefined) as ReturnType<
     typeof mock<(p: string, opts: unknown) => void>
   >,
-  unlinkSync: mock(() => undefined) as ReturnType<typeof mock<(p: string) => void>>,
+  unlinkSync: vi.fn(() => undefined) as ReturnType<typeof mock<(p: string) => void>>,
 };
 
-mock.module("fs", () => mockFs);
+vi.mock("fs", () => mockFs);
 
 // Mock brain-config module
 const mockBrainConfig = {
-  getBrainConfigDir: mock(() => path.join(os.homedir(), ".config", "brain")),
-  loadBrainConfig: mock(async () => ({ ...DEFAULT_BRAIN_CONFIG })),
-  saveBrainConfig: mock(async () => undefined),
+  getBrainConfigDir: vi.fn(() => path.join(os.homedir(), ".config", "brain")),
+  loadBrainConfig: vi.fn(async () => ({ ...DEFAULT_BRAIN_CONFIG })),
+  saveBrainConfig: vi.fn(async () => undefined),
 };
 
-mock.module("../brain-config", () => mockBrainConfig);
+vi.mock("../brain-config", () => mockBrainConfig);
 
 // Mock translation-layer module
 const mockTranslationLayer = {
-  syncConfigToBasicMemory: mock(async () => undefined),
+  syncConfigToBasicMemory: vi.fn(async () => undefined),
 };
 
-mock.module("../translation-layer", () => mockTranslationLayer);
+vi.mock("../translation-layer", () => mockTranslationLayer);
 
 import { ConfigRollbackManager, type RollbackSnapshot } from "../rollback";
 

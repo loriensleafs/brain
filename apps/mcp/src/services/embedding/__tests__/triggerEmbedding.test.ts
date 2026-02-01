@@ -3,7 +3,7 @@
  * Tests fire-and-forget behavior, success storage, and error handling.
  */
 
-import { describe, test, expect, mock, afterEach, beforeEach, spyOn } from "bun:test";
+import { describe, test, expect, vi, afterEach, beforeEach } from "vitest";
 import { triggerEmbedding } from "../triggerEmbedding";
 import * as vectorsModule from "../../../db/vectors";
 import * as connectionModule from "../../../db/connection";
@@ -12,29 +12,29 @@ import { logger } from "../../../utils/internal/logger";
 
 describe("triggerEmbedding", () => {
   const originalFetch = globalThis.fetch;
-  let mockDb: { close: ReturnType<typeof mock> };
-  let storeChunkedEmbeddingsSpy: ReturnType<typeof spyOn>;
-  let createVectorConnectionSpy: ReturnType<typeof spyOn>;
-  let ensureEmbeddingTablesSpy: ReturnType<typeof spyOn>;
-  let loggerDebugSpy: ReturnType<typeof spyOn>;
-  let loggerWarnSpy: ReturnType<typeof spyOn>;
+  let mockDb: { close: ReturnType<typeof vi.fn> };
+  let storeChunkedEmbeddingsSpy: ReturnType<typeof vi.spyOn>;
+  let createVectorConnectionSpy: ReturnType<typeof vi.spyOn>;
+  let ensureEmbeddingTablesSpy: ReturnType<typeof vi.spyOn>;
+  let loggerDebugSpy: ReturnType<typeof vi.spyOn>;
+  let loggerWarnSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     // Create mock database
-    mockDb = { close: mock(() => {}) };
+    mockDb = { close: vi.fn(() => {}) };
 
     // Spy on storeChunkedEmbeddings
-    storeChunkedEmbeddingsSpy = spyOn(vectorsModule, "storeChunkedEmbeddings").mockReturnValue(1);
+    storeChunkedEmbeddingsSpy = vi.spyOn(vectorsModule, "storeChunkedEmbeddings").mockReturnValue(1);
 
     // Spy on createVectorConnection
-    createVectorConnectionSpy = spyOn(connectionModule, "createVectorConnection").mockReturnValue(mockDb as any);
+    createVectorConnectionSpy = vi.spyOn(connectionModule, "createVectorConnection").mockReturnValue(mockDb as any);
 
     // Spy on ensureEmbeddingTables
-    ensureEmbeddingTablesSpy = spyOn(schemaModule, "ensureEmbeddingTables").mockImplementation(() => {});
+    ensureEmbeddingTablesSpy = vi.spyOn(schemaModule, "ensureEmbeddingTables").mockImplementation(() => {});
 
     // Spy on logger methods
-    loggerDebugSpy = spyOn(logger, "debug").mockImplementation(() => {});
-    loggerWarnSpy = spyOn(logger, "warn").mockImplementation(() => {});
+    loggerDebugSpy = vi.spyOn(logger, "debug").mockImplementation(() => {});
+    loggerWarnSpy = vi.spyOn(logger, "warn").mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -48,7 +48,7 @@ describe("triggerEmbedding", () => {
 
   // Helper to create mock fetch response
   const mockFetchSuccess = (embedding: number[]) => {
-    globalThis.fetch = mock(() =>
+    globalThis.fetch = vi.fn(() =>
       Promise.resolve({
         ok: true,
         status: 200,
@@ -106,7 +106,7 @@ describe("triggerEmbedding", () => {
 
   describe("fire-and-forget behavior", () => {
     test("does not throw on failure", () => {
-      globalThis.fetch = mock(() =>
+      globalThis.fetch = vi.fn(() =>
         Promise.reject(new Error("Network error"))
       ) as unknown as typeof fetch;
 
@@ -115,7 +115,7 @@ describe("triggerEmbedding", () => {
     });
 
     test("logs warning on failure", async () => {
-      globalThis.fetch = mock(() =>
+      globalThis.fetch = vi.fn(() =>
         Promise.reject(new Error("Connection refused"))
       ) as unknown as typeof fetch;
 
@@ -128,7 +128,7 @@ describe("triggerEmbedding", () => {
     });
 
     test("does not call storeChunkedEmbeddings when generateEmbedding fails", async () => {
-      globalThis.fetch = mock(() =>
+      globalThis.fetch = vi.fn(() =>
         Promise.reject(new Error("API error"))
       ) as unknown as typeof fetch;
 

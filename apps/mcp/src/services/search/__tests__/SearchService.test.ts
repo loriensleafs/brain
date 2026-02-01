@@ -10,7 +10,7 @@
  * @see ADR-001: Search Service Abstraction
  */
 
-import { describe, test, expect, mock, beforeEach, afterEach } from "bun:test";
+import { describe, test, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   SearchService,
   getSearchService,
@@ -19,7 +19,7 @@ import {
 import type { SearchOptions } from "../types";
 
 // Mock modules
-const mockCallTool = mock(() =>
+const mockCallTool = vi.fn(() =>
   Promise.resolve({
     content: [
       {
@@ -48,11 +48,11 @@ const mockCallTool = mock(() =>
   })
 );
 
-const mockGenerateEmbedding = mock(() =>
+const mockGenerateEmbedding = vi.fn(() =>
   Promise.resolve(Array.from({ length: 768 }, () => 0.5))
 );
 
-const mockDbQuery = mock(() => ({
+const mockDbQuery = vi.fn(() => ({
   all: () => [
     { entity_id: "notes/semantic-result", distance: 0.1 },
     { entity_id: "features/semantic-feature", distance: 0.2 },
@@ -62,28 +62,28 @@ const mockDbQuery = mock(() => ({
 
 const mockDb = {
   query: mockDbQuery,
-  close: mock(() => {}),
+  close: vi.fn(() => {}),
 };
 
 // Mock the dependencies
-mock.module("../../../proxy/client", () => ({
-  getBasicMemoryClient: mock(() =>
+vi.mock("../../../proxy/client", () => ({
+  getBasicMemoryClient: vi.fn(() =>
     Promise.resolve({
       callTool: mockCallTool,
     })
   ),
 }));
 
-mock.module("../../../db", () => ({
-  createVectorConnection: mock(() => mockDb),
+vi.mock("../../../db", () => ({
+  createVectorConnection: vi.fn(() => mockDb),
 }));
 
-mock.module("../../embedding/generateEmbedding", () => ({
+vi.mock("../../embedding/generateEmbedding", () => ({
   generateEmbedding: mockGenerateEmbedding,
 }));
 
-mock.module("../../../project/resolve", () => ({
-  resolveProject: mock(() => "test-project"),
+vi.mock("../../../project/resolve", () => ({
+  resolveProject: vi.fn(() => "test-project"),
 }));
 
 describe("SearchService", () => {

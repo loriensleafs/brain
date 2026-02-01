@@ -7,7 +7,7 @@
  * To regenerate: bun run generate:types
  * Source schemas: packages/validation/schemas/*.schema.json
  *
- * Generated: 2026-02-01T13:52:22.998Z
+ * Generated: 2026-02-01T14:22:23.845Z
  */
 
 // Source: schemas/config/brain-config.schema.json
@@ -111,6 +111,247 @@ export interface InngestConfig {
   dev: true;
 }
 
+// Source: schemas/domain/memory-index-entry.schema.json
+/**
+ * Schema for memory index entry validation. Validates entries in domain index files (skills-*-index.md).
+ */
+export interface MemoryIndexEntry {
+  /**
+   * Keywords for this entry (space-separated in table, parsed to array)
+   *
+   * @minItems 1
+   */
+  keywords: [string, ...string[]];
+  /**
+   * File name without .md extension
+   */
+  fileName: string;
+  /**
+   * Original space-separated keywords string
+   */
+  rawKeywords?: string;
+}
+
+// Source: schemas/domain/naming-pattern.schema.json
+/**
+ * Schema for artifact naming convention validation. Defines expected patterns for various artifact types.
+ */
+export interface NamingPatternValidation {
+  /**
+   * File name to validate
+   */
+  fileName: string;
+  /**
+   * Expected pattern type for validation
+   */
+  patternType?:
+    | "epic"
+    | "adr"
+    | "prd"
+    | "tasks"
+    | "plan"
+    | "tm"
+    | "req"
+    | "design"
+    | "task"
+    | "skill"
+    | "retro"
+    | "session";
+}
+
+// Source: schemas/domain/scenario-config.schema.json
+/**
+ * Schema for scenario detection configuration. Validates scenario type configurations used by detect-scenario.
+ */
+export interface ScenarioConfig {
+  /**
+   * Keywords that trigger this scenario
+   *
+   * @minItems 1
+   */
+  keywords: [string, ...string[]];
+  /**
+   * Recommended action message
+   */
+  recommended: string;
+  /**
+   * Target directory for notes
+   */
+  directory: string;
+  /**
+   * Type of note to create
+   */
+  noteType: string;
+}
+
+// Source: schemas/domain/scenario-result.schema.json
+/**
+ * Schema for scenario detection result. Validates the output of detect-scenario operations.
+ */
+export interface ScenarioResult {
+  /**
+   * Whether a scenario was detected
+   */
+  detected: boolean;
+  /**
+   * The detected scenario type
+   */
+  scenario?: "BUG" | "FEATURE" | "SPEC" | "ANALYSIS" | "RESEARCH" | "DECISION" | "TESTING" | "";
+  /**
+   * Keywords that matched
+   */
+  keywords?: string[];
+  /**
+   * Recommended action
+   */
+  recommended?: string;
+  /**
+   * Target directory
+   */
+  directory?: string;
+  /**
+   * Note type to create
+   */
+  noteType?: string;
+}
+
+// Source: schemas/domain/skill-frontmatter.schema.json
+/**
+ * Schema for skill file frontmatter validation. Validates the YAML frontmatter in .md skill files.
+ */
+export interface SkillFrontmatter {
+  /**
+   * Skill name: lowercase letters, numbers, and hyphens, 1-64 characters
+   */
+  name: string;
+  /**
+   * Skill description, max 1024 characters
+   */
+  description: string;
+  [k: string]: unknown | undefined;
+}
+
+// Source: schemas/domain/skill-violation.schema.json
+/**
+ * Schema for skill violation detection result. Validates the output of detect-skill-violation operations.
+ */
+export interface SkillViolationResult {
+  /**
+   * Whether validation passed (violations are warnings, not failures)
+   */
+  valid: boolean;
+  /**
+   * Individual check results
+   */
+  checks?: {
+    name: string;
+    passed: boolean;
+    message: string;
+  }[];
+  /**
+   * Overall result message
+   */
+  message?: string;
+  /**
+   * Remediation guidance
+   */
+  remediation?: string;
+  /**
+   * Path to skills directory
+   */
+  skillsDir?: string;
+  /**
+   * Number of files checked
+   */
+  filesChecked: number;
+  /**
+   * List of detected violations
+   */
+  violations?: SkillViolation[];
+  /**
+   * Missing skill capabilities detected
+   */
+  capabilityGaps?: string[];
+}
+export interface SkillViolation {
+  /**
+   * File path where violation was detected
+   */
+  file: string;
+  /**
+   * Line number of violation
+   */
+  line: number;
+  /**
+   * Regex pattern that matched
+   */
+  pattern: string;
+  /**
+   * Extracted gh subcommand
+   */
+  command?: string;
+}
+
+// Source: schemas/domain/slash-command-frontmatter.schema.json
+/**
+ * Schema for slash command file frontmatter validation. Validates the YAML frontmatter in .md command files.
+ */
+export interface SlashCommandFrontmatter {
+  /**
+   * Command description, should start with action verb or 'Use when...'
+   */
+  description: string;
+  /**
+   * Hint for expected arguments (e.g., '<file-path>')
+   */
+  "argument-hint"?: string;
+  /**
+   * List of allowed tools for bash execution
+   */
+  "allowed-tools"?: string[];
+  [k: string]: unknown | undefined;
+}
+
+// Source: schemas/domain/spec-frontmatter.schema.json
+/**
+ * Schema for specification file YAML frontmatter. Validates REQ, DESIGN, and TASK spec frontmatter.
+ */
+export type SpecFrontmatter = {
+  [k: string]: unknown | undefined;
+} & {
+  /**
+   * Specification type
+   */
+  type: "requirement" | "design" | "task";
+  /**
+   * Specification ID (e.g., REQ-001, DESIGN-ABC, TASK-001)
+   */
+  id: string;
+  /**
+   * Current status of the specification
+   */
+  status:
+    | "draft"
+    | "review"
+    | "approved"
+    | "pending"
+    | "in-progress"
+    | "complete"
+    | "done"
+    | "implemented"
+    | "rejected"
+    | "deferred";
+  /**
+   * Related specification IDs for traceability
+   */
+  related?: string[];
+  /**
+   * File path (runtime metadata, not from YAML)
+   */
+  filePath?: string;
+  [k: string]: unknown | undefined;
+};
+
 // Source: schemas/domain/workflow.schema.json
 /**
  * Schema for workflow state validation. Validates mode values and conditional task requirements.
@@ -135,6 +376,124 @@ export type WorkflowState = {
    */
   updatedAt?: string;
 };
+
+// Source: schemas/pr/pr-description-config.schema.json
+/**
+ * Configuration for PR description validation. Defines the PR body text, files in the PR, and patterns for significant files that should be mentioned.
+ */
+export interface PRDescriptionConfig {
+  /**
+   * The PR body/description text
+   */
+  description: string;
+  /**
+   * List of files changed in the PR
+   */
+  filesInPR?: string[];
+  /**
+   * File extensions considered significant for warning when not mentioned
+   */
+  significantExtensions?: string[];
+  /**
+   * Path prefixes for files that should be mentioned in PR description
+   */
+  significantPaths?: string[];
+  /**
+   * Required sections in PR description (matched as ## or ### headers)
+   */
+  requiredSections?: string[];
+  /**
+   * Whether to validate that checklist items are completed
+   */
+  validateChecklist?: boolean;
+}
+
+// Source: schemas/pr/pre-pr-config.schema.json
+/**
+ * Configuration for pre-PR validation. Defines paths and options for validating code quality before creating a pull request.
+ */
+export interface PrePRConfig {
+  /**
+   * Base path for the repository to validate
+   */
+  basePath: string;
+  /**
+   * Skip slow validations (CI environment checks)
+   */
+  quickMode?: boolean;
+  /**
+   * Skip test-implementation alignment validation
+   */
+  skipTests?: boolean;
+  /**
+   * Directories containing source code to validate
+   */
+  sourceDirs?: string[];
+  /**
+   * Directories containing test files
+   */
+  testDirs?: string[];
+  /**
+   * Configuration files to check for documentation
+   */
+  configFiles?: string[];
+  /**
+   * Environment variable files to parse for documented variables
+   */
+  envFiles?: string[];
+}
+
+// Source: schemas/session/session-protocol.schema.json
+/**
+ * Session log filename in YYYY-MM-DD-session-NN.md format
+ */
+export type SessionLogFilename = string;
+/**
+ * Required sections in a session log
+ */
+export type RequiredSections = ("Session Info" | "Protocol Compliance" | "Session Start" | "Session End")[];
+/**
+ * Patterns that indicate Brain MCP initialization
+ */
+export type BrainInitializationPatterns = string[];
+/**
+ * Patterns that indicate Brain note update
+ */
+export type BrainUpdatePatterns = string[];
+/**
+ * Patterns that indicate git branch documentation
+ */
+export type BranchPatterns = string[];
+/**
+ * Placeholder values that are NOT valid branch names
+ */
+export type BranchPlaceholders = string[];
+/**
+ * Patterns that indicate markdown lint execution
+ */
+export type LintEvidencePatterns = string[];
+/**
+ * Regex patterns for invalid memory evidence placeholders
+ */
+export type MemoryPlaceholderPatterns = string[];
+
+/**
+ * Schema for session protocol validation. Validates session log structure, checklist completion, and evidence requirements.
+ */
+export interface SessionProtocol {
+  /**
+   * Path to the session log file
+   */
+  sessionLogPath?: string;
+  filename?: SessionLogFilename;
+  requiredSections?: RequiredSections;
+  brainInitializationPatterns?: BrainInitializationPatterns;
+  brainUpdatePatterns?: BrainUpdatePatterns;
+  branchPatterns?: BranchPatterns;
+  branchPlaceholders?: BranchPlaceholders;
+  lintEvidencePatterns?: LintEvidencePatterns;
+  memoryPlaceholderPatterns?: MemoryPlaceholderPatterns;
+}
 
 // Source: schemas/session/session-state.schema.json
 /**
@@ -273,6 +632,71 @@ export interface CompactionEntry {
   notePath: string;
   compactedAt: string;
   count: number;
+}
+
+// Source: schemas/session/session-validation.schema.json
+/**
+ * Type of QA skip allowed for a session
+ */
+export type QASkipType = "" | "docs-only" | "investigation-only";
+
+/**
+ * Schema for session validation parameters. Validates session state, QA skip eligibility, and memory evidence.
+ */
+export interface SessionValidation {
+  workflowState?: WorkflowState;
+  qaSkipType?: QASkipType;
+  /**
+   * List of changed files for QA skip eligibility check
+   */
+  changedFiles?: string[];
+  /**
+   * Checklist rows to validate
+   */
+  checklistRows?: ChecklistRow[];
+}
+/**
+ * Simplified workflow state for basic validation
+ */
+export interface WorkflowState {
+  /**
+   * Current workflow mode
+   */
+  mode?: "" | "analysis" | "planning" | "coding" | "implementation" | "disabled";
+  /**
+   * Current task description
+   */
+  task?: string;
+  /**
+   * Session identifier
+   */
+  sessionId?: string;
+  /**
+   * ISO timestamp of last update
+   */
+  updatedAt?: string;
+}
+/**
+ * Parsed checklist row from session log
+ */
+export interface ChecklistRow {
+  /**
+   * RFC 2119 requirement level
+   */
+  requirement: "MUST" | "SHOULD" | "MAY";
+  /**
+   * Step description
+   */
+  step: string;
+  /**
+   * Checkbox status: [ ] or [x] or [X]
+   */
+  status: string;
+  /**
+   * Evidence text for the step
+   */
+  evidence?: string;
+  [k: string]: unknown | undefined;
 }
 
 // Source: schemas/tools/bootstrap-context.schema.json
@@ -590,4 +1014,618 @@ export interface SessionArgs {
    * Active feature slug/path (for set operation)
    */
   feature?: string;
+}
+
+// Source: schemas/validators/batch-pr-review.schema.json
+/**
+ * Operation to perform on PR worktrees
+ */
+export type BatchPRReviewOperation = "Setup" | "Status" | "Cleanup" | "All";
+
+/**
+ * Schema for batch PR review configuration and results.
+ */
+export interface BatchPRReviewValidation {
+  config?: BatchPRReviewConfig;
+  result?: BatchPRReviewResult;
+}
+/**
+ * Configuration for batch PR review operations
+ */
+export interface BatchPRReviewConfig {
+  /**
+   * PR numbers to process
+   *
+   * @minItems 1
+   */
+  prNumbers: [number, ...number[]];
+  operation: BatchPRReviewOperation;
+  /**
+   * Root directory for worktrees. Empty uses parent of repo root.
+   */
+  worktreeRoot?: string;
+  /**
+   * Force operations (skip safety checks)
+   */
+  force?: boolean;
+}
+/**
+ * Result of batch PR review operation
+ */
+export interface BatchPRReviewResult {
+  /**
+   * Overall success
+   */
+  valid: boolean;
+  checks: Check[];
+  /**
+   * Summary message
+   */
+  message: string;
+  remediation?: string;
+  operation: BatchPRReviewOperation;
+  /**
+   * Resolved worktree root path
+   */
+  worktreeRoot: string;
+  /**
+   * Worktree statuses (for Status/All operations)
+   */
+  statuses?: WorktreeStatus[];
+  /**
+   * Operation results (for Setup/Cleanup/All operations)
+   */
+  results?: WorktreeOperationResult[];
+}
+/**
+ * A single validation check result
+ */
+export interface Check {
+  name: string;
+  passed: boolean;
+  message: string;
+}
+/**
+ * Status of a single worktree
+ */
+export interface WorktreeStatus {
+  /**
+   * PR number
+   */
+  pr: number;
+  /**
+   * Worktree path
+   */
+  path: string;
+  /**
+   * Whether worktree exists
+   */
+  exists: boolean;
+  /**
+   * Whether worktree has no uncommitted changes
+   */
+  clean?: boolean;
+  /**
+   * Current branch name
+   */
+  branch?: string;
+  /**
+   * Current commit SHA
+   */
+  commit?: string;
+  /**
+   * Whether worktree has unpushed commits
+   */
+  unpushed?: boolean;
+}
+/**
+ * Result of a worktree operation
+ */
+export interface WorktreeOperationResult {
+  /**
+   * PR number
+   */
+  pr: number;
+  /**
+   * Whether operation succeeded
+   */
+  success: boolean;
+  /**
+   * Success message
+   */
+  message?: string;
+  /**
+   * Error message if failed
+   */
+  error?: string;
+}
+
+// Source: schemas/validators/check-skill-exists.schema.json
+/**
+ * Schema for skill existence check parameters and results.
+ */
+export interface CheckSkillExistsValidation {
+  skillInput?: SkillExistsInput;
+  skillResult?: SkillExistsResult;
+  scriptInput?: SkillScriptInput;
+}
+/**
+ * Input parameters for skill existence check
+ */
+export interface SkillExistsInput {
+  /**
+   * Repository root path
+   */
+  basePath: string;
+  /**
+   * Skill name to check (kebab-case)
+   */
+  skillName: string;
+}
+/**
+ * Result of skill existence check
+ */
+export interface SkillExistsResult {
+  /**
+   * Whether the skill file exists
+   */
+  exists: boolean;
+  /**
+   * The skill name that was checked
+   */
+  skillName: string;
+  /**
+   * Full path to the SKILL.md file
+   */
+  skillPath?: string;
+  /**
+   * Parsed name from frontmatter
+   */
+  name?: string;
+  /**
+   * Parsed description from frontmatter
+   */
+  description?: string;
+  /**
+   * Summary message
+   */
+  message: string;
+  /**
+   * Individual check results
+   */
+  checks: Check[];
+}
+/**
+ * A single validation check result
+ */
+export interface Check {
+  /**
+   * Check identifier
+   */
+  name: string;
+  /**
+   * Whether the check passed
+   */
+  passed: boolean;
+  /**
+   * Human-readable check result message
+   */
+  message: string;
+}
+/**
+ * Input parameters for skill script check
+ */
+export interface SkillScriptInput {
+  /**
+   * Repository root path
+   */
+  basePath: string;
+  /**
+   * Operation type
+   */
+  operation: "pr" | "issue" | "reactions" | "label" | "milestone";
+  /**
+   * Action name to search for
+   */
+  action: string;
+}
+
+// Source: schemas/validators/check-tasks.schema.json
+/**
+ * Status of a task
+ */
+export type TaskStatus = "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED" | "BLOCKED" | "DEFERRED";
+
+/**
+ * Schema for task validation input and results.
+ */
+export interface CheckTasksValidation {
+  input?: TasksInput;
+  result?: TasksValidationResult;
+}
+/**
+ * Input for task validation
+ */
+export interface TasksInput {
+  /**
+   * Array of tasks to validate
+   */
+  tasks: Task[];
+}
+/**
+ * A task to validate
+ */
+export interface Task {
+  /**
+   * Task name/identifier
+   */
+  name?: string;
+  status?: TaskStatus;
+  /**
+   * Whether the task is completed
+   */
+  completed?: boolean;
+  /**
+   * Task description
+   */
+  description?: string;
+  /**
+   * Task assignee
+   */
+  assignee?: string;
+  /**
+   * Task due date in ISO format
+   */
+  dueDate?: string;
+  /**
+   * Task priority
+   */
+  priority?: "P0" | "P1" | "P2" | "P3";
+  [k: string]: unknown | undefined;
+}
+/**
+ * Result of task validation
+ */
+export interface TasksValidationResult {
+  /**
+   * Overall validation result
+   */
+  valid: boolean;
+  /**
+   * Individual check results
+   */
+  checks: Check[];
+  /**
+   * Summary message
+   */
+  message: string;
+  /**
+   * Remediation steps if validation failed
+   */
+  remediation?: string;
+  /**
+   * Names of incomplete in-progress tasks
+   */
+  incompleteTasks?: string[];
+}
+/**
+ * A single validation check result
+ */
+export interface Check {
+  /**
+   * Check identifier
+   */
+  name: string;
+  /**
+   * Whether the check passed
+   */
+  passed: boolean;
+  /**
+   * Human-readable check result message
+   */
+  message: string;
+}
+
+// Source: schemas/validators/pr-maintenance.schema.json
+/**
+ * GitHub mergeable state
+ */
+export type MergeableState = "MERGEABLE" | "CONFLICTING" | "UNKNOWN";
+/**
+ * GitHub review decision
+ */
+export type ReviewDecision = "APPROVED" | "CHANGES_REQUESTED" | "REVIEW_REQUIRED" | "";
+/**
+ * CI check state
+ */
+export type CheckState = "SUCCESS" | "FAILURE" | "ERROR" | "PENDING";
+/**
+ * CI check conclusion
+ */
+export type CheckConclusion = "SUCCESS" | "FAILURE" | "NEUTRAL" | "SKIPPED" | "";
+/**
+ * Classification of PR author or state
+ */
+export type BotCategory =
+  | "agent-controlled"
+  | "mention-triggered"
+  | "review-bot"
+  | "human"
+  | "human-blocked"
+  | "has-derivatives";
+/**
+ * Reason a PR requires action
+ */
+export type PRActionReason =
+  | "CHANGES_REQUESTED"
+  | "HAS_CONFLICTS"
+  | "HAS_FAILING_CHECKS"
+  | "PENDING_DERIVATIVES"
+  | "MENTION";
+
+/**
+ * Schema for PR maintenance analysis configuration and results.
+ */
+export interface PRMaintenanceValidation {
+  config?: PRMaintenanceConfig;
+  pullRequests?: PullRequest[];
+  result?: PRMaintenanceResult;
+  output?: PRMaintenanceOutput;
+  rateLimit?: RateLimitInfo;
+}
+/**
+ * Configuration for PR maintenance analysis
+ */
+export interface PRMaintenanceConfig {
+  /**
+   * Branches considered protected (non-derivative)
+   */
+  protectedBranches?: string[];
+  /**
+   * Bot usernames grouped by category
+   */
+  botCategories?: {
+    [k: string]: string[] | undefined;
+  };
+  /**
+   * Maximum number of PRs to analyze
+   */
+  maxPRs?: number;
+}
+/**
+ * GitHub pull request data
+ */
+export interface PullRequest {
+  number: number;
+  title?: string;
+  author: PRAuthor;
+  /**
+   * Source branch name
+   */
+  headRefName?: string;
+  /**
+   * Target branch name
+   */
+  baseRefName?: string;
+  mergeable?: MergeableState;
+  reviewDecision?: ReviewDecision;
+  reviewRequests?: {
+    nodes?: ReviewRequest[];
+  };
+  commits?: {
+    nodes?: PRCommit[];
+  };
+  [k: string]: unknown | undefined;
+}
+export interface PRAuthor {
+  /**
+   * GitHub username
+   */
+  login: string;
+}
+export interface ReviewRequest {
+  requestedReviewer?: {
+    login?: string;
+    name?: string;
+  };
+}
+export interface PRCommit {
+  commit?: {
+    statusCheckRollup?: StatusCheckRollup;
+  };
+}
+export interface StatusCheckRollup {
+  state?: CheckState;
+  contexts?: {
+    nodes?: StatusCheckContext[];
+  };
+}
+export interface StatusCheckContext {
+  name?: string;
+  context?: string;
+  conclusion?: CheckConclusion;
+  status?: string;
+  state?: CheckState;
+}
+/**
+ * Result of PR maintenance analysis
+ */
+export interface PRMaintenanceResult {
+  totalPRs: number;
+  actionRequired: PRActionItem[];
+  blocked: PRActionItem[];
+  derivativePRs: DerivativePR[];
+  parentsWithDerivatives: ParentWithDerivatives[];
+  errors?: PRError[];
+}
+/**
+ * A PR requiring action
+ */
+export interface PRActionItem {
+  number: number;
+  category: BotCategory;
+  hasConflicts: boolean;
+  hasFailingChecks?: boolean;
+  reason: PRActionReason;
+  author: string;
+  title: string;
+  headRefName?: string;
+  baseRefName?: string;
+  requiresSynthesis?: boolean;
+  derivatives?: number[];
+}
+/**
+ * A PR targeting a non-protected branch
+ */
+export interface DerivativePR {
+  number: number;
+  title: string;
+  author: string;
+  targetBranch: string;
+  sourceBranch: string;
+}
+/**
+ * A parent PR with pending derivative PRs
+ */
+export interface ParentWithDerivatives {
+  parentPR: number;
+  parentTitle: string;
+  parentBranch: string;
+  derivatives: number[];
+}
+export interface PRError {
+  pr: number;
+  error: string;
+}
+/**
+ * Final output for workflow consumption
+ */
+export interface PRMaintenanceOutput {
+  prs: PRActionItem[];
+  summary: PRMaintenanceSummary;
+}
+export interface PRMaintenanceSummary {
+  total: number;
+  actionRequired: number;
+  blocked: number;
+  derivatives: number;
+}
+/**
+ * GitHub API rate limit information
+ */
+export interface RateLimitInfo {
+  coreRemaining: number;
+  graphqlRemaining: number;
+  /**
+   * True if rate limits are sufficient (core >= 100, graphql >= 50)
+   */
+  isSafe: boolean;
+}
+
+// Source: schemas/validators/test-coverage-gaps.schema.json
+/**
+ * Programming language supported for test coverage detection
+ */
+export type SupportedLanguage = "go" | "powershell" | "typescript" | "javascript" | "python" | "csharp";
+
+/**
+ * Schema for test coverage gap detection options and results.
+ */
+export interface TestCoverageGapsValidation {
+  options?: TestCoverageGapOptions;
+  result?: TestCoverageGapResult;
+}
+/**
+ * Configuration options for test coverage gap detection
+ */
+export interface TestCoverageGapOptions {
+  /**
+   * Root path to scan. Empty string defaults to current directory.
+   */
+  basePath?: string;
+  /**
+   * Language to check. Empty triggers auto-detection.
+   */
+  language?: "go" | "powershell" | "typescript" | "javascript" | "python" | "csharp";
+  /**
+   * Only check git-staged files
+   */
+  stagedOnly?: boolean;
+  /**
+   * Path to file containing patterns to ignore
+   */
+  ignoreFile?: string;
+  /**
+   * Coverage threshold percentage (0-100)
+   */
+  threshold?: number;
+  /**
+   * Additional regex ignore patterns
+   */
+  customPatterns?: string[];
+}
+/**
+ * Result of test coverage gap detection
+ */
+export interface TestCoverageGapResult {
+  /**
+   * Overall validation result
+   */
+  valid: boolean;
+  /**
+   * Individual check results
+   */
+  checks: Check[];
+  /**
+   * Summary message
+   */
+  message: string;
+  /**
+   * Remediation steps if validation failed
+   */
+  remediation?: string;
+  /**
+   * Resolved absolute path that was scanned
+   */
+  basePath?: string;
+  language?: SupportedLanguage;
+  stagedOnly?: boolean;
+  totalSourceFiles?: number;
+  filesWithTests?: number;
+  filesWithoutTests?: number;
+  coveragePercent?: number;
+  threshold?: number;
+  missingTests?: MissingTestFile[];
+  ignorePatterns?: string[];
+}
+/**
+ * A single validation check result
+ */
+export interface Check {
+  /**
+   * Check identifier
+   */
+  name: string;
+  /**
+   * Whether the check passed
+   */
+  passed: boolean;
+  /**
+   * Human-readable check result message
+   */
+  message: string;
+}
+/**
+ * A source file without a corresponding test file
+ */
+export interface MissingTestFile {
+  /**
+   * Relative path to the source file
+   */
+  sourceFile: string;
+  /**
+   * Relative path to the expected test file
+   */
+  expectedTest: string;
+  language?: SupportedLanguage;
 }

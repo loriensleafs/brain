@@ -9,7 +9,7 @@
  * - Start/stop methods
  */
 
-import { describe, test, expect, beforeEach, mock } from "bun:test";
+import { describe, test, expect, beforeEach, vi } from "vitest";
 import * as path from "path";
 import * as os from "os";
 import type { BrainConfig } from "../schema";
@@ -19,57 +19,57 @@ import { DEFAULT_BRAIN_CONFIG } from "../schema";
 type EventHandler = (...args: unknown[]) => void;
 const mockWatcherEvents: Map<string, EventHandler[]> = new Map();
 const mockWatcher = {
-  on: mock((event: string, handler: EventHandler) => {
+  on: vi.fn((event: string, handler: EventHandler) => {
     const handlers = mockWatcherEvents.get(event) || [];
     handlers.push(handler);
     mockWatcherEvents.set(event, handlers);
     return mockWatcher;
   }),
-  close: mock(() => Promise.resolve()),
+  close: vi.fn(() => Promise.resolve()),
 };
 
 // Mock chokidar
-mock.module("chokidar", () => ({
-  watch: mock(() => mockWatcher),
+vi.mock("chokidar", () => ({
+  watch: vi.fn(() => mockWatcher),
 }));
 
 // Mock brain-config module
 const mockBrainConfig = {
-  getBrainConfigPath: mock(() => path.join(os.homedir(), ".config", "brain", "config.json")),
-  loadBrainConfig: mock(async () => ({ ...DEFAULT_BRAIN_CONFIG })),
-  loadBrainConfigSync: mock(() => ({ ...DEFAULT_BRAIN_CONFIG })),
+  getBrainConfigPath: vi.fn(() => path.join(os.homedir(), ".config", "brain", "config.json")),
+  loadBrainConfig: vi.fn(async () => ({ ...DEFAULT_BRAIN_CONFIG })),
+  loadBrainConfigSync: vi.fn(() => ({ ...DEFAULT_BRAIN_CONFIG })),
 };
 
-mock.module("../brain-config", () => mockBrainConfig);
+vi.mock("../brain-config", () => mockBrainConfig);
 
 // Mock translation-layer module
 const mockTranslationLayer = {
-  syncConfigToBasicMemory: mock(async () => undefined),
+  syncConfigToBasicMemory: vi.fn(async () => undefined),
 };
 
-mock.module("../translation-layer", () => mockTranslationLayer);
+vi.mock("../translation-layer", () => mockTranslationLayer);
 
 // Mock rollback module
 const mockRollback = {
   rollbackManager: {
-    isInitialized: mock(() => true),
-    initialize: mock(async () => true),
-    snapshot: mock(() => ({
+    isInitialized: vi.fn(() => true),
+    initialize: vi.fn(async () => true),
+    snapshot: vi.fn(() => ({
       id: "snap-test",
       createdAt: new Date(),
       reason: "test",
       checksum: "abc123",
       config: DEFAULT_BRAIN_CONFIG,
     })),
-    markAsGood: mock(async () => undefined),
-    revert: mock(async () => ({
+    markAsGood: vi.fn(async () => undefined),
+    revert: vi.fn(async () => ({
       success: true,
       restoredConfig: DEFAULT_BRAIN_CONFIG,
     })),
   },
 };
 
-mock.module("../rollback", () => mockRollback);
+vi.mock("../rollback", () => mockRollback);
 
 // Import actual diff module - no mocking needed as it has no side effects
 import { detectConfigDiff, summarizeConfigDiff } from "../diff";

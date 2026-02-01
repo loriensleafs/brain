@@ -3,13 +3,13 @@
  * Tests configuration, error handling, and API interactions.
  */
 
-import { describe, test, expect, mock, afterEach } from "bun:test";
+import { describe, test, expect, vi, afterEach } from "vitest";
 import { OllamaClient } from "../client";
 import { OllamaError } from "../types";
 
 // Helper to create a typed mock for fetch
 const createFetchMock = (impl: () => unknown) => {
-  const mockFn = mock(impl);
+  const mockFn = vi.fn(impl);
   return mockFn as unknown as typeof fetch;
 };
 
@@ -82,7 +82,7 @@ describe("OllamaClient", () => {
     });
 
     test("calls correct endpoint", async () => {
-      const mockFetch = mock(() =>
+      const mockFetch = vi.fn(() =>
         Promise.resolve({ ok: true, status: 200 } as Response)
       );
       globalThis.fetch = mockFetch as unknown as typeof fetch;
@@ -155,7 +155,7 @@ describe("OllamaClient", () => {
     });
 
     test("sends correct request body with default model", async () => {
-      const mockFetch = mock(() =>
+      const mockFetch = vi.fn(() =>
         Promise.resolve({
           ok: true,
           status: 200,
@@ -185,7 +185,7 @@ describe("OllamaClient", () => {
     });
 
     test("sends correct request body with custom model", async () => {
-      const mockFetch = mock(() =>
+      const mockFetch = vi.fn(() =>
         Promise.resolve({
           ok: true,
           status: 200,
@@ -210,7 +210,7 @@ describe("OllamaClient", () => {
 
     test("delegates to generateBatchEmbeddings", async () => {
       const mockEmbedding = [0.1, 0.2, 0.3];
-      const mockFetch = mock(() =>
+      const mockFetch = vi.fn(() =>
         Promise.resolve({
           ok: true,
           status: 200,
@@ -233,7 +233,7 @@ describe("OllamaClient", () => {
     });
 
     test("includes search_document prefix when specified", async () => {
-      const mockFetch = mock(() =>
+      const mockFetch = vi.fn(() =>
         Promise.resolve({
           ok: true,
           status: 200,
@@ -254,7 +254,7 @@ describe("OllamaClient", () => {
     });
 
     test("includes search_query prefix when specified", async () => {
-      const mockFetch = mock(() =>
+      const mockFetch = vi.fn(() =>
         Promise.resolve({
           ok: true,
           status: 200,
@@ -275,7 +275,7 @@ describe("OllamaClient", () => {
     });
 
     test("defaults to search_document when task type not specified", async () => {
-      const mockFetch = mock(() =>
+      const mockFetch = vi.fn(() =>
         Promise.resolve({
           ok: true,
           status: 200,
@@ -346,7 +346,7 @@ describe("OllamaClient", () => {
     });
 
     test("sends batch request to /api/embed endpoint", async () => {
-      const mockFetch = mock(() =>
+      const mockFetch = vi.fn(() =>
         Promise.resolve({
           ok: true,
           status: 200,
@@ -368,7 +368,7 @@ describe("OllamaClient", () => {
     });
 
     test("prefixes texts with task type", async () => {
-      const mockFetch = mock(() =>
+      const mockFetch = vi.fn(() =>
         Promise.resolve({
           ok: true,
           status: 200,
@@ -392,7 +392,7 @@ describe("OllamaClient", () => {
     });
 
     test("uses custom model when specified", async () => {
-      const mockFetch = mock(() =>
+      const mockFetch = vi.fn(() =>
         Promise.resolve({
           ok: true,
           status: 200,
@@ -445,7 +445,7 @@ describe("OllamaClient", () => {
     });
 
     test("includes timeout in request", async () => {
-      const mockFetch = mock(() =>
+      const mockFetch = vi.fn(() =>
         Promise.resolve({
           ok: true,
           status: 200,
@@ -465,7 +465,7 @@ describe("OllamaClient", () => {
     });
 
     test("includes truncate flag in request body", async () => {
-      const mockFetch = mock(() =>
+      const mockFetch = vi.fn(() =>
         Promise.resolve({
           ok: true,
           status: 200,

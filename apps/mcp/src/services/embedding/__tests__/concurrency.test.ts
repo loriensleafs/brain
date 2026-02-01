@@ -3,7 +3,7 @@
  * Tests p-limit behavior and concurrent note processing patterns.
  */
 
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect } from "vitest";
 import pLimit from "p-limit";
 
 /**

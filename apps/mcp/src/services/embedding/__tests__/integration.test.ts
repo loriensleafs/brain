@@ -6,7 +6,7 @@
  * Tests simulating failures use 4xx errors (non-retryable) for immediate failure.
  */
 
-import { describe, test, expect, beforeEach, afterEach, mock, spyOn } from "bun:test";
+import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 import { Database } from "bun:sqlite";
 import * as sqliteVec from "sqlite-vec";
 import * as connectionModule from "../../../db/connection";
@@ -25,12 +25,12 @@ const MOCK_EMBEDDING = Array.from({ length: 768 }, (_, i) => i * 0.001);
 
 /** Helper to create mock fetch */
 const createFetchMock = (impl: () => unknown) =>
-  mock(impl) as unknown as typeof fetch;
+  vi.fn(impl) as unknown as typeof fetch;
 
 describe("Embedding Integration Tests", () => {
   const originalFetch = globalThis.fetch;
   let db: Database;
-  let createVectorConnectionSpy: ReturnType<typeof spyOn>;
+  let createVectorConnectionSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     // Reset singleton client before each test
@@ -41,7 +41,7 @@ describe("Embedding Integration Tests", () => {
     sqliteVec.load(db);
 
     // Spy on createVectorConnection to return our test database
-    createVectorConnectionSpy = spyOn(
+    createVectorConnectionSpy = vi.spyOn(
       connectionModule,
       "createVectorConnection"
     ).mockImplementation(() => {
@@ -93,7 +93,7 @@ describe("Embedding Integration Tests", () => {
 
     test("handles long text by truncating", async () => {
       const longText = "a".repeat(35000);
-      const mockFetch = mock(() =>
+      const mockFetch = vi.fn(() =>
         Promise.resolve({
           ok: true,
           status: 200,

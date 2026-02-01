@@ -7,11 +7,10 @@ import {
   describe,
   test,
   expect,
-  mock,
+  vi,
   afterEach,
   beforeEach,
-  spyOn,
-} from "bun:test";
+} from "vitest";
 import {
   processWithRetry,
   processEmbeddingQueue,
@@ -26,26 +25,26 @@ import { logger } from "../../../utils/internal/logger";
 
 describe("retry", () => {
   const originalFetch = globalThis.fetch;
-  let mockDb: { close: ReturnType<typeof mock> };
-  let storeChunkedEmbeddingsSpy: ReturnType<typeof spyOn>;
-  let createVectorConnectionSpy: ReturnType<typeof spyOn>;
-  let ensureEmbeddingTablesSpy: ReturnType<typeof spyOn>;
-  let loggerInfoSpy: ReturnType<typeof spyOn>;
-  let loggerWarnSpy: ReturnType<typeof spyOn>;
+  let mockDb: { close: ReturnType<typeof vi.fn> };
+  let storeChunkedEmbeddingsSpy: ReturnType<typeof vi.spyOn>;
+  let createVectorConnectionSpy: ReturnType<typeof vi.spyOn>;
+  let ensureEmbeddingTablesSpy: ReturnType<typeof vi.spyOn>;
+  let loggerInfoSpy: ReturnType<typeof vi.spyOn>;
+  let loggerWarnSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    mockDb = { close: mock(() => {}) };
-    storeChunkedEmbeddingsSpy = spyOn(vectorsModule, "storeChunkedEmbeddings").mockReturnValue(1);
-    createVectorConnectionSpy = spyOn(
+    mockDb = { close: vi.fn(() => {}) };
+    storeChunkedEmbeddingsSpy = vi.spyOn(vectorsModule, "storeChunkedEmbeddings").mockReturnValue(1);
+    createVectorConnectionSpy = vi.spyOn(
       connectionModule,
       "createVectorConnection"
     ).mockReturnValue(mockDb as any);
-    ensureEmbeddingTablesSpy = spyOn(
+    ensureEmbeddingTablesSpy = vi.spyOn(
       schemaModule,
       "ensureEmbeddingTables"
     ).mockImplementation(() => {});
-    loggerInfoSpy = spyOn(logger, "info").mockImplementation(() => {});
-    loggerWarnSpy = spyOn(logger, "warn").mockImplementation(() => {});
+    loggerInfoSpy = vi.spyOn(logger, "info").mockImplementation(() => {});
+    loggerWarnSpy = vi.spyOn(logger, "warn").mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -58,7 +57,7 @@ describe("retry", () => {
   });
 
   const mockFetchSuccess = (embedding: number[]) => {
-    globalThis.fetch = mock(() =>
+    globalThis.fetch = vi.fn(() =>
       Promise.resolve({
         ok: true,
         status: 200,
@@ -68,7 +67,7 @@ describe("retry", () => {
   };
 
   const mockFetchFailure = () => {
-    globalThis.fetch = mock(() =>
+    globalThis.fetch = vi.fn(() =>
       Promise.reject(new Error("API error"))
     ) as unknown as typeof fetch;
   };
@@ -182,17 +181,17 @@ describe("retry", () => {
   });
 
   describe("processEmbeddingQueue", () => {
-    let dequeueSpy: ReturnType<typeof spyOn>;
-    let markProcessedSpy: ReturnType<typeof spyOn>;
-    let incrementAttemptsSpy: ReturnType<typeof spyOn>;
+    let dequeueSpy: ReturnType<typeof vi.spyOn>;
+    let markProcessedSpy: ReturnType<typeof vi.spyOn>;
+    let incrementAttemptsSpy: ReturnType<typeof vi.spyOn>;
 
     beforeEach(() => {
-      dequeueSpy = spyOn(queueModule, "dequeueEmbedding");
-      markProcessedSpy = spyOn(
+      dequeueSpy = vi.spyOn(queueModule, "dequeueEmbedding");
+      markProcessedSpy = vi.spyOn(
         queueModule,
         "markEmbeddingProcessed"
       ).mockImplementation(() => {});
-      incrementAttemptsSpy = spyOn(
+      incrementAttemptsSpy = vi.spyOn(
         queueModule,
         "incrementAttempts"
       ).mockImplementation(() => {});

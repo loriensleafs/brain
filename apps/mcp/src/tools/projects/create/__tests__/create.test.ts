@@ -9,7 +9,7 @@
  * - Path expansion works for ~ in all modes
  */
 
-import { describe, test, expect, beforeEach, afterEach, mock } from "bun:test";
+import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 import * as os from "os";
 import * as path from "path";
 
@@ -37,13 +37,13 @@ function getResponseText(content: ToolResultContent[]): string {
 
 // Mock filesystem operations
 const mockFs = {
-  existsSync: mock(() => false) as ReturnType<typeof mock<(p: unknown) => boolean>>,
-  readFileSync: mock(() => "{}") as ReturnType<typeof mock<(p: unknown) => string>>,
-  writeFileSync: mock(() => undefined) as ReturnType<typeof mock<(p: unknown, data: unknown) => void>>,
-  mkdirSync: mock(() => undefined) as ReturnType<typeof mock<(p: unknown, opts: unknown) => void>>,
+  existsSync: vi.fn(() => false) as ReturnType<typeof mock<(p: unknown) => boolean>>,
+  readFileSync: vi.fn(() => "{}") as ReturnType<typeof mock<(p: unknown) => string>>,
+  writeFileSync: vi.fn(() => undefined) as ReturnType<typeof mock<(p: unknown, data: unknown) => void>>,
+  mkdirSync: vi.fn(() => undefined) as ReturnType<typeof mock<(p: unknown, opts: unknown) => void>>,
 };
 
-mock.module("fs", () => mockFs);
+vi.mock("fs", () => mockFs);
 
 // Mock @brain/utils to use our mocked fs
 // The actual module uses Bun.file() which can't be mocked
@@ -60,7 +60,7 @@ class MockProjectNotFoundError extends Error {
 // Stores project configs for @brain/utils mock
 let mockProjects: Record<string, string> = {};
 
-mock.module("@brain/utils", () => ({
+vi.mock("@brain/utils", () => ({
   getProjectMemoriesPath: async (project: string) => {
     const path = mockProjects[project];
     if (!path) {
@@ -73,10 +73,10 @@ mock.module("@brain/utils", () => ({
 }));
 
 // Mock config module
-const mockSetCodePath = mock(() => undefined) as ReturnType<typeof mock<(name: unknown, path: unknown) => void>>;
-const mockGetCodePath = mock(() => undefined as string | undefined) as ReturnType<typeof mock<(name: unknown) => string | undefined>>;
+const mockSetCodePath = vi.fn(() => undefined) as ReturnType<typeof mock<(name: unknown, path: unknown) => void>>;
+const mockGetCodePath = vi.fn(() => undefined as string | undefined) as ReturnType<typeof mock<(name: unknown) => string | undefined>>;
 
-mock.module("../../../project/config", () => ({
+vi.mock("../../../project/config", () => ({
   setCodePath: mockSetCodePath,
   getCodePath: mockGetCodePath,
 }));

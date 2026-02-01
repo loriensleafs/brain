@@ -5,19 +5,19 @@
  * Tests retry logic with timeout as required by critic review (Issue 1).
  */
 
-import { describe, test, expect, beforeEach, mock } from "bun:test";
+import { describe, test, expect, beforeEach, vi } from "vitest";
 
 // Mock filesystem
 const mockFs = {
-  existsSync: mock(() => false) as ReturnType<typeof mock<(p: unknown) => boolean>>,
-  openSync: mock(() => 1) as ReturnType<typeof mock<(p: unknown, flags: unknown) => number>>,
-  writeSync: mock(() => undefined) as ReturnType<typeof mock<(fd: unknown, data: unknown) => void>>,
-  closeSync: mock(() => undefined) as ReturnType<typeof mock<(fd: unknown) => void>>,
-  unlinkSync: mock(() => undefined) as ReturnType<typeof mock<(p: unknown) => void>>,
-  statSync: mock(() => ({ mtimeMs: Date.now() })) as ReturnType<
+  existsSync: vi.fn(() => false) as ReturnType<typeof mock<(p: unknown) => boolean>>,
+  openSync: vi.fn(() => 1) as ReturnType<typeof mock<(p: unknown, flags: unknown) => number>>,
+  writeSync: vi.fn(() => undefined) as ReturnType<typeof mock<(fd: unknown, data: unknown) => void>>,
+  closeSync: vi.fn(() => undefined) as ReturnType<typeof mock<(fd: unknown) => void>>,
+  unlinkSync: vi.fn(() => undefined) as ReturnType<typeof mock<(p: unknown) => void>>,
+  statSync: vi.fn(() => ({ mtimeMs: Date.now() })) as ReturnType<
     typeof mock<(p: unknown) => { mtimeMs: number }>
   >,
-  mkdirSync: mock(() => undefined) as ReturnType<typeof mock<(p: unknown, opts: unknown) => void>>,
+  mkdirSync: vi.fn(() => undefined) as ReturnType<typeof mock<(p: unknown, opts: unknown) => void>>,
   constants: {
     O_CREAT: 0x0200,
     O_EXCL: 0x0800,
@@ -25,17 +25,17 @@ const mockFs = {
   },
 };
 
-mock.module("fs", () => mockFs);
+vi.mock("fs", () => mockFs);
 
 // Mock logger
 const mockLogger = {
-  info: mock(() => undefined),
-  warn: mock(() => undefined),
-  error: mock(() => undefined),
-  debug: mock(() => undefined),
+  info: vi.fn(() => undefined),
+  warn: vi.fn(() => undefined),
+  error: vi.fn(() => undefined),
+  debug: vi.fn(() => undefined),
 };
 
-mock.module("../../internal/logger", () => ({
+vi.mock("../../internal/logger", () => ({
   logger: mockLogger,
 }));
 

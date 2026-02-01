@@ -3,7 +3,7 @@
  *
  * Validates that JSON Schema validators behave identically to the original Zod schemas.
  */
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect } from "vitest";
 import {
   validateSearchArgs,
   parseSearchArgs,

@@ -8,11 +8,11 @@
  * - Return list of missing/mismatched memories
  */
 
-import { describe, test, expect, beforeEach, mock } from "bun:test";
+import { describe, test, expect, beforeEach, vi } from "vitest";
 import type { SearchResponse, SearchResult } from "../../services/search/types";
 
 // Mock SearchService
-const mockSearch = mock(
+const mockSearch = vi.fn(
   async (): Promise<SearchResponse> => ({
     results: [],
     total: 0,
@@ -25,29 +25,29 @@ const mockSearch = mock(
   typeof mock<(query: string, opts: unknown) => Promise<SearchResponse>>
 >;
 
-const MockSearchService = mock(() => ({
+const MockSearchService = vi.fn(() => ({
   search: mockSearch,
 }));
 
-mock.module("../../services/search", () => ({
+vi.mock("../../services/search", () => ({
   SearchService: MockSearchService,
 }));
 
 // Mock proxy client
-const mockCallTool = mock(async () => ({
+const mockCallTool = vi.fn(async () => ({
   content: [{ type: "text", text: "Test content for memory" }],
 })) as ReturnType<
   typeof mock<(args: unknown) => Promise<{ content: { type: string; text: string }[] }>>
 >;
 
-mock.module("../../proxy/client", () => ({
+vi.mock("../../proxy/client", () => ({
   getBasicMemoryClient: async () => ({
     callTool: mockCallTool,
   }),
 }));
 
 // Mock logger
-mock.module("../../utils/internal/logger", () => ({
+vi.mock("../../utils/internal/logger", () => ({
   logger: {
     info: () => {},
     debug: () => {},

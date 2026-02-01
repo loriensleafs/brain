@@ -3,22 +3,22 @@
  * Verifies that edit_note triggers embedding generation asynchronously.
  */
 
-import { describe, test, expect, mock, afterEach, beforeEach, spyOn } from "bun:test";
+import { describe, test, expect, vi, afterEach, beforeEach } from "vitest";
 import * as triggerModule from "../../services/embedding/triggerEmbedding";
 import { logger } from "../../utils/internal/logger";
 
 describe("edit_note embedding trigger integration", () => {
-  let triggerEmbeddingSpy: ReturnType<typeof spyOn>;
-  let loggerDebugSpy: ReturnType<typeof spyOn>;
-  let loggerWarnSpy: ReturnType<typeof spyOn>;
+  let triggerEmbeddingSpy: ReturnType<typeof vi.spyOn>;
+  let loggerDebugSpy: ReturnType<typeof vi.spyOn>;
+  let loggerWarnSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     // Spy on triggerEmbedding
-    triggerEmbeddingSpy = spyOn(triggerModule, "triggerEmbedding").mockImplementation(() => {});
+    triggerEmbeddingSpy = vi.spyOn(triggerModule, "triggerEmbedding").mockImplementation(() => {});
 
     // Spy on logger methods
-    loggerDebugSpy = spyOn(logger, "debug").mockImplementation(() => {});
-    loggerWarnSpy = spyOn(logger, "warn").mockImplementation(() => {});
+    loggerDebugSpy = vi.spyOn(logger, "debug").mockImplementation(() => {});
+    loggerWarnSpy = vi.spyOn(logger, "warn").mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -47,7 +47,7 @@ describe("edit_note embedding trigger integration", () => {
       };
 
       const mockClient = {
-        callTool: mock((): Promise<MockCallToolResult> => {
+        callTool: vi.fn((): Promise<MockCallToolResult> => {
           return Promise.resolve({
             content: [{ type: "text" as const, text: content }]
           });
@@ -85,7 +85,7 @@ describe("edit_note embedding trigger integration", () => {
       };
 
       const mockClient = {
-        callTool: mock((): Promise<MockCallToolResult> => {
+        callTool: vi.fn((): Promise<MockCallToolResult> => {
           // Simulate slow read_note (50ms)
           return new Promise((resolve) => {
             setTimeout(() => {
@@ -123,7 +123,7 @@ describe("edit_note embedding trigger integration", () => {
       const identifier = "failing-note";
 
       const mockClient = {
-        callTool: mock((): Promise<never> => Promise.reject(new Error("Read failed")))
+        callTool: vi.fn((): Promise<never> => Promise.reject(new Error("Read failed")))
       };
 
       // Simulate the error path
@@ -163,7 +163,7 @@ describe("edit_note embedding trigger integration", () => {
       };
 
       const mockClient = {
-        callTool: mock((): Promise<MockCallToolResult> => Promise.resolve({
+        callTool: vi.fn((): Promise<MockCallToolResult> => Promise.resolve({
           content: [{ type: "resource", resource: { uri: "file://image.png", mimeType: "image/png" } }]
         }))
       };

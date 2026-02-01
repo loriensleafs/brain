@@ -11,7 +11,7 @@
  * - Error handling for Brain MCP unavailable
  */
 
-import { describe, test, expect, mock } from "bun:test";
+import { describe, test, expect, vi } from "vitest";
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import type { AgentInvocation } from "../types";
 import { createDefaultSessionState } from "../types";
@@ -21,7 +21,7 @@ function createMockClient(
   noteStore: Map<string, string> = new Map()
 ): Client {
   return {
-    callTool: mock(
+    callTool: vi.fn(
       async ({ name, arguments: args }: { name: string; arguments: Record<string, unknown> }) => {
         if (name === "write_note") {
           const path = args.path as string;
@@ -48,7 +48,7 @@ function createMockClient(
 // Mock client that throws errors
 function createFailingClient(): Client {
   return {
-    callTool: mock(async () => {
+    callTool: vi.fn(async () => {
       throw new Error("Brain MCP unavailable");
     }),
   } as unknown as Client;
@@ -127,7 +127,7 @@ describe("BrainSessionPersistence", () => {
 
       // Mock client that returns empty content
       const mockClient = {
-        callTool: mock(async () => ({
+        callTool: vi.fn(async () => ({
           content: [{ type: "text", text: "" }],
         })),
       } as unknown as Client;
@@ -360,7 +360,7 @@ describe("BrainSessionPersistence", () => {
       expect(mockClient.callTool).toHaveBeenCalled();
 
       // Check the arguments passed to callTool
-      const calls = (mockClient.callTool as ReturnType<typeof mock>).mock.calls;
+      const calls = (mockClient.callTool as ReturnType<typeof vi.fn>).mock.calls;
       const writeCall = calls.find(
         (c: { name: string; arguments: Record<string, unknown> }[]) =>
           c[0].name === "write_note"
@@ -384,7 +384,7 @@ describe("BrainSessionPersistence", () => {
       await persistence.saveSession(session);
 
       // Check the arguments passed to callTool
-      const calls = (mockClient.callTool as ReturnType<typeof mock>).mock.calls;
+      const calls = (mockClient.callTool as ReturnType<typeof vi.fn>).mock.calls;
       const writeCall = calls.find(
         (c: { name: string; arguments: Record<string, unknown> }[]) =>
           c[0].name === "write_note"

@@ -10,7 +10,7 @@
  * the translation layer to basic-memory configuration.
  */
 
-import { describe, test, expect, beforeEach, afterEach, mock, spyOn } from "bun:test";
+import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 import * as os from "os";
 import * as path from "path";
 import * as fs from "fs";

@@ -14,7 +14,7 @@
  * @see ADR-020 Security Requirements section
  */
 
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
+import { describe, test, expect, beforeEach, afterEach } from "vitest";
 import * as os from "os";
 import * as path from "path";
 

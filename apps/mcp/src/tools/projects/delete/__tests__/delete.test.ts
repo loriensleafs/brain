@@ -11,7 +11,7 @@
  * Security controls are tested directly in pathValidation.test.ts and configLock.test.ts.
  */
 
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect } from "vitest";
 
 // Import schema for validation tests
 import { DeleteProjectArgsSchema, toolDefinition } from "../schema";

@@ -8,7 +8,7 @@
  * @see TASK-013: Orchestrator Agent Routing Workflow
  */
 
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect } from "vitest";
 import {
   orchestratorAgentInvokedWorkflow,
   type AgentInvokedResult,

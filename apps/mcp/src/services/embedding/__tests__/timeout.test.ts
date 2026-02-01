@@ -7,13 +7,13 @@
  * Timeout functionality is validated manually and through integration tests.
  */
 
-import { describe, test, expect, mock, afterEach } from "bun:test";
+import { describe, test, expect, vi, afterEach } from "vitest";
 import { OllamaClient } from "../../ollama/client";
 import { OllamaError } from "../../ollama/types";
 
 /** Helper to create mock fetch */
 const createFetchMock = (impl: () => unknown) =>
-  mock(impl) as unknown as typeof fetch;
+  vi.fn(impl) as unknown as typeof fetch;
 
 describe("OllamaClient timeout behavior", () => {
   const originalFetch = globalThis.fetch;
@@ -53,7 +53,7 @@ describe("OllamaClient timeout behavior", () => {
   });
 
   test("uses default timeout when none specified", async () => {
-    const mockFetch = mock(() =>
+    const mockFetch = vi.fn(() =>
       Promise.resolve({
         ok: true,
         status: 200,
@@ -75,7 +75,7 @@ describe("OllamaClient timeout behavior", () => {
   });
 
   test("health check uses separate short timeout", async () => {
-    const mockFetch = mock(() =>
+    const mockFetch = vi.fn(() =>
       Promise.resolve({
         ok: true,
         status: 200,
@@ -202,7 +202,7 @@ describe("Timeout configuration", () => {
   });
 
   test("accepts custom timeout in constructor", async () => {
-    const mockFetch = mock(() =>
+    const mockFetch = vi.fn(() =>
       Promise.resolve({
         ok: true,
         status: 200,
@@ -224,7 +224,7 @@ describe("Timeout configuration", () => {
   });
 
   test("accepts custom baseUrl with timeout", async () => {
-    const mockFetch = mock(() =>
+    const mockFetch = vi.fn(() =>
       Promise.resolve({
         ok: true,
         status: 200,

@@ -46,6 +46,39 @@ var sessionValidationSchemaData []byte
 //go:embed schemas/session/session-protocol.schema.json
 var sessionProtocolSchemaData []byte
 
+//go:embed schemas/validators/test-coverage-gaps.schema.json
+var testCoverageGapsSchemaData []byte
+
+//go:embed schemas/validators/check-skill-exists.schema.json
+var checkSkillExistsSchemaData []byte
+
+//go:embed schemas/validators/check-tasks.schema.json
+var checkTasksSchemaData []byte
+
+//go:embed schemas/validators/batch-pr-review.schema.json
+var batchPRReviewSchemaData []byte
+
+//go:embed schemas/validators/pr-maintenance.schema.json
+var prMaintenanceSchemaData []byte
+
+//go:embed schemas/domain/scenario-config.schema.json
+var scenarioConfigSchemaData []byte
+
+//go:embed schemas/domain/scenario-result.schema.json
+var scenarioResultSchemaData []byte
+
+//go:embed schemas/domain/skill-violation.schema.json
+var skillViolationSchemaData []byte
+
+//go:embed schemas/domain/spec-frontmatter.schema.json
+var specFrontmatterSchemaData []byte
+
+//go:embed schemas/domain/naming-pattern.schema.json
+var namingPatternSchemaData []byte
+
+//go:embed schemas/domain/memory-index-entry.schema.json
+var memoryIndexEntrySchemaData []byte
+
 func init() {
 	// Initialize internal package with schema data
 	internal.SetBootstrapSchemaData(bootstrapSchemaData)
@@ -60,6 +93,17 @@ func init() {
 	internal.SetSlashCommandFrontmatterSchemaData(slashCommandFrontmatterSchemaData)
 	internal.SetSessionValidationSchemaData(sessionValidationSchemaData)
 	internal.SetSessionProtocolSchemaData(sessionProtocolSchemaData)
+	internal.SetTestCoverageGapsSchemaData(testCoverageGapsSchemaData)
+	internal.SetCheckSkillExistsSchemaData(checkSkillExistsSchemaData)
+	internal.SetCheckTasksSchemaData(checkTasksSchemaData)
+	internal.SetBatchPRReviewSchemaData(batchPRReviewSchemaData)
+	internal.SetPRMaintenanceSchemaData(prMaintenanceSchemaData)
+	internal.SetScenarioConfigSchemaData(scenarioConfigSchemaData)
+	internal.SetScenarioResultSchemaData(scenarioResultSchemaData)
+	internal.SetSkillViolationSchemaData(skillViolationSchemaData)
+	internal.SetSpecFrontmatterSchemaData(specFrontmatterSchemaData)
+	internal.SetNamingPatternSchemaData(namingPatternSchemaData)
+	internal.SetMemoryIndexEntrySchemaData(memoryIndexEntrySchemaData)
 }
 
 // Re-export core types
@@ -104,6 +148,10 @@ type (
 	QASkipResult                  = internal.QASkipResult
 	SessionValidationConfig       = internal.SessionValidationConfig
 	SessionProtocolConfig         = internal.SessionProtocolConfig
+	ScenarioConfig                = internal.ScenarioConfig
+	SpecFrontmatter               = internal.SpecFrontmatter
+	NamingPatternInput            = internal.NamingPatternInput
+	IndexEntry                    = internal.IndexEntry
 )
 
 // Re-export detector types
@@ -393,6 +441,36 @@ var (
 	IsBotReviewer              = internal.IsBotReviewer
 	PRHasConflicts             = internal.PRHasConflicts
 	PRHasFailingChecks         = internal.PRHasFailingChecks
+)
+
+// Schema validation functions for batch 2 validators
+var (
+	ValidateTestCoverageGapsOptions  = internal.ValidateTestCoverageGapsOptions
+	ValidateTestCoverageGapsResult   = internal.ValidateTestCoverageGapsResult
+	ValidateSkillExistsInput         = internal.ValidateSkillExistsInput
+	ValidateSkillExistsResult        = internal.ValidateSkillExistsResult
+	ValidateTasksInput               = internal.ValidateTasksInput
+	ValidateBatchPRReviewConfig      = internal.ValidateBatchPRReviewConfig
+	ValidateBatchPRReviewResult      = internal.ValidateBatchPRReviewResult
+	ValidatePRMaintenanceConfigInput = internal.ValidatePRMaintenanceConfigInput
+	ValidatePRMaintenanceResult      = internal.ValidatePRMaintenanceResult
+	ValidatePullRequestInput         = internal.ValidatePullRequestInput
+)
+
+// Schema validation functions for batch 1 validators (consistency, memory-index, traceability, scenario, skill-violation)
+var (
+	ValidateScenarioConfig         = internal.ValidateScenarioConfig
+	GetScenarioConfigErrors        = internal.GetScenarioConfigErrors
+	ValidateScenarioResultSchema   = internal.ValidateScenarioResult
+	GetScenarioResultErrors        = internal.GetScenarioResultErrors
+	ValidateSkillViolationResult   = internal.ValidateSkillViolationResult
+	GetSkillViolationResultErrors  = internal.GetSkillViolationResultErrors
+	ValidateSpecFrontmatter        = internal.ValidateSpecFrontmatter
+	GetSpecFrontmatterErrors       = internal.GetSpecFrontmatterErrors
+	ValidateNamingPatternInput     = internal.ValidateNamingPatternInput
+	GetNamingPatternInputErrors    = internal.GetNamingPatternInputErrors
+	ValidateIndexEntry             = internal.ValidateIndexEntry
+	GetIndexEntryErrors            = internal.GetIndexEntryErrors
 )
 
 // Bot category type and constants

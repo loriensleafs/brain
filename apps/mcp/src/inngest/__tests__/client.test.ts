@@ -2,7 +2,7 @@
  * Tests for Inngest client initialization and availability checking.
  */
 
-import { describe, test, expect, mock, beforeEach, afterEach } from "bun:test";
+import { describe, test, expect, vi, beforeEach, afterEach } from "vitest";
 import { Inngest } from "inngest";
 
 // Store original fetch and env
@@ -69,7 +69,7 @@ describe("Inngest Client", () => {
   describe("checkInngestAvailability", () => {
     test("returns true when dev server responds with OK status", async () => {
       // Mock fetch to return OK response
-      const mockFetch = mock(() =>
+      const mockFetch = vi.fn(() =>
         Promise.resolve({
           ok: true,
           status: 200,
@@ -86,7 +86,7 @@ describe("Inngest Client", () => {
 
     test("returns false when dev server responds with non-OK status", async () => {
       // Mock fetch to return non-OK response
-      const mockFetch = mock(() =>
+      const mockFetch = vi.fn(() =>
         Promise.resolve({
           ok: false,
           status: 503,
@@ -102,7 +102,7 @@ describe("Inngest Client", () => {
 
     test("returns false when fetch throws an error", async () => {
       // Mock fetch to throw error (connection refused)
-      const mockFetch = mock(() =>
+      const mockFetch = vi.fn(() =>
         Promise.reject(new Error("Connection refused"))
       );
       globalThis.fetch = mockFetch as unknown as typeof fetch;
@@ -115,7 +115,7 @@ describe("Inngest Client", () => {
 
     test("returns false when request is aborted", async () => {
       // Mock fetch that rejects with abort error
-      const mockFetch = mock(() => {
+      const mockFetch = vi.fn(() => {
         const abortError = new Error("The operation was aborted");
         abortError.name = "AbortError";
         return Promise.reject(abortError);
@@ -152,7 +152,7 @@ describe("Inngest Client", () => {
 
     test("returns true after successful availability check", async () => {
       // Mock successful fetch
-      const mockFetch = mock(() =>
+      const mockFetch = vi.fn(() =>
         Promise.resolve({
           ok: true,
           status: 200,
@@ -174,7 +174,7 @@ describe("Inngest Client", () => {
 
     test("returns false after failed availability check", async () => {
       // Mock failed fetch
-      const mockFetch = mock(() =>
+      const mockFetch = vi.fn(() =>
         Promise.reject(new Error("Connection refused"))
       );
       globalThis.fetch = mockFetch as unknown as typeof fetch;

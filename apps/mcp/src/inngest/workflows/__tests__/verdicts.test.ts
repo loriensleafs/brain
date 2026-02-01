@@ -2,7 +2,7 @@
  * Tests for verdict aggregation logic.
  */
 
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { mergeVerdicts, canProceed, type FinalVerdict } from "../verdicts";
 import type { AgentVerdict, Verdict } from "../../agents";
 

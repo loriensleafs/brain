@@ -1,0 +1,174 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://brain.dev/schemas/validators/test-coverage-gaps.json",
+  "title": "TestCoverageGapsValidation",
+  "description": "Schema for test coverage gap detection options and results.",
+  "definitions": {
+    "SupportedLanguage": {
+      "type": "string",
+      "enum": ["go", "powershell", "typescript", "javascript", "python", "csharp"],
+      "description": "Programming language supported for test coverage detection"
+    },
+    "TestCoverageGapOptions": {
+      "type": "object",
+      "description": "Configuration options for test coverage gap detection",
+      "properties": {
+        "basePath": {
+          "type": "string",
+          "minLength": 0,
+          "description": "Root path to scan. Empty string defaults to current directory."
+        },
+        "language": {
+          "$ref": "#/definitions/SupportedLanguage",
+          "description": "Language to check. Empty triggers auto-detection."
+        },
+        "stagedOnly": {
+          "type": "boolean",
+          "default": false,
+          "description": "Only check git-staged files"
+        },
+        "ignoreFile": {
+          "type": "string",
+          "description": "Path to file containing patterns to ignore"
+        },
+        "threshold": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Coverage threshold percentage (0-100)"
+        },
+        "customPatterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Additional regex ignore patterns"
+        }
+      },
+      "additionalProperties": false
+    },
+    "MissingTestFile": {
+      "type": "object",
+      "description": "A source file without a corresponding test file",
+      "properties": {
+        "sourceFile": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Relative path to the source file"
+        },
+        "expectedTest": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Relative path to the expected test file"
+        },
+        "language": {
+          "$ref": "#/definitions/SupportedLanguage"
+        }
+      },
+      "required": ["sourceFile", "expectedTest"],
+      "additionalProperties": false
+    },
+    "Check": {
+      "type": "object",
+      "description": "A single validation check result",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Check identifier"
+        },
+        "passed": {
+          "type": "boolean",
+          "description": "Whether the check passed"
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable check result message"
+        }
+      },
+      "required": ["name", "passed", "message"],
+      "additionalProperties": false
+    },
+    "TestCoverageGapResult": {
+      "type": "object",
+      "description": "Result of test coverage gap detection",
+      "properties": {
+        "valid": {
+          "type": "boolean",
+          "description": "Overall validation result"
+        },
+        "checks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Check"
+          },
+          "description": "Individual check results"
+        },
+        "message": {
+          "type": "string",
+          "description": "Summary message"
+        },
+        "remediation": {
+          "type": "string",
+          "description": "Remediation steps if validation failed"
+        },
+        "basePath": {
+          "type": "string",
+          "description": "Resolved absolute path that was scanned"
+        },
+        "language": {
+          "$ref": "#/definitions/SupportedLanguage"
+        },
+        "stagedOnly": {
+          "type": "boolean"
+        },
+        "totalSourceFiles": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "filesWithTests": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "filesWithoutTests": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "coveragePercent": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "threshold": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "missingTests": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MissingTestFile"
+          }
+        },
+        "ignorePatterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": ["valid", "checks", "message"],
+      "additionalProperties": false
+    }
+  },
+  "type": "object",
+  "properties": {
+    "options": {
+      "$ref": "#/definitions/TestCoverageGapOptions"
+    },
+    "result": {
+      "$ref": "#/definitions/TestCoverageGapResult"
+    }
+  },
+  "additionalProperties": false
+}

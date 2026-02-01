@@ -1,10 +1,15 @@
 package internal
 
 import (
+	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
+
+	"github.com/santhosh-tekuri/jsonschema/v6"
 )
 
 // NamingPatterns defines the regex patterns for artifact naming conventions.
@@ -21,6 +26,106 @@ var NamingPatterns = map[string]*regexp.Regexp{
 	"skill":   regexp.MustCompile(`^Skill-[\w]+-\d{3}\.md$`),
 	"retro":   regexp.MustCompile(`^\d{4}-\d{2}-\d{2}-[\w-]+\.md$`),
 	"session": regexp.MustCompile(`^\d{4}-\d{2}-\d{2}-session-\d+\.md$`),
+}
+
+// NamingPatternInput represents input for naming pattern validation.
+type NamingPatternInput struct {
+	FileName    string `json:"fileName"`
+	PatternType string `json:"patternType,omitempty"`
+}
+
+var (
+	namingPatternSchemaOnce     sync.Once
+	namingPatternSchemaCompiled *jsonschema.Schema
+	namingPatternSchemaErr      error
+	namingPatternSchemaData     []byte
+)
+
+// SetNamingPatternSchemaData sets the schema data for naming pattern validation.
+func SetNamingPatternSchemaData(data []byte) {
+	namingPatternSchemaData = data
+}
+
+// getNamingPatternSchema returns the compiled naming pattern schema.
+func getNamingPatternSchema() (*jsonschema.Schema, error) {
+	namingPatternSchemaOnce.Do(func() {
+		if namingPatternSchemaData == nil {
+			namingPatternSchemaErr = fmt.Errorf("naming pattern schema data not set; call SetNamingPatternSchemaData first")
+			return
+		}
+
+		var schemaDoc any
+		if err := json.Unmarshal(namingPatternSchemaData, &schemaDoc); err != nil {
+			namingPatternSchemaErr = fmt.Errorf("failed to parse naming pattern schema: %w", err)
+			return
+		}
+
+		c := jsonschema.NewCompiler()
+		if err := c.AddResource("naming-pattern.schema.json", schemaDoc); err != nil {
+			namingPatternSchemaErr = fmt.Errorf("failed to add naming pattern schema resource: %w", err)
+			return
+		}
+
+		namingPatternSchemaCompiled, namingPatternSchemaErr = c.Compile("naming-pattern.schema.json")
+	})
+	return namingPatternSchemaCompiled, namingPatternSchemaErr
+}
+
+// ValidateNamingPatternInput validates naming pattern input against the JSON Schema.
+func ValidateNamingPatternInput(input NamingPatternInput) bool {
+	schema, err := getNamingPatternSchema()
+	if err != nil {
+		return false
+	}
+
+	data, err := json.Marshal(input)
+	if err != nil {
+		return false
+	}
+
+	var inputMap any
+	if err := json.Unmarshal(data, &inputMap); err != nil {
+		return false
+	}
+
+	return schema.Validate(inputMap) == nil
+}
+
+// GetNamingPatternInputErrors returns validation errors for naming pattern input.
+func GetNamingPatternInputErrors(input NamingPatternInput) []ValidationError {
+	schema, err := getNamingPatternSchema()
+	if err != nil {
+		return []ValidationError{{
+			Field:      "",
+			Constraint: "schema",
+			Message:    err.Error(),
+		}}
+	}
+
+	data, err := json.Marshal(input)
+	if err != nil {
+		return []ValidationError{{
+			Field:      "",
+			Constraint: "marshal",
+			Message:    err.Error(),
+		}}
+	}
+
+	var inputMap any
+	if err := json.Unmarshal(data, &inputMap); err != nil {
+		return []ValidationError{{
+			Field:      "",
+			Constraint: "unmarshal",
+			Message:    err.Error(),
+		}}
+	}
+
+	err = schema.Validate(inputMap)
+	if err == nil {
+		return []ValidationError{}
+	}
+
+	return ExtractValidationErrors(err)
 }
 
 // ConsistencyValidationResult extends ValidationResult with consistency-specific fields.

@@ -1,12 +1,17 @@
 package internal
 
 import (
+	"encoding/json"
+	"fmt"
 	"math"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
+
+	"github.com/santhosh-tekuri/jsonschema/v6"
 )
 
 // MemoryIndexValidationResult represents the outcome of memory index validation.
@@ -104,9 +109,103 @@ type MemoryIndexSummary struct {
 
 // IndexEntry represents a parsed entry from a domain index.
 type IndexEntry struct {
-	Keywords    []string
-	FileName    string
-	RawKeywords string
+	Keywords    []string `json:"keywords"`
+	FileName    string   `json:"fileName"`
+	RawKeywords string   `json:"rawKeywords,omitempty"`
+}
+
+var (
+	memoryIndexEntrySchemaOnce     sync.Once
+	memoryIndexEntrySchemaCompiled *jsonschema.Schema
+	memoryIndexEntrySchemaErr      error
+	memoryIndexEntrySchemaData     []byte
+)
+
+// SetMemoryIndexEntrySchemaData sets the schema data for memory index entry validation.
+func SetMemoryIndexEntrySchemaData(data []byte) {
+	memoryIndexEntrySchemaData = data
+}
+
+// getMemoryIndexEntrySchema returns the compiled memory index entry schema.
+func getMemoryIndexEntrySchema() (*jsonschema.Schema, error) {
+	memoryIndexEntrySchemaOnce.Do(func() {
+		if memoryIndexEntrySchemaData == nil {
+			memoryIndexEntrySchemaErr = fmt.Errorf("memory index entry schema data not set; call SetMemoryIndexEntrySchemaData first")
+			return
+		}
+
+		var schemaDoc any
+		if err := json.Unmarshal(memoryIndexEntrySchemaData, &schemaDoc); err != nil {
+			memoryIndexEntrySchemaErr = fmt.Errorf("failed to parse memory index entry schema: %w", err)
+			return
+		}
+
+		c := jsonschema.NewCompiler()
+		if err := c.AddResource("memory-index-entry.schema.json", schemaDoc); err != nil {
+			memoryIndexEntrySchemaErr = fmt.Errorf("failed to add memory index entry schema resource: %w", err)
+			return
+		}
+
+		memoryIndexEntrySchemaCompiled, memoryIndexEntrySchemaErr = c.Compile("memory-index-entry.schema.json")
+	})
+	return memoryIndexEntrySchemaCompiled, memoryIndexEntrySchemaErr
+}
+
+// ValidateIndexEntry validates an IndexEntry against the JSON Schema.
+func ValidateIndexEntry(entry IndexEntry) bool {
+	schema, err := getMemoryIndexEntrySchema()
+	if err != nil {
+		return false
+	}
+
+	data, err := json.Marshal(entry)
+	if err != nil {
+		return false
+	}
+
+	var entryMap any
+	if err := json.Unmarshal(data, &entryMap); err != nil {
+		return false
+	}
+
+	return schema.Validate(entryMap) == nil
+}
+
+// GetIndexEntryErrors returns validation errors for an IndexEntry.
+func GetIndexEntryErrors(entry IndexEntry) []ValidationError {
+	schema, err := getMemoryIndexEntrySchema()
+	if err != nil {
+		return []ValidationError{{
+			Field:      "",
+			Constraint: "schema",
+			Message:    err.Error(),
+		}}
+	}
+
+	data, err := json.Marshal(entry)
+	if err != nil {
+		return []ValidationError{{
+			Field:      "",
+			Constraint: "marshal",
+			Message:    err.Error(),
+		}}
+	}
+
+	var entryMap any
+	if err := json.Unmarshal(data, &entryMap); err != nil {
+		return []ValidationError{{
+			Field:      "",
+			Constraint: "unmarshal",
+			Message:    err.Error(),
+		}}
+	}
+
+	err = schema.Validate(entryMap)
+	if err == nil {
+		return []ValidationError{}
+	}
+
+	return ExtractValidationErrors(err)
 }
 
 // DomainIndex represents a domain index file.

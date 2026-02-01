@@ -4,20 +4,16 @@
  * Tests CWE-22 (Path Traversal) and CWE-59 (Symlink Attack) prevention.
  */
 
-import { describe, test, expect, beforeEach, mock } from "bun:test";
+import { describe, test, expect, beforeEach, vi } from "vitest";
 import * as os from "os";
 import * as path from "path";
 
-// Mock filesystem
-const mockFs = {
-  existsSync: mock(() => true) as ReturnType<typeof mock<(p: unknown) => boolean>>,
-  realpathSync: mock((p: unknown) => String(p)) as ReturnType<typeof mock<(p: unknown) => string>>,
-  lstatSync: mock(() => ({ isSymbolicLink: () => false })) as ReturnType<
-    typeof mock<(p: unknown) => { isSymbolicLink: () => boolean }>
-  >,
-};
-
-mock.module("fs", () => mockFs);
+// vi.mock must use inline factory - cannot reference top-level variables
+vi.mock("fs", () => ({
+  existsSync: vi.fn(() => true),
+  realpathSync: vi.fn((p: unknown) => String(p)),
+  lstatSync: vi.fn(() => ({ isSymbolicLink: () => false })),
+}));
 
 import {
   validateProjectName,
@@ -25,6 +21,10 @@ import {
   validateDeleteOperation,
   isSymlink,
 } from "../pathValidation";
+import * as fs from "fs";
+
+// Type-safe reference to mocked fs
+const mockFs = vi.mocked(fs);
 
 describe("validateProjectName", () => {
   test("accepts valid project name", () => {

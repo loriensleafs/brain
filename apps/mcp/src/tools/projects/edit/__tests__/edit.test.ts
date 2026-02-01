@@ -18,7 +18,7 @@
  * The tests validate behavior through response values.
  */
 
-import { describe, test, expect, beforeEach, afterEach, mock } from "bun:test";
+import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 import * as os from "os";
 import * as path from "path";
 
@@ -53,21 +53,21 @@ interface MockDirEntry {
 
 // Mock filesystem operations before any imports
 const mockFs = {
-  existsSync: mock(() => false) as ReturnType<typeof mock<(p: unknown) => boolean>>,
-  readFileSync: mock(() => "{}") as ReturnType<typeof mock<(p: unknown) => string>>,
-  writeFileSync: mock(() => undefined) as ReturnType<typeof mock<(p: unknown, data: unknown) => void>>,
-  readdirSync: mock(() => [] as MockDirEntry[]) as ReturnType<typeof mock<(p: unknown, opts?: unknown) => MockDirEntry[]>>,
-  statSync: mock(() => ({ size: 0 })) as ReturnType<typeof mock<(p: unknown) => { size: number }>>,
-  cpSync: mock(() => {
+  existsSync: vi.fn(() => false) as ReturnType<typeof mock<(p: unknown) => boolean>>,
+  readFileSync: vi.fn(() => "{}") as ReturnType<typeof mock<(p: unknown) => string>>,
+  writeFileSync: vi.fn(() => undefined) as ReturnType<typeof mock<(p: unknown, data: unknown) => void>>,
+  readdirSync: vi.fn(() => [] as MockDirEntry[]) as ReturnType<typeof mock<(p: unknown, opts?: unknown) => MockDirEntry[]>>,
+  statSync: vi.fn(() => ({ size: 0 })) as ReturnType<typeof mock<(p: unknown) => { size: number }>>,
+  cpSync: vi.fn(() => {
     // Track copy operation
   }) as ReturnType<typeof mock<(src: unknown, dest: unknown, opts?: unknown) => void>>,
-  rmSync: mock(() => {
+  rmSync: vi.fn(() => {
     // Track delete operation
   }) as ReturnType<typeof mock<(p: unknown, opts?: unknown) => void>>,
-  realpathSync: mock((p: unknown) => String(p)) as ReturnType<typeof mock<(p: unknown) => string>>,
+  realpathSync: vi.fn((p: unknown) => String(p)) as ReturnType<typeof mock<(p: unknown) => string>>,
 };
 
-mock.module("fs", () => mockFs);
+vi.mock("fs", () => mockFs);
 
 // Mock @brain/utils to use our mocked fs
 // The actual module uses Bun.file() which can't be mocked
@@ -84,7 +84,7 @@ class MockProjectNotFoundError extends Error {
 // Stores project configs for @brain/utils mock
 let mockProjects: Record<string, string> = {};
 
-mock.module("@brain/utils", () => ({
+vi.mock("@brain/utils", () => ({
   getProjectMemoriesPath: async (project: string) => {
     const path = mockProjects[project];
     if (!path) {
@@ -97,7 +97,7 @@ mock.module("@brain/utils", () => ({
 }));
 
 // Mock basic-memory client to prevent real network calls
-mock.module("../../../proxy/client", () => ({
+vi.mock("../../../proxy/client", () => ({
   getBasicMemoryClient: () => Promise.resolve({
     callTool: () => Promise.resolve({ content: [{ type: "text", text: "[]" }] }),
   }),
@@ -247,7 +247,7 @@ describe("edit_project tool", () => {
 
   describe("CODE auto-update preservation", () => {
     /**
-     * Note: CODE auto-update tests are skipped because mock.module limitations
+     * Note: CODE auto-update tests are skipped because vi.mock limitations
      * prevent proper mocking of the config module's getCodePath function.
      * The auto-update logic requires getCodePath to return the old code path,
      * but the mocked fs doesn't propagate to the config module.
@@ -267,7 +267,7 @@ describe("edit_project tool", () => {
       // Then: memories_path should auto-update to ${new_code_path}/docs
       //       memories_path_mode should be "CODE (auto-updated)"
 
-      // Due to mock.module limitations, we verify the implementation logic
+      // Due to vi.mock limitations, we verify the implementation logic
       // exists in the handler by checking that when old_code_path is available
       // and memories_path was old_code_path/docs, it would trigger auto-update.
       //

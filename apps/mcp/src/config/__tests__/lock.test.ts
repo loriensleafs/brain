@@ -11,24 +11,24 @@
  * - Lock timeout handling
  */
 
-import { describe, test, expect, beforeEach, afterEach, mock } from "bun:test";
+import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 import * as os from "os";
 import * as path from "path";
 
 // Mock filesystem
 const mockFs = {
-  existsSync: mock(() => false) as ReturnType<typeof mock<(p: string) => boolean>>,
-  mkdirSync: mock(() => undefined) as ReturnType<
+  existsSync: vi.fn(() => false) as ReturnType<typeof mock<(p: string) => boolean>>,
+  mkdirSync: vi.fn(() => undefined) as ReturnType<
     typeof mock<(p: string, opts: unknown) => void>
   >,
-  openSync: mock(() => 3) as ReturnType<typeof mock<(p: string, flags: number, mode?: number) => number>>,
-  writeSync: mock(() => undefined) as ReturnType<typeof mock<(fd: number, content: string) => void>>,
-  closeSync: mock(() => undefined) as ReturnType<typeof mock<(fd: number) => void>>,
-  unlinkSync: mock(() => undefined) as ReturnType<typeof mock<(p: string) => void>>,
-  statSync: mock(() => ({ mtimeMs: Date.now() })) as ReturnType<
+  openSync: vi.fn(() => 3) as ReturnType<typeof mock<(p: string, flags: number, mode?: number) => number>>,
+  writeSync: vi.fn(() => undefined) as ReturnType<typeof mock<(fd: number, content: string) => void>>,
+  closeSync: vi.fn(() => undefined) as ReturnType<typeof mock<(fd: number) => void>>,
+  unlinkSync: vi.fn(() => undefined) as ReturnType<typeof mock<(p: string) => void>>,
+  statSync: vi.fn(() => ({ mtimeMs: Date.now() })) as ReturnType<
     typeof mock<(p: string) => { mtimeMs: number }>
   >,
-  readdirSync: mock(() => [] as string[]) as ReturnType<typeof mock<(p: string) => string[]>>,
+  readdirSync: vi.fn(() => [] as string[]) as ReturnType<typeof mock<(p: string) => string[]>>,
   constants: {
     O_CREAT: 0x0200,
     O_EXCL: 0x0800,
@@ -36,17 +36,17 @@ const mockFs = {
   },
 };
 
-mock.module("fs", () => mockFs);
+vi.mock("fs", () => mockFs);
 
 // Mock logger
 const mockLogger = {
-  debug: mock(() => undefined),
-  info: mock(() => undefined),
-  warn: mock(() => undefined),
-  error: mock(() => undefined),
+  debug: vi.fn(() => undefined),
+  info: vi.fn(() => undefined),
+  warn: vi.fn(() => undefined),
+  error: vi.fn(() => undefined),
 };
 
-mock.module("../../utils/internal/logger", () => ({
+vi.mock("../../utils/internal/logger", () => ({
   logger: mockLogger,
 }));
 

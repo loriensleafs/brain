@@ -9,7 +9,7 @@
  * - Immutable state helpers
  */
 
-import { describe, test, expect, beforeEach } from "bun:test";
+import { describe, test, expect, beforeEach } from "vitest";
 import { createDefaultSessionState } from "../types";
 import {
   DEFAULT_MODE,

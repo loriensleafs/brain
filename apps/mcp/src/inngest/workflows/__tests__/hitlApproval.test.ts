@@ -5,7 +5,7 @@
  * requiring the Inngest dev server to be running.
  */
 
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect } from "vitest";
 import {
   hitlApprovalWorkflow,
   type ApprovalStatus,

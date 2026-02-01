@@ -11,7 +11,7 @@
  * - Remove old config after success
  */
 
-import { describe, test, expect, beforeEach, mock } from "bun:test";
+import { describe, test, expect, beforeEach, vi } from "vitest";
 import * as os from "os";
 import * as path from "path";
 import type { BrainConfig } from "../schema";
@@ -23,33 +23,33 @@ let deletedFiles: Set<string>;
 
 // Mock filesystem
 const mockFs = {
-  existsSync: mock((p: string) => fileSystem.has(p)) as ReturnType<
+  existsSync: vi.fn((p: string) => fileSystem.has(p)) as ReturnType<
     typeof mock<(p: string) => boolean>
   >,
-  readFileSync: mock((p: string) => {
+  readFileSync: vi.fn((p: string) => {
     const content = fileSystem.get(p);
     if (!content) throw new Error(`ENOENT: no such file: ${p}`);
     return content;
   }) as ReturnType<typeof mock<(p: string, enc: string) => string>>,
-  writeFileSync: mock((p: string, content: string) => {
+  writeFileSync: vi.fn((p: string, content: string) => {
     fileSystem.set(p, content);
   }) as ReturnType<typeof mock<(p: string, content: string, opts: unknown) => void>>,
-  mkdirSync: mock(() => undefined) as ReturnType<
+  mkdirSync: vi.fn(() => undefined) as ReturnType<
     typeof mock<(p: string, opts: unknown) => void>
   >,
-  copyFileSync: mock((src: string, dest: string) => {
+  copyFileSync: vi.fn((src: string, dest: string) => {
     const content = fileSystem.get(src);
     if (!content) throw new Error(`ENOENT: no such file: ${src}`);
     fileSystem.set(dest, content);
   }) as ReturnType<typeof mock<(src: string, dest: string) => void>>,
-  unlinkSync: mock((p: string) => {
+  unlinkSync: vi.fn((p: string) => {
     fileSystem.delete(p);
     deletedFiles.add(p);
   }) as ReturnType<typeof mock<(p: string) => void>>,
-  chmodSync: mock(() => undefined) as ReturnType<
+  chmodSync: vi.fn(() => undefined) as ReturnType<
     typeof mock<(p: string, mode: number) => void>
   >,
-  renameSync: mock((from: string, to: string) => {
+  renameSync: vi.fn((from: string, to: string) => {
     const content = fileSystem.get(from);
     if (content) {
       fileSystem.set(to, content);
@@ -58,37 +58,37 @@ const mockFs = {
   }) as ReturnType<typeof mock<(from: string, to: string) => void>>,
 };
 
-mock.module("fs", () => mockFs);
+vi.mock("fs", () => mockFs);
 
 // Mock brain-config module
 const mockBrainConfig = {
-  saveBrainConfig: mock(async (config: BrainConfig) => {
+  saveBrainConfig: vi.fn(async (config: BrainConfig) => {
     const newPath = path.join(os.homedir(), ".config", "brain", "config.json");
     fileSystem.set(newPath, JSON.stringify(config, null, 2));
   }),
-  loadBrainConfig: mock(async () => {
+  loadBrainConfig: vi.fn(async () => {
     const newPath = path.join(os.homedir(), ".config", "brain", "config.json");
     const content = fileSystem.get(newPath);
     if (!content) return { ...DEFAULT_BRAIN_CONFIG };
     return JSON.parse(content) as BrainConfig;
   }),
-  getBrainConfigDir: mock(() => path.join(os.homedir(), ".config", "brain")),
-  getBrainConfigPath: mock(() =>
+  getBrainConfigDir: vi.fn(() => path.join(os.homedir(), ".config", "brain")),
+  getBrainConfigPath: vi.fn(() =>
     path.join(os.homedir(), ".config", "brain", "config.json")
   ),
 };
 
-mock.module("../brain-config", () => mockBrainConfig);
+vi.mock("../brain-config", () => mockBrainConfig);
 
 // Mock translation-layer module
 const mockTranslationLayer = {
-  syncConfigToBasicMemory: mock(async () => undefined),
+  syncConfigToBasicMemory: vi.fn(async () => undefined),
 };
 
-mock.module("../translation-layer", () => mockTranslationLayer);
+vi.mock("../translation-layer", () => mockTranslationLayer);
 
 // Mock logger
-mock.module("../../utils/internal/logger", () => ({
+vi.mock("../../utils/internal/logger", () => ({
   logger: {
     info: () => {},
     debug: () => {},

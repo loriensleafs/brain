@@ -3,7 +3,7 @@
  *
  * Validates that JSON Schema validators behave correctly for session state types.
  */
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect } from "vitest";
 import {
   validateSessionState,
   parseSessionState,

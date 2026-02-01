@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://brain.dev/schemas/domain/scenario-config.json",
+  "title": "ScenarioConfig",
+  "description": "Schema for scenario detection configuration. Validates scenario type configurations used by detect-scenario.",
+  "type": "object",
+  "properties": {
+    "keywords": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "description": "Keywords that trigger this scenario"
+    },
+    "recommended": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "description": "Recommended action message"
+    },
+    "directory": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$",
+      "description": "Target directory for notes"
+    },
+    "noteType": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$",
+      "description": "Type of note to create"
+    }
+  },
+  "required": ["keywords", "recommended", "directory", "noteType"],
+  "additionalProperties": false
+}

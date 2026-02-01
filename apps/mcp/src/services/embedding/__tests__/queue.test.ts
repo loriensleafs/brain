@@ -3,7 +3,7 @@
  * Tests queue CRUD operations and retry logic.
  */
 
-import { describe, test, expect, beforeEach, afterEach, spyOn } from "bun:test";
+import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 import { Database } from "bun:sqlite";
 import * as sqliteVec from "sqlite-vec";
 import * as connectionModule from "../../../db/connection";
@@ -18,7 +18,7 @@ import {
 
 describe("embedding queue", () => {
   let db: Database;
-  let createVectorConnectionSpy: ReturnType<typeof spyOn>;
+  let createVectorConnectionSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     // Create fresh in-memory database for each test
@@ -27,7 +27,7 @@ describe("embedding queue", () => {
 
     // Spy on createVectorConnection to return our test database
     // Return a wrapper that prevents actual close() to keep db available for assertions
-    createVectorConnectionSpy = spyOn(
+    createVectorConnectionSpy = vi.spyOn(
       connectionModule,
       "createVectorConnection"
     ).mockImplementation(() => {

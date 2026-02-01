@@ -1,4 +1,4 @@
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect } from "vitest";
 import { SearchArgsSchema, type SearchResult } from "../schema";
 
 describe("search schema validation", () => {
