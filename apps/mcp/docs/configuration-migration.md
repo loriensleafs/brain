@@ -139,36 +139,6 @@ brain projects create --name proj --code-path ~/Dev/proj --memories-path CODE
 
 The old flags continue to work but display deprecation warnings.
 
-## Migrating .agents/ Content
-
-If you have `.agents/` directories in your projects, migrate them to Brain's searchable memory system:
-
-### Preview
-
-```bash
-brain migrate-agents --dry-run
-```
-
-### Execute
-
-```bash
-brain migrate-agents
-```
-
-### Specific Project
-
-```bash
-brain migrate-agents --project myproject
-```
-
-### Verify Indexing
-
-```bash
-brain migrate-agents --verify-only
-```
-
-This checks that all migrated memories are properly indexed and searchable.
-
 ## Troubleshooting
 
 ### Migration Fails with Permission Error
@@ -218,17 +188,13 @@ brain projects list
 
 ### Memories Not Found After Migration
 
-Run indexing verification:
+If memories are missing from the index, verify project configuration:
 
 ```bash
-brain migrate-agents --verify-only
+brain config --json
 ```
 
-If memories are missing from the index, re-run migration:
-
-```bash
-brain migrate-agents
-```
+Check that the project's memories path is correct and accessible.
 
 ## What Happens During Migration
 

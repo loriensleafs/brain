@@ -9,7 +9,7 @@
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 
 /**
- * Input migration result from migrate_cluster
+ * Input migration result from a migration operation
  */
 export interface MigrationResultInput {
 	source: string;
@@ -53,13 +53,13 @@ export interface ValidateImportOutput {
 
 export const toolDefinition: Tool = {
 	name: "validate_import",
-	description: `Verify migration quality after running migrate_cluster. Checks that:
+	description: `Verify migration quality. Checks that:
 - Target files exist and contain content (content preservation)
 - Migrated files now conform to Brain project conventions
 - Returns a quality score based on conformance improvement
 
 Usage:
-1. Run migrate_cluster to execute migrations
+1. Execute migrations
 2. Pass the migration results to this tool
 3. Review the quality score and any remaining issues
 
@@ -73,7 +73,7 @@ The tool re-runs conformance checks on migrated files to verify improvements.`,
 			},
 			migration_results: {
 				type: "array",
-				description: "Array of migration results from migrate_cluster",
+				description: "Array of migration results",
 				items: {
 					type: "object",
 					properties: {

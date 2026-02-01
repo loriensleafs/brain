@@ -400,7 +400,7 @@ export async function handler(
 				reason: "Migration disabled (migrate_affected=false)",
 				affected_projects: affectedProjects,
 				warning:
-					"Projects using DEFAULT mode may have broken paths. Use migrate_agents tool to migrate manually.",
+					"Projects using DEFAULT mode may have broken paths. Migrate manually if needed.",
 			};
 		}
 

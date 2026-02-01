@@ -31,8 +31,6 @@ import * as findDuplicates from "./find-duplicates";
 import * as listFeaturesByPriority from "./list-features-by-priority";
 import * as maintainKnowledgeGraph from "./maintain-knowledge-graph";
 import * as manageBacklog from "./manage-backlog";
-import * as migrateAgents from "./migrate-agents";
-import * as migrateCluster from "./migrate-cluster";
 // Unified projects tools (each tool in its own subdirectory)
 import * as projects from "./projects";
 import * as search from "./search";
@@ -82,15 +80,6 @@ const WRAPPER_TOOLS: Map<string, WrapperTool> = new Map([
 		{
 			definition: analyzeProject.toolDefinition,
 			handler: analyzeProject.handler as (
-				args: Record<string, unknown>,
-			) => Promise<CallToolResult>,
-		},
-	],
-	[
-		"migrate_cluster",
-		{
-			definition: migrateCluster.toolDefinition,
-			handler: migrateCluster.handler as (
 				args: Record<string, unknown>,
 			) => Promise<CallToolResult>,
 		},
@@ -237,15 +226,6 @@ const WRAPPER_TOOLS: Map<string, WrapperTool> = new Map([
 		{
 			definition: projects.deleteProject.toolDefinition,
 			handler: projects.deleteProject.handler as unknown as (
-				args: Record<string, unknown>,
-			) => Promise<CallToolResult>,
-		},
-	],
-	[
-		"migrate_agents",
-		{
-			definition: migrateAgents.toolDefinition,
-			handler: migrateAgents.handler as unknown as (
 				args: Record<string, unknown>,
 			) => Promise<CallToolResult>,
 		},

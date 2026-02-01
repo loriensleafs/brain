@@ -65,7 +65,7 @@ export async function handler(
 			content: [
 				{
 					type: "text" as const,
-					text: "No migration results provided. Run migrate_cluster first and pass its results.",
+					text: "No migration results provided. Execute migrations first and pass the results.",
 				},
 			],
 			isError: true,
