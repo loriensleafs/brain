@@ -507,7 +507,7 @@ describe("migrateToNewConfigLocation", () => {
 
     mockBrainConfig.loadBrainConfig.mockResolvedValue({
       ...DEFAULT_BRAIN_CONFIG,
-      version: "1.0.0", // Wrong version
+      version: "1.0.0" as "2.0.0", // Wrong version (cast to satisfy type, test verifies failure)
     });
 
     const result = await migrateToNewConfigLocation();

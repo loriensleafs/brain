@@ -326,8 +326,9 @@ export class ConfigFileWatcher {
     // Validate the config
     const validation = validateBrainConfig(newConfig);
     if (!validation.success) {
+      const errorMsg = validation.errors?.map(e => e.message).join("; ") || "Validation failed";
       await this.handleInvalidConfig(
-        new Error(`Validation failed: ${validation.error?.message}`)
+        new Error(`Validation failed: ${errorMsg}`)
       );
       return;
     }

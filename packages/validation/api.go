@@ -25,6 +25,15 @@ var deleteProjectSchemaData []byte
 //go:embed schemas/tools/projects/active-project.schema.json
 var activeProjectSchemaData []byte
 
+//go:embed schemas/tools/list-features-by-priority.schema.json
+var listFeaturesByPrioritySchemaData []byte
+
+//go:embed schemas/config/brain-config.schema.json
+var brainConfigSchemaData []byte
+
+//go:embed schemas/domain/workflow.schema.json
+var workflowSchemaData []byte
+
 func init() {
 	// Initialize internal package with schema data
 	internal.SetBootstrapSchemaData(bootstrapSchemaData)
@@ -32,6 +41,9 @@ func init() {
 	internal.SetListProjectsSchemaData(listProjectsSchemaData)
 	internal.SetDeleteProjectSchemaData(deleteProjectSchemaData)
 	internal.SetActiveProjectSchemaData(activeProjectSchemaData)
+	internal.SetListFeaturesByPrioritySchemaData(listFeaturesByPrioritySchemaData)
+	internal.SetBrainConfigSchemaData(brainConfigSchemaData)
+	internal.SetWorkflowSchemaData(workflowSchemaData)
 }
 
 // Re-export core types
@@ -112,21 +124,48 @@ type (
 	CheckConclusion         = internal.CheckConclusion
 )
 
-// Re-export schema validation types (from internal/validate_bootstrap.go, validate_search.go, validate_projects.go)
+// Re-export schema validation types (from internal/validate_bootstrap.go, validate_search.go, validate_projects.go, validate_list_features_by_priority.go, validate_brain_config.go)
 type (
-	BootstrapContextArgs = internal.BootstrapContextArgs
-	SearchArgs           = internal.SearchArgs
-	ListProjectsArgs     = internal.ListProjectsArgs
-	DeleteProjectArgs    = internal.DeleteProjectArgs
-	ActiveProjectArgs    = internal.ActiveProjectArgs
+	BootstrapContextArgs       = internal.BootstrapContextArgs
+	SearchArgs                 = internal.SearchArgs
+	ListProjectsArgs           = internal.ListProjectsArgs
+	DeleteProjectArgs          = internal.DeleteProjectArgs
+	ActiveProjectArgs          = internal.ActiveProjectArgs
+	ListFeaturesByPriorityArgs = internal.ListFeaturesByPriorityArgs
+	BrainConfig                = internal.BrainConfig
+	ProjectConfig              = internal.ProjectConfig
+	DefaultsConfig             = internal.DefaultsConfig
+	SyncConfig                 = internal.SyncConfig
+	LoggingConfig              = internal.LoggingConfig
+	WatcherConfig              = internal.WatcherConfig
+	MemoriesMode               = internal.MemoriesMode
+	LogLevel                   = internal.LogLevel
 )
 
 // Re-export default values
 var (
-	BootstrapContextArgsDefaults = internal.BootstrapContextArgsDefaults
-	SearchArgsDefaults           = internal.SearchArgsDefaults
-	DeleteProjectArgsDefaults    = internal.DeleteProjectArgsDefaults
-	ActiveProjectArgsDefaults    = internal.ActiveProjectArgsDefaults
+	BootstrapContextArgsDefaults       = internal.BootstrapContextArgsDefaults
+	SearchArgsDefaults                 = internal.SearchArgsDefaults
+	DeleteProjectArgsDefaults          = internal.DeleteProjectArgsDefaults
+	ActiveProjectArgsDefaults          = internal.ActiveProjectArgsDefaults
+	ListFeaturesByPriorityArgsDefaults = internal.ListFeaturesByPriorityArgsDefaults
+	BrainConfigDefaults                = internal.BrainConfigDefaults
+)
+
+// Re-export MemoriesMode constants
+const (
+	MemoriesModeDefault = internal.MemoriesModeDefault
+	MemoriesModeCode    = internal.MemoriesModeCode
+	MemoriesModeCustom  = internal.MemoriesModeCustom
+)
+
+// Re-export LogLevel constants
+const (
+	LogLevelTrace = internal.LogLevelTrace
+	LogLevelDebug = internal.LogLevelDebug
+	LogLevelInfo  = internal.LogLevelInfo
+	LogLevelWarn  = internal.LogLevelWarn
+	LogLevelError = internal.LogLevelError
 )
 
 // Mergeable state type and constants
@@ -230,6 +269,28 @@ var (
 	ValidateActiveProjectArgs  = internal.ValidateActiveProjectArgs
 	ParseActiveProjectArgs     = internal.ParseActiveProjectArgs
 	GetActiveProjectArgsErrors = internal.GetActiveProjectArgsErrors
+)
+
+// ListFeaturesByPriority validation functions
+var (
+	ValidateListFeaturesByPriorityArgs  = internal.ValidateListFeaturesByPriorityArgs
+	ParseListFeaturesByPriorityArgs     = internal.ParseListFeaturesByPriorityArgs
+	GetListFeaturesByPriorityArgsErrors = internal.GetListFeaturesByPriorityArgsErrors
+)
+
+// BrainConfig validation functions
+var (
+	ValidateBrainConfig  = internal.ValidateBrainConfig
+	ParseBrainConfig     = internal.ParseBrainConfig
+	GetBrainConfigErrors = internal.GetBrainConfigErrors
+	DefaultBrainConfig   = internal.DefaultBrainConfig
+)
+
+// Workflow validation functions (schema-based)
+var (
+	ValidateWorkflowState  = internal.ValidateWorkflowState
+	ParseWorkflowState     = internal.ParseWorkflowState
+	GetWorkflowStateErrors = internal.GetWorkflowStateErrors
 )
 
 // Project resolution function

@@ -806,9 +806,9 @@ describe("Schema Validation", () => {
 
 describe("Rollback Manager", () => {
   describe("RollbackSnapshot interface", () => {
-    test("snapshot structure is correct", async () => {
+    test("snapshot structure is correct", () => {
       // Test the snapshot interface structure
-      const { RollbackSnapshot } = await import("../rollback");
+      // RollbackSnapshot is a TypeScript interface - we verify the shape here
 
       // Create a mock snapshot to test the interface
       const snapshot = {

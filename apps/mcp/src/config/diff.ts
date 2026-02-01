@@ -94,7 +94,7 @@ export function detectConfigDiff(
 ): ConfigDiff {
   // Handle null oldConfig (initial configuration)
   if (oldConfig === null) {
-    const projectNames = Object.keys(newConfig.projects);
+    const projectNames = Object.keys(newConfig.projects ?? {});
     return {
       projectsAdded: projectNames,
       projectsRemoved: [],
@@ -111,8 +111,8 @@ export function detectConfigDiff(
   const globalFieldsChanged: string[] = [];
 
   // Detect project changes
-  const oldProjectNames = new Set(Object.keys(oldConfig.projects));
-  const newProjectNames = new Set(Object.keys(newConfig.projects));
+  const oldProjectNames = new Set(Object.keys(oldConfig.projects ?? {}));
+  const newProjectNames = new Set(Object.keys(newConfig.projects ?? {}));
 
   // Projects added in new config
   for (const name of newProjectNames) {
@@ -131,9 +131,9 @@ export function detectConfigDiff(
   // Projects that exist in both - check for modifications
   for (const name of oldProjectNames) {
     if (newProjectNames.has(name)) {
-      const oldProject = oldConfig.projects[name];
-      const newProject = newConfig.projects[name];
-      if (!projectConfigsEqual(oldProject, newProject)) {
+      const oldProject = oldConfig.projects?.[name];
+      const newProject = newConfig.projects?.[name];
+      if (oldProject && newProject && !projectConfigsEqual(oldProject, newProject)) {
         projectsModified.push(name);
       }
     }
@@ -168,8 +168,9 @@ export function detectConfigDiff(
     projectsAdded.length > 0 ||
     projectsRemoved.length > 0 ||
     projectsModified.some((name) => {
-      const oldProject = oldConfig.projects[name];
-      const newProject = newConfig.projects[name];
+      const oldProject = oldConfig.projects?.[name];
+      const newProject = newConfig.projects?.[name];
+      if (!oldProject || !newProject) return false;
       return pathFieldsChanged(oldProject, newProject);
     }) ||
     (globalFieldsChanged.includes("defaults") &&
@@ -207,7 +208,9 @@ export function detectDetailedConfigDiff(
   for (const name of baseDiff.projectsModified) {
     const oldProject = oldConfig!.projects[name];
     const newProject = newConfig.projects[name];
-    projectChanges[name] = getProjectFieldChanges(oldProject, newProject);
+    if (oldProject && newProject) {
+      projectChanges[name] = getProjectFieldChanges(oldProject, newProject);
+    }
   }
 
   // Get detailed global changes
@@ -336,6 +339,7 @@ export function getDefaultModeAffectedProjects(
   // Find all projects using DEFAULT mode
   const affected: string[] = [];
   for (const [name, project] of Object.entries(newConfig.projects)) {
+    if (!project) continue;
     // DEFAULT is the mode when memories_mode is not set or explicitly "DEFAULT"
     if (!project.memories_mode || project.memories_mode === "DEFAULT") {
       affected.push(name);

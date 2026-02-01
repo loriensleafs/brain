@@ -223,7 +223,8 @@ export class ConfigRollbackManager {
     // Validate config before marking as good
     const validation = validateBrainConfig(config);
     if (!validation.success) {
-      throw new Error(`Cannot mark invalid config as good: ${validation.error?.message}`);
+      const errorMsg = validation.errors?.map(e => e.message).join("; ") || "Validation failed";
+      throw new Error(`Cannot mark invalid config as good: ${errorMsg}`);
     }
 
     // Create and save the lastKnownGood snapshot

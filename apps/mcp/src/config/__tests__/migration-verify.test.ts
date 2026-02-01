@@ -250,8 +250,9 @@ describe("verifyMemoryIndexing", () => {
     });
 
     // Mock content fetch based on permalink
-    mockCallTool.mockImplementation(async (args: { arguments: { identifier: string } }) => {
-      const permalink = args.arguments?.identifier;
+    mockCallTool.mockImplementation(async (args: unknown) => {
+      const typedArgs = args as { arguments?: { identifier?: string } };
+      const permalink = typedArgs.arguments?.identifier;
       if (permalink === "found/memory") {
         return { content: [{ type: "text", text: "Found content" }] };
       }

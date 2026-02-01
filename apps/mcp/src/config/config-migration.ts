@@ -18,7 +18,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
-import { BrainConfig, BrainConfigSchema, DEFAULT_BRAIN_CONFIG, MemoriesMode } from "./schema";
+import { BrainConfig, DEFAULT_BRAIN_CONFIG, MemoriesMode, parseBrainConfig } from "./schema";
 import { saveBrainConfig, loadBrainConfig, getBrainConfigDir, getBrainConfigPath } from "./brain-config";
 import { ConfigRollbackManager } from "./rollback";
 import { syncConfigToBasicMemory } from "./translation-layer";
@@ -207,6 +207,10 @@ export function loadOldConfig(): OldBrainConfig | null {
  * @returns Configuration in new format
  */
 export function transformOldToNew(oldConfig: OldBrainConfig): BrainConfig {
+  const defaultSync = DEFAULT_BRAIN_CONFIG.sync ?? { enabled: true, delay_ms: 500 };
+  const defaultLogging = DEFAULT_BRAIN_CONFIG.logging ?? { level: "info" as const };
+  const defaultWatcher = DEFAULT_BRAIN_CONFIG.watcher ?? { enabled: true, debounce_ms: 2000 };
+
   const newConfig: BrainConfig = {
     $schema: DEFAULT_BRAIN_CONFIG.$schema,
     version: "2.0.0",
@@ -216,14 +220,14 @@ export function transformOldToNew(oldConfig: OldBrainConfig): BrainConfig {
     },
     projects: {},
     sync: {
-      enabled: oldConfig.sync?.enabled ?? DEFAULT_BRAIN_CONFIG.sync.enabled,
-      delay_ms: oldConfig.sync?.delay ?? DEFAULT_BRAIN_CONFIG.sync.delay_ms,
+      enabled: oldConfig.sync?.enabled ?? defaultSync.enabled,
+      delay_ms: oldConfig.sync?.delay ?? defaultSync.delay_ms,
     },
     logging: {
-      level: (oldConfig.log_level as BrainConfig["logging"]["level"]) ||
-        DEFAULT_BRAIN_CONFIG.logging.level,
+      level: (oldConfig.log_level as "trace" | "debug" | "info" | "warn" | "error") ||
+        defaultLogging.level,
     },
-    watcher: { ...DEFAULT_BRAIN_CONFIG.watcher },
+    watcher: { ...defaultWatcher },
   };
 
   // Transform projects
@@ -234,14 +238,14 @@ export function transformOldToNew(oldConfig: OldBrainConfig): BrainConfig {
         continue;
       }
 
-      newConfig.projects[name] = {
+      newConfig.projects![name] = {
         code_path: oldProject.code_path,
       };
 
       // Map notes_path to memories_path
       if (oldProject.notes_path) {
-        newConfig.projects[name].memories_path = oldProject.notes_path;
-        newConfig.projects[name].memories_mode = "CUSTOM";
+        newConfig.projects![name]!.memories_path = oldProject.notes_path;
+        newConfig.projects![name]!.memories_mode = "CUSTOM";
       }
 
       // Map mode to memories_mode
@@ -254,7 +258,7 @@ export function transformOldToNew(oldConfig: OldBrainConfig): BrainConfig {
           CODE: "CODE",
           CUSTOM: "CUSTOM",
         };
-        newConfig.projects[name].memories_mode = modeMap[oldProject.mode] || "DEFAULT";
+        newConfig.projects![name]!.memories_mode = modeMap[oldProject.mode] || "DEFAULT";
       }
     }
   }
@@ -403,11 +407,8 @@ export async function migrateToNewConfigLocation(
   try {
     newConfig = transformOldToNew(oldConfig);
 
-    // Validate the transformed config
-    const validation = BrainConfigSchema.safeParse(newConfig);
-    if (!validation.success) {
-      throw new Error(`Invalid config after transform: ${validation.error.message}`);
-    }
+    // Validate the transformed config by parsing (throws on error)
+    parseBrainConfig(newConfig);
 
     steps.push({ name: "transform_schema", status: "completed" });
   } catch (error) {
@@ -521,7 +522,7 @@ export async function migrateToNewConfigLocation(
   }
 
   logger.info(
-    { backupPath, oldRemoved, projectCount: Object.keys(newConfig.projects).length },
+    { backupPath, oldRemoved, projectCount: Object.keys(newConfig.projects ?? {}).length },
     "Config migration completed successfully"
   );
 

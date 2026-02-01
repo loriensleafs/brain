@@ -18,7 +18,6 @@ import * as path from "path";
 import * as os from "os";
 import {
   BrainConfig,
-  BrainConfigSchema,
   DEFAULT_BRAIN_CONFIG,
   validateBrainConfig,
 } from "./schema";
@@ -202,14 +201,14 @@ export async function loadBrainConfig(options: BrainConfigOptions = {}): Promise
     // Validate against schema
     const result = validateBrainConfig(parsed);
     if (!result.success) {
-      const issues = result.error?.issues || [];
-      const errorDetails = issues
-        .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
+      const errors = result.errors || [];
+      const errorDetails = errors
+        .map((error) => `${error.field || "root"}: ${error.message}`)
         .join("; ");
       throw new BrainConfigError(
         `Config validation failed: ${errorDetails}`,
         "VALIDATION_ERROR",
-        result.error
+        new Error(errorDetails)
       );
     }
 
@@ -278,14 +277,14 @@ export async function saveBrainConfig(
   // Validate config before writing
   const result = validateBrainConfig(config);
   if (!result.success) {
-    const issues = result.error?.issues || [];
-    const errorDetails = issues
-      .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
+    const errors = result.errors || [];
+    const errorDetails = errors
+      .map((error) => `${error.field || "root"}: ${error.message}`)
       .join("; ");
     throw new BrainConfigError(
       `Invalid config: ${errorDetails}`,
       "VALIDATION_ERROR",
-      result.error
+      new Error(errorDetails)
     );
   }
 
@@ -403,7 +402,9 @@ function validateConfigPaths(config: BrainConfig): void {
   }
 
   // Validate project paths
-  for (const [projectName, projectConfig] of Object.entries(config.projects)) {
+  for (const [projectName, projectConfig] of Object.entries(config.projects ?? {})) {
+    if (!projectConfig) continue;
+
     // Validate code_path
     try {
       validatePathOrThrow(projectConfig.code_path);

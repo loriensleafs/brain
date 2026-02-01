@@ -1,15 +1,36 @@
 /**
  * Brain Configuration Schema
  *
- * Zod schema definitions for Brain's global configuration at ~/.config/brain/config.json.
- * This schema represents the user-facing configuration that gets translated to basic-memory's
- * internal config via the translation layer.
+ * TypeScript types and validation for Brain's global configuration at ~/.config/brain/config.json.
+ * This module re-exports types from @brain/validation which uses JSON Schema + AJV.
  *
  * @see ADR-020 for the configuration architecture decision
+ * @see packages/validation/schemas/config/brain-config.schema.json for the canonical schema
  * @see translation-layer.ts for Brain -> basic-memory field mapping
  */
 
-import { z } from "zod";
+import {
+  validateBrainConfig as ajvValidate,
+  parseBrainConfig as ajvParse,
+  getBrainConfigErrors,
+  type BrainConfig,
+  type ProjectConfig,
+  type DefaultsConfig,
+  type SyncConfig,
+  type LoggingConfig,
+  type WatcherConfig,
+  type ValidationError,
+} from "@brain/validation";
+
+// Re-export types from @brain/validation
+export type {
+  BrainConfig,
+  ProjectConfig,
+  DefaultsConfig,
+  SyncConfig,
+  LoggingConfig,
+  WatcherConfig,
+};
 
 /**
  * Memories mode determines where project memories are stored.
@@ -18,139 +39,30 @@ import { z } from "zod";
  * - CODE: ${code_path}/docs
  * - CUSTOM: Explicit memories_path value
  */
-export const MemoriesModeSchema = z.enum(["DEFAULT", "CODE", "CUSTOM"]);
-export type MemoriesMode = z.infer<typeof MemoriesModeSchema>;
+export type MemoriesMode = "DEFAULT" | "CODE" | "CUSTOM";
 
 /**
  * Log level for Brain operations.
  */
-export const LogLevelSchema = z.enum(["trace", "debug", "info", "warn", "error"]);
-export type LogLevel = z.infer<typeof LogLevelSchema>;
+export type LogLevel = "trace" | "debug" | "info" | "warn" | "error";
 
 /**
- * Project-specific configuration.
- *
- * Each project tracks:
- * - code_path: Absolute path to the project source code
- * - memories_path: Computed or explicit path to memories (optional)
- * - memories_mode: How to resolve the memories path (optional, defaults to global)
- */
-export const ProjectConfigSchema = z.object({
-  /** Absolute path to project source code. */
-  code_path: z.string().min(1, "code_path is required"),
-
-  /** Computed or explicit path to project memories. Optional if using DEFAULT or CODE mode. */
-  memories_path: z.string().optional(),
-
-  /** How to resolve the memories path. Defaults to global memories_mode if not set. */
-  memories_mode: MemoriesModeSchema.optional(),
-});
-export type ProjectConfig = z.infer<typeof ProjectConfigSchema>;
-
-/**
- * Global default settings for new projects.
- */
-export const DefaultsConfigSchema = z.object({
-  /** Base path for DEFAULT mode memories (e.g., ~/memories). */
-  memories_location: z.string().min(1, "memories_location is required"),
-
-  /** Default memories mode for new projects. */
-  memories_mode: MemoriesModeSchema.default("DEFAULT"),
-});
-export type DefaultsConfig = z.infer<typeof DefaultsConfigSchema>;
-
-/**
- * File synchronization settings.
- */
-export const SyncConfigSchema = z.object({
-  /** Enable file sync between code and memories. */
-  enabled: z.boolean().default(true),
-
-  /** Sync delay in milliseconds. */
-  delay_ms: z.number().int().min(0).default(500),
-});
-export type SyncConfig = z.infer<typeof SyncConfigSchema>;
-
-/**
- * Logging configuration.
- */
-export const LoggingConfigSchema = z.object({
-  /** Log verbosity level. */
-  level: LogLevelSchema.default("info"),
-});
-export type LoggingConfig = z.infer<typeof LoggingConfigSchema>;
-
-/**
- * File watcher configuration for detecting manual config edits.
- */
-export const WatcherConfigSchema = z.object({
-  /** Enable config file watching. */
-  enabled: z.boolean().default(true),
-
-  /** Debounce delay in milliseconds to handle editor chunked writes. */
-  debounce_ms: z.number().int().min(0).default(2000),
-});
-export type WatcherConfig = z.infer<typeof WatcherConfigSchema>;
-
-/**
- * Complete Brain configuration schema.
- *
- * This is the user-facing configuration stored at ~/.config/brain/config.json.
- * It provides a clean abstraction over basic-memory's internal configuration.
- */
-export const BrainConfigSchema = z.object({
-  /** JSON Schema URL for editor validation support. */
-  $schema: z.string().optional(),
-
-  /** Configuration version. Must be "2.0.0" for this schema. */
-  version: z.literal("2.0.0"),
-
-  /** Global default settings. */
-  defaults: DefaultsConfigSchema,
-
-  /** Project-specific configurations keyed by project name. */
-  projects: z.record(z.string(), ProjectConfigSchema).default({}),
-
-  /** File synchronization settings. */
-  sync: SyncConfigSchema.default({
-    enabled: true,
-    delay_ms: 500,
-  }),
-
-  /** Logging configuration. */
-  logging: LoggingConfigSchema.default({
-    level: "info",
-  }),
-
-  /** File watcher configuration. */
-  watcher: WatcherConfigSchema.default({
-    enabled: true,
-    debounce_ms: 2000,
-  }),
-});
-
-/**
- * Inferred TypeScript type from the Zod schema.
- */
-export type BrainConfig = z.infer<typeof BrainConfigSchema>;
-
-/**
- * Validation result from safeParse operations.
+ * Validation result from validation operations.
  */
 export interface ValidationResult<T> {
   success: boolean;
   data?: T;
-  error?: z.ZodError;
+  errors?: ValidationError[];
 }
 
 /**
- * Validate a Brain configuration object using Zod safeParse.
+ * Validate a Brain configuration object using JSON Schema + AJV.
  *
  * Returns a result object with success status and either parsed data or error details.
  * Use this instead of parse() when you need to handle validation errors gracefully.
  *
  * @param config - The configuration object to validate
- * @returns ValidationResult with success status and data or error
+ * @returns ValidationResult with success status and data or errors
  *
  * @example
  * ```typescript
@@ -158,30 +70,83 @@ export interface ValidationResult<T> {
  * if (result.success) {
  *   console.log("Valid config:", result.data);
  * } else {
- *   console.error("Invalid config:", result.error.format());
+ *   console.error("Invalid config:", result.errors);
  * }
  * ```
  */
 export function validateBrainConfig(config: unknown): ValidationResult<BrainConfig> {
-  const result = BrainConfigSchema.safeParse(config);
-  if (result.success) {
-    return { success: true, data: result.data };
+  // Deep clone to avoid mutating input
+  const cloned = typeof config === "object" && config !== null
+    ? JSON.parse(JSON.stringify(config))
+    : config;
+
+  if (ajvValidate(cloned)) {
+    return { success: true, data: cloned as BrainConfig };
   }
-  return { success: false, error: result.error };
+
+  const errors = getBrainConfigErrors(config);
+  return { success: false, errors };
 }
 
 /**
  * Validate a single project configuration.
  *
  * @param project - The project configuration to validate
- * @returns ValidationResult with success status and data or error
+ * @returns ValidationResult with success status and data or errors
  */
 export function validateProjectConfig(project: unknown): ValidationResult<ProjectConfig> {
-  const result = ProjectConfigSchema.safeParse(project);
-  if (result.success) {
-    return { success: true, data: result.data };
+  // Project validation is a subset - validate required fields
+  if (typeof project !== "object" || project === null) {
+    return {
+      success: false,
+      errors: [{
+        field: "",
+        constraint: "type",
+        message: "Expected object",
+      }],
+    };
   }
-  return { success: false, error: result.error };
+
+  const p = project as Record<string, unknown>;
+
+  if (typeof p.code_path !== "string" || p.code_path.length === 0) {
+    return {
+      success: false,
+      errors: [{
+        field: "/code_path",
+        constraint: "required",
+        message: "code_path is required",
+      }],
+    };
+  }
+
+  if (p.memories_mode !== undefined) {
+    const validModes = ["DEFAULT", "CODE", "CUSTOM"];
+    if (!validModes.includes(p.memories_mode as string)) {
+      return {
+        success: false,
+        errors: [{
+          field: "/memories_mode",
+          constraint: "enum",
+          message: `memories_mode must be one of: ${validModes.join(", ")}`,
+        }],
+      };
+    }
+  }
+
+  return { success: true, data: project as ProjectConfig };
+}
+
+/**
+ * Parse and validate Brain configuration.
+ * Throws Error with structured message on validation failure.
+ *
+ * @param config - The configuration object to validate
+ * @returns Validated BrainConfig
+ * @throws Error if validation fails
+ */
+export function parseBrainConfig(config: unknown): BrainConfig {
+  return ajvParse(config);
 }
 
 /**

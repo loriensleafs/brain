@@ -290,6 +290,8 @@ export function translateBrainToBasicMemory(
   // Translate projects with resolved paths
   result.projects = {};
   for (const [projectName, projectConfig] of Object.entries(brainConfig.projects)) {
+    if (!projectConfig) continue;
+
     const resolved = resolveMemoriesPath(
       projectName,
       projectConfig,
@@ -485,6 +487,8 @@ export function validateTranslation(brainConfig: BrainConfig): string[] {
   // Check that at least one project can be resolved
   let resolvedCount = 0;
   for (const [projectName, projectConfig] of Object.entries(brainConfig.projects)) {
+    if (!projectConfig) continue;
+
     const resolved = resolveMemoriesPath(
       projectName,
       projectConfig,
@@ -500,13 +504,15 @@ export function validateTranslation(brainConfig: BrainConfig): string[] {
 
   // Validate log level
   const validLogLevels: LogLevel[] = ["trace", "debug", "info", "warn", "error"];
-  if (!validLogLevels.includes(brainConfig.logging.level)) {
-    errors.push(`Invalid log level: ${brainConfig.logging.level}`);
+  const logLevel = brainConfig.logging.level ?? "info";
+  if (!validLogLevels.includes(logLevel)) {
+    errors.push(`Invalid log level: ${logLevel}`);
   }
 
   // Validate sync delay
-  if (brainConfig.sync.delay_ms < 0) {
-    errors.push(`Invalid sync delay: ${brainConfig.sync.delay_ms} (must be >= 0)`);
+  const syncDelayMs = brainConfig.sync.delay_ms ?? 500;
+  if (syncDelayMs < 0) {
+    errors.push(`Invalid sync delay: ${syncDelayMs} (must be >= 0)`);
   }
 
   return errors;
@@ -528,6 +534,7 @@ export function previewTranslation(brainConfig: BrainConfig): {
 
   // Resolve all projects
   for (const [projectName, projectConfig] of Object.entries(brainConfig.projects)) {
+    if (!projectConfig) continue;
     resolutions[projectName] = resolveMemoriesPath(
       projectName,
       projectConfig,
