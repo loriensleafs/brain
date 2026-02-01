@@ -27,6 +27,7 @@ Implementation verified by:
 **Command**: `bun test apps/mcp/src/config/`
 
 **Results**:
+
 - **Individual test files**: All pass when run in isolation
 - **Full suite**: 42 failures due to test isolation issues (not implementation bugs)
 - **Coverage metrics**:
@@ -41,6 +42,7 @@ Implementation verified by:
     - `config-migration.ts`: 91.67% functions, 74.34% lines [MEETS TARGET]
 
 **Analysis**:
+
 - Core migration modules (copy-manifest, migration-verify, rollback) exceed 80% target
 - Translation layer (69.23% functions, 64.91% lines) below target but tests pass individually
 - Low coverage in `brain-config.ts` (35.29% functions) and `path-validator.ts` (0% functions) indicates untested code paths
@@ -52,12 +54,14 @@ Implementation verified by:
 ### 2. Security Tests [PASS]
 
 **Security controls verified**:
+
 - Path traversal sanitization: `lock.test.ts` validates `../../../etc/passwd` sanitization
 - File permissions: `brain-config.ts` implements 0700 directories, 0600 files
 - TOCTOU mitigation: Atomic write pattern (temp + rename)
 - Race condition prevention: File locking via `configLock.ts`
 
 **Test results**:
+
 - `lock.test.ts`: 33 pass, 0 fail
 - Path traversal test: Confirms ".." sequences sanitized
 
@@ -68,10 +72,12 @@ Implementation verified by:
 ### 3. Integration Tests [NEEDS WORK]
 
 **Files checked**:
+
 - `integration.test.ts` exists with config change scenarios
 - Tests use home-relative paths to avoid system path validation
 
 **Issues**:
+
 - Test isolation failures when running full suite (42 failures)
 - Individual files pass but suite fails - suggests mock pollution or shared state
 
@@ -84,17 +90,21 @@ Implementation verified by:
 **Check**: Are .agents/ references removed from instructions?
 
 **Findings**:
+
 - Agent instruction files (`AGENT-INSTRUCTIONS.md`) still reference `.agents/` directories
 - References are legitimate (workflow output locations, not config paths)
 - However, ADR-020 requires agent artifacts consolidation into Brain memory system
 
 **Evidence**:
+
 ```bash
 grep -r "\.agents/" apps/claude-plugin/agents/*.md
 ```
+
 Shows 20+ references to `.agents/planning/`, `.agents/critique/`, `.agents/qa/`, etc.
 
 **Gap**: ADR-020 Section "Agent Artifacts Migration" not implemented
+
 - Agent session logs, plans, critiques still in `.agents/` filesystem
 - Should be migrated to Brain memory for semantic searchability
 
@@ -103,28 +113,34 @@ Shows 20+ references to `.agents/planning/`, `.agents/critique/`, `.agents/qa/`,
 ### 5. Documentation [CONDITIONAL PASS]
 
 **Migration Guide**: [PASS]
+
 - Location: `apps/mcp/docs/configuration-migration.md`
 - Content: Complete with dry-run, rollback, troubleshooting
 - Quality: Clear step-by-step instructions
 
 **Configuration Reference**: [PASS]
+
 - Location: `apps/mcp/docs/configuration.md`
 - Content: Schema, fields, examples
 - Quality: Comprehensive with security notes
 
 **README**: [PASS]
+
 - Updated with XDG-compliant config location
 - Includes `brain config` command examples
 
 **User Documentation - basic-memory References**: [WARNING]
+
 - 6 references to `~/.basic-memory/` found in user docs
 - All references in migration guide (explaining old location)
 - Migration guide reference at `~/.basic-memory/brain.log` should be Brain log path
 
 **Evidence**:
+
 ```bash
 grep -r "basic-memory" apps/mcp/docs/
 ```
+
 Shows references in migration guide and config docs
 
 **Verdict**: [CONDITIONAL PASS] Documentation complete, but migration guide has legacy path reference
@@ -153,11 +169,13 @@ Shows references in migration guide and config docs
 **Context**: ADR requires all agent outputs (session logs, plans, critiques, analyses) move from `.agents/` filesystem to Brain memory for semantic searchability
 
 **Impact**:
+
 - Agent artifacts remain in scattered filesystem locations
 - Not searchable via `brain search`
 - Missing key ADR confirmation criterion
 
 **Recommendation**: Create TASK for agent artifacts migration
+
 - Migrate `.agents/planning/` → Brain memories
 - Migrate `.agents/critique/` → Brain memories
 - Migrate `.agents/qa/` → Brain memories
@@ -173,6 +191,7 @@ Shows references in migration guide and config docs
 **Impact**: CI may fail intermittently; reduces confidence in test suite
 
 **Recommendation**: Fix test isolation:
+
 - Clear all mocks in `afterEach` hooks
 - Use `beforeEach` to reset shared state
 - Isolate filesystem mocks per test file
@@ -194,6 +213,7 @@ Shows references in migration guide and config docs
 **Confidence**: Medium
 
 **Rationale**:
+
 - Core implementation is solid (97%+ coverage on critical modules)
 - Security controls properly implemented and tested
 - Documentation is comprehensive
@@ -224,11 +244,13 @@ Shows references in migration guide and config docs
 ## Evidence
 
 **Test coverage report**: `bun test --coverage apps/mcp/src/config/`
+
 - 331 tests pass (individual files)
 - 42 tests fail (full suite - isolation issues)
 - Coverage: 50-97% across modules
 
 **Documentation files**:
+
 - `apps/mcp/docs/configuration-migration.md`
 - `apps/mcp/docs/configuration.md`
 - `apps/mcp/README.md`

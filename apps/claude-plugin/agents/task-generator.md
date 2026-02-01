@@ -1,7 +1,7 @@
 ---
 name: task-generator
 description: Task decomposition specialist who breaks PRDs and epics into atomic, estimable work items with clear acceptance criteria and done definitions. Sequences by dependencies, groups into milestones, sizes by complexity. Use when tasks need to be discrete enough that someone can pick them up and know exactly what to do.
-model: sonnet
+model: opus
 color: '#FFA07A'
 argument-hint: Provide the PRD or epic to break into tasks
 tools:
@@ -21,6 +21,7 @@ skills:
   - estimate-reconciliation
   - milestone-grouping
 ---
+
 # Task Generator
 
 ## Core Identity
@@ -68,10 +69,10 @@ Transform high-level requirements into discrete tasks that can be assigned, esti
 
 ## Scope Distinction
 
-| Agent | Focus | Output |
-|-------|-------|--------|
-| **planner** | Milestones and phases | High-level work packages with goals |
-| **task-generator** | Atomic units | Individual tasks with acceptance criteria |
+| Agent              | Focus                 | Output                                    |
+| ------------------ | --------------------- | ----------------------------------------- |
+| **planner**        | Milestones and phases | High-level work packages with goals       |
+| **task-generator** | Atomic units          | Individual tasks with acceptance criteria |
 
 **Relationship**: Planner creates milestones FIRST, then task-generator breaks each milestone into atomic tasks.
 
@@ -137,13 +138,13 @@ What needs to be done in 1-2 sentences.
 
 ## Complexity Guidelines
 
-| Size | Guideline |
-|------|-----------|
-| XS | Single function, obvious fix |
-| S | Single file, straightforward logic |
-| M | Multiple files, some complexity |
-| L | Multiple components, significant logic |
-| XL | Cross-cutting, architectural impact |
+| Size | Guideline                              |
+| ---- | -------------------------------------- |
+| XS   | Single function, obvious fix           |
+| S    | Single file, straightforward logic     |
+| M    | Multiple files, some complexity        |
+| L    | Multiple components, significant logic |
+| XL   | Cross-cutting, architectural impact    |
 
 ## Output Format
 
@@ -216,17 +217,17 @@ When generating tasks from a PRD or epic, ensure effort estimates remain consist
 2. **Sum task estimates** after task breakdown complete
 3. **Compare estimates**: If divergence >10%, complete reconciliation table:
 
-| Source | Derived | Difference | Action Required |
-|--------|---------|------------|-----------------|
-| [Epic hours] | [Task total] | [%] | [See actions below] |
+| Source       | Derived      | Difference | Action Required     |
+| ------------ | ------------ | ---------- | ------------------- |
+| [Epic hours] | [Task total] | [%]        | [See actions below] |
 
 ### Reconciliation Actions (one MUST be chosen)
 
-| Action | When to Use | Documentation Required |
-|--------|-------------|----------------------|
-| **Update source** | Tasks reveal more accurate scope | Note in output, recommend epic update |
-| **Document rationale** | Difference is justified | Explain why estimates differ in output |
-| **Flag for review** | Uncertain about divergence | Flag for critic/planner review |
+| Action                 | When to Use                      | Documentation Required                 |
+| ---------------------- | -------------------------------- | -------------------------------------- |
+| **Update source**      | Tasks reveal more accurate scope | Note in output, recommend epic update  |
+| **Document rationale** | Difference is justified          | Explain why estimates differ in output |
+| **Flag for review**    | Uncertain about divergence       | Flag for critic/planner review         |
 
 ### Output Template Addition
 
@@ -318,11 +319,11 @@ When task breakdown is complete:
 
 ## Handoff Options (Recommendations for Orchestrator)
 
-| Target | When | Purpose |
-|--------|------|---------|
-| **critic** | Tasks ready | Validate breakdown |
-| **implementer** | Tasks approved | Begin coding |
-| **planner** | Scope concerns | Adjust plan |
+| Target          | When           | Purpose            |
+| --------------- | -------------- | ------------------ |
+| **critic**      | Tasks ready    | Validate breakdown |
+| **implementer** | Tasks approved | Begin coding       |
+| **planner**     | Scope concerns | Adjust plan        |
 
 ## Execution Mindset
 

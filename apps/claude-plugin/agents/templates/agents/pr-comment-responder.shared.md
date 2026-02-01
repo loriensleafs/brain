@@ -212,7 +212,7 @@ These gates implement RFC 2119 MUST requirements. Proceeding without passing cau
 
 ```bash
 # Create session log
-SESSION_FILE=".agents/sessions/$(date +%Y-%m-%d)-session-XX.md"
+SESSION_FILE="sessions/$(date +%Y-%m-%d)-session-XX.md"
 cat > "$SESSION_FILE" << 'EOF'
 # PR Comment Responder Session
 
@@ -235,7 +235,7 @@ EOF
 
 ```bash
 # Count reactions added vs comments
-REACTIONS_ADDED=$(cat .agents/pr-comments/PR-[number]/session.log | grep -c "reaction.*eyes")
+REACTIONS_ADDED=$(cat pr-comments/PR-[number]/session.log | grep -c "reaction.*eyes")
 COMMENT_COUNT=$TOTAL_COMMENTS
 
 if [ "$REACTIONS_ADDED" -ne "$COMMENT_COUNT" ]; then
@@ -252,11 +252,11 @@ fi
 
 ```bash
 # Verify artifacts exist
-test -f ".agents/pr-comments/PR-[number]/comments.md" || exit 1
-test -f ".agents/pr-comments/PR-[number]/tasks.md" || exit 1
+test -f "pr-comments/PR-[number]/comments.md" || exit 1
+test -f "pr-comments/PR-[number]/tasks.md" || exit 1
 
 # Verify comment count matches
-ARTIFACT_COUNT=$(grep -c "^| [0-9]" .agents/pr-comments/PR-[number]/comments.md)
+ARTIFACT_COUNT=$(grep -c "^| [0-9]" pr-comments/PR-[number]/comments.md)
 if [ "$ARTIFACT_COUNT" -ne "$TOTAL_COMMENTS" ]; then
   echo "[BLOCKED] Artifact count: $ARTIFACT_COUNT != API count: $TOTAL_COMMENTS"
   exit 1
@@ -272,10 +272,10 @@ fi
 ```bash
 # IMMEDIATELY after git commit, update artifact
 sed -i "s/TASK-$COMMENT_ID.*pending/TASK-$COMMENT_ID ... [COMPLETE]/" \
-  .agents/pr-comments/PR-[number]/tasks.md
+  pr-comments/PR-[number]/tasks.md
 
 # Verify update applied
-grep "TASK-$COMMENT_ID.*COMPLETE" .agents/pr-comments/PR-[number]/tasks.md || exit 1
+grep "TASK-$COMMENT_ID.*COMPLETE" pr-comments/PR-[number]/tasks.md || exit 1
 ```
 
 **Evidence required**: Task marked complete in artifact file.
@@ -286,8 +286,8 @@ grep "TASK-$COMMENT_ID.*COMPLETE" .agents/pr-comments/PR-[number]/tasks.md || ex
 
 ```bash
 # Count completed tasks in artifact
-COMPLETED=$(grep -c "\[COMPLETE\]" .agents/pr-comments/PR-[number]/tasks.md)
-TOTAL=$(grep -c "^- \[ \]\|^\[x\]" .agents/pr-comments/PR-[number]/tasks.md)
+COMPLETED=$(grep -c "\[COMPLETE\]" pr-comments/PR-[number]/tasks.md)
+TOTAL=$(grep -c "^- \[ \]\|^\[x\]" pr-comments/PR-[number]/tasks.md)
 
 # Count threads to resolve
 UNRESOLVED_API=$(gh api graphql -f query='...' --jq '.data...unresolved.length')
@@ -310,7 +310,7 @@ fi
 REMAINING=$(gh api graphql -f query='...' --jq '.data...unresolved.length')
 
 # Artifact state
-PENDING=$(grep -c "Status: pending\|Status: \[ACKNOWLEDGED\]" .agents/pr-comments/PR-[number]/comments.md)
+PENDING=$(grep -c "Status: pending\|Status: \[ACKNOWLEDGED\]" pr-comments/PR-[number]/comments.md)
 
 if [ "$REMAINING" -ne 0 ] || [ "$PENDING" -ne 0 ]; then
   echo "[BLOCKED] API unresolved: $REMAINING, Artifact pending: $PENDING"
@@ -373,7 +373,7 @@ Reviewer-specific memories (e.g., `cursor-bot-review-patterns`) are loaded in **
 Before fetching new data, check if this is a continuation of a previous session:
 
 ```bash
-SESSION_DIR=".agents/pr-comments/PR-[number]"
+SESSION_DIR="pr-comments/PR-[number]"
 
 if [ -d "$SESSION_DIR" ]; then
   echo "[CONTINUATION] Previous session found"
@@ -397,7 +397,7 @@ else
 fi
 ```
 
-**Session state directory**: `.agents/pr-comments/PR-[number]/`
+**Session state directory**: `pr-comments/PR-[number]/`
 
 | File | Purpose |
 |------|---------|
@@ -451,7 +451,7 @@ fi
    3. What patterns led to this situation?
    4. Recommendations for future work
 
-   Save analysis to: .agents/retrospective/PR-[number]-needs-split-analysis.md
+   Save analysis to: retrospective/PR-[number]-needs-split-analysis.md
    ```
 
 2. **Analyze commit history**: Group commits by logical change
@@ -586,7 +586,7 @@ gh api repos/[owner]/[repo]/issues/[number]/comments --jq '.[] | {
 
 ### Phase 2: Comment Map Generation
 
-Create a persistent map of all comments. Save to `.agents/pr-comments/PR-[number]/comments.md`.
+Create a persistent map of all comments. Save to `pr-comments/PR-[number]/comments.md`.
 
 #### Step 2.1: Acknowledge All Comments (Batch)
 
@@ -625,7 +625,7 @@ gh api repos/[owner]/[repo]/issues/comments/[comment_id]/reactions \
 
 #### Step 2.2: Generate Comment Map
 
-Save to: `.agents/pr-comments/PR-[number]/comments.md`
+Save to: `pr-comments/PR-[number]/comments.md`
 
 ```markdown
 # PR Comment Map: PR #[number]
@@ -721,7 +721,7 @@ Analyze this PR comment and determine:
 #runSubagent with subagentType=orchestrator
 [Context from Step 3.1]
 
-After analysis, save plan to: `.agents/pr-comments/PR-[number]/[comment_id]-plan.md`
+After analysis, save plan to: `pr-comments/PR-[number]/[comment_id]-plan.md`
 
 Return:
 - Classification: [Quick Fix / Standard / Strategic]
@@ -738,7 +738,7 @@ After orchestrator returns, update the comment map with analysis results.
 
 Based on orchestrator analysis, generate a prioritized task list.
 
-Save to: `.agents/pr-comments/PR-[number]/tasks.md`
+Save to: `pr-comments/PR-[number]/tasks.md`
 
 ```markdown
 # PR #[number] Task List
@@ -771,7 +771,7 @@ These comments require immediate response before implementation:
 - [ ] **TASK-[id]**: [description]
   - Comment: [comment_id] by @[author]
   - File: [path]
-  - Plan: `.agents/pr-comments/PR-[number]/[comment_id]-plan.md`
+  - Plan: `pr-comments/PR-[number]/[comment_id]-plan.md`
 
 ### Major Priority
 
@@ -1034,7 +1034,7 @@ pwsh .claude/skills/github/scripts/pr/Resolve-PRReviewThread.ps1 -ThreadId "PRRT
 
 #### Step 6.5: Update Task List
 
-Mark task as complete in `.agents/pr-comments/PR-[number]/tasks.md`.
+Mark task as complete in `pr-comments/PR-[number]/tasks.md`.
 
 ### Phase 7: PR Description Update
 
@@ -1073,15 +1073,15 @@ gh pr edit [number] --body "[updated body]"
 
 ```bash
 # Count addressed vs total
-ADDRESSED=$(grep -c "Status: \[COMPLETE\]" .agents/pr-comments/PR-[number]/comments.md)
-WONTFIX=$(grep -c "Status: \[WONTFIX\]" .agents/pr-comments/PR-[number]/comments.md)
+ADDRESSED=$(grep -c "Status: \[COMPLETE\]" pr-comments/PR-[number]/comments.md)
+WONTFIX=$(grep -c "Status: \[WONTFIX\]" pr-comments/PR-[number]/comments.md)
 TOTAL=$TOTAL_COMMENTS
 
 echo "Verification: $((ADDRESSED + WONTFIX)) / $TOTAL comments addressed"
 
 if [ "$((ADDRESSED + WONTFIX))" -lt "$TOTAL" ]; then
   echo "[WARNING] INCOMPLETE: $((TOTAL - ADDRESSED - WONTFIX)) comments remaining"
-  grep -B5 "Status: \[ACKNOWLEDGED\]\|Status: pending" .agents/pr-comments/PR-[number]/comments.md
+  grep -B5 "Status: \[ACKNOWLEDGED\]\|Status: pending" pr-comments/PR-[number]/comments.md
   # Return to Phase 3 for unaddressed comments
 fi
 ```

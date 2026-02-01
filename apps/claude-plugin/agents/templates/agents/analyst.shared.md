@@ -128,6 +128,21 @@ mcp__cloudmcp-manager__memory-add_observations
 }
 ```
 
+### Pre-Flight Validation Checklist (MANDATORY)
+
+Before writing memory notes:
+
+```markdown
+- [ ] Entity type valid (decision, session, analysis, feature, etc.)
+- [ ] Folder matches entity type (analysis/ for research findings)
+- [ ] Filename follows CAPS prefix pattern (ANALYSIS-NNN-topic)
+- [ ] Frontmatter complete (title, type, tags, permalink)
+- [ ] 3-10 observations with categories: `- [category] content #tags`
+- [ ] 2-8 relations with wikilinks: `- relation_type [[Target]]`
+```
+
+See memory skill documentation for complete entity type mapping and quality requirements.
+
 ## Analysis Types
 
 ### Root Cause Analysis
@@ -280,7 +295,7 @@ If Reject: Document reasoning for future reference
 
 ## Analysis Document Format
 
-Save to: `.agents/analysis/NNN-[topic]-analysis.md`
+Save to: `analysis/NNN-[topic]-analysis.md`
 
 ```markdown
 # Analysis: [Topic Name]
@@ -326,7 +341,7 @@ Save to: `.agents/analysis/NNN-[topic]-analysis.md`
 
 When analysis is complete:
 
-1. Save analysis document to `.agents/analysis/`
+1. Save analysis document to `analysis/`
 2. Store key findings in memory
 3. Announce: "Analysis complete. Handing off to [agent] for [next step]"
 4. Provide document path and summary

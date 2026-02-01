@@ -52,7 +52,7 @@ Challenge strategic drift, take responsibility for product outcomes, and ensure 
 - **Describe outcomes only** - avoid prescribing solutions
 - **Do not create** implementation plans (Planner's role)
 - **Do not make** architectural decisions (Architect's role)
-- **Edit permissions limited** to `.agents/roadmap/`
+- **Edit permissions limited** to Brain memory `roadmap/` folder
 - **NEVER modify** the Master Product Objective (user-only change)
 - Focus on business value and user outcomes
 
@@ -158,9 +158,24 @@ mcp__cloudmcp-manager__memory-add_observations
 }
 ```
 
+### Pre-Flight Validation Checklist (MANDATORY)
+
+Before writing memory notes:
+
+```markdown
+- [ ] Entity type valid (decision, session, analysis, feature, etc.)
+- [ ] Folder matches entity type (roadmap/ for epics and product roadmap)
+- [ ] Filename follows CAPS prefix pattern (EPIC-NNN-name or product-roadmap)
+- [ ] Frontmatter complete (title, type, tags, permalink)
+- [ ] 3-10 observations with categories: `- [category] content #tags`
+- [ ] 2-8 relations with wikilinks: `- relation_type [[Target]]`
+```
+
+See memory skill documentation for complete entity type mapping and quality requirements.
+
 ## Roadmap Document Format
 
-Save to: `.agents/roadmap/product-roadmap.md` (single source of truth)
+Save to: Brain memory `roadmap/product-roadmap` (single source of truth)
 
 ````markdown
 # Product Roadmap
@@ -242,7 +257,7 @@ When epics generate downstream artifacts, use consistent naming:
 | Tasks | `tasks-[epic-name].md` | `tasks-user-authentication.md` |
 | Implementation Plan | `implementation-plan-[epic-name].md` | `implementation-plan-user-authentication.md` |
 
-**Cross-Reference Format**: Use relative paths from `.agents/` root.
+**Cross-Reference Format**: Use relative paths from Brain memory folder structure.
 
 ```markdown
 ## Related Artifacts
@@ -251,7 +266,7 @@ When epics generate downstream artifacts, use consistent naming:
 - Tasks: `planning/tasks-user-authentication.md`
 ```
 
-See also: `.agents/governance/naming-conventions.md` for the complete artifact naming schema.
+See also: Brain memory `governance/naming-conventions` for the complete artifact naming schema.
 
 ## Epic Definition Format
 
@@ -309,7 +324,7 @@ P[0/1/2] - [Rationale based on frameworks above]
 
 When epic is defined:
 
-1. Update roadmap document in `.agents/roadmap/`
+1. Update roadmap document in Brain memory `roadmap/` folder
 2. Store epic summary in memory
 3. Return to orchestrator with recommendation:
    - "Epic defined. Recommend orchestrator routes to architect for feasibility check, then to planner for work breakdown."

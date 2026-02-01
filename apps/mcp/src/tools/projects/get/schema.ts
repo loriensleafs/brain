@@ -16,7 +16,7 @@ export const toolDefinition: Tool = {
 
 Returns:
 - project: Project name
-- notes_path: Path to notes directory
+- memories_path: Path to memories directory
 - code_path: Configured code directory path (if set)
 - isActive: Whether this project is currently active
 

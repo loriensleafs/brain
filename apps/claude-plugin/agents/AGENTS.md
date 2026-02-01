@@ -2,6 +2,8 @@
 
 This document describes the 18 AI agents defined for Claude Code CLI and the critical workflow rules for maintaining them.
 
+> **Related**: [ADR-020: Brain Configuration Architecture Refactoring](../../../.agents/architecture/decision/ADR-020-configuration-architecture-refactoring.md) - Agent artifacts are stored in Brain memory, not `.agents/` directory.
+
 ## Overview
 
 The `src/claude/` directory contains **hand-maintained** agent definitions for Claude Code CLI. Unlike VS Code and Copilot CLI agents (which are generated from templates), Claude agents are the primary source for Claude-specific features.
@@ -316,5 +318,6 @@ Invoke-Pester ./build/tests/
 - [templates/AGENTS.md](../../templates/AGENTS.md) - Template system
 - [build/AGENTS.md](../../build/AGENTS.md) - Build automation
 - [Root AGENTS.md](../../AGENTS.md) - Agent usage instructions
-- [AGENT-SYSTEM.md](../../.agents/AGENT-SYSTEM.md) - Full system documentation
+- [AGENT-SYSTEM.md](./AGENT-SYSTEM.md) - Full system documentation
+- [ADR-020](../../../.agents/architecture/decision/ADR-020-configuration-architecture-refactoring.md) - Brain configuration architecture
 - usage-mandatory (use `mcp__plugin_brain_brain__read_note` with `identifier="skills/usage-mandatory"`) - GitHub skill rules

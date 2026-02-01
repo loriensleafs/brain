@@ -2,9 +2,9 @@
  * Unit tests for create_project tool
  *
  * Tests P0 blocking issues from QA validation:
- * - DEFAULT mode is the default when notes_path omitted
+ * - DEFAULT mode is the default when memories_path omitted
  * - CODE mode uses code_path/docs
- * - DEFAULT mode uses default_notes_path/project_name
+ * - DEFAULT mode uses default_memories_location/project_name
  * - Custom absolute paths work correctly
  * - Path expansion works for ~ in all modes
  */
@@ -80,8 +80,8 @@ describe("create_project tool", () => {
     mock.restore();
   });
 
-  describe("DEFAULT mode (notes_path omitted)", () => {
-    test("uses DEFAULT mode when notes_path is not provided", async () => {
+  describe("DEFAULT mode (memories_path omitted)", () => {
+    test("uses DEFAULT mode when memories_path is not provided", async () => {
       const args: CreateProjectArgs = {
         name: "test-project",
         code_path: "~/Dev/test-project",
@@ -92,22 +92,32 @@ describe("create_project tool", () => {
       expect(result.isError).toBeUndefined();
       const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
 
-      expect(response.notes_path_mode).toBe("DEFAULT");
+      expect(response.memories_path_mode).toBe("DEFAULT");
       expect(response.created).toBe(true);
     });
 
-    test("creates notes path at default_notes_path/project_name", async () => {
-      // Mock brain-config.json with custom default_notes_path
+    test("creates memories path at default_memories_location/project_name", async () => {
+      // Mock the new Brain config (~/.config/brain/config.json)
       mockFs.existsSync.mockImplementation((p: unknown) => {
         const pStr = String(p);
-        if (pStr.includes("brain-config.json")) return true;
+        if (pStr.includes(".config/brain/config.json")) return true;
         if (pStr.includes("config.json")) return false;
         return false;
       });
       mockFs.readFileSync.mockImplementation((p: unknown) => {
         const pStr = String(p);
-        if (pStr.includes("brain-config.json")) {
-          return JSON.stringify({ default_notes_path: "~/memories" });
+        if (pStr.includes(".config/brain/config.json")) {
+          return JSON.stringify({
+            version: "2.0.0",
+            defaults: {
+              memories_location: "~/memories",
+              memories_mode: "DEFAULT",
+            },
+            projects: {},
+            sync: { enabled: true, delay_ms: 500 },
+            logging: { level: "info" },
+            watcher: { enabled: true, debounce_ms: 2000 },
+          });
         }
         return "{}";
       });
@@ -120,13 +130,13 @@ describe("create_project tool", () => {
       const result = await handler(args);
       const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
 
-      // Notes path should be ~/memories/my-project expanded
-      expect(response.notes_path).toBe(path.join(homeDir, "memories", "my-project"));
-      expect(response.notes_path_mode).toBe("DEFAULT");
+      // Memories path should be ~/memories/my-project expanded
+      expect(response.memories_path).toBe(path.join(homeDir, "memories", "my-project"));
+      expect(response.memories_path_mode).toBe("DEFAULT");
     });
 
-    test("uses ~/memories as fallback when brain-config.json doesn't exist", async () => {
-      // No config files exist
+    test("uses ~/memories as fallback when brain config doesn't exist", async () => {
+      // No config files exist - uses default from DEFAULT_BRAIN_CONFIG
       mockFs.existsSync.mockReturnValue(false);
 
       const args: CreateProjectArgs = {
@@ -137,22 +147,35 @@ describe("create_project tool", () => {
       const result = await handler(args);
       const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
 
-      expect(response.notes_path).toBe(path.join(homeDir, "memories", "fallback-project"));
-      expect(response.notes_path_mode).toBe("DEFAULT");
+      expect(response.memories_path).toBe(path.join(homeDir, "memories", "fallback-project"));
+      expect(response.memories_path_mode).toBe("DEFAULT");
     });
   });
 
   describe("Explicit DEFAULT mode", () => {
     test("uses DEFAULT mode when explicitly specified", async () => {
+      // Mock the new Brain config path (~/.config/brain/config.json)
       mockFs.existsSync.mockImplementation((p: unknown) => {
         const pStr = String(p);
-        if (pStr.includes("brain-config.json")) return true;
+        // New config location: ~/.config/brain/config.json
+        if (pStr.includes(".config/brain/config.json")) return true;
         return false;
       });
       mockFs.readFileSync.mockImplementation((p: unknown) => {
         const pStr = String(p);
-        if (pStr.includes("brain-config.json")) {
-          return JSON.stringify({ default_notes_path: "~/custom-memories" });
+        // New Brain config format at ~/.config/brain/config.json
+        if (pStr.includes(".config/brain/config.json")) {
+          return JSON.stringify({
+            version: "2.0.0",
+            defaults: {
+              memories_location: "~/custom-memories",
+              memories_mode: "DEFAULT",
+            },
+            projects: {},
+            sync: { enabled: true, delay_ms: 500 },
+            logging: { level: "info" },
+            watcher: { enabled: true, debounce_ms: 2000 },
+          });
         }
         return "{}";
       });
@@ -160,44 +183,44 @@ describe("create_project tool", () => {
       const args: CreateProjectArgs = {
         name: "explicit-default",
         code_path: "~/Dev/explicit-default",
-        notes_path: "DEFAULT",
+        memories_path: "DEFAULT",
       };
 
       const result = await handler(args);
       const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
 
-      expect(response.notes_path).toBe(path.join(homeDir, "custom-memories", "explicit-default"));
-      expect(response.notes_path_mode).toBe("DEFAULT");
+      expect(response.memories_path).toBe(path.join(homeDir, "custom-memories", "explicit-default"));
+      expect(response.memories_path_mode).toBe("DEFAULT");
     });
   });
 
   describe("CODE mode", () => {
-    test("uses code_path/docs when notes_path is CODE", async () => {
+    test("uses code_path/docs when memories_path is CODE", async () => {
       const args: CreateProjectArgs = {
         name: "code-mode-project",
         code_path: "~/Dev/code-mode-project",
-        notes_path: "CODE",
+        memories_path: "CODE",
       };
 
       const result = await handler(args);
       const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
 
-      expect(response.notes_path).toBe(path.join(homeDir, "Dev", "code-mode-project", "docs"));
-      expect(response.notes_path_mode).toBe("CODE");
+      expect(response.memories_path).toBe(path.join(homeDir, "Dev", "code-mode-project", "docs"));
+      expect(response.memories_path_mode).toBe("CODE");
     });
 
     test("resolves CODE mode with absolute code_path", async () => {
       const args: CreateProjectArgs = {
         name: "absolute-code",
         code_path: "/var/projects/absolute-code",
-        notes_path: "CODE",
+        memories_path: "CODE",
       };
 
       const result = await handler(args);
       const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
 
-      expect(response.notes_path).toBe("/var/projects/absolute-code/docs");
-      expect(response.notes_path_mode).toBe("CODE");
+      expect(response.memories_path).toBe("/var/projects/absolute-code/docs");
+      expect(response.memories_path_mode).toBe("CODE");
     });
   });
 
@@ -206,28 +229,28 @@ describe("create_project tool", () => {
       const args: CreateProjectArgs = {
         name: "custom-path-project",
         code_path: "~/Dev/custom-path-project",
-        notes_path: "/var/custom/notes",
+        memories_path: "/var/custom/notes",
       };
 
       const result = await handler(args);
       const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
 
-      expect(response.notes_path).toBe("/var/custom/notes");
-      expect(response.notes_path_mode).toBe("/var/custom/notes");
+      expect(response.memories_path).toBe("/var/custom/notes");
+      expect(response.memories_path_mode).toBe("/var/custom/notes");
     });
 
     test("expands ~ in custom path", async () => {
       const args: CreateProjectArgs = {
         name: "tilde-custom",
         code_path: "~/Dev/tilde-custom",
-        notes_path: "~/my-notes/special",
+        memories_path: "~/my-notes/special",
       };
 
       const result = await handler(args);
       const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
 
-      expect(response.notes_path).toBe(path.join(homeDir, "my-notes", "special"));
-      expect(response.notes_path_mode).toBe("~/my-notes/special");
+      expect(response.memories_path).toBe(path.join(homeDir, "my-notes", "special"));
+      expect(response.memories_path_mode).toBe("~/my-notes/special");
     });
   });
 
@@ -293,7 +316,7 @@ describe("create_project tool", () => {
       expect(response.error).toContain("edit_project");
       expect(response.error).toContain("delete_project");
       expect(response.suggestion).toBe("Use edit_project to update configuration");
-      expect(response.existing_notes_path).toBe("/existing/notes/path");
+      expect(response.existing_memories_path).toBe("/existing/notes/path");
       // Note: getCodePath mock may not work due to module caching, verify behavior
       // The important assertion is that the error message and suggestion are correct
     });
@@ -332,7 +355,7 @@ describe("create_project tool", () => {
         'Project "duplicate-project" already exists. Use edit_project to modify it, or delete_project to remove it first.'
       );
       expect(response.suggestion).toBe("Use edit_project to update configuration");
-      expect(response.existing_notes_path).toBe("/some/notes/path");
+      expect(response.existing_memories_path).toBe("/some/notes/path");
     });
   });
 
@@ -352,7 +375,7 @@ describe("create_project tool", () => {
       expect(response.created).toBe(true);
     });
 
-    test("writes notes path to basic-memory config", async () => {
+    test("writes memories path to basic-memory config", async () => {
       const args: CreateProjectArgs = {
         name: "notes-config-test",
         code_path: "~/Dev/notes-config-test",

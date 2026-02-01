@@ -1,9 +1,9 @@
 ---
-status: proposed
+status: accepted
 date: 2026-01-21
 decision-makers: [architect, planner]
 consulted: [analyst, memory, orchestrator]
-informed: [implementer, all agents with write access]
+informed: [all agents]
 ---
 
 # ADR-019: Memory Operations Governance and Convention Enforcement
@@ -22,14 +22,17 @@ Current state: 15+ agents have direct access to `write_note` and `edit_note` too
 
 How should we enforce Brain memory conventions across all agents?
 
+**Architectural Constraint**: The agent system uses one-level delegation. Subagents cannot delegate to other subagents. When orchestrator delegates to analyst, analyst must be able to write directly. Any governance model requiring delegation to memory agent violates this constraint.
+
 ## Decision Drivers
 
-* **Consistency**: All notes MUST follow Session 06 standards (11 folders, 13 entity types)
-* **Quality**: Notes MUST meet quality thresholds (3-5 observations, 2-3 relations)
-* **Discoverability**: Consistent naming enables reliable semantic search
-* **Graph Integrity**: Proper relations maintain knowledge graph connectivity
-* **Minimal Friction**: Enforcement cannot create excessive overhead for agents
-* **Auditability**: Violations must be detectable and reportable
+- **One-Level Delegation**: Subagents cannot delegate; governance must work with direct tool access
+- **Consistency**: All notes MUST follow Session 06 standards (11 folders, 13 entity types)
+- **Quality**: Notes MUST meet quality thresholds (3-5 observations, 2-3 relations)
+- **Discoverability**: Consistent naming enables reliable semantic search
+- **Graph Integrity**: Proper relations maintain knowledge graph connectivity
+- **Minimal Friction**: Enforcement cannot create excessive overhead for agents
+- **Auditability**: Violations must be detectable and reportable
 
 ## Considered Options
 
@@ -38,105 +41,119 @@ How should we enforce Brain memory conventions across all agents?
 All write/edit operations delegated to memory agent, which knows all conventions.
 
 Pros:
+
 - Single point of enforcement
 - Memory agent specializes in conventions
 - Clean separation of concerns
 
 Cons:
-- Extra delegation overhead for every write
+
+- **REJECTED**: Violates one-level delegation architecture
+- Subagents cannot delegate to other subagents
 - Memory agent becomes bottleneck
-- Simple operations require full agent invocation
 
-### Option B: Enhanced Memory Skill with Validation
+### Option B: Enhanced Memory Skill with Validation Guidance
 
-Update memory skill to include comprehensive validation rules. Agents use skill for guidance.
+Update memory skill to include comprehensive validation rules. All agents use skill for guidance and follow pre-flight validation.
 
 Pros:
-- Skill provides reference without delegation
-- Lower overhead than full agent delegation
+
+- Skill provides validation reference for all agents
+- No delegation required (compatible with one-level delegation)
 - Validation rules codified in one place
+- All agents retain autonomy
 
 Cons:
-- "Guidance" achieves <50% compliance (same problem as trust-based approaches)
-- No enforcement, only education
-- Agents can ignore skill
 
-### Option C: Tiered Approach with Technical Enforcement
+- Compliance depends on agents following guidance
+- No technical enforcement at tool level
+- Violations detected post-hoc via audit
 
-Tier 1 (Simple): Read/search operations direct via skill
-Tier 2 (Write): Validation layer that intercepts and validates
-Tier 3 (Complex): Delegate to memory agent
-
-Pros:
-- Right-sized enforcement for operation complexity
-- Technical validation achieves 100% compliance
-- Memory agent handles edge cases
-
-Cons:
-- Requires validation infrastructure
-- More complex architecture
-- Validation layer needs maintenance
-
-### Option D: Remove Direct Write Access from Most Agents
+### Option C: Remove Direct Write Access from Most Agents
 
 Strip `write_note` and `edit_note` from all agents except memory agent and specialists.
 
 Pros:
+
 - Prevents violations at tool access level
 - Clear ownership of memory operations
-- Simpler agent configurations
 
 Cons:
-- Reduces agent autonomy
-- All writes require memory agent delegation
-- May slow down workflows
+
+- **REJECTED**: Violates one-level delegation architecture
+- Analyst delegated by orchestrator cannot write without sub-delegation
+- Creates workflow bottlenecks
+
+### Option D: Validation-Based Governance (All Agents Write, MUST Validate)
+
+All agents retain write access. Pre-flight validation is MANDATORY before writes. Post-hoc audit detects violations.
+
+Pros:
+
+- Compatible with one-level delegation
+- All agents can write when delegated work requires it
+- Governance via education + audit, not access removal
+- Memory skill becomes validator/guide, not gatekeeper
+
+Cons:
+
+- Compliance depends on agent discipline
+- Violations possible (detected by audit)
+- Requires validation script infrastructure
 
 ## Decision Outcome
 
-Chosen option: **Option C (Tiered Approach)** with elements of Option D.
+Chosen option: **Option D (Validation-Based Governance)**.
 
-The tiered approach provides right-sized enforcement:
+This option is the only one compatible with the one-level delegation architecture. All agents retain `write_note` and `edit_note` access. Governance is enforced through:
 
-| Operation Type | Enforcement Level | Mechanism |
-|---------------|-------------------|-----------|
-| Read/Search | None needed | Direct MCP tool access |
-| Create Note | Validation gate | Pre-flight validation before write |
-| Edit Note | Validation gate | Pre-flight validation before edit |
-| Complex Operations | Full delegation | Route to memory agent |
+1. **Pre-flight validation requirements** (BLOCKING gate before writes)
+2. **Memory skill as validator/guide** (provides validation checklist and entity mapping)
+3. **Post-hoc audit scripts** (detect violations for cleanup)
+4. **CI enforcement** (validate notes on PR)
 
-Combined with selective tool access (Option D elements):
+| Operation Type | Who Can Perform | Enforcement Mechanism |
+|---------------|-----------------|----------------------|
+| Read/Search | All agents | No enforcement needed |
+| Create Note | All agents | Pre-flight validation MUST pass |
+| Edit Note | All agents | Pre-flight validation MUST pass |
+| Complex Operations | All agents (consult memory skill) | Pre-flight validation + skill guidance |
 
-| Agent Category | write_note Access | edit_note Access | Rationale |
-|---------------|-------------------|------------------|-----------|
-| memory | Yes | Yes | Primary owner |
-| skillbook | Yes | Yes | Creates SKILL-* entities |
-| retrospective | Yes | Yes | Creates RETRO-* entities |
-| spec-generator | Yes | Yes | Creates REQ/DESIGN/TASK entities |
-| All others | Read-only | Read-only | Delegate to memory agent |
+**Access Model**:
+
+| Agent | write_note | edit_note | Rationale |
+|-------|------------|-----------|-----------|
+| **All agents** | **Yes** | **Yes** | One-level delegation requires direct access |
 
 ### Consequences
 
 Good:
-- Violations impossible at write time (validation gate)
-- Reduced agent complexity (most agents become read-only for memory)
-- Memory agent handles conventions (single source of truth)
-- Quality thresholds enforced (not just suggested)
+
+- Compatible with one-level delegation architecture
+- All agents can complete delegated work independently
+- No workflow bottlenecks from memory agent delegation
+- Governance via validation, not access control
 
 Bad:
-- Validation infrastructure required
-- Some agents lose direct write capability
-- Initial migration effort to update agent configs
+
+- Violations possible if agents skip validation
+- Post-hoc cleanup required for non-compliant notes
+- Relies on agent discipline and audit
 
 Neutral:
-- Memory agent load increases (more delegations)
+
+- Memory agent role shifts from gatekeeper to consultant
+- Validation infrastructure required
 - Existing notes not retroactively validated (separate cleanup task)
 
 ### Confirmation
 
 Compliance verified by:
-1. Validation script runs before every write operation
-2. CI check for new agent definitions adding write tools
-3. Audit script to detect notes not matching conventions
+
+1. Pre-flight validation checklist in memory skill (agents MUST complete)
+2. Post-hoc audit script to detect notes not matching conventions
+3. CI check validates notes in PRs before merge
+4. Session logs must show validation checklist completed before writes
 
 ## Enforcement Mechanism Design
 
@@ -197,36 +214,49 @@ implements, depends_on, relates_to, extends, part_of,
 inspired_by, contains, pairs_with, supersedes, leads_to, caused_by
 ```
 
-## Delegation Protocol
+## Write Operations Protocol
 
-### When to Use Memory Skill (Direct)
+### All Agents MAY Write Directly
 
-```markdown
-- Search operations: `mcp__plugin_brain_brain__search`
-- Read operations: `mcp__plugin_brain_brain__read_note`
-- List operations: `mcp__plugin_brain_brain__list_directory`
-- Simple edits to existing notes (append observation)
-```
+Per one-level delegation architecture, all agents retain `write_note` and `edit_note` access. There is no delegation requirement.
 
-### When to Delegate to Memory Agent
+### Pre-Flight Validation (BLOCKING)
+
+Before ANY write operation, agents MUST complete pre-flight validation:
 
 ```markdown
-- Creating new entities (ensures convention compliance)
-- Complex multi-note operations
-- Knowledge graph reorganization
-- Cross-domain relation management
-- When unsure about correct folder/naming
+### Pre-Flight Checklist (MUST all pass before write)
+
+- [ ] Entity type is valid (13 types only, see table below)
+- [ ] Folder matches entity type (see mapping)
+- [ ] File name follows CAPS prefix pattern
+- [ ] Frontmatter has: title, type, tags (2-5)
+- [ ] Observations section: 3-10 entries with categories
+- [ ] Observation format: `- [category] content #tags`
+- [ ] Relations section: 2-8 entries with wikilinks
+- [ ] Relation format: `- relation_type [[Target Entity]]`
 ```
 
-### Delegation Format
+**Agents that skip validation create governance debt.** Post-hoc audit will detect violations.
 
-```text
-Task(subagent_type="memory", prompt="Create [entity-type] note for [topic] with:
-- Context: [why this matters]
-- Observations: [key facts and decisions]
-- Relations: [what this connects to]
-")
+### When to Consult Memory Skill
+
+The memory skill provides guidance (not access control):
+
+```markdown
+- **Entity type mapping**: Which folder for which entity type
+- **Naming conventions**: CAPS prefix patterns
+- **Quality thresholds**: Minimum observations/relations
+- **Format examples**: Compliant note structure
 ```
+
+### Complex Operations
+
+For complex multi-note operations or knowledge graph reorganization, agents SHOULD:
+
+1. Complete pre-flight validation for each note
+2. Reference memory skill for entity relationships
+3. Document cross-domain relations properly
 
 ## Validation Script Requirements
 
@@ -248,45 +278,46 @@ Output: PASS/FAIL with specific violations
 - No generic NOTE-* entity type
 ```
 
-### validate-agent-memory-access.ps1
+### audit-memory-violations.ps1
 
-Input: Agent definition file
-Output: Report of memory tool access
+Input: Memory notes directory
+Output: Compliance report with violation list
 
 ```powershell
-# Checks
-- Lists agents with write_note access
-- Lists agents with edit_note access
-- Flags agents not in approved list
-- Generates compliance report
+# Audit checks (post-hoc)
+- Scans all notes in memory folders
+- Validates each note against pre-flight checklist
+- Generates report: compliant count, violation count, violation details
+- Groups violations by type (folder mismatch, naming, quality threshold)
+- Outputs actionable fix recommendations
 ```
 
 ## Migration Path
 
-### Phase 1: Update Memory Skill (Week 1)
+### Phase 1: Update Documentation (Week 1)
 
-1. Add entity type mapping table to skill
-2. Add validation checklist to skill
-3. Add delegation protocol to skill
-4. Update skill triggers for delegation
+1. Update ADR-019 to validation-based governance (this document)
+2. Update memory skill with pre-flight validation checklist
+3. Update DESIGN-001 to reflect validation-based enforcement
+4. Remove access-control language from all documents
 
-### Phase 2: Update Agent Definitions (Week 2)
+### Phase 2: Ensure All Agents Have Write Access (Week 2)
 
-1. Remove write_note from non-approved agents
-2. Remove edit_note from non-approved agents
-3. Add memory agent delegation protocol to affected agents
-4. Update agent tests
+1. Verify all agent definitions include `write_note` and `edit_note`
+2. Add pre-flight validation guidance to agent instructions
+3. Remove any delegation-to-memory requirements
+4. Update agent documentation
 
 ### Phase 3: Add Validation Scripts (Week 3)
 
-1. Create validate-memory-note.ps1
-2. Create validate-agent-memory-access.ps1
-3. Add CI workflow for agent definition checks
+1. Create validate-memory-note.ps1 (validates note structure)
+2. Create audit-memory-violations.ps1 (finds non-compliant notes)
+3. Add CI workflow for note validation on PR
 4. Add pre-commit hook for note validation
 
 ### Phase 4: Cleanup Existing Notes (Week 4)
 
-1. Run validation against all existing notes
+1. Run audit against all existing notes
 2. Generate violation report
 3. Fix or archive non-compliant notes
 4. Establish baseline compliance metrics
@@ -303,6 +334,7 @@ Output: Report of memory tool access
 ### Evidence
 
 Current state audit (2026-01-21):
+
 - 15+ agents have direct write_note access
 - No validation before writes
 - Inconsistent naming observed in existing notes
@@ -311,6 +343,7 @@ Current state audit (2026-01-21):
 ### Review Schedule
 
 Review at 30 days post-implementation to assess:
+
 - Delegation volume to memory agent
 - Validation rejection rate
 - Agent friction feedback

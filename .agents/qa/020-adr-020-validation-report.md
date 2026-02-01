@@ -116,6 +116,7 @@ Validate ADR-020 implementation against its confirmation criteria:
 **Issue**: ADR-020 requires agent artifacts (session logs, plans, critiques) migrate from `.agents/` filesystem to Brain memory for semantic searchability.
 
 **Evidence**:
+
 - Agent instructions still reference `.agents/planning/`, `.agents/qa/`, `.agents/sessions/`
 - No migration tool exists for these artifacts
 - `brain search` cannot find agent artifacts
@@ -127,17 +128,20 @@ Validate ADR-020 implementation against its confirmation criteria:
 ### Documentation Validation
 
 **Configuration Reference** (`apps/mcp/docs/configuration.md`):
+
 - Schema documented with examples [PASS]
 - XDG compliance explained [PASS]
 - Security permissions documented [PASS]
 
 **Migration Guide** (`apps/mcp/docs/configuration-migration.md`):
+
 - Step-by-step instructions [PASS]
 - Dry-run and rollback documented [PASS]
 - Troubleshooting section exists [PASS]
 - **Issue**: References `~/.basic-memory/brain.log` (should be Brain log path) [WARNING]
 
 **README** (`apps/mcp/README.md`):
+
 - Updated with XDG config location [PASS]
 - `brain config` commands documented [PASS]
 
@@ -150,6 +154,7 @@ Validate ADR-020 implementation against its confirmation criteria:
 **Rationale**: ADR-020 requires semantic searchability of agent context
 
 **Actions**:
+
 - Design migration strategy for `.agents/` → Brain memories
 - Implement migration tool with manifest + rollback
 - Update agent instructions to use Brain memory tools
@@ -162,6 +167,7 @@ Validate ADR-020 implementation against its confirmation criteria:
 **Rationale**: 42 suite failures indicate fragile test infrastructure
 
 **Actions**:
+
 - Add `afterEach(() => { jest.clearAllMocks() })` to all test files
 - Isolate filesystem mocks between test files
 - Reset shared state (RollbackManager, config watchers) in teardown
@@ -174,6 +180,7 @@ Validate ADR-020 implementation against its confirmation criteria:
 **Rationale**: 0% coverage on security-critical path validation
 
 **Actions**:
+
 - Add unit tests for path traversal rejection
 - Add tests for null byte rejection
 - Add tests for system path rejection
@@ -186,6 +193,7 @@ Validate ADR-020 implementation against its confirmation criteria:
 **Rationale**: 35% function coverage on core config I/O module
 
 **Actions**:
+
 - Test all error paths (permission denied, invalid JSON, etc.)
 - Test atomic write failure scenarios
 - Test lock timeout handling
@@ -198,6 +206,7 @@ Validate ADR-020 implementation against its confirmation criteria:
 **Rationale**: Migration guide references old basic-memory log location
 
 **Actions**:
+
 - Replace `~/.basic-memory/brain.log` with Brain log path
 - Verify all path references are migration-context only
 - Add note about log location change
@@ -211,6 +220,7 @@ Validate ADR-020 implementation against its confirmation criteria:
 **Confidence**: Medium
 
 **Rationale**:
+
 - Core migration modules (copy-manifest, migration-verify, rollback) exceed 80% coverage and tests pass
 - Security controls implemented but path-validator module undertested (0% coverage)
 - Test isolation issues cause 42 suite failures (tests pass individually)
@@ -244,6 +254,7 @@ bun test --coverage apps/mcp/src/config/
 ```
 
 **Output**:
+
 - 331 pass
 - 42 fail (isolation issues)
 - Coverage: 50.44% functions, 55.03% lines overall
@@ -254,17 +265,20 @@ bun test --coverage apps/mcp/src/config/
 **File**: `apps/mcp/src/config/__tests__/lock.test.ts`
 
 **Tests**:
+
 - "sanitizes project name to prevent path traversal" [PASS]
 - 33 total tests pass
 
 ### Documentation Review
 
 **Files checked**:
+
 - `apps/mcp/docs/configuration-migration.md` (complete)
 - `apps/mcp/docs/configuration.md` (complete)
 - `apps/mcp/README.md` (updated)
 
 **Command**:
+
 ```bash
 grep -r "basic-memory" apps/mcp/docs/
 ```
@@ -274,6 +288,7 @@ grep -r "basic-memory" apps/mcp/docs/
 ### Agent Instruction Audit
 
 **Command**:
+
 ```bash
 grep -r "\.agents/" apps/claude-plugin/agents/*.md
 ```

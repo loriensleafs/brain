@@ -15,7 +15,7 @@ export const toolDefinition: Tool = {
 Returns a simple array of project names: ["project1", "project2"]
 
 Use this to see what projects are available. For detailed project information
-including code_path and notes_path, use get_project_details with a specific project name.`,
+including code_path and memories_path, use get_project_details with a specific project name.`,
   inputSchema: {
     type: "object" as const,
     properties: {},

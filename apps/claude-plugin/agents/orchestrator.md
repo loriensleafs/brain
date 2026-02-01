@@ -484,7 +484,8 @@ Use classification + domains to select the appropriate sequence from **Agent Seq
 
 ```markdown
 - [ ] CRITICAL: Retrieve memory context
-- [ ] Read repository docs: CLAUDE.md, .github/copilot-instructions.md, .agents/\*.md
+- [ ] Read repository docs: CLAUDE.md, .github/copilot-instructions.md
+- [ ] Read project context from Brain memory: `mcp__plugin_brain_brain__read_note(identifier="handoff")`
 - [ ] Identify project type and existing tools
 - [ ] Check for similar past orchestrations in memory
 - [ ] Plan agent routing sequence
@@ -527,7 +528,7 @@ Before spawning multiple agents, verify the investment is justified:
 
 **Purpose**: Prevent premature PR opening by validating quality gates.
 
-**Terminology**: See `.agents/specs/design/HANDOFF-TERMS.md` for verdict definitions.
+**Terminology**: See Brain memory `specs/design/HANDOFF-TERMS` for verdict definitions.
 
 #### Phase 4 Workflow Diagram
 
@@ -777,10 +778,10 @@ When formal requirements are needed, route through the spec workflow.
 ```text
 1. Orchestrator routes to spec-generator with feature description
 2. spec-generator asks clarifying questions (returns to user if needed)
-3. spec-generator produces:
-   - REQ-NNN documents in .agents/specs/requirements/
-   - DESIGN-NNN documents in .agents/specs/design/
-   - TASK-NNN documents in .agents/specs/tasks/
+3. spec-generator produces (in Brain memory):
+   - REQ-NNN documents in specs/{spec}/requirements/
+   - DESIGN-NNN documents in specs/{spec}/design/
+   - TASK-NNN documents in specs/{spec}/tasks/
 4. Orchestrator routes to critic for EARS compliance validation
 5. Orchestrator routes to architect for design review
 6. Spec-generator's TASK documents are implementation-ready (no task-generator needed)
@@ -811,13 +812,13 @@ REQ-NNN (WHAT/WHY) → DESIGN-NNN (HOW) → TASK-NNN (IMPLEMENTATION)
 | Regulatory/compliance requirement           | Specification | Traceability is mandatory          |
 | Quick feature, low complexity               | Standard      | Skip formality, implement directly |
 
-**Output Locations**:
+**Output Locations** (Brain memory):
 
 | Artifact     | Directory                     | Naming Pattern             |
 | ------------ | ----------------------------- | -------------------------- |
-| Requirements | `.agents/specs/requirements/` | `REQ-NNN-kebab-case.md`    |
-| Designs      | `.agents/specs/design/`       | `DESIGN-NNN-kebab-case.md` |
-| Tasks        | `.agents/specs/tasks/`        | `TASK-NNN-kebab-case.md`   |
+| Requirements | `specs/{spec}/requirements/` | `REQ-NNN-kebab-case`    |
+| Designs      | `specs/{spec}/design/`       | `DESIGN-NNN-kebab-case` |
+| Tasks        | `specs/{spec}/tasks/`        | `TASK-NNN-kebab-case`   |
 
 ### Impact Analysis Orchestration
 
@@ -948,7 +949,7 @@ When ANY agent returns output indicating ADR creation/update:
 
 **Detection Pattern**:
 
-- Agent output contains: "ADR created/updated: .agents/architecture/ADR-\*.md"
+- Agent output contains: "ADR created/updated: decisions/ADR-*"
 - Agent output contains: "MANDATORY: Orchestrator MUST invoke adr-review"
 
 **Enforcement**:
@@ -1034,7 +1035,7 @@ Continue to: critic
 
 **Automation**: Run `scripts/Validate-Consistency.ps1 -Feature "[name]"` for automated validation.
 
-See also: `.agents/governance/consistency-protocol.md` for the complete validation procedure.
+See also: Brain memory `governance/consistency-protocol` for the complete validation procedure.
 
 ## Routing Heuristics
 
@@ -1076,7 +1077,7 @@ See also: `.agents/governance/consistency-protocol.md` for the complete validati
 - `mcp__plugin_brain_brain__read_note` - Read relevant analysis notes
 - External MCP tools if available (library docs, code samples, deep research)
 
-**Output**: Research findings document at `.agents/analysis/ideation-[topic].md`
+**Output**: Research findings in Brain memory `analysis/ANALYSIS-ideation-[topic]`
 
 **Research Template**:
 
@@ -1125,7 +1126,7 @@ See also: `.agents/governance/consistency-protocol.md` for the complete validati
 | critic              | Validate research     | Is the analysis complete and accurate?      |
 | roadmap             | Priority assessment   | Where does this fit in the product roadmap? |
 
-**Output**: Consensus decision document at `.agents/analysis/ideation-[topic]-validation.md`
+**Output**: Consensus decision in Brain memory `analysis/ANALYSIS-ideation-[topic]-validation`
 
 **Validation Document Template**:
 
@@ -1180,8 +1181,8 @@ See also: `.agents/governance/consistency-protocol.md` for the complete validati
 **Decision Options**:
 
 - **Proceed**: Move to Phase 3 (Planning)
-- **Defer**: Good idea, but not now. The orchestrator pauses the current workflow, creates a backlog entry at `.agents/roadmap/backlog.md` with specified conditions, and records the resume trigger (time-based, event-based, or manual). Workflow resumes when conditions are met.
-- **Reject**: Not aligned with goals. The orchestrator reports the rejection and documented reasoning back to the user, persisting the decision rationale in the `.agents/analysis/ideation-[topic]-validation.md` file for future reference.
+- **Defer**: Good idea, but not now. The orchestrator pauses the current workflow, creates a backlog entry in Brain memory `roadmap/backlog` with specified conditions, and records the resume trigger (time-based, event-based, or manual). Workflow resumes when conditions are met.
+- **Reject**: Not aligned with goals. The orchestrator reports the rejection and documented reasoning back to the user, persisting the decision rationale in Brain memory `analysis/ANALYSIS-ideation-[topic]-validation` for future reference.
 
 ### Phase 3: Epic & PRD Creation
 
@@ -1191,9 +1192,9 @@ See also: `.agents/governance/consistency-protocol.md` for the complete validati
 
 | Agent          | Output                       | Location                            |
 | -------------- | ---------------------------- | ----------------------------------- |
-| roadmap        | Epic vision with outcomes    | `.agents/roadmap/epic-[topic].md`   |
-| explainer      | Full PRD with specifications | `.agents/planning/prd-[topic].md`   |
-| task-generator | Work breakdown structure     | `.agents/planning/tasks-[topic].md` |
+| roadmap        | Epic vision with outcomes    | Brain memory `roadmap/EPIC-[topic]`   |
+| explainer      | Full PRD with specifications | Brain memory `planning/PRD-[topic]`   |
+| task-generator | Work breakdown structure     | Brain memory `planning/TASKS-[topic]` |
 
 **Epic Template** (roadmap produces):
 
@@ -1238,7 +1239,7 @@ See also: `.agents/governance/consistency-protocol.md` for the complete validati
 
 **Consensus Required**: All agents must approve before work begins.
 
-**Output**: Approved implementation plan at `.agents/planning/implementation-plan-[topic].md`
+**Output**: Approved implementation plan in Brain memory `planning/PLAN-implementation-[topic]`
 
 **Implementation Plan Template**:
 
@@ -1290,7 +1291,7 @@ See also: `.agents/governance/consistency-protocol.md` for the complete validati
 
 ### Work Breakdown
 
-Reference: `.agents/planning/tasks-[topic].md`
+Reference: Brain memory `planning/TASKS-[topic]`
 
 | Task     | Agent       | Priority |
 | -------- | ----------- | -------- |
@@ -1388,7 +1389,7 @@ Retrospective agent returns output containing `## Retrospective Handoff` section
 │ Step 4: Execute Git Operations (IF git operations listed)   │
 │   - Run `git add` for each path in Git Operations table     │
 │   - Stage Brain notes files as needed                       │
-│   - Stage .agents/retrospective/*.md files                  │
+│   - Note: Retrospective docs stored in Brain memory         │
 │   - Do NOT commit (user will commit when ready)             │
 └─────────────────────────────────────────────────────────────┘
                               │
@@ -1476,10 +1477,10 @@ For complex updates, route to memory agent.
 Execute directly via Bash:
 
 ```bash
-# Stage files listed in Git Operations table
-# Note: Brain notes are stored in ~/memories/{project-path}/ outside the repo
-# Stage any in-repo files like retrospective docs
-git add ".agents/retrospective/YYYY-MM-DD-*.md"
+# Stage any in-repo code files listed in Git Operations table
+# Note: Brain memories are stored in ~/memories/{project}/ outside the repo
+# No git staging needed for Brain memory - only stage code changes
+git add [code-files]
 ```
 
 ### Conditional Routing
@@ -1508,17 +1509,17 @@ After processing retrospective handoff:
 ## Retrospective Processing Complete
 
 ### Skills Persisted
-- Skill-Validation-006: Added to skills/validation.md in Brain
-- Skill-CI-003: Updated in skills/ci-infrastructure.md in Brain
+- SKILL-Validation-006: Added to skills/ in Brain memory
+- SKILL-CI-003: Updated in skills/ in Brain memory
 
 ### Memory Updates
 - Added observation to AI-Workflow-Patterns note
-- Created Session-17-Learnings note in analysis/ folder
+- Created ANALYSIS-Session-17-Learnings note in analysis/ folder
 
-### Files Staged
-  git add .agents/retrospective/2025-12-18-workflow-retro.md
+### Code Files Staged
+[List any in-repo code files if applicable]
 
-Note: Brain notes stored in ~/memories/{project-path}/ are managed separately.
+Note: Brain memories stored in ~/memories/{project}/ are managed via MCP tools.
 
 ### Next Steps
 Run: git commit -m "chore: persist retrospective learnings"
@@ -1602,25 +1603,25 @@ When encountering issues requiring investigation:
 
 ## Output Directory
 
-All agent artifacts go to `.agents/`:
+All agent artifacts go to Brain memory folders:
 
-- `.agents/analysis/` - Analyst reports, ideation research
-- `.agents/architecture/` - ADRs only (no review documents)
-- `.agents/critique/` - Critic reviews, ADR reviews, design reviews
-- `.agents/planning/` - Planner work packages, PRDs, handoffs
-- `.agents/qa/` - QA test strategies
-- `.agents/retrospective/` - Learning extractions
-- `.agents/roadmap/` - Roadmap documents, epics
-- `.agents/security/` - Threat models, security reviews
-- `.agents/sessions/` - Session logs
-- `.agents/skills/` - Learned strategies
-- `.agents/pr-comments/` - PR comment analysis and plans
+- `analysis/` - Analyst reports, ideation research
+- `decisions/` - ADRs only (no review documents)
+- `critique/` - Critic reviews, ADR reviews, design reviews
+- `planning/` - Planner work packages, PRDs, handoffs
+- `qa/` - QA test strategies
+- `retrospective/` - Learning extractions
+- `roadmap/` - Roadmap documents, epics
+- `security/` - Threat models, security reviews
+- `sessions/` - Session logs
+- `skills/` - Learned strategies
+- `governance/` - Project constraints, handoffs
 
 ## Session Continuity
 
-For multi-session projects, maintain a handoff document:
+For multi-session projects, maintain a handoff document in Brain memory:
 
-**Location**: `.agents/planning/handoff-[topic].md`
+**Location**: Brain memory `governance/handoff` or `planning/handoff-[topic]`
 
 **Handoff Document Template**:
 
@@ -1699,9 +1700,9 @@ You CANNOT claim "session complete", "done", "finished", or any completion langu
 
 | Requirement                    | Evidence                                      | Validator                       |
 | ------------------------------ | --------------------------------------------- | ------------------------------- |
-| Session log exists             | `~/.agents/sessions/YYYY-MM-DD-session-NN.md` | File exists                     |
+| Session log exists             | Brain memory `sessions/SESSION-YYYY-MM-DD-NN` | `mcp__plugin_brain_brain__read_note` |
 | Session End checklist complete | All MUST items checked with `[x]`             | `brain validate session`        |
-| Brain note updated             | Cross-session context persisted               | `brain validate session`        |
+| Handoff note updated           | Cross-session context persisted               | `mcp__plugin_brain_brain__read_note(identifier="handoff")` |
 | Git worktree clean             | No uncommitted changes                        | `git status --porcelain`        |
 | Markdown lint passes           | No errors                                     | `npx markdownlint-cli2 **/*.md` |
 
@@ -1710,7 +1711,7 @@ You CANNOT claim "session complete", "done", "finished", or any completion langu
 Before claiming completion, run:
 
 ```bash
-brain validate session ~/.agents/sessions/YYYY-MM-DD-session-NN.md
+brain validate session SESSION-YYYY-MM-DD-NN
 ```
 
 ### Gate Outcomes

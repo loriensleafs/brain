@@ -1,8 +1,8 @@
 /**
  * edit_project tool implementation
  *
- * Edits project metadata including code path and notes path configuration.
- * Notes path supports enum options: DEFAULT, CODE, or absolute path.
+ * Edits project metadata including code path and memories path configuration.
+ * Memories path supports enum options: DEFAULT, CODE, or absolute path.
  *
  * Security controls (TM-001):
  * - CWE-22: Path traversal prevention via symlink resolution
@@ -16,7 +16,8 @@ import * as path from "path";
 import * as os from "os";
 import { setCodePath, getCodePath } from "../../../project/config";
 import { getBasicMemoryClient } from "../../../proxy/client";
-import type { EditProjectArgs, NotesPathOption } from "./schema";
+import { getDefaultMemoriesLocation } from "../../../config/brain-config";
+import type { EditProjectArgs, MemoriesPathOption } from "./schema";
 
 // ============================================================================
 // Path Validation Utilities (Security: CWE-22, CWE-59)
@@ -194,7 +195,7 @@ function getTotalSize(dirPath: string): number {
 const LARGE_DIRECTORY_THRESHOLD = 1000;
 
 /**
- * Migrate notes from old location to new location using copy-verify-delete pattern.
+ * Migrate memories from old location to new location using copy-verify-delete pattern.
  *
  * Security: Implements C-004 from TM-001 threat model.
  * - Copies all files to new location
@@ -202,11 +203,11 @@ const LARGE_DIRECTORY_THRESHOLD = 1000;
  * - Only deletes source after successful verification
  * - Automatic rollback on any failure
  *
- * @param oldPath - Source notes directory
- * @param newPath - Destination notes directory
+ * @param oldPath - Source memories directory
+ * @param newPath - Destination memories directory
  * @returns Migration result with file count
  */
-function migrateNotes(oldPath: string, newPath: string): MigrationResult {
+function migrateMemories(oldPath: string, newPath: string): MigrationResult {
   // Validate source path (must exist)
   const oldValidation = validatePath(oldPath, true);
   if (!oldValidation.valid) {
@@ -304,7 +305,7 @@ function migrateNotes(oldPath: string, newPath: string): MigrationResult {
     fs.rmSync(oldPath, { recursive: true, force: true });
   } catch (deleteError) {
     // Migration succeeded but cleanup failed - this is acceptable
-    // Notes are now in new location, old location remains (no data loss)
+    // Memories are now in new location, old location remains (no data loss)
     return {
       migrated: true,
       files_moved: sourceCount,
@@ -330,30 +331,15 @@ export {
   toolDefinition,
   EditProjectArgsSchema,
   type EditProjectArgs,
-  type NotesPathOption,
+  type MemoriesPathOption,
 } from "./schema";
 
-/**
- * Load brain config to get default_notes_path
- */
-function getDefaultNotesPath(): string {
-  const configPath = path.join(os.homedir(), ".basic-memory", "brain-config.json");
-  try {
-    if (fs.existsSync(configPath)) {
-      const content = fs.readFileSync(configPath, "utf-8");
-      const config = JSON.parse(content);
-      return config.default_notes_path || "~/memories";
-    }
-  } catch {
-    // Ignore errors, return default
-  }
-  return "~/memories";
-}
+// getDefaultMemoriesLocation is imported from ../../../config/brain-config
 
 /**
- * Get notes path for a project from basic-memory config
+ * Get memories path for a project from basic-memory config
  */
-function getNotesPath(project: string): string | null {
+function getMemoriesPath(project: string): string | null {
   const configPath = path.join(os.homedir(), ".basic-memory", "config.json");
   try {
     if (fs.existsSync(configPath)) {
@@ -370,9 +356,9 @@ function getNotesPath(project: string): string | null {
 }
 
 /**
- * Set notes path for a project in basic-memory config
+ * Set memories path for a project in basic-memory config
  */
-function setNotesPath(project: string, notesPath: string): void {
+function setMemoriesPath(project: string, memoriesPath: string): void {
   const configPath = path.join(os.homedir(), ".basic-memory", "config.json");
   try {
     let config: Record<string, unknown> = {};
@@ -386,7 +372,7 @@ function setNotesPath(project: string, notesPath: string): void {
     }
 
     // Expand ~ and resolve to absolute path
-    let resolved = notesPath;
+    let resolved = memoriesPath;
     if (resolved.startsWith("~")) {
       resolved = path.join(os.homedir(), resolved.slice(1));
     }
@@ -396,7 +382,7 @@ function setNotesPath(project: string, notesPath: string): void {
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
   } catch (error) {
     throw new Error(
-      `Failed to update notes path: ${error instanceof Error ? error.message : String(error)}`
+      `Failed to update memories path: ${error instanceof Error ? error.message : String(error)}`
     );
   }
 }
@@ -413,14 +399,14 @@ function resolvePath(inputPath: string): string {
 }
 
 /**
- * Resolve notes_path option to an actual path
+ * Resolve memories_path option to an actual path
  *
- * @param option - NotesPathOption: 'DEFAULT', 'CODE', or absolute path
+ * @param option - MemoriesPathOption: 'DEFAULT', 'CODE', or absolute path
  * @param projectName - Project name (for DEFAULT option)
  * @param resolvedCodePath - Resolved code path (for CODE option)
  */
-function resolveNotesPathOption(
-  option: NotesPathOption,
+function resolveMemoriesPathOption(
+  option: MemoriesPathOption,
   projectName: string,
   resolvedCodePath: string
 ): string {
@@ -429,8 +415,8 @@ function resolveNotesPathOption(
   }
 
   if (option === "DEFAULT") {
-    const defaultNotesPath = getDefaultNotesPath();
-    const resolved = resolvePath(defaultNotesPath);
+    const defaultMemoriesPath = getDefaultMemoriesLocation();
+    const resolved = resolvePath(defaultMemoriesPath);
     return path.join(resolved, projectName);
   }
 
@@ -487,12 +473,12 @@ async function getAvailableProjects(): Promise<string[]> {
 }
 
 export async function handler(args: EditProjectArgs): Promise<CallToolResult> {
-  const { name, code_path, notes_path } = args;
+  const { name, code_path, memories_path } = args;
 
   // Check if project exists in basic-memory
-  const currentNotesPath = getNotesPath(name);
+  const currentMemoriesPath = getMemoriesPath(name);
 
-  if (!currentNotesPath) {
+  if (!currentMemoriesPath) {
     const availableProjects = await getAvailableProjects();
     return {
       content: [
@@ -520,27 +506,27 @@ export async function handler(args: EditProjectArgs): Promise<CallToolResult> {
   setCodePath(name, code_path);
   updates.push(`Set code path: ${resolvedNewCodePath}`);
 
-  // Handle notes_path
-  let finalNotesPath = currentNotesPath;
-  let notesPathMode: string | null = null;
+  // Handle memories_path
+  let finalMemoriesPath = currentMemoriesPath;
+  let memoriesPathMode: string | null = null;
   let migrationResult: MigrationResult | null = null;
 
-  if (notes_path !== undefined) {
-    // Explicit notes_path provided - resolve using enum logic
-    finalNotesPath = resolveNotesPathOption(
-      notes_path as NotesPathOption,
+  if (memories_path !== undefined) {
+    // Explicit memories_path provided - resolve using enum logic
+    finalMemoriesPath = resolveMemoriesPathOption(
+      memories_path as MemoriesPathOption,
       name,
       resolvedNewCodePath
     );
-    notesPathMode = notes_path === "DEFAULT" || notes_path === "CODE" ? notes_path : "CUSTOM";
+    memoriesPathMode = memories_path === "DEFAULT" || memories_path === "CODE" ? memories_path : "CUSTOM";
 
     // Check if migration is needed (path changed AND old directory exists)
-    const normalizedCurrent = path.resolve(currentNotesPath);
-    const normalizedNew = path.resolve(finalNotesPath);
+    const normalizedCurrent = path.resolve(currentMemoriesPath);
+    const normalizedNew = path.resolve(finalMemoriesPath);
 
-    if (normalizedCurrent !== normalizedNew && fs.existsSync(currentNotesPath)) {
+    if (normalizedCurrent !== normalizedNew && fs.existsSync(currentMemoriesPath)) {
       // Perform migration with copy-verify-delete pattern (C-004)
-      migrationResult = migrateNotes(currentNotesPath, finalNotesPath);
+      migrationResult = migrateMemories(currentMemoriesPath, finalMemoriesPath);
 
       if (!migrationResult.migrated && !migrationResult.error?.includes("Migration complete")) {
         // Migration failed - return error, config not updated
@@ -550,10 +536,10 @@ export async function handler(args: EditProjectArgs): Promise<CallToolResult> {
               type: "text" as const,
               text: JSON.stringify(
                 {
-                  error: `Note migration failed: ${migrationResult.error}`,
-                  old_path: currentNotesPath,
-                  new_path: finalNotesPath,
-                  rollback: "Source notes preserved, no changes made",
+                  error: `Memories migration failed: ${migrationResult.error}`,
+                  old_path: currentMemoriesPath,
+                  new_path: finalMemoriesPath,
+                  rollback: "Source memories preserved, no changes made",
                 },
                 null,
                 2
@@ -565,7 +551,7 @@ export async function handler(args: EditProjectArgs): Promise<CallToolResult> {
       }
 
       updates.push(
-        `Migrated notes: ${migrationResult.files_moved} files from ${currentNotesPath} to ${finalNotesPath}`
+        `Migrated memories: ${migrationResult.files_moved} files from ${currentMemoriesPath} to ${finalMemoriesPath}`
       );
       if (migrationResult.error) {
         // Migration succeeded but with warning (e.g., couldn't delete source)
@@ -573,26 +559,26 @@ export async function handler(args: EditProjectArgs): Promise<CallToolResult> {
       }
     }
 
-    setNotesPath(name, finalNotesPath);
-    updates.push(`Set notes path: ${finalNotesPath} (${notesPathMode})`);
+    setMemoriesPath(name, finalMemoriesPath);
+    updates.push(`Set memories path: ${finalMemoriesPath} (${memoriesPathMode})`);
   } else {
-    // notes_path not specified - check for auto-update scenario first
+    // memories_path not specified - check for auto-update scenario first
     let autoUpdated = false;
 
     if (oldCodePath) {
-      // Check if notes_path was auto-configured from old code_path (CODE mode)
-      const oldDefaultNotesPath = path.join(resolvePath(oldCodePath), "docs");
-      if (currentNotesPath === oldDefaultNotesPath) {
-        // Auto-update notes_path to new code_path/docs (preserve CODE mode)
-        const newDefaultNotesPath = path.join(resolvedNewCodePath, "docs");
+      // Check if memories_path was auto-configured from old code_path (CODE mode)
+      const oldDefaultMemoriesPath = path.join(resolvePath(oldCodePath), "docs");
+      if (currentMemoriesPath === oldDefaultMemoriesPath) {
+        // Auto-update memories_path to new code_path/docs (preserve CODE mode)
+        const newDefaultMemoriesPath = path.join(resolvedNewCodePath, "docs");
 
         // Check if migration is needed for CODE mode auto-update
-        const normalizedCurrent = path.resolve(currentNotesPath);
-        const normalizedNew = path.resolve(newDefaultNotesPath);
+        const normalizedCurrent = path.resolve(currentMemoriesPath);
+        const normalizedNew = path.resolve(newDefaultMemoriesPath);
 
-        if (normalizedCurrent !== normalizedNew && fs.existsSync(currentNotesPath)) {
+        if (normalizedCurrent !== normalizedNew && fs.existsSync(currentMemoriesPath)) {
           // Perform migration with copy-verify-delete pattern (C-004)
-          migrationResult = migrateNotes(currentNotesPath, newDefaultNotesPath);
+          migrationResult = migrateMemories(currentMemoriesPath, newDefaultMemoriesPath);
 
           if (!migrationResult.migrated && !migrationResult.error?.includes("Migration complete")) {
             // Migration failed - return error, config not updated
@@ -602,10 +588,10 @@ export async function handler(args: EditProjectArgs): Promise<CallToolResult> {
                   type: "text" as const,
                   text: JSON.stringify(
                     {
-                      error: `Note migration failed during CODE auto-update: ${migrationResult.error}`,
-                      old_path: currentNotesPath,
-                      new_path: newDefaultNotesPath,
-                      rollback: "Source notes preserved, no changes made",
+                      error: `Memories migration failed during CODE auto-update: ${migrationResult.error}`,
+                      old_path: currentMemoriesPath,
+                      new_path: newDefaultMemoriesPath,
+                      rollback: "Source memories preserved, no changes made",
                     },
                     null,
                     2
@@ -617,32 +603,32 @@ export async function handler(args: EditProjectArgs): Promise<CallToolResult> {
           }
 
           updates.push(
-            `Migrated notes: ${migrationResult.files_moved} files from ${currentNotesPath} to ${newDefaultNotesPath}`
+            `Migrated memories: ${migrationResult.files_moved} files from ${currentMemoriesPath} to ${newDefaultMemoriesPath}`
           );
           if (migrationResult.error) {
             updates.push(`Warning: ${migrationResult.error}`);
           }
         }
 
-        setNotesPath(name, newDefaultNotesPath);
-        finalNotesPath = newDefaultNotesPath;
-        notesPathMode = "CODE (auto-updated)";
-        updates.push(`Auto-updated notes path: ${newDefaultNotesPath}`);
+        setMemoriesPath(name, newDefaultMemoriesPath);
+        finalMemoriesPath = newDefaultMemoriesPath;
+        memoriesPathMode = "CODE (auto-updated)";
+        updates.push(`Auto-updated memories path: ${newDefaultMemoriesPath}`);
         autoUpdated = true;
       }
     }
 
     // If not auto-updated, default to 'DEFAULT' mode
     if (!autoUpdated) {
-      finalNotesPath = resolveNotesPathOption("DEFAULT", name, resolvedNewCodePath);
+      finalMemoriesPath = resolveMemoriesPathOption("DEFAULT", name, resolvedNewCodePath);
 
       // Check if migration is needed for DEFAULT mode
-      const normalizedCurrent = path.resolve(currentNotesPath);
-      const normalizedNew = path.resolve(finalNotesPath);
+      const normalizedCurrent = path.resolve(currentMemoriesPath);
+      const normalizedNew = path.resolve(finalMemoriesPath);
 
-      if (normalizedCurrent !== normalizedNew && fs.existsSync(currentNotesPath)) {
+      if (normalizedCurrent !== normalizedNew && fs.existsSync(currentMemoriesPath)) {
         // Perform migration with copy-verify-delete pattern (C-004)
-        migrationResult = migrateNotes(currentNotesPath, finalNotesPath);
+        migrationResult = migrateMemories(currentMemoriesPath, finalMemoriesPath);
 
         if (!migrationResult.migrated && !migrationResult.error?.includes("Migration complete")) {
           // Migration failed - return error, config not updated
@@ -652,10 +638,10 @@ export async function handler(args: EditProjectArgs): Promise<CallToolResult> {
                 type: "text" as const,
                 text: JSON.stringify(
                   {
-                    error: `Note migration failed: ${migrationResult.error}`,
-                    old_path: currentNotesPath,
-                    new_path: finalNotesPath,
-                    rollback: "Source notes preserved, no changes made",
+                    error: `Memories migration failed: ${migrationResult.error}`,
+                    old_path: currentMemoriesPath,
+                    new_path: finalMemoriesPath,
+                    rollback: "Source memories preserved, no changes made",
                   },
                   null,
                   2
@@ -667,16 +653,16 @@ export async function handler(args: EditProjectArgs): Promise<CallToolResult> {
         }
 
         updates.push(
-          `Migrated notes: ${migrationResult.files_moved} files from ${currentNotesPath} to ${finalNotesPath}`
+          `Migrated memories: ${migrationResult.files_moved} files from ${currentMemoriesPath} to ${finalMemoriesPath}`
         );
         if (migrationResult.error) {
           updates.push(`Warning: ${migrationResult.error}`);
         }
       }
 
-      setNotesPath(name, finalNotesPath);
-      notesPathMode = "DEFAULT";
-      updates.push(`Set notes path: ${finalNotesPath} (${notesPathMode})`);
+      setMemoriesPath(name, finalMemoriesPath);
+      memoriesPathMode = "DEFAULT";
+      updates.push(`Set memories path: ${finalMemoriesPath} (${memoriesPathMode})`);
     }
   }
 
@@ -685,8 +671,8 @@ export async function handler(args: EditProjectArgs): Promise<CallToolResult> {
     project: name,
     updates,
     code_path: getCodePath(name) || null,
-    notes_path: finalNotesPath,
-    notes_path_mode: notesPathMode,
+    memories_path: finalMemoriesPath,
+    memories_path_mode: memoriesPathMode,
   };
 
   // Include migration details in response

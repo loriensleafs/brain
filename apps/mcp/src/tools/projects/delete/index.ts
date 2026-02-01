@@ -177,7 +177,7 @@ export async function handler(args: DeleteProjectArgs): Promise<CallToolResult> 
             {
               error: `Security validation failed: ${validation.error}`,
               project,
-              notes_path: notesPath,
+              memories_path: notesPath,
             },
             null,
             2
@@ -236,7 +236,7 @@ export async function handler(args: DeleteProjectArgs): Promise<CallToolResult> 
             partial: true,
             config_removed: brainConfigRemoved || basicMemoryConfigRemoved,
             notes_deleted: false,
-            notes_path: notesPath,
+            memories_path: notesPath,
             error: `Config removed but file deletion failed: ${error instanceof Error ? error.message : String(error)}`,
           };
         }
@@ -262,7 +262,7 @@ export async function handler(args: DeleteProjectArgs): Promise<CallToolResult> 
                 project,
                 deleted_config: result.config_removed,
                 deleted_notes: false,
-                notes_path: notesPath,
+                memories_path: notesPath,
                 error: result.error,
                 recovery: "Notes directory still exists at the path above. You can manually delete it or recreate the project config.",
               },
@@ -280,7 +280,7 @@ export async function handler(args: DeleteProjectArgs): Promise<CallToolResult> 
       project,
       deleted_config: result.config_removed,
       deleted_notes: result.notes_deleted,
-      notes_path: notesPath,
+      memories_path: notesPath,
       code_path: codePath,
       ...(result.notes_deleted && { files_removed: result.files_removed }),
     };

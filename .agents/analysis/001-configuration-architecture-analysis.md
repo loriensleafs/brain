@@ -5,6 +5,7 @@
 **Objective**: Design a clean abstraction layer where Brain manages its own configuration and translates it to basic-memory configuration internally, hiding implementation details from users.
 
 **Scope**:
+
 - Current state of Brain and basic-memory configuration
 - Configuration best practices from similar tools
 - Proposed Brain configuration architecture
@@ -13,12 +14,14 @@
 ## 2. Context
 
 Brain currently wraps basic-memory but exposes implementation details:
+
 - Configuration lives in `~/.basic-memory/` (basic-memory's directory)
 - Users see `brain-config.json` and `config.json` side by side
 - `default_notes_path` is GLOBAL but stored alongside project configs
 - The `~/.brain/` directory exists but is unused (empty `projects.json`)
 
 **User confusion points**:
+
 1. "Why is my Brain config in a basic-memory folder?"
 2. "What's the difference between brain-config.json and config.json?"
 3. "Which config do I edit?"
@@ -26,16 +29,19 @@ Brain currently wraps basic-memory but exposes implementation details:
 ## 3. Approach
 
 **Methodology**:
+
 1. Code analysis of current Brain and basic-memory configuration handling
 2. Research configuration patterns from Docker, kubectl, npm/yarn, and git
 3. Apply XDG Base Directory Specification principles
 4. Design Brain-native configuration architecture
 
 **Tools Used**:
+
 - Grep/Read for codebase analysis
 - WebSearch for industry best practices
 
 **Limitations**:
+
 - Cannot test changes without implementation
 - basic-memory's config schema is external dependency
 
@@ -108,6 +114,7 @@ Brain MCP (TypeScript)
 | Local | `.git/config` | Repository | Highest |
 
 **Brain Application**: Git's model works well. Brain should support:
+
 - Global: User defaults (`~/.config/brain/config.json`)
 - Local: Project overrides (stored in Brain's global config, keyed by project)
 
@@ -124,6 +131,7 @@ $KUBECONFIG              # Environment variable override
 #### Docker: Hidden Runtime Abstraction
 
 Docker users interact with `docker` commands. They rarely see containerd configuration directly. Docker maintains:
+
 - `/etc/docker/daemon.json` - Docker daemon config
 - Internal management of containerd (hidden from users)
 
@@ -226,6 +234,7 @@ package.json             # Project metadata
 | `notes_path` | Where project notes are stored | Computed or explicit |
 
 **Notes Mode Resolution**:
+
 - `DEFAULT`: `${notes_location}/${project_name}`
 - `CODE`: `${code_path}/docs`
 - `CUSTOM`: Explicit path specified by user
@@ -245,6 +254,7 @@ logging.level               →   log_level
 ```
 
 **Sync Strategy**: On any Brain config change:
+
 1. Read Brain config from `~/.config/brain/config.json`
 2. Transform to basic-memory schema
 3. Write to `~/.basic-memory/config.json`
@@ -309,6 +319,7 @@ brain projects delete --project myproj --delete-notes
 **Abstraction Quality**: The current architecture leaks implementation details. Users should not know that basic-memory exists, just like Docker users do not need to know about containerd.
 
 **Future Flexibility**: By owning its config format, Brain can:
+
 - Add features without basic-memory changes
 - Migrate to different backends without user impact
 - Version its schema independently
@@ -318,6 +329,7 @@ brain projects delete --project myproj --delete-notes
 ### 6.2 Migration Considerations
 
 **Backward Compatibility**: Existing users have data in `~/.basic-memory/brain-config.json`. Migration must:
+
 1. Detect existing config
 2. Transform to new format
 3. Write to new location
@@ -328,10 +340,12 @@ brain projects delete --project myproj --delete-notes
 ### 6.3 XDG vs Custom Location
 
 **Option A**: XDG-compliant (`~/.config/brain/`)
+
 - Pros: Follows Linux standards, familiar to power users
 - Cons: macOS users may not expect this
 
 **Option B**: Custom (`~/.brain/`)
+
 - Pros: Simple, discoverable
 - Cons: Adds to home directory clutter
 
@@ -384,12 +398,14 @@ brain projects delete --project myproj --delete-notes
 ### B. Data Transparency
 
 **Found**:
+
 - Complete Brain config handling code in `/apps/mcp/src/project/config.ts`
 - All project tool implementations in `/apps/mcp/src/tools/projects/`
 - Current config files at `~/.basic-memory/`
 - Unused `~/.brain/projects.json`
 
 **Not Found**:
+
 - Documentation on original design intent for `~/.brain/`
 - basic-memory's internal config schema documentation
 

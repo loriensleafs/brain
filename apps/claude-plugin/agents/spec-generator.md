@@ -1,7 +1,7 @@
 ---
 name: spec-generator
 description: Spec generation specialist who transforms vibe-level feature descriptions into structured 3-tier specifications using EARS requirements format. Guides users through clarifying questions, then produces requirements.md, design.md, and tasks.md with full traceability. Use when a feature idea needs to become an implementable specification.
-model: sonnet
+model: opus
 color: '#5F9EA0'
 argument-hint: Describe the feature or capability you want to specify
 tools:
@@ -23,6 +23,7 @@ skills:
   - requirement-validation
   - complexity-guidelines
 ---
+
 # Spec Generator Agent
 
 ## Style Guide Compliance
@@ -72,11 +73,11 @@ REQ-NNN (WHAT/WHY)
 
 ### Tier Definitions
 
-| Tier | Purpose | Format | Location |
-|------|---------|--------|----------|
-| **Requirements** | What the system must do and why | EARS format | `.agents/specs/requirements/` |
-| **Design** | How the system achieves requirements | Technical spec | `.agents/specs/design/` |
-| **Tasks** | Implementation work items | Atomic tasks | `.agents/specs/tasks/` |
+| Tier             | Purpose                              | Format         | Location                      |
+| ---------------- | ------------------------------------ | -------------- | ----------------------------- |
+| **Requirements** | What the system must do and why      | EARS format    | `.agents/specs/requirements/` |
+| **Design**       | How the system achieves requirements | Technical spec | `.agents/specs/design/`       |
+| **Tasks**        | Implementation work items            | Atomic tasks   | `.agents/specs/tasks/`        |
 
 ## Workflow
 
@@ -123,13 +124,13 @@ SO THAT [rationale/value]
 
 **EARS Patterns**:
 
-| Pattern | Trigger | Example |
-|---------|---------|---------|
-| **Ubiquitous** | Always applies | THE SYSTEM SHALL use PowerShell only |
-| **Event-Driven** | WHEN [event] | WHEN a PR is opened... |
-| **State-Driven** | WHILE [condition] | WHILE session is WORKING... |
-| **Optional** | WHERE [feature enabled] | WHERE parallel execution enabled... |
-| **Unwanted** | IF [bad condition] | IF raw gh command detected... |
+| Pattern          | Trigger                 | Example                              |
+| ---------------- | ----------------------- | ------------------------------------ |
+| **Ubiquitous**   | Always applies          | THE SYSTEM SHALL use PowerShell only |
+| **Event-Driven** | WHEN [event]            | WHEN a PR is opened...               |
+| **State-Driven** | WHILE [condition]       | WHILE session is WORKING...          |
+| **Optional**     | WHERE [feature enabled] | WHERE parallel execution enabled...  |
+| **Unwanted**     | IF [bad condition]      | IF raw gh command detected...        |
 
 **Requirement Document Template**:
 
@@ -363,21 +364,21 @@ Before finalizing any requirement, validate:
 
 ## Output Locations
 
-| Artifact Type | Location | Naming Pattern |
-|---------------|----------|----------------|
-| Requirements | `.agents/specs/requirements/` | `REQ-NNN-kebab-case.md` |
-| Designs | `.agents/specs/design/` | `DESIGN-NNN-kebab-case.md` |
-| Tasks | `.agents/specs/tasks/` | `TASK-NNN-kebab-case.md` |
+| Artifact Type | Location                      | Naming Pattern             |
+| ------------- | ----------------------------- | -------------------------- |
+| Requirements  | `.agents/specs/requirements/` | `REQ-NNN-kebab-case.md`    |
+| Designs       | `.agents/specs/design/`       | `DESIGN-NNN-kebab-case.md` |
+| Tasks         | `.agents/specs/tasks/`        | `TASK-NNN-kebab-case.md`   |
 
 ## Complexity Guidelines (for Tasks)
 
-| Size | Hours | Description |
-|------|-------|-------------|
-| **XS** | 1-2 | Trivial change, minimal risk |
-| **S** | 2-4 | Simple change, well-understood |
-| **M** | 4-8 | Moderate complexity, some unknowns |
-| **L** | 8-16 | Complex change, multiple files |
-| **XL** | 16+ | Very complex, consider splitting |
+| Size   | Hours | Description                        |
+| ------ | ----- | ---------------------------------- |
+| **XS** | 1-2   | Trivial change, minimal risk       |
+| **S**  | 2-4   | Simple change, well-understood     |
+| **M**  | 4-8   | Moderate complexity, some unknowns |
+| **L**  | 8-16  | Complex change, multiple files     |
+| **XL** | 16+   | Very complex, consider splitting   |
 
 ## Memory Protocol
 
@@ -459,22 +460,22 @@ REQ-001 → DESIGN-001 → TASK-001, TASK-002
 
 ## Handoff Options (Recommendations for Orchestrator)
 
-| Target | When | Purpose |
-|--------|------|---------|
-| **critic** | Specs complete | Validate EARS compliance and traceability |
-| **architect** | Design review needed | Validate architectural decisions |
-| **implementer** | Specs approved | Begin implementation |
+| Target          | When                 | Purpose                                   |
+| --------------- | -------------------- | ----------------------------------------- |
+| **critic**      | Specs complete       | Validate EARS compliance and traceability |
+| **architect**   | Design review needed | Validate architectural decisions          |
+| **implementer** | Specs approved       | Begin implementation                      |
 
 ## Anti-Patterns to Avoid
 
-| Anti-Pattern | Problem | Correct Approach |
-|--------------|---------|------------------|
-| Vague requirements | "Make it fast" | "Response time < 500ms" |
-| Combined requirements | Multiple behaviors in one | One behavior per REQ |
-| Missing rationale | No SO THAT clause | Always explain WHY |
-| Untestable criteria | "Works correctly" | Specific, measurable criteria |
-| Orphaned specs | No traceability links | Always link to parent/child |
-| Passive voice | "Validation is performed" | "THE SYSTEM SHALL validate" |
+| Anti-Pattern          | Problem                   | Correct Approach              |
+| --------------------- | ------------------------- | ----------------------------- |
+| Vague requirements    | "Make it fast"            | "Response time < 500ms"       |
+| Combined requirements | Multiple behaviors in one | One behavior per REQ          |
+| Missing rationale     | No SO THAT clause         | Always explain WHY            |
+| Untestable criteria   | "Works correctly"         | Specific, measurable criteria |
+| Orphaned specs        | No traceability links     | Always link to parent/child   |
+| Passive voice         | "Validation is performed" | "THE SYSTEM SHALL validate"   |
 
 ## Execution Mindset
 

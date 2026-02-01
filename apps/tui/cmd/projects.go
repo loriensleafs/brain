@@ -26,10 +26,12 @@ import (
 var (
 	projectsActiveProject string
 	projectsCodePath      string
-	projectsNotesPath     string
+	projectsMemoriesPath  string // New flag name (ADR-020)
+	projectsNotesPath     string // Deprecated, kept for backward compatibility
 	projectsName          string
 	projectsDeleteProject string
-	projectsDeleteNotes   bool
+	projectsDeleteMemories bool // New flag name (ADR-020)
+	projectsDeleteNotes    bool // Deprecated, kept for backward compatibility
 )
 
 var projectsCmd = &cobra.Command{
@@ -46,22 +48,22 @@ Commands:
   brain projects <project>         Get project details
   brain projects <project> --code-path PATH   Update project code path
 
-Notes path options (--notes-path):
-  DEFAULT    Use ${default_notes_path}/${project_name} from brain-config.json (default)
+Memories path options (--memories-path):
+  DEFAULT    Use ${memories_location}/${project_name} from config (default)
   CODE       Use ${code_path}/docs
   <path>     Use any absolute path (must start with / or ~)
 
-When --notes-path is not specified, it defaults to 'DEFAULT' mode.
+When --memories-path is not specified, it defaults to 'DEFAULT' mode.
 
 Examples:
   brain projects list
   brain projects active -p myproject
   brain projects create --name myproject --code-path ~/Dev/myproject
-  brain projects create --name myproject --code-path ~/Dev/myproject --notes-path CODE
+  brain projects create --name myproject --code-path ~/Dev/myproject --memories-path CODE
   brain projects delete --project myproject
-  brain projects delete --project myproject --delete-notes
+  brain projects delete --project myproject --delete-memories
   brain projects myproject
-  brain projects myproject --code-path ~/Dev/myproject --notes-path DEFAULT`,
+  brain projects myproject --code-path ~/Dev/myproject --memories-path DEFAULT`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runProjectsRoot,
 }
@@ -97,20 +99,22 @@ Required flags:
   --code-path  Code directory path
 
 Optional flags:
-  --notes-path Notes directory path (default: 'DEFAULT'). Options:
-               - 'DEFAULT': ${default_notes_path}/${project_name} (from brain-config.json)
-               - 'CODE': ${code_path}/docs
-               - Absolute path: Any custom path (must start with / or ~)
+  --memories-path  Memories directory path (default: 'DEFAULT'). Options:
+                   - 'DEFAULT': ${memories_location}/${project_name} (from config)
+                   - 'CODE': ${code_path}/docs
+                   - Absolute path: Any custom path (must start with / or ~)
 
-When --notes-path is not specified, 'DEFAULT' mode is used, which stores notes
-in ${default_notes_path}/${project_name} as configured in brain-config.json.
+When --memories-path is not specified, 'DEFAULT' mode is used, which stores
+memories in ${memories_location}/${project_name} as configured.
 
-To store notes alongside code (legacy behavior), use --notes-path CODE.
+To store memories alongside code (legacy behavior), use --memories-path CODE.
+
+DEPRECATED: --notes-path is deprecated, use --memories-path instead.
 
 Examples:
   brain projects create --name myproject --code-path ~/Dev/myproject
-  brain projects create --name myproject --code-path ~/Dev/myproject --notes-path CODE
-  brain projects create --name myproject --code-path ~/Dev/myproject --notes-path ~/memories/myproject`,
+  brain projects create --name myproject --code-path ~/Dev/myproject --memories-path CODE
+  brain projects create --name myproject --code-path ~/Dev/myproject --memories-path ~/memories/myproject`,
 	RunE: runProjectsCreate,
 }
 
@@ -120,31 +124,33 @@ var projectsDeleteCmd = &cobra.Command{
 	Long: `Delete a Brain memory project from configuration.
 
 Required flags:
-  --project      Project name to delete
+  --project          Project name to delete
 
 Optional flags:
-  --delete-notes Also delete the notes directory (default: false)
-                 WARNING: This permanently deletes all note files!
+  --delete-memories  Also delete the memories directory (default: false)
+                     WARNING: This permanently deletes all memory files!
 
 Behavior:
-  Without --delete-notes (default):
+  Without --delete-memories (default):
     - Removes project from brain-config.json and basic-memory config.json
-    - Preserves the notes directory for manual recovery or re-registration
-    - Safe operation: notes remain intact at their original location
+    - Preserves the memories directory for manual recovery or re-registration
+    - Safe operation: memories remain intact at their original location
 
-  With --delete-notes:
+  With --delete-memories:
     - Removes project from both configuration files
-    - PERMANENTLY DELETES the notes directory and ALL contents
+    - PERMANENTLY DELETES the memories directory and ALL contents
     - Requires double confirmation to prevent accidental data loss
     - Cannot be undone - ensure you have backups
 
 Recovery:
-  Config-only deletion: Use 'brain projects create' to re-register with existing notes
+  Config-only deletion: Use 'brain projects create' to re-register with existing memories
   Full deletion: Restore from backup (Git, Time Machine, etc.)
 
+DEPRECATED: --delete-notes is deprecated, use --delete-memories instead.
+
 Examples:
-  brain projects delete --project myproject                  # Config only
-  brain projects delete --project myproject --delete-notes   # Full deletion`,
+  brain projects delete --project myproject                      # Config only
+  brain projects delete --project myproject --delete-memories    # Full deletion`,
 	RunE: runProjectsDelete,
 }
 
@@ -161,18 +167,24 @@ func init() {
 	// Flags for create command
 	projectsCreateCmd.Flags().StringVar(&projectsName, "name", "", "Project name (required)")
 	projectsCreateCmd.Flags().StringVar(&projectsCodePath, "code-path", "", "Code directory path (required)")
-	projectsCreateCmd.Flags().StringVar(&projectsNotesPath, "notes-path", "", "Notes directory path (default: 'DEFAULT'). Options: 'DEFAULT', 'CODE', or absolute path")
+	projectsCreateCmd.Flags().StringVar(&projectsMemoriesPath, "memories-path", "", "Memories directory path (default: 'DEFAULT'). Options: 'DEFAULT', 'CODE', or absolute path")
+	projectsCreateCmd.Flags().StringVar(&projectsNotesPath, "notes-path", "", "DEPRECATED: Use --memories-path instead")
+	projectsCreateCmd.Flags().MarkDeprecated("notes-path", "use --memories-path instead")
 	projectsCreateCmd.MarkFlagRequired("name")
 	projectsCreateCmd.MarkFlagRequired("code-path")
 
 	// Flags for delete command
 	projectsDeleteCmd.Flags().StringVar(&projectsDeleteProject, "project", "", "Project name to delete (required)")
-	projectsDeleteCmd.Flags().BoolVar(&projectsDeleteNotes, "delete-notes", false, "Also delete the notes directory (DESTRUCTIVE)")
+	projectsDeleteCmd.Flags().BoolVar(&projectsDeleteMemories, "delete-memories", false, "Also delete the memories directory (DESTRUCTIVE)")
+	projectsDeleteCmd.Flags().BoolVar(&projectsDeleteNotes, "delete-notes", false, "DEPRECATED: Use --delete-memories instead")
+	projectsDeleteCmd.Flags().MarkDeprecated("delete-notes", "use --delete-memories instead")
 	projectsDeleteCmd.MarkFlagRequired("project")
 
 	// Flags for root command (editing project)
 	projectsCmd.Flags().StringVar(&projectsCodePath, "code-path", "", "Set code directory path for project")
-	projectsCmd.Flags().StringVar(&projectsNotesPath, "notes-path", "", "Notes directory path (default: 'DEFAULT'). Options: 'DEFAULT', 'CODE', or absolute path")
+	projectsCmd.Flags().StringVar(&projectsMemoriesPath, "memories-path", "", "Memories directory path (default: 'DEFAULT'). Options: 'DEFAULT', 'CODE', or absolute path")
+	projectsCmd.Flags().StringVar(&projectsNotesPath, "notes-path", "", "DEPRECATED: Use --memories-path instead")
+	projectsCmd.Flags().MarkDeprecated("notes-path", "use --memories-path instead")
 }
 
 // runProjectsRoot handles 'brain projects' and 'brain projects <project>'
@@ -251,30 +263,56 @@ func parseProjectListResponse(text string) []string {
 	return nil
 }
 
-// validateNotesPath checks if notes_path value is valid and prints hints for invalid values.
+// getEffectiveMemoriesPath returns the effective memories path, handling deprecated --notes-path flag.
+// Priority: --memories-path > --notes-path (with warning) > empty
+func getEffectiveMemoriesPath() string {
+	if projectsMemoriesPath != "" {
+		return projectsMemoriesPath
+	}
+	if projectsNotesPath != "" {
+		// Deprecated flag used - Cobra already prints deprecation warning via MarkDeprecated
+		return projectsNotesPath
+	}
+	return ""
+}
+
+// validateMemoriesPath checks if memories_path value is valid and prints hints for invalid values.
 // Returns true if valid, false if invalid.
 // Valid values: "DEFAULT", "CODE", absolute path starting with / or ~
-func validateNotesPath(notesPath string) bool {
-	if notesPath == "" {
+func validateMemoriesPath(memoriesPath string) bool {
+	if memoriesPath == "" {
 		return true // Empty is valid (uses default)
 	}
 
 	// Check for enum values (case-sensitive)
-	if notesPath == "DEFAULT" || notesPath == "CODE" {
+	if memoriesPath == "DEFAULT" || memoriesPath == "CODE" {
 		return true
 	}
 
 	// Check for absolute path
-	if len(notesPath) > 0 && (notesPath[0] == '/' || notesPath[0] == '~') {
+	if len(memoriesPath) > 0 && (memoriesPath[0] == '/' || memoriesPath[0] == '~') {
 		return true
 	}
 
 	// Invalid value - print hints
-	fmt.Fprintf(os.Stderr, "Warning: Invalid notes-path value '%s'\n", notesPath)
+	fmt.Fprintf(os.Stderr, "Warning: Invalid memories-path value '%s'\n", memoriesPath)
 	fmt.Fprintf(os.Stderr, "Valid options:\n")
-	fmt.Fprintf(os.Stderr, "  DEFAULT  Use ${default_notes_path}/${project_name}\n")
+	fmt.Fprintf(os.Stderr, "  DEFAULT  Use ${memories_location}/${project_name}\n")
 	fmt.Fprintf(os.Stderr, "  CODE     Use ${code_path}/docs\n")
 	fmt.Fprintf(os.Stderr, "  <path>   Absolute path starting with / or ~\n")
+	return false
+}
+
+// getEffectiveDeleteMemories returns the effective delete-memories flag, handling deprecated --delete-notes flag.
+// Priority: --delete-memories > --delete-notes (with warning)
+func getEffectiveDeleteMemories() bool {
+	if projectsDeleteMemories {
+		return true
+	}
+	if projectsDeleteNotes {
+		// Deprecated flag used - Cobra already prints deprecation warning via MarkDeprecated
+		return true
+	}
 	return false
 }
 
@@ -369,10 +407,11 @@ func getProjectDetails(project string) error {
 	}
 
 	var response struct {
-		Project   string  `json:"project"`
-		NotesPath *string `json:"notes_path"`
-		CodePath  *string `json:"code_path"`
-		IsActive  bool    `json:"isActive"`
+		Project      string  `json:"project"`
+		MemoriesPath *string `json:"memories_path"` // New field name
+		NotesPath    *string `json:"notes_path"`    // Fallback for old MCP responses
+		CodePath     *string `json:"code_path"`
+		IsActive     bool    `json:"isActive"`
 	}
 	if err := json.Unmarshal([]byte(text), &response); err != nil {
 		// If can't parse, just output raw
@@ -380,17 +419,25 @@ func getProjectDetails(project string) error {
 		return nil
 	}
 
-	fmt.Printf("Project: %s\n", response.Project)
-	if response.IsActive {
-		fmt.Println("Status:  Active")
+	// Get memories path (prefer new field name, fall back to old)
+	var memoriesPath *string
+	if response.MemoriesPath != nil {
+		memoriesPath = response.MemoriesPath
+	} else {
+		memoriesPath = response.NotesPath
 	}
-	if response.NotesPath != nil && *response.NotesPath != "" {
-		fmt.Printf("Notes:   %s\n", *response.NotesPath)
+
+	fmt.Printf("Project:  %s\n", response.Project)
+	if response.IsActive {
+		fmt.Println("Status:   Active")
+	}
+	if memoriesPath != nil && *memoriesPath != "" {
+		fmt.Printf("Memories: %s\n", *memoriesPath)
 	}
 	if response.CodePath != nil && *response.CodePath != "" {
-		fmt.Printf("Code:    %s\n", *response.CodePath)
+		fmt.Printf("Code:     %s\n", *response.CodePath)
 	} else {
-		fmt.Println("Code:    (not configured)")
+		fmt.Println("Code:     (not configured)")
 	}
 
 	return nil
@@ -398,9 +445,12 @@ func getProjectDetails(project string) error {
 
 // editProject updates project configuration
 func editProject(project, codePath string) error {
-	// Validate notes_path before making request
-	if !validateNotesPath(projectsNotesPath) {
-		return fmt.Errorf("invalid notes-path value: %s", projectsNotesPath)
+	// Get effective memories path (handles deprecated flag)
+	effectiveMemoriesPath := getEffectiveMemoriesPath()
+
+	// Validate memories_path before making request
+	if !validateMemoriesPath(effectiveMemoriesPath) {
+		return fmt.Errorf("invalid memories-path value: %s", effectiveMemoriesPath)
 	}
 
 	brainClient, err := client.EnsureServerRunning()
@@ -414,9 +464,9 @@ func editProject(project, codePath string) error {
 		"code_path": codePath,
 	}
 
-	// Add notes_path if provided
-	if projectsNotesPath != "" {
-		args["notes_path"] = projectsNotesPath
+	// Add memories_path if provided (MCP tool accepts both old and new names)
+	if effectiveMemoriesPath != "" {
+		args["memories_path"] = effectiveMemoriesPath
 	}
 
 	result, err := brainClient.CallTool("edit_project", args)
@@ -448,9 +498,12 @@ func editProject(project, codePath string) error {
 
 // runProjectsCreate handles 'brain projects create'
 func runProjectsCreate(cmd *cobra.Command, args []string) error {
-	// Validate notes_path before making request
-	if !validateNotesPath(projectsNotesPath) {
-		return fmt.Errorf("invalid notes-path value: %s", projectsNotesPath)
+	// Get effective memories path (handles deprecated flag)
+	effectiveMemoriesPath := getEffectiveMemoriesPath()
+
+	// Validate memories_path before making request
+	if !validateMemoriesPath(effectiveMemoriesPath) {
+		return fmt.Errorf("invalid memories-path value: %s", effectiveMemoriesPath)
 	}
 
 	brainClient, err := client.EnsureServerRunning()
@@ -464,9 +517,9 @@ func runProjectsCreate(cmd *cobra.Command, args []string) error {
 		"code_path": projectsCodePath,
 	}
 
-	// Add notes_path if provided
-	if projectsNotesPath != "" {
-		toolArgs["notes_path"] = projectsNotesPath
+	// Add memories_path if provided (MCP tool accepts both old and new names)
+	if effectiveMemoriesPath != "" {
+		toolArgs["memories_path"] = effectiveMemoriesPath
 	}
 
 	result, err := brainClient.CallTool("create_project", toolArgs)
@@ -507,8 +560,8 @@ func runProjectsCreate(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Printf("Created project: %s\n", response.Project)
-	fmt.Printf("Code path:  %s\n", response.CodePath)
-	fmt.Printf("Notes path: %s\n", response.NotesPath)
+	fmt.Printf("Code path:     %s\n", response.CodePath)
+	fmt.Printf("Memories path: %s\n", response.NotesPath)
 
 	return nil
 }
@@ -516,9 +569,9 @@ func runProjectsCreate(cmd *cobra.Command, args []string) error {
 // runProjectsDelete handles 'brain projects delete'
 func runProjectsDelete(cmd *cobra.Command, args []string) error {
 	project := projectsDeleteProject
-	deleteNotes := projectsDeleteNotes
+	deleteMemories := getEffectiveDeleteMemories()
 
-	// First, get project details to show the notes path in confirmation
+	// First, get project details to show the memories path in confirmation
 	brainClient, err := client.EnsureServerRunning()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
@@ -534,7 +587,7 @@ func runProjectsDelete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Parse response to check if project exists and get notes path
+	// Parse response to check if project exists and get memories path
 	detailsText := detailsResult.GetText()
 	var errorResponse struct {
 		Error             string   `json:"error"`
@@ -553,27 +606,31 @@ func runProjectsDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	var projectDetails struct {
-		Project   string  `json:"project"`
-		NotesPath *string `json:"notes_path"`
-		CodePath  *string `json:"code_path"`
+		Project      string  `json:"project"`
+		MemoriesPath *string `json:"memories_path"` // New field name
+		NotesPath    *string `json:"notes_path"`    // Fallback for old MCP responses
+		CodePath     *string `json:"code_path"`
 	}
 	if err := json.Unmarshal([]byte(detailsText), &projectDetails); err != nil {
 		fmt.Fprintf(os.Stderr, "Error parsing project details: %v\n", err)
 		return err
 	}
 
-	notesPath := ""
-	if projectDetails.NotesPath != nil {
-		notesPath = *projectDetails.NotesPath
+	// Get memories path (prefer new field name, fall back to old)
+	memoriesPath := ""
+	if projectDetails.MemoriesPath != nil {
+		memoriesPath = *projectDetails.MemoriesPath
+	} else if projectDetails.NotesPath != nil {
+		memoriesPath = *projectDetails.NotesPath
 	}
 
 	// Interactive confirmation
 	reader := bufio.NewReader(os.Stdin)
 
-	if deleteNotes {
+	if deleteMemories {
 		// Double confirmation for destructive operation
 		// First confirmation
-		fmt.Printf("Delete project '%s'? Notes WILL BE DELETED. (yes/no): ", project)
+		fmt.Printf("Delete project '%s'? Memories WILL BE DELETED. (yes/no): ", project)
 		response, err := reader.ReadString('\n')
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error reading input: %v\n", err)
@@ -588,10 +645,10 @@ func runProjectsDelete(cmd *cobra.Command, args []string) error {
 		}
 
 		// Second confirmation with full path display (security requirement from TM-001)
-		fmt.Printf("\n[WARNING] This will permanently delete notes at:\n  %s\n\n", notesPath)
+		fmt.Printf("\n[WARNING] This will permanently delete memories at:\n  %s\n\n", memoriesPath)
 
 		// Get file count for display
-		fileCount := getFileCountFromServer(brainClient, project, notesPath)
+		fileCount := getFileCountFromServer(brainClient, project, memoriesPath)
 		if fileCount > 0 {
 			fmt.Printf("This will permanently delete %d files.\n", fileCount)
 		}
@@ -626,10 +683,10 @@ func runProjectsDelete(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// Execute deletion
+	// Execute deletion (MCP tool accepts both old and new field names)
 	result, err := brainClient.CallTool("delete_project", map[string]any{
-		"project":      project,
-		"delete_notes": deleteNotes,
+		"project":         project,
+		"delete_memories": deleteMemories,
 	})
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
@@ -670,12 +727,14 @@ func runProjectsDelete(cmd *cobra.Command, args []string) error {
 
 	// Parse success response
 	var response struct {
-		Project       string  `json:"project"`
-		DeletedConfig bool    `json:"deleted_config"`
-		DeletedNotes  bool    `json:"deleted_notes"`
-		NotesPath     *string `json:"notes_path"`
-		CodePath      *string `json:"code_path"`
-		FilesRemoved  int     `json:"files_removed,omitempty"`
+		Project         string  `json:"project"`
+		DeletedConfig   bool    `json:"deleted_config"`
+		DeletedMemories bool    `json:"deleted_memories"` // New field name
+		DeletedNotes    bool    `json:"deleted_notes"`    // Fallback for old MCP responses
+		MemoriesPath    *string `json:"memories_path"`    // New field name
+		NotesPath       *string `json:"notes_path"`       // Fallback for old MCP responses
+		CodePath        *string `json:"code_path"`
+		FilesRemoved    int     `json:"files_removed,omitempty"`
 	}
 	if err := json.Unmarshal([]byte(text), &response); err != nil {
 		// If can't parse, just output raw
@@ -683,21 +742,30 @@ func runProjectsDelete(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
+	// Get effective deleted flag and path (prefer new field names, fall back to old)
+	deletedMemories := response.DeletedMemories || response.DeletedNotes
+	var memoriesPathResult *string
+	if response.MemoriesPath != nil {
+		memoriesPathResult = response.MemoriesPath
+	} else {
+		memoriesPathResult = response.NotesPath
+	}
+
 	// Display results
 	fmt.Printf("[PASS] Deleted project: %s\n", response.Project)
 	if response.DeletedConfig {
 		fmt.Println("       Config removed: brain-config.json, basic-memory config.json")
 	}
-	if response.DeletedNotes {
-		if response.NotesPath != nil {
+	if deletedMemories {
+		if memoriesPathResult != nil {
 			if response.FilesRemoved > 0 {
-				fmt.Printf("       Notes deleted: %s (%d files removed)\n", *response.NotesPath, response.FilesRemoved)
+				fmt.Printf("       Memories deleted: %s (%d files removed)\n", *memoriesPathResult, response.FilesRemoved)
 			} else {
-				fmt.Printf("       Notes deleted: %s\n", *response.NotesPath)
+				fmt.Printf("       Memories deleted: %s\n", *memoriesPathResult)
 			}
 		}
-	} else if response.NotesPath != nil && *response.NotesPath != "" {
-		fmt.Printf("       Notes preserved: %s\n", *response.NotesPath)
+	} else if memoriesPathResult != nil && *memoriesPathResult != "" {
+		fmt.Printf("       Memories preserved: %s\n", *memoriesPathResult)
 	}
 
 	return nil
@@ -705,7 +773,7 @@ func runProjectsDelete(cmd *cobra.Command, args []string) error {
 
 // getFileCountFromServer attempts to get file count from the server
 // Returns 0 if unable to determine (fail-safe)
-func getFileCountFromServer(brainClient *client.BrainClient, project, notesPath string) int {
+func getFileCountFromServer(brainClient *client.BrainClient, project, memoriesPath string) int {
 	// The MCP tool doesn't expose file count before deletion,
 	// so we return 0 and let the server report the count in the response
 	// This is a fail-safe design - we don't block on missing information

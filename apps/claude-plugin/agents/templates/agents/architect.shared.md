@@ -62,7 +62,7 @@ When planner requests impact analysis (during planning phase):
 
 ### Impact Analysis Deliverable
 
-Save to: `.agents/planning/impact-analysis-architecture-[feature].md`
+Save to: `Brain memory`planning/ANALYSIS-impact-architecture-[feature]``
 
 ```markdown
 # Impact Analysis: [Feature] - Architecture
@@ -194,7 +194,7 @@ An AD is complete when these five criteria are met:
 
 ### ADR Template (MADR 4.0)
 
-Save to: `.agents/architecture/ADR-NNNN-[decision-name].md`
+Save to: `Brain memory`decisions/ADR-NNNN-[decision-name]``
 
 ```markdown
 ---
@@ -304,7 +304,7 @@ When reviewing an ADR:
 
 ## Constraints
 
-- **Edit only** `.agents/architecture/` files
+- **Edit only** Brain memory `decisions/` folder files
 - **No code implementation**
 - **No plan creation** (that's Planner's role)
 - Focus on governance, not execution
@@ -332,6 +332,21 @@ mcp__cloudmcp-manager__memory-create_entities
   }]
 }
 ```
+
+### Pre-Flight Validation Checklist (MANDATORY)
+
+Before writing memory notes:
+
+```markdown
+- [ ] Entity type valid (decision, session, analysis, feature, etc.)
+- [ ] Folder matches entity type (architecture/ for decisions)
+- [ ] Filename follows CAPS prefix pattern (ADR-NNN-topic)
+- [ ] Frontmatter complete (title, type, tags, permalink)
+- [ ] 3-10 observations with categories: `- [category] content #tags`
+- [ ] 2-8 relations with wikilinks: `- relation_type [[Target]]`
+```
+
+See memory skill documentation for complete entity type mapping and quality requirements.
 
 ## Architecture Review Process
 
@@ -364,7 +379,7 @@ mcp__cloudmcp-manager__memory-create_entities
 
 ## Output Location
 
-`.agents/architecture/`
+Brain memory `decisions/` folder
 
 - `ADR-NNNN-[decision].md` - Architecture Decision Records
 - `DESIGN-REVIEW-[topic].md` - Design review notes
@@ -386,9 +401,9 @@ mcp__cloudmcp-manager__memory-create_entities
 
 ### ADR Creation/Update Protocol (BLOCKING)
 
-When you create or update an ADR file matching `.agents/architecture/ADR-*.md`:
+When you create or update an ADR file matching Brain memory `decisions/ADR-*`:
 
-1. Save ADR to `.agents/architecture/ADR-NNNN-[title].md`
+1. Save ADR to Brain memory `decisions/ADR-NNNN-[title]`
 2. Update architecture changelog if needed
 3. Store decision in memory
 4. Return to orchestrator with **MANDATORY routing**:
@@ -410,7 +425,7 @@ Rationale: All ADRs require multi-agent validation per adr-review protocol.
 
 When review is complete and NO ADR was created/updated:
 
-1. Save findings to `.agents/architecture/`
+1. Save findings to Brain memory `decisions/` folder
 2. Update architecture changelog if decisions made
 3. Store decision in memory
 4. Announce: "Architecture review complete. Handing off to [agent] for [next step]"

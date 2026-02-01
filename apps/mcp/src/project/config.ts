@@ -9,6 +9,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
 import { logger } from "../utils/internal/logger";
+import { getDefaultMemoriesLocation } from "../config/brain-config";
 
 /**
  * Path to brain-specific config file
@@ -21,39 +22,54 @@ const CONFIG_PATH = path.join(
 );
 
 /**
- * Brain configuration schema
+ * Brain configuration schema (legacy format)
+ *
+ * @deprecated Use ~/.config/brain/config.json via brain-config.ts instead.
+ * This interface is maintained for backward compatibility during migration.
  */
-interface BrainConfig {
+interface LegacyBrainConfig {
   /** Map of project names to code directory paths */
   code_paths: Record<string, string>;
-  /** Default notes path. @deprecated '~/memories' */
-  default_notes_path: string;
+  /**
+   * Default memories location.
+   * @deprecated Read from new config via getDefaultMemoriesLocation() instead.
+   */
+  default_memories_location?: string;
 }
 
 /**
- * Load brain config from disk
+ * Load legacy brain config from disk.
+ *
+ * @deprecated This function reads from the legacy config location.
+ * For the default memories location, use getDefaultMemoriesLocation() instead.
  */
-function loadConfig(): BrainConfig {
+function loadConfig(): LegacyBrainConfig {
   try {
     if (fs.existsSync(CONFIG_PATH)) {
       const content = fs.readFileSync(CONFIG_PATH, "utf-8");
       const parsed = JSON.parse(content);
       return {
         code_paths: parsed.code_paths || {},
-        default_notes_path: parsed.default_notes_path || "~/memories",
+        // Support both old and new field names during migration
+        default_memories_location:
+          parsed.default_memories_location ||
+          parsed.default_notes_path ||
+          getDefaultMemoriesLocation(),
       };
     }
   } catch (error) {
     logger.warn({ error, path: CONFIG_PATH }, "Failed to load brain config");
   }
 
-  return { code_paths: {}, default_notes_path: "~/memories" };
+  return { code_paths: {}, default_memories_location: getDefaultMemoriesLocation() };
 }
 
 /**
  * Save brain config to disk
+ *
+ * @deprecated This function writes to the legacy config location.
  */
-function saveConfig(config: BrainConfig): void {
+function saveConfig(config: LegacyBrainConfig): void {
   try {
     const dir = path.dirname(CONFIG_PATH);
     if (!fs.existsSync(dir)) {

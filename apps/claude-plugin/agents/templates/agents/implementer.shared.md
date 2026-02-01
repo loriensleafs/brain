@@ -36,7 +36,7 @@ Implementer-specific requirements:
 
 ## Core Mission
 
-Read complete plans from `.agents/planning/`, validate alignment with project objectives, and execute code changes step-by-step while maintaining quality standards.
+Read complete plans from Brain memory `planning/` folder, validate alignment with project objectives, and execute code changes step-by-step while maintaining quality standards.
 
 ## Key Responsibilities
 
@@ -92,7 +92,7 @@ When ANY trigger matches:
 **Recommendation**: Route to security agent for PIV before merge.
 ```
 
-1. **Document in Implementation Notes**: Add to `.agents/planning/implementation-notes-[feature].md`
+1. **Document in Implementation Notes**: Add to Brain memory `planning/implementation-notes-[feature]`
 
 ```markdown
 ## Security Flagging
@@ -131,7 +131,7 @@ When planner requests impact analysis (before implementation):
 
 ### Impact Analysis Deliverable
 
-Save to: `.agents/planning/impact-analysis-code-[feature].md`
+Save to: Brain memory `planning/ANALYSIS-impact-code-[feature]`
 
 ```markdown
 # Impact Analysis: [Feature] - Code
@@ -371,7 +371,7 @@ public class Given_context : ContextSpecification
 ### Phase 1: Preparation
 
 ```markdown
-- [ ] Read plan from `.agents/planning/`
+- [ ] Read plan from Brain memory `planning/` folder
 - [ ] Review architecture documentation
 - [ ] Retrieve relevant memory context
 - [ ] Identify files to modify

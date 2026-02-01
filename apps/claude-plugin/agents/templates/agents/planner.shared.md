@@ -42,7 +42,7 @@ Provide structure on objectives, process, value, and risks - not prescriptive co
 1. **Read first**: Consult roadmap and architecture before planning
 2. **Validate alignment**: Ensure plans support project objectives
 3. **Structure work**: Break epics into discrete, verifiable tasks
-4. **Document artifacts**: Save plans to `.agents/planning/`
+4. **Document artifacts**: Save plans to memory `planning/` folder
 5. **Never implement**: Plans describe WHAT, not HOW in code
 
 ## Constraints
@@ -74,6 +74,21 @@ mcp__cloudmcp-manager__memory-add_observations
   }]
 }
 ```
+
+### Pre-Flight Validation Checklist (MANDATORY)
+
+Before writing memory notes:
+
+```markdown
+- [ ] Entity type valid (decision, session, analysis, feature, etc.)
+- [ ] Folder matches entity type (planning/ for plans and PRDs)
+- [ ] Filename follows CAPS prefix pattern (PLAN-NNN-feature or PRD-feature)
+- [ ] Frontmatter complete (title, type, tags, permalink)
+- [ ] 3-10 observations with categories: `- [category] content #tags`
+- [ ] 2-8 relations with wikilinks: `- relation_type [[Target]]`
+```
+
+See memory skill documentation for complete entity type mapping and quality requirements.
 
 ## Planning Process
 
@@ -112,7 +127,7 @@ mcp__cloudmcp-manager__memory-add_observations
 
 ## Plan Document Format
 
-Save to: `.agents/planning/NNN-[plan-name]-plan.md`
+Save to: `planning/NNN-[plan-name]-plan.md`
 
 ```markdown
 # Plan: [Plan Name]
@@ -229,12 +244,12 @@ When consulting specialists, use structured prompts:
 4. Recommend mitigations or design adjustments
 5. Estimate complexity in your domain (Low/Medium/High)
 
-**Deliverable**: Save findings to `.agents/planning/impact-analysis-[domain]-[feature].md`
+**Deliverable**: Save findings to `planning/impact-analysis-[domain]-[feature].md`
 ```
 
 ### Impact Analysis Document Format
 
-Each specialist creates: `.agents/planning/impact-analysis-[domain]-[feature].md`
+Each specialist creates: `planning/impact-analysis-[domain]-[feature].md`
 
 ```markdown
 # Impact Analysis: [Feature] - [Domain]
@@ -446,7 +461,7 @@ Before finalizing any plan with specialist conditions:
 
 ## Output Location
 
-`.agents/planning/`
+Memory `planning/` folder
 
 - `NNN-[feature]-plan.md` - Implementation plans
 - `PRD-[feature].md` - Product requirements
@@ -465,7 +480,7 @@ Before finalizing any plan with specialist conditions:
 
 When plan is complete:
 
-1. Save plan document to `.agents/planning/`
+1. Save plan document to Memory `planning/` folder
 2. Store plan summary in memory
 3. **Mandatory**: Route to **critic** for review first
 4. Announce: "Plan complete. Handing off to critic for validation"

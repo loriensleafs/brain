@@ -131,7 +131,7 @@ When orchestrator routes back to security after implementation:
 
 1. **PIV Report Template**
 
-Save to: `.agents/security/PIV-[feature].md`
+Save to: Brain memory `security/PIV-[feature]`
 
 ```markdown
 # Post-Implementation Verification: [Feature]
@@ -189,7 +189,7 @@ Save to: `.agents/security/PIV-[feature].md`
 
 #### Impact Analysis Deliverable
 
-Save to: `.agents/planning/impact-analysis-security-[feature].md`
+Save to: Brain memory `planning/ANALYSIS-impact-security-[feature]`
 
 ```markdown
 # Impact Analysis: [Feature] - Security
@@ -315,6 +315,21 @@ mcp__cloudmcp-manager__memory-add_observations
 }
 ```
 
+### Pre-Flight Validation Checklist (MANDATORY)
+
+Before writing memory notes:
+
+```markdown
+- [ ] Entity type valid (decision, session, analysis, feature, etc.)
+- [ ] Folder matches entity type (security/ for threat models and reports)
+- [ ] Filename follows CAPS prefix pattern (TM-NNN-feature or SR-NNN-scope or PIV-feature)
+- [ ] Frontmatter complete (title, type, tags, permalink)
+- [ ] 3-10 observations with categories: `- [category] content #tags`
+- [ ] 2-8 relations with wikilinks: `- relation_type [[Target]]`
+```
+
+See memory skill documentation for complete entity type mapping and quality requirements.
+
 ## Security Checklist
 
 ### Code Review
@@ -341,7 +356,7 @@ mcp__cloudmcp-manager__memory-add_observations
 
 ## Threat Model Format
 
-Save to: `.agents/security/TM-NNN-[feature].md`
+Save to: Brain memory `security/TM-NNN-[feature]`
 
 ```markdown
 # Threat Model: [Feature Name]
@@ -374,7 +389,7 @@ Save to: `.agents/security/TM-NNN-[feature].md`
 
 ## Security Report Format
 
-Save to: `.agents/security/SR-NNN-[scope].md`
+Save to: Brain memory `security/SR-NNN-[scope]`
 
 ```markdown
 # Security Report: [Scope]
@@ -406,7 +421,7 @@ Save to: `.agents/security/SR-NNN-[scope].md`
 
 When security review is complete:
 
-1. Save threat model/assessment to `.agents/security/`
+1. Save threat model/assessment to Brain memory `security/` folder
 2. Store findings in memory
 3. Return to orchestrator with risk level and recommended next steps
 

@@ -12,6 +12,7 @@
 **Memory Search**: No existing configuration architecture decisions found in Brain memory.
 
 **Related ADRs**:
+
 - ADR-007: Memory-First Architecture (abstraction principle)
 - ADR-016: Session Protocol Enforcement
 - ADR-017: Memory Tool Naming Strategy (terminology alignment)
@@ -25,6 +26,7 @@
 
 **Verdict**: CONCERNS
 **Key Issues**:
+
 - P0: Translation layer sync direction ambiguous (one-way vs bidirectional)
 - P0: TUI/MCP coordination for config not explicit
 - P1: Missing test strategy
@@ -36,6 +38,7 @@
 
 **Verdict**: CONCERNS (Conditional Approval)
 **Critical Issues**:
+
 - Translation layer atomicity undefined
 - basic-memory config ownership conflict (who can write?)
 - Migration data loss risk (no pre-archive validation)
@@ -49,12 +52,14 @@
 
 **Verdict**: CONCERNS
 **Challenged Assumptions**:
+
 - "User confusion" is hypothetical (no documented complaints)
 - Translation layer provides flexibility for backend swap (not planned)
 - XDG compliance violates macOS conventions
 - Two config files problem not actually solved (still two files, one "hidden")
 
 **Alternative Approaches**:
+
 - Unify into basic-memory config
 - Environment-only configuration
 - Do nothing (current state works)
@@ -66,6 +71,7 @@
 **Verdict**: CONDITIONAL
 **Risk Score**: 5.8/10 (Medium)
 **Security Issues**:
+
 - CWE-22: Path traversal vulnerability (no validation for arbitrary paths)
 - CWE-732: File permission specifications missing
 - CWE-200: Migration backup data exposure
@@ -78,6 +84,7 @@
 
 **Verdict**: ACCEPT with CONCERNS
 **Findings**:
+
 - Evidence quality: Thorough with minor gaps
 - Feasibility: Implementable
 - Effort estimates: Underestimated by 30-50%
@@ -89,6 +96,7 @@
 
 **Verdict**: CONCERNS (P2 Priority)
 **Strategic Assessment**:
+
 - No evidence of actual user pain (hypothetical confusion)
 - Premature abstraction for speculative backend swap
 - Opportunity cost not quantified (2-4 weeks for zero new capability)
@@ -113,6 +121,7 @@
 ### Major Conflict
 
 **Priority Disagreement**:
+
 - **high-level-advisor + independent-thinker**: This is P2 work (developer housekeeping, not user value)
 - **architect + critic + security + analyst**: This is necessary architectural improvement
 
@@ -121,6 +130,7 @@
 ### User Clarifications (Critical)
 
 **Received during Phase 2**:
+
 1. **No backward compatibility** - Just migrate, don't support old locations
 2. **Deprecate .agents/ entirely** - Move everything to Brain memory
 3. **Ensure basic-memory indexing** - All memories must be semantically searchable
@@ -173,6 +183,7 @@
 All agents reviewed the UPDATED ADR-020:
 
 **Final Verdicts**:
+
 - **architect**: ACCEPT (all concerns addressed)
 - **critic**: ACCEPT (critical issues resolved)
 - **independent-thinker**: DISAGREE-AND-COMMIT (reversibility concern documented, commits to execution)
@@ -223,12 +234,14 @@ Before marking implementation complete:
 ### Implementation Handoff
 
 **Next Steps**:
+
 1. Orchestrator routes to planner to create implementation tasks
 2. Planner breaks down ADR-020 into atomic work items
 3. Implementer executes per approved plan
 4. QA validates per confirmation criteria
 
 **Critical Path**:
+
 1. Translation layer implementation (P0)
 2. .agents/ content migration (P0)
 3. Agent/skill updates for memory system usage (P0)
@@ -272,6 +285,7 @@ Before marking implementation complete:
 **architect**: ACCEPT - File-watching integrates cleanly
 
 **critic**: CONCERNS - 5 P0 issues:
+
 - Partial write race, lastKnownGood init, partial copy tracking, shutdown hooks, config deletion
 
 **independent-thinker**: DISAGREE-AND-COMMIT - Automatic migration may surprise users, cloud sync conflicts unaddressed
@@ -289,6 +303,7 @@ All issues addressed by architect in comprehensive update.
 ### Phase 3: Final Convergence (Round 2)
 
 **Final Votes**:
+
 - architect: ✅ ACCEPT
 - critic: ✅ ACCEPT
 - independent-thinker: ⚠️ DISAGREE-AND-COMMIT

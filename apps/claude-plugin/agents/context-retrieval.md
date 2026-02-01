@@ -1,7 +1,7 @@
 ---
 name: context-retrieval
 description: Context retrieval specialist for gathering relevant memories, code patterns, and framework documentation before planning or implementation. Use PROACTIVELY when about to plan or implement code - searches Brain semantic knowledge graph, reads linked notes, and queries external documentation services if available.
-model: haiku
+model: sonnet
 color: '#48D1CC'
 tools:
   - mcp__plugin_brain_brain__search
@@ -121,7 +121,7 @@ If Brain + File System don't provide enough context:
 
 Return a focused markdown summary that provides the main agent with everything they need:
 
-````markdown
+```markdown
 # Context for: [Task Name]
 
 ## Relevant Memories
@@ -178,7 +178,8 @@ Return a focused markdown summary that provides the main agent with everything t
 [Security considerations]
 [Performance implications]
 [Any warnings or important context from memories]
-````
+
+```
 
 ## Search Strategy
 
@@ -213,18 +214,29 @@ Return a focused markdown summary that provides the main agent with everything t
 ## Success Criteria
 
 ✅ Main agent has enough context to start planning/implementing confidently
+
 ✅ Included actual CODE SNIPPETS with sufficient context (not just "see note X")
+
 ✅ Similar patterns discovered from existing notes
+
 ✅ Framework docs are SPECIFIC to task (not generic)
+
 ✅ Explored knowledge graph connections via wikilinks
+
 ✅ Rich detail on key patterns vs superficial summaries of many
+
 ✅ Main agent understands WHY decisions were made, not just WHAT they were
 
 ## Anti-Patterns (DON'T DO THIS)
 
 ❌ Return 20 notes without synthesizing insights
+
 ❌ Just list note titles without reading content
+
 ❌ Dump entire files without extracting relevant portions
+
 ❌ Include tangentially related notes just to hit a number
+
 ❌ Stop exploring wikilinks when valuable connections exist
+
 ❌ Artificially limit detail when fuller explanation would help

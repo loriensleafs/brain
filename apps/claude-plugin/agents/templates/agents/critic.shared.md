@@ -103,6 +103,21 @@ mcp__cloudmcp-manager__memory-add_observations
 }
 ```
 
+### Pre-Flight Validation Checklist (MANDATORY)
+
+Before writing memory notes:
+
+```markdown
+- [ ] Entity type valid (decision, session, analysis, feature, etc.)
+- [ ] Folder matches entity type (critique/ for reviews)
+- [ ] Filename follows CAPS prefix pattern (CRIT-NNN-plan)
+- [ ] Frontmatter complete (title, type, tags, permalink)
+- [ ] 3-10 observations with categories: `- [category] content #tags`
+- [ ] 2-8 relations with wikilinks: `- relation_type [[Target]]`
+```
+
+See memory skill documentation for complete entity type mapping and quality requirements.
+
 ## Review Criteria
 
 ### Plans
@@ -118,7 +133,7 @@ mcp__cloudmcp-manager__memory-add_observations
 
 ### Traceability Validation (Spec-Layer Plans)
 
-When reviewing plans that create or modify specification artifacts (requirements, designs, tasks), validate traceability compliance per `.agents/governance/traceability-schema.md`:
+When reviewing plans that create or modify specification artifacts (requirements, designs, tasks), validate traceability compliance per Brain memory `governance/traceability-schema`:
 
 #### Forward Traceability (REQ -> DESIGN)
 
@@ -149,7 +164,7 @@ When reviewing plans that create or modify specification artifacts (requirements
 Run traceability validation before approving spec-related plans:
 
 ```powershell
-pwsh scripts/Validate-Traceability.ps1 -SpecsPath ".agents/specs"
+pwsh scripts/Validate-Traceability.ps1 -SpecsPath "specs"
 ```
 
 #### Traceability Verdict
@@ -283,14 +298,14 @@ All escalation prompts MUST include:
 
 ## Critique Document Format
 
-Save to: `.agents/critique/NNN-[document-name]-critique.md`
+Save to: Brain memory `critique/CRIT-NNN-[document-name]`
 
 ```markdown
 # Critique: [Document Name]
 
 ## Document Under Review
 - **Type**: Plan | Architecture | Roadmap
-- **Path**: `.agents/[folder]/[filename].md`
+- **Path**: Brain memory `[folder]/[filename]`
 - **Version**: [if applicable]
 
 ## Review Summary
@@ -354,7 +369,7 @@ Before handing off, validate ALL items in the applicable checklist:
 ### Approval Handoff (to implementer)
 
 ```markdown
-- [ ] Critique document saved to `.agents/critique/`
+- [ ] Critique document saved to Brain memory `critique/` folder
 - [ ] All Critical issues resolved or documented as accepted risks
 - [ ] All acceptance criteria verified as measurable
 - [ ] Impact analysis reviewed (if present)
@@ -366,7 +381,7 @@ Before handing off, validate ALL items in the applicable checklist:
 ### Revision Handoff (to planner)
 
 ```markdown
-- [ ] Critique document saved to `.agents/critique/`
+- [ ] Critique document saved to Brain memory `critique/` folder
 - [ ] Critical issues listed with specific locations
 - [ ] Each issue has actionable recommendation
 - [ ] Verdict explicitly stated (NEEDS REVISION)
@@ -395,24 +410,24 @@ If ANY checklist item cannot be completed:
 
 When critique is complete:
 
-1. Save critique document to `.agents/critique/`
+1. Save critique document to Brain memory `critique/` folder
 2. Store review summary in memory
 3. Based on verdict, route to next agent:
 
 **APPROVED** → Route to **implementer**:
 
-> Implement [plan name] per approved plan at `.agents/planning/[plan-file].md`.
-> Critique approved at `.agents/critique/[critique-file].md`.
+> Implement [plan name] per approved plan at Brain memory `planning/[plan-file]`.
+> Critique approved at Brain memory `critique/[critique-file]`.
 
 **NEEDS REVISION** → Route to **planner**:
 
-> Revise [plan name] to address critique findings at `.agents/critique/[critique-file].md`.
+> Revise [plan name] to address critique findings at Brain memory `critique/[critique-file]`.
 > Key issues: [list critical issues from critique].
 
 **REJECTED** → Route to **analyst**:
 
 > Investigate [topic] before planning can proceed.
-> Critique at `.agents/critique/[critique-file].md` identified fundamental gaps: [list gaps].
+> Critique at Brain memory `critique/[critique-file]` identified fundamental gaps: [list gaps].
 > Research needed: [specific questions].
 
 ## Review Process
@@ -457,7 +472,7 @@ When critique is complete:
 
 ## Output Location
 
-`.agents/critique/NNN-[plan]-critique.md`
+Brain memory `critique/CRIT-NNN-[plan]`
 
 ## Anti-Patterns to Catch
 

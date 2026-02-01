@@ -6,7 +6,7 @@ description: Memory system for AI agents. Tier 1 Semantic (Brain MCP search). Ti
 license: MIT
 model: claude-sonnet-4-5
 metadata:
-  adr: ADR-007
+  adr: [ADR-007, ADR-020]
   reference: ai-agents memory skill v0.2.0
   brain_version: 0.1.0
   timelessness: 8/10
@@ -42,7 +42,7 @@ mcp__plugin_brain_brain__read_note({
 ```bash
 # Tier 2: Extract episode from session (Episodic)
 bun run apps/claude-plugin/skills/memory/scripts/extract-episode.ts \
-  .agents/sessions/2026-01-20-session-06.md
+  --session SESSION-2026-01-20-06
 
 # Tier 3: Add pattern (Causal)
 bun run apps/claude-plugin/skills/memory/scripts/add-pattern.ts \
@@ -143,7 +143,7 @@ See ADR-007 for:
 | "what do we know about X" | Tier 1: `mcp__plugin_brain_brain__search()` |
 | "list memories" | Tier 1: `mcp__plugin_brain_brain__list_directory()` |
 | "read memory X" | Tier 1: `mcp__plugin_brain_brain__read_note()` |
-| "extract episode from session" | Tier 2: `bun run scripts/extract-episode.ts [log-path]` |
+| "extract episode from session" | Tier 2: `bun run scripts/extract-episode.ts --session SESSION-X` |
 | "what happened in session X" | Tier 2: `mcp__plugin_brain_brain__read_note({ identifier: "EPISODE-X" })` |
 | "find sessions with failures" | Tier 2: `mcp__plugin_brain_brain__search({ query: "outcome:failure", folder: "episodes" })` |
 | "add pattern" | Tier 3: `bun run scripts/add-pattern.ts --name "..." --trigger "..."` |
@@ -160,7 +160,7 @@ See ADR-007 for:
 | Read memory | `mcp__plugin_brain_brain__read_note` | `identifier` |
 | Write memory | `mcp__plugin_brain_brain__write_note` | `title`, `content`, `folder` |
 | Edit memory | `mcp__plugin_brain_brain__edit_note` | `identifier`, `operation`, `content` |
-| Extract episode | `bun run scripts/extract-episode.ts` | `session-log-path`, `--force`, `--output` |
+| Extract episode | `bun run scripts/extract-episode.ts` | `--session SESSION-ID`, `--force` |
 | Query episodes | `mcp__plugin_brain_brain__search` | `query`, `folder: "episodes"` |
 | Read episode | `mcp__plugin_brain_brain__read_note` | `identifier: "EPISODE-{id}"` |
 | Add pattern | `bun run scripts/add-pattern.ts` | `--name`, `--trigger`, `--action`, `--success-rate` |
@@ -215,7 +215,7 @@ What do you need?
 | Using old Serena/Forgetful tools | Use Brain MCP tools (`mcp__plugin_brain_brain__*`) |
 | Expecting Tier 2-3 features | Document needs, these are planned for future |
 | Not documenting memory gaps | When memory lacks info, note it for future enhancement |
-| Direct write_note call (non-approved agent) | Delegate to memory agent |
+| Skipping pre-flight validation | ALWAYS complete validation checklist before writes |
 | Writing to wrong folder | Check entity type to folder mapping |
 | Missing CAPS prefix in filename | Follow pattern: `{PREFIX}-{NNN}-{topic}.md` |
 | Fewer than 3 observations | Add more facts/decisions with categories |
@@ -226,11 +226,22 @@ What do you need?
 
 ## Storage Locations
 
+> **Configuration**: Memory paths configured in `~/.config/brain/config.json` (see ADR-020).
+
 | Data | Location |
 |------|----------|
-| Brain notes | `~/memories/{project}/` or configured notes path |
-| Episodes | `~/memories/{project}/episodes/EPISODE-*.md` |
-| Patterns | `~/memories/{project}/patterns/PATTERN-*.md` |
+| Brain config | `~/.config/brain/config.json` |
+| Brain memories | `{memories_location}/{project}/` (default: `~/memories/{project}/`) |
+| Episodes | `{memories_location}/{project}/episodes/EPISODE-*.md` |
+| Patterns | `{memories_location}/{project}/patterns/PATTERN-*.md` |
+| Sessions | `{memories_location}/{project}/sessions/SESSION-*.md` |
+| Governance | `{memories_location}/{project}/governance/` |
+
+**Notes**:
+
+- Brain MCP tools handle path resolution automatically. Do not use hardcoded paths in agent instructions.
+- The `memories_location` default is `~/memories` but can be configured per-project or globally.
+- ADR-020 defines three modes: DEFAULT (`{memories_location}/{project}`), CODE (`{code_path}/docs`), CUSTOM (explicit path).
 
 ---
 
@@ -258,57 +269,48 @@ What do you need?
 
 ## Write Operations Governance (BLOCKING)
 
-> **Reference**: ADR-019 Memory Operations Governance
+> **References**:
+>
+> - ADR-019: Memory Operations Governance (validation-based governance)
+> - ADR-020: Configuration Architecture Refactoring (storage locations, terminology)
 
-**Most agents MUST NOT call `write_note` or `edit_note` directly.**
+**All agents MAY write to Brain memory using this skill.**
 
-Write operations require convention compliance. Non-compliant writes create governance debt:
+The agent system uses one-level delegation. Subagents cannot delegate to other subagents. When orchestrator delegates to analyst, analyst must be able to write directly. Governance is achieved through pre-flight validation, not access control.
+
+**Non-compliant writes create governance debt**:
 
 - Notes in wrong folders
 - Inconsistent naming (missing CAPS prefix)
 - Missing quality thresholds
 - Broken knowledge graph relations
 
-### Who Can Write Directly?
+### All Agents Can Write (with Validation)
 
-| Agent | write_note | edit_note | Rationale |
-|-------|------------|-----------|-----------|
-| memory | Yes | Yes | Primary memory owner |
-| skillbook | Yes | Yes | Creates SKILL-* entities |
-| retrospective | Yes | Yes | Creates RETRO-* entities |
-| spec-generator | Yes | Yes | Creates REQ/DESIGN/TASK |
-| **All others** | **No** | **No** | Delegate to memory agent |
+| Agent | write_note | edit_note | Requirement |
+|-------|------------|-----------|-------------|
+| **All agents** | **Yes** | **Yes** | MUST complete pre-flight validation |
 
-### Delegation Protocol (MANDATORY for non-approved agents)
+**No delegation required.** All agents write directly after completing validation.
 
-If you need to create or update a memory note, delegate to memory agent:
+### Pre-Flight Validation (BLOCKING - All Agents)
 
-```text
-Task(subagent_type="memory", prompt="Create [entity-type] note for [topic]:
-- Folder: [correct folder per entity type]
-- Title: [CAPS-PREFIX-NNN-topic]
-- Context: [why this matters]
-- Observations: [3-5 facts/decisions with categories]
-- Relations: [2-3 wikilinks to related entities]
-")
-```
-
-### Pre-Flight Validation (for approved agents)
-
-Before calling `write_note` or `edit_note`, validate:
+Before calling `write_note` or `edit_note`, you MUST complete this checklist:
 
 ```markdown
-### Pre-Flight Checklist (MUST all pass)
+### Pre-Flight Checklist (MUST all pass before write)
 
 - [ ] Entity type is valid (13 types only, see table below)
 - [ ] Folder matches entity type (see mapping)
 - [ ] File name follows CAPS prefix pattern
 - [ ] Frontmatter has: title, type, tags (2-5)
-- [ ] Observations section: 3-10 entries
+- [ ] Observations section: 3-10 entries with categories
 - [ ] Observation format: `- [category] content #tags`
-- [ ] Relations section: 2-8 entries
+- [ ] Relations section: 2-8 entries with wikilinks
 - [ ] Relation format: `- relation_type [[Target Entity]]`
 ```
+
+**Agents that skip validation create governance debt.** Post-hoc audit will detect violations.
 
 ### Entity Type to Folder Mapping (Canonical)
 
@@ -369,10 +371,10 @@ Agents writing to memory without conventions create governance debt.
 
 ## Observations
 
-- [decision] Tiered enforcement approach selected #architecture
-- [fact] 15+ agents had direct write access before governance #audit
+- [decision] Validation-based governance selected #architecture
+- [fact] All agents retain direct write access #one-level-delegation
 - [requirement] Pre-flight validation MUST pass before writes #blocking
-- [technique] Delegation to memory agent for non-approved agents #pattern
+- [technique] Memory skill provides validation guidance (not access control) #pattern
 
 ## Relations
 
@@ -386,20 +388,25 @@ Agents writing to memory without conventions create governance debt.
 ```text
 Need to write/edit a memory note?
 │
-├─► Are you an approved agent (memory, skillbook, retrospective, spec-generator)?
+├─► Run pre-flight validation checklist
 │   │
-│   ├─► YES: Run pre-flight validation checklist
-│   │   │
-│   │   ├─► All checks PASS: Proceed with write_note/edit_note
-│   │   │
-│   │   └─► Any check FAILS: Fix violations before writing
+│   ├─► All checks PASS: Proceed with write_note/edit_note
 │   │
-│   └─► NO: Delegate to memory agent (MANDATORY)
+│   └─► Any check FAILS: Fix violations before writing
 │       │
-│       └─► Task(subagent_type="memory", prompt="Create/update...")
+│       ├─► Wrong folder? Check entity type mapping
+│       ├─► Missing CAPS prefix? Follow naming pattern
+│       ├─► Too few observations? Add more facts/decisions
+│       └─► No relations? Add 2+ wikilinks
 │
-└─► Read/search operations: Always allowed directly
+├─► Unsure about conventions?
+│   │
+│   └─► Consult this skill for entity type mapping, naming patterns, examples
+│
+└─► Read/search operations: Always allowed directly (no validation needed)
 ```
+
+**All agents write directly.** No delegation to memory agent required.
 
 ---
 
@@ -408,6 +415,7 @@ Need to write/edit a memory note?
 Session replay via structured episode extraction. Reduces session logs from 10K-50K tokens to 500-2000 tokens.
 
 **Capabilities**:
+
 - Extract structured episodes from completed session logs
 - Query past sessions by outcome/task/date
 - Read decision sequences and event timelines
@@ -418,9 +426,9 @@ Session replay via structured episode extraction. Reduces session logs from 10K-
 **Usage**:
 
 ```bash
-# Extract episode from completed session
+# Extract episode from completed session (reads from Brain memory)
 bun run apps/claude-plugin/skills/memory/scripts/extract-episode.ts \
-  .agents/sessions/2026-01-20-session-06.md
+  --session SESSION-2026-01-20-06
 
 # Query episodes by outcome
 mcp__plugin_brain_brain__search({
@@ -431,7 +439,7 @@ mcp__plugin_brain_brain__search({
 
 # Read specific episode
 mcp__plugin_brain_brain__read_note({
-  identifier: "EPISODE-2026-01-20-session-06"
+  identifier: "EPISODE-2026-01-20-06"
 })
 ```
 
@@ -440,6 +448,7 @@ mcp__plugin_brain_brain__read_note({
 Decision pattern tracking with statistical validation. Prevents repeated mistakes through success rate tracking.
 
 **Capabilities**:
+
 - Track cause-effect relationships via WikiLink relations
 - Success rate tracking for patterns (running average)
 - Anti-pattern detection (low success rate patterns)

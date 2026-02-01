@@ -40,7 +40,7 @@ QA-specific requirements:
 
 1. **Read roadmaps** before designing tests
 2. **Approach testing** from user perspective
-3. **Create** QA documentation in `.agents/qa/`
+3. **Create** QA documentation in Brain memory `qa/` folder
 4. **Identify** testing infrastructure needs
 5. **Validate** coverage comprehensively
 6. **Conduct** impact analysis when requested by planner during planning phase
@@ -61,7 +61,7 @@ When planner requests impact analysis (during planning phase):
 
 ### Impact Analysis Deliverable
 
-Save to: `.agents/planning/impact-analysis-qa-[feature].md`
+Save to: Brain memory `planning/ANALYSIS-impact-qa-[feature]`
 
 ```markdown
 # Impact Analysis: [Feature] - QA
@@ -299,7 +299,7 @@ Verify code coverage meets minimum thresholds:
 
 ### Pre-PR Validation Report
 
-Generate validation report at `.agents/qa/pre-pr-validation-[feature].md`:
+Generate validation report at Brain memory `qa/QA-pre-pr-validation-[feature]`:
 
 ```markdown
 # Pre-PR Quality Gate Validation
@@ -385,6 +385,21 @@ mcp__cloudmcp-manager__memory-add_observations
 }
 ```
 
+### Pre-Flight Validation Checklist (MANDATORY)
+
+Before writing memory notes:
+
+```markdown
+- [ ] Entity type valid (decision, session, analysis, feature, etc.)
+- [ ] Folder matches entity type (qa/ for test reports and strategies)
+- [ ] Filename follows CAPS prefix pattern (QA-NNN-feature-test-report)
+- [ ] Frontmatter complete (title, type, tags, permalink)
+- [ ] 3-10 observations with categories: `- [category] content #tags`
+- [ ] 2-8 relations with wikilinks: `- relation_type [[Target]]`
+```
+
+See memory skill documentation for complete entity type mapping and quality requirements.
+
 ## Two-Phase Process
 
 ### Phase 1: Pre-Implementation (Test Strategy)
@@ -431,7 +446,7 @@ TESTING INFRASTRUCTURE NEEDED: [specific need]
 
 ## Test Strategy Document Format
 
-Save to: `.agents/qa/NNN-[feature]-test-strategy.md`
+Save to: Brain memory `qa/QA-NNN-[feature]-test-strategy`
 
 ```markdown
 # Test Strategy: [Feature Name]
@@ -476,7 +491,7 @@ Save to: `.agents/qa/NNN-[feature]-test-strategy.md`
 
 ## Test Report Format
 
-Save to: `.agents/qa/NNN-[feature]-test-report.md`
+Save to: Brain memory `qa/QA-NNN-[feature]-test-report`
 
 ```markdown
 # Test Report: [Feature Name]
@@ -529,7 +544,7 @@ Before handing off, validate ALL items in the applicable checklist:
 ### Pass Handoff (to orchestrator)
 
 ```markdown
-- [ ] Test report saved to `.agents/qa/`
+- [ ] Test report saved to Brain memory `qa/` folder
 - [ ] All tests pass (summary shows 0 failures)
 - [ ] Coverage meets plan requirements (or gap documented)
 - [ ] Test report includes: summary, passed, failed, skipped, gaps
@@ -541,7 +556,7 @@ Before handing off, validate ALL items in the applicable checklist:
 ### Failure Handoff (to implementer)
 
 ```markdown
-- [ ] Test report saved to `.agents/qa/`
+- [ ] Test report saved to Brain memory `qa/` folder
 - [ ] Failed tests listed with specific failure reasons
 - [ ] Each failure includes: expected vs actual, recommendation
 - [ ] Status explicitly stated as "QA FAILED"
@@ -573,7 +588,7 @@ If ANY checklist item cannot be completed:
 
 When QA is complete:
 
-1. Save test report to `.agents/qa/`
+1. Save test report to Brain memory `qa/` folder
 2. Store results summary in memory
 3. Return to orchestrator with clear status:
    - **QA COMPLETE**: "All tests passing. Ready for user validation."

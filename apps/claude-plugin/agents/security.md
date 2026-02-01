@@ -201,7 +201,7 @@ Get-ChildItem -Recurse -Include *.ps1 |
 
 1. **PIV Report Template**
 
-Save to: `.agents/security/PIV-[feature].md`
+Save to Brain memory: `mcp__plugin_brain_brain__write_note(title="PIV-[feature]", folder="security", content="...")`
 
 ```markdown
 # Post-Implementation Verification: [Feature]
@@ -259,7 +259,7 @@ Save to: `.agents/security/PIV-[feature].md`
 
 #### Impact Analysis Deliverable
 
-Save to: `.agents/planning/impact-analysis-security-[feature].md`
+Save to Brain memory: `planning/ANALYSIS-impact-security-[feature]`
 
 ```markdown
 # Impact Analysis: [Feature] - Security
@@ -362,28 +362,57 @@ Save to: `.agents/planning/impact-analysis-security-[feature].md`
 - **Total**: [Hours/Days]
 ```
 
-## Memory Protocol
+## Brain Memory Integration
 
-Use cloudmcp-manager memory tools directly for cross-session context:
+When creating or updating memory notes, follow pre-flight validation.
 
-**Before assessment:**
+### Pre-Flight Validation Checklist (MANDATORY)
+
+Before calling `mcp__plugin_brain_brain__write_note` or `mcp__plugin_brain_brain__edit_note`:
+
+```markdown
+- [ ] Entity type valid (decision, session, analysis, feature, etc.)
+- [ ] Folder matches entity type (security/ for threat models and reports)
+- [ ] Filename follows CAPS prefix pattern (TM-NNN-feature or SR-NNN-scope or PIV-feature)
+- [ ] Frontmatter complete (title, type, tags, permalink)
+- [ ] 3-10 observations with categories: `- [category] content #tags`
+- [ ] 2-8 relations with wikilinks: `- relation_type [[Target]]`
+```
+
+### Entity Type Mapping
+
+| Entity Type | Folder | Filename Pattern |
+|------------|--------|------------------|
+| threat-model | security/ | TM-NNN-feature |
+| security-report | security/ | SR-NNN-scope |
+| piv | security/ | PIV-feature |
+
+### Memory Operations
+
+**Search for prior security findings**:
 
 ```text
 mcp__plugin_brain_brain__search
-Query: "security patterns vulnerabilities [component]"
+query: "security patterns vulnerabilities [component]"
 ```
 
-**After assessment:**
+**Read specific note**:
 
-```json
-mcp__plugin_brain_brain__edit_note OR mcp__plugin_brain_brain__write_note
-{
-  "observations": [{
-    "entityName": "Security-[Component]",
-    "contents": ["[Vulnerabilities found and remediations applied]"]
-  }]
-}
+```text
+mcp__plugin_brain_brain__read_note
+identifier: "security/TM-[number]"
 ```
+
+**Create new threat model** (after pre-flight validation):
+
+```text
+mcp__plugin_brain_brain__write_note
+title: "TM-NNN-[feature]"
+folder: "security"
+content: "[Full threat model content with frontmatter, observations, relations]"
+```
+
+See memory skill documentation for complete entity type mapping and quality requirements.
 
 ## Security Checklist
 
@@ -411,7 +440,7 @@ mcp__plugin_brain_brain__edit_note OR mcp__plugin_brain_brain__write_note
 
 ## Threat Model Format
 
-Save to: `.agents/security/TM-NNN-[feature].md`
+Save to Brain memory: `mcp__plugin_brain_brain__write_note(title="TM-NNN-[feature]", folder="security", content="...")`
 
 ```markdown
 # Threat Model: [Feature Name]
@@ -444,7 +473,7 @@ Save to: `.agents/security/TM-NNN-[feature].md`
 
 ## Security Report Format
 
-Save to: `.agents/security/SR-NNN-[scope].md`
+Save to Brain memory: `mcp__plugin_brain_brain__write_note(title="SR-NNN-[scope]", folder="security", content="...")`
 
 ```markdown
 # Security Report: [Scope]
@@ -476,7 +505,7 @@ Save to: `.agents/security/SR-NNN-[scope].md`
 
 When security review is complete:
 
-1. Save threat model/assessment to `.agents/security/`
+1. Save threat model/assessment to Brain memory `security/` folder
 2. Store findings in memory
 3. Return to orchestrator with risk level and recommended next steps
 

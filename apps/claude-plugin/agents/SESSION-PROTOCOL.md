@@ -1,10 +1,13 @@
 # Session Protocol
 
 > **Status**: Canonical Source of Truth
-> **Last Updated**: 2026-01-14
+> **Last Updated**: 2026-02-01
 > **RFC 2119**: This document uses RFC 2119 key words to indicate requirement levels.
+> **Related**: [ADR-020: Brain Configuration Architecture Refactoring](../../../.agents/architecture/decision/ADR-020-configuration-architecture-refactoring.md)
 
 This document is the **single canonical source** for session protocol requirements. All other documents (CLAUDE.md, AGENTS.md, AGENT-INSTRUCTIONS.md) MUST reference this document rather than duplicate its content.
+
+Per ADR-020, all agent artifacts (session logs, analysis, planning, etc.) are stored in Brain memory and accessed via Brain MCP tools. The `.agents/` directory pattern is deprecated.
 
 ---
 
@@ -85,8 +88,8 @@ The agent MUST read context documents before starting work. This is a **blocking
 1. The agent MUST read the `memory-index` note using `mcp__plugin_brain_brain__read_note` to identify task-relevant notes
 2. The agent MUST read notes from `memory-index` that match the task keywords before modifying code or files
 3. The agent MUST search Brain notes for cross-session context: `mcp__plugin_brain_brain__search(query="session context [topic]")`
-4. The agent SHOULD read `.agents/planning/enhancement-PROJECT-PLAN.md` if working on enhancement project
-5. The agent MAY read additional context files based on task requirements
+4. The agent MUST read the project handoff: `mcp__plugin_brain_brain__read_note(identifier="handoff")`
+5. The agent MAY read additional context notes based on task requirements
 
 **Memory Loading Protocol:**
 
@@ -149,7 +152,7 @@ The agent MUST validate skill availability before starting work. This is a **blo
 
 3. The agent MUST read the usage-mandatory note using `mcp__plugin_brain_brain__read_note` with `identifier="usage-mandatory"`
    - If the Brain MCP is not available, then the agent MUST read the usage-mandatory note from the notes directory
-4. The agent MUST read `.agents/governance/PROJECT-CONSTRAINTS.md`
+4. The agent MUST read project constraints: `mcp__plugin_brain_brain__read_note(identifier="constraints")`
 5. The agent MUST document available skills in session log under "Skill Inventory"
 
 **Verification:**
@@ -166,15 +169,15 @@ The agent MUST create a session log early in the session.
 
 **Requirements:**
 
-1. The agent MUST create a session log file at `.agents/sessions/YYYY-MM-DD-session-NN.md`
+1. The agent MUST create a session log in Brain memory: `mcp__plugin_brain_brain__write_note(title="SESSION-YYYY-MM-DD-NN-topic", folder="sessions", content="...")`
 2. The session log SHOULD be created within the first 5 tool calls of the session
 3. The session log MUST include the Protocol Compliance section (see template below)
 4. The agent MUST NOT defer session log creation to the end of the session
 
 **Verification:**
 
-- Session log file exists with correct naming pattern
-- File contains Protocol Compliance section
+- Session log exists in Brain memory under `sessions/` folder
+- Note contains Protocol Compliance section
 - Timestamp shows early creation, not late
 
 **Rationale:** Late session log creation reduces traceability and often results in incomplete documentation when sessions end unexpectedly.
@@ -221,9 +224,9 @@ Copy this checklist to each session log and verify completion:
 | MUST | Create this session log | [ ] | This file exists |
 | MUST | List skill scripts in `.claude/skills/github/scripts/` | [ ] | Output documented below |
 | MUST | Read usage-mandatory note | [ ] | Content in context |
-| MUST | Read PROJECT-CONSTRAINTS.md | [ ] | Content in context |
+| MUST | Read project constraints: `mcp__plugin_brain_brain__read_note(identifier="constraints")` | [ ] | Content in context |
 | MUST | Read memory-index, load task-relevant notes | [ ] | List notes loaded |
-| SHOULD | Import shared notes: `pwsh .claude-mem/scripts/Import-ClaudeMemMemories.ps1` | [ ] | Import count: N (or "None") |
+| MUST | Read project handoff: `mcp__plugin_brain_brain__read_note(identifier="handoff")` | [ ] | Content in context |
 | MUST | Verify and declare current branch | [ ] | Branch documented below |
 | MUST | Confirm not on main/master | [ ] | On feature branch |
 | SHOULD | Verify git status | [ ] | Output documented below |
@@ -307,21 +310,21 @@ The agent MUST update documentation before ending.
 
 **Requirements:**
 
-1. The agent MUST persist session context to Brain notes:
-   - Your session log at `.agents/sessions/YYYY-MM-DD-session-NN.md`
-   - Brain note for cross-session context (using `mcp__plugin_brain_brain__write_note` or `mcp__plugin_brain_brain__edit_note`)
+1. The agent MUST persist session context to Brain memory:
+   - Update session log: `mcp__plugin_brain_brain__edit_note(identifier="SESSION-YYYY-MM-DD-NN-topic", operation="append", content="...")`
+   - Update project handoff: `mcp__plugin_brain_brain__edit_note(identifier="handoff", operation="replace_section", section="Current State", content="...")`
 2. The agent MUST complete the session log with:
    - Tasks attempted and outcomes
    - Decisions made with rationale
    - Challenges encountered and resolutions
-   - Link reference for next session handoff
-3. The agent SHOULD update PROJECT-PLAN.md if tasks were completed
+   - Relations to relevant project notes
+3. The agent SHOULD search for and update related planning notes if tasks were completed
 
 **Verification:**
 
-- Session log contains complete information
-- Brain note updated with relevant context
-- PROJECT-PLAN.md checkboxes updated if applicable
+- Session log in Brain memory contains complete information
+- Handoff note updated with current state
+- Related planning notes updated if applicable
 
 ### Phase 2: Quality Checks (REQUIRED)
 
@@ -354,15 +357,15 @@ The agent MUST route to the qa agent after feature implementation. This is a **b
 3. The agent MUST NOT commit feature code without QA validation
 4. The agent MAY skip QA validation when:
    - **Docs-only**: All modified files are documentation files (e.g., Markdown), and changes are strictly editorial (spelling, grammar, or formatting) with no changes to code, configuration, tests, workflows, or code blocks of any kind. Use evidence: `SKIPPED: docs-only`
-   - **Investigation-only**: Session is investigation-only (no code/config changes), with staged files limited to investigation artifacts: `.agents/sessions/`, `.agents/analysis/`, `.agents/retrospective/`, `.brain/notes/`, `.agents/security/`. Use evidence: `SKIPPED: investigation-only` (see ADR-034)
+   - **Investigation-only**: Session is investigation-only (no code/config changes), with changes limited to investigation artifacts stored in Brain memory: `sessions/`, `analysis/`, `retrospective/`, `security/` folders. Use evidence: `SKIPPED: investigation-only` (see ADR-034)
 
 **Session Log Exemption:**
 
-Session logs (`.agents/sessions/`), analysis artifacts (`.agents/analysis/`), and note updates (`.brain/notes/`) are **audit trail, not implementation**. They are automatically filtered out when determining if QA validation is required. This allows session logs to be committed alongside implementation files without requiring separate commits or investigation-only skips.
+Session logs (Brain memory `sessions/` folder), analysis artifacts (Brain memory `analysis/` folder), and note updates are **audit trail, not implementation**. They are automatically filtered out when determining if QA validation is required. This allows session logs to be committed alongside implementation files without requiring separate commits or investigation-only skips.
 
 **Verification:**
 
-- QA report exists in `.agents/qa/`
+- QA report exists in Brain memory `qa/` folder
 - QA agent confirms validation passed
 - No critical issues remain unaddressed
 
@@ -372,11 +375,11 @@ Session logs (`.agents/sessions/`), analysis artifacts (`.agents/analysis/`), an
 
 **Valid investigation sessions** (may use `SKIPPED: investigation-only`):
 
-1. **Pure analysis** - Reading code, documenting findings in `.agents/analysis/`
-2. **Note updates** - Cross-session context updates in `.brain/notes/`
+1. **Pure analysis** - Reading code, documenting findings in Brain memory `analysis/` folder
+2. **Note updates** - Cross-session context updates in Brain memory
 3. **CI debugging** - Investigating CI failures, documenting in session log
-4. **Security assessments** - Writing security analysis to `.agents/security/`
-5. **Retrospectives** - Extracting learnings to `.agents/retrospective/`
+4. **Security assessments** - Writing security analysis to Brain memory `security/` folder
+5. **Retrospectives** - Extracting learnings to Brain memory `retrospective/` folder
 
 **Not investigation sessions** (require QA validation):
 
@@ -418,7 +421,7 @@ The agent MUST commit changes before ending.
    ```
 
 2. The agent MUST NOT commit if branch mismatch detected (stop and investigate)
-3. The agent MUST stage all changed files including `.agents/` files
+3. The agent MUST stage all changed files (note: Brain memory is external, session artifacts stored there)
 4. The agent MUST commit with conventional commit message format
 5. The agent SHOULD verify clean git status after commit
 6. The agent MAY push to remote if appropriate
@@ -468,20 +471,17 @@ Copy this checklist to each session log and verify completion:
 
 | Req | Step | Status | Evidence |
 |-----|------|--------|----------|
-| SHOULD | Export session notes: `pwsh .claude-mem/scripts/Export-ClaudeMemMemories.ps1 -Query "[query]" -SessionNumber NNN -Topic "topic"` | [ ] | Export file: [path] (or "Skipped") |
-| MUST | Security review export (if exported): `grep -iE "api[_-]?key|password|token|secret|credential|private[_-]?key" [file].json` | [ ] | Scan result: "Clean" or "Redacted" |
-| MUST | Complete session log (all sections filled) | [ ] | File complete |
-| MUST | Update Brain note (cross-session context) | [ ] | Note write confirmed |
+| MUST | Complete session log in Brain memory | [ ] | `mcp__plugin_brain_brain__edit_note` confirmed |
+| MUST | Update handoff note: `mcp__plugin_brain_brain__edit_note(identifier="handoff", ...)` | [ ] | Handoff updated |
 | MUST | Run markdown lint | [ ] | Lint output clean |
-| MUST | Route to qa agent (feature implementation) | [ ] | QA report: `.agents/qa/[report].md` OR `SKIPPED: investigation-only` |
-| MUST | Commit all changes (including .brain/notes) | [ ] | Commit SHA: _______ |
-| SHOULD | Update PROJECT-PLAN.md | [ ] | Tasks checked off |
+| MUST | Route to qa agent (feature implementation) | [ ] | QA report in Brain memory `qa/` folder OR `SKIPPED: investigation-only` |
+| MUST | Commit code changes (Brain memory is external) | [ ] | Commit SHA: _______ |
+| SHOULD | Update related planning notes | [ ] | Planning notes updated |
 | SHOULD | Invoke retrospective (significant sessions) | [ ] | Doc: _______ |
 | SHOULD | Verify clean git status | [ ] | `git status` output |
 
 <!-- Investigation sessions may skip QA with evidence "SKIPPED: investigation-only"
-     when only staging: .agents/sessions/, .agents/analysis/, .agents/retrospective/,
-     .brain/notes/, .agents/security/
+     when only updating Brain memory: sessions/, analysis/, retrospective/, security/
      See ADR-034 for details. -->
 ```
 
@@ -489,9 +489,15 @@ Copy this checklist to each session log and verify completion:
 
 ## Session Log Template
 
-Create at: `.agents/sessions/YYYY-MM-DD-session-NN.md`
+Create in Brain memory: `mcp__plugin_brain_brain__write_note(title="SESSION-YYYY-MM-DD-NN-topic", folder="sessions", content="...")`
 
 ```markdown
+---
+title: SESSION-YYYY-MM-DD-NN-topic
+type: session
+tags: [session, YYYY-MM-DD]
+---
+
 # Session NN - YYYY-MM-DD
 
 ## Session Info
@@ -513,9 +519,9 @@ Create at: `.agents/sessions/YYYY-MM-DD-session-NN.md`
 | MUST | Create this session log | [ ] | This file exists |
 | MUST | List skill scripts in `.claude/skills/github/scripts/` | [ ] | Output documented below |
 | MUST | Read usage-mandatory note | [ ] | Content in context |
-| MUST | Read PROJECT-CONSTRAINTS.md | [ ] | Content in context |
+| MUST | Read project constraints: `mcp__plugin_brain_brain__read_note(identifier="constraints")` | [ ] | Content in context |
 | MUST | Read memory-index, load task-relevant notes | [ ] | List notes loaded |
-| SHOULD | Import shared notes: `pwsh .claude-mem/scripts/Import-ClaudeMemMemories.ps1` | [ ] | Import count: N (or "None") |
+| MUST | Read project handoff: `mcp__plugin_brain_brain__read_note(identifier="handoff")` | [ ] | Content in context |
 | MUST | Verify and declare current branch | [ ] | Branch documented below |
 | MUST | Confirm not on main/master | [ ] | On feature branch |
 | SHOULD | Verify git status | [ ] | Output documented below |
@@ -562,26 +568,28 @@ All MUST requirements above are marked complete.
 **Files changed**:
 - `[path]` - [What changed]
 
+## Relations
+
+- part_of [[Current Project]]
+- leads_to [[Next Session Topic]]
+
 ---
 
 ## Session End (COMPLETE ALL before closing)
 
 | Req | Step | Status | Evidence |
 |-----|------|--------|----------|
-| SHOULD | Export session notes: `pwsh .claude-mem/scripts/Export-ClaudeMemMemories.ps1 -Query "[query]" -SessionNumber NNN -Topic "topic"` | [ ] | Export file: [path] (or "Skipped") |
-| MUST | Security review export (if exported): `grep -iE "api[_-]?key|password|token|secret|credential|private[_-]?key" [file].json` | [ ] | Scan result: "Clean" or "Redacted" |
-| MUST | Complete session log (all sections filled) | [ ] | File complete |
-| MUST | Update Brain note (cross-session context) | [ ] | Note write confirmed |
+| MUST | Complete session log in Brain memory | [ ] | `mcp__plugin_brain_brain__edit_note` confirmed |
+| MUST | Update handoff note: `mcp__plugin_brain_brain__edit_note(identifier="handoff", ...)` | [ ] | Handoff updated |
 | MUST | Run markdown lint | [ ] | Output below |
-| MUST | Route to qa agent (feature implementation) | [ ] | QA report: `.agents/qa/[report].md` OR `SKIPPED: investigation-only` |
-| MUST | Commit all changes (including .brain/notes) | [ ] | Commit SHA: _______ |
-| SHOULD | Update PROJECT-PLAN.md | [ ] | Tasks checked off |
+| MUST | Route to qa agent (feature implementation) | [ ] | QA report in Brain memory `qa/` folder OR `SKIPPED: investigation-only` |
+| MUST | Commit code changes (Brain memory is external) | [ ] | Commit SHA: _______ |
+| SHOULD | Update related planning notes | [ ] | Planning notes updated |
 | SHOULD | Invoke retrospective (significant sessions) | [ ] | Doc: _______ |
 | SHOULD | Verify clean git status | [ ] | Output below |
 
 <!-- Investigation sessions may skip QA with evidence "SKIPPED: investigation-only"
-     when only staging: .agents/sessions/, .agents/analysis/, .agents/retrospective/,
-     .brain/notes/, .agents/security/
+     when only updating Brain memory: sessions/, analysis/, retrospective/, security/
      See ADR-034 for details. -->
 
 ### Lint Output
@@ -617,8 +625,8 @@ When user indicates autonomous/unattended operation (e.g., "Drive this through t
 |-----|-------------|--------------|
 | MUST | Create session log IMMEDIATELY (within first 3 tool calls) | Session log exists before any substantive work |
 | MUST | Invoke orchestrator for task coordination | Orchestrator invoked in session transcript |
-| MUST | Invoke critic before ANY merge or PR creation | Critic report exists in `.agents/critique/` |
-| MUST | Invoke QA after ANY code change | QA report exists in `.agents/qa/` |
+| MUST | Invoke critic before ANY merge or PR creation | Critic report exists in `critique/` folder |
+| MUST | Invoke QA after ANY code change | QA report exists in `qa/` folder |
 | MUST NOT | Mark security comments as "won't fix" without security agent review | Security agent approval documented |
 | MUST NOT | Merge without explicit validation gate pass | All validations passed and documented |
 | MUST | Document all "won't fix" decisions with rationale | Session log contains decision justification |
@@ -690,7 +698,7 @@ The `Validate-SessionProtocol.ps1` script checks session protocol compliance:
 
 ```powershell
 # Validate current session
-.\scripts\Validate-SessionProtocol.ps1 -SessionPath ".agents/sessions/2025-12-17-session-01.md"
+.\scripts\Validate-SessionProtocol.ps1 -SessionPath "sessions/2025-12-17-session-01"
 
 # Validate all recent sessions
 .\scripts\Validate-SessionProtocol.ps1 -All
@@ -703,11 +711,11 @@ The `Validate-SessionProtocol.ps1` script checks session protocol compliance:
 
 | Check | Description | Severity |
 |-------|-------------|----------|
-| Session log exists | File at expected path | Critical |
+| Session log exists | Note exists in Brain memory `sessions/` | Critical |
 | Protocol Compliance section | Contains start/end checklists | Critical |
 | MUST items checked | All MUST requirements marked complete | Critical |
-| QA validation ran | QA report exists in `.agents/qa/` (feature sessions) | Critical |
-| Brain note updated | Cross-session context persisted | Warning |
+| QA validation ran | QA report exists in Brain memory `qa/` folder (feature sessions) | Critical |
+| Handoff note updated | Project handoff persisted | Warning |
 | Git commit exists | Commit with matching date | Warning |
 | Lint ran | Evidence of markdownlint execution | Warning |
 

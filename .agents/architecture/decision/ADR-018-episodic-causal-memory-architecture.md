@@ -213,10 +213,10 @@ The causal graph is computed on-demand from pattern notes rather than stored as 
 4. **Path Finding**: BFS/DFS on computed graph structure
 
 This approach provides:
-- Human-readable patterns
-- Semantic searchability
-- Automatic embedding generation
-- No sync issues between graph and patterns
+* Human-readable patterns
+* Semantic searchability
+* Automatic embedding generation
+* No sync issues between graph and patterns
 
 #### Causal Relation Types
 
@@ -285,8 +285,8 @@ interface EpisodeTransform {
 }
 ```
 
-3. Generate WikiLinks for decision effects (d001 -> [[d002]])
-4. Write to `episodes/` folder
+1. Generate WikiLinks for decision effects (d001 -> [[d002]])
+2. Write to `episodes/` folder
 
 #### From ai-agents Causal Graph
 
@@ -299,6 +299,7 @@ interface EpisodeTransform {
 ### Integration with Session Protocol
 
 #### Session Start
+
 ```text
 1. bootstrap_context includes recent episodes (outcome=failure, last 7 days)
 2. Query antipatterns for warnings
@@ -306,6 +307,7 @@ interface EpisodeTransform {
 ```
 
 #### Session End
+
 ```text
 1. Extract session log -> episode note via Extract-SessionEpisode.ps1
 2. Update related patterns with new evidence
@@ -332,6 +334,7 @@ interface EpisodeTransform {
 ## Consequences
 
 ### Positive
+
 * Episodes and patterns are human-readable markdown
 * Full semantic search capability via embeddings
 * WikiLinks create natural knowledge graph connections
@@ -340,12 +343,14 @@ interface EpisodeTransform {
 * Patterns can reference and be referenced by all other note types
 
 ### Negative
+
 * Graph traversal requires parsing markdown (vs direct JSON access)
 * Migration effort from existing ai-agents data
 * More complex episode creation (structured markdown vs JSON)
 * Success rate/occurrence tracking requires frontmatter parsing
 
 ### Neutral
+
 * PowerShell scripts (Extract-SessionEpisode.ps1) remain for session extraction
 * TypeScript tools added to Brain MCP for specialized operations
 * Pattern success rates are denormalized (stored in frontmatter, not computed)
@@ -353,6 +358,7 @@ interface EpisodeTransform {
 ## Confirmation
 
 Implementation will be confirmed through:
+
 1. Design review by architect agent
 2. Prototype implementation of `store_episode` tool
 3. Migration test with sample ai-agents episodes
@@ -360,23 +366,23 @@ Implementation will be confirmed through:
 
 ## Reversibility Assessment
 
-- **Rollback capability**: Episodes/patterns are markdown files, easily reversible
-- **Vendor lock-in**: None - pure markdown with frontmatter
-- **Exit strategy**: Export to JSON if needed
-- **Legacy impact**: ai-agents data can be imported, no breaking changes
-- **Data migration**: Reversing creates markdown -> JSON export (straightforward)
+* **Rollback capability**: Episodes/patterns are markdown files, easily reversible
+* **Vendor lock-in**: None - pure markdown with frontmatter
+* **Exit strategy**: Export to JSON if needed
+* **Legacy impact**: ai-agents data can be imported, no breaking changes
+* **Data migration**: Reversing creates markdown -> JSON export (straightforward)
 
 ## More Information
 
 ### Related ADRs
-- [[ADR-007 Memory First Architecture]] - Established memory-first principle
-- [[ADR-001 Search Service Abstraction]] - Search infrastructure
-- ADR-038 (ai-agents) - Original Reflexion Memory Schema
+* [[ADR-007 Memory First Architecture]] - Established memory-first principle
+* [[ADR-001 Search Service Abstraction]] - Search infrastructure
+* ADR-038 (ai-agents) - Original Reflexion Memory Schema
 
 ### Implementation References
-- ai-agents ReflexionMemory.psm1 - Episode/pattern functions
-- brain relationFollowing.ts - WikiLink extraction
-- brain organizer/types.ts - Quality issue patterns
+* ai-agents ReflexionMemory.psm1 - Episode/pattern functions
+* brain relationFollowing.ts - WikiLink extraction
+* brain organizer/types.ts - Quality issue patterns
 
 ### Schema Compatibility
 

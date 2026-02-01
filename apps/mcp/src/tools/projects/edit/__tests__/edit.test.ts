@@ -2,9 +2,9 @@
  * Unit tests for edit_project tool
  *
  * Tests P0 blocking issues from QA validation:
- * - DEFAULT mode is the default when notes_path omitted
+ * - DEFAULT mode is the default when memories_path omitted
  * - CODE auto-update preservation when code_path changes
- * - Explicit notes_path overrides auto-update
+ * - Explicit memories_path overrides auto-update
  * - Enum values resolve correctly (DEFAULT, CODE, custom)
  *
  * M3 Migration tests (TM-001):
@@ -125,7 +125,7 @@ describe("edit_project tool", () => {
       }
       if (pStr.includes("brain-config.json") && codePath) {
         return JSON.stringify({
-          default_notes_path: "~/memories",
+          default_memories_location: "~/memories",
           code_paths: { [projectName]: codePath },
         });
       }
@@ -133,8 +133,8 @@ describe("edit_project tool", () => {
     });
   }
 
-  describe("DEFAULT mode (notes_path omitted)", () => {
-    test("defaults to DEFAULT mode when notes_path is not provided", async () => {
+  describe("DEFAULT mode (memories_path omitted)", () => {
+    test("defaults to DEFAULT mode when memories_path is not provided", async () => {
       // Project exists with notes in a custom location (not code_path/docs)
       setupExistingProject(
         "test-project",
@@ -152,10 +152,10 @@ describe("edit_project tool", () => {
       const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
 
       // Verify DEFAULT mode is applied
-      expect(response.notes_path_mode).toBe("DEFAULT");
+      expect(response.memories_path_mode).toBe("DEFAULT");
       // Notes path should be in ~/memories/<project> pattern
-      expect(response.notes_path).toContain("memories");
-      expect(response.notes_path).toContain("test-project");
+      expect(response.memories_path).toContain("memories");
+      expect(response.memories_path).toContain("test-project");
     });
 
     test("uses ~/memories fallback when no brain-config.json exists", async () => {
@@ -183,8 +183,8 @@ describe("edit_project tool", () => {
       const result = await handler(args);
       const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
 
-      expect(response.notes_path).toBe(path.join(homeDir, "memories", "fallback-project"));
-      expect(response.notes_path_mode).toBe("DEFAULT");
+      expect(response.memories_path).toBe(path.join(homeDir, "memories", "fallback-project"));
+      expect(response.memories_path_mode).toBe("DEFAULT");
     });
   });
 
@@ -198,14 +198,14 @@ describe("edit_project tool", () => {
       const args: EditProjectArgs = {
         name: "explicit-default",
         code_path: "~/Dev/explicit-default",
-        notes_path: "DEFAULT",
+        memories_path: "DEFAULT",
       };
 
       const result = await handler(args);
       const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
 
-      expect(response.notes_path).toBe(path.join(homeDir, "memories", "explicit-default"));
-      expect(response.notes_path_mode).toBe("DEFAULT");
+      expect(response.memories_path).toBe(path.join(homeDir, "memories", "explicit-default"));
+      expect(response.memories_path_mode).toBe("DEFAULT");
     });
   });
 
@@ -217,29 +217,29 @@ describe("edit_project tool", () => {
      * but the mocked fs doesn't propagate to the config module.
      *
      * These tests are marked as skipped but document the expected behavior:
-     * - When notes_path was ${old_code_path}/docs and code_path changes
-     * - The notes_path should auto-update to ${new_code_path}/docs
-     * - The notes_path_mode should be "CODE (auto-updated)"
+     * - When memories_path was ${old_code_path}/docs and code_path changes
+     * - The memories_path should auto-update to ${new_code_path}/docs
+     * - The memories_path_mode should be "CODE (auto-updated)"
      *
      * The implementation is verified through manual testing and the logic
      * in edit/index.ts lines 227-238.
      */
     test("documents auto-update behavior when code_path changes", async () => {
       // This test documents the expected behavior:
-      // Given: Project with notes_path = ${old_code_path}/docs
+      // Given: Project with memories_path = ${old_code_path}/docs
       // When: code_path is changed
-      // Then: notes_path should auto-update to ${new_code_path}/docs
-      //       notes_path_mode should be "CODE (auto-updated)"
+      // Then: memories_path should auto-update to ${new_code_path}/docs
+      //       memories_path_mode should be "CODE (auto-updated)"
 
       // Due to mock.module limitations, we verify the implementation logic
       // exists in the handler by checking that when old_code_path is available
-      // and notes_path was old_code_path/docs, it would trigger auto-update.
+      // and memories_path was old_code_path/docs, it would trigger auto-update.
       //
       // See edit/index.ts lines 227-238 for implementation:
       // if (oldCodePath) {
       //   const oldDefaultNotesPath = path.join(resolvePath(oldCodePath), "docs");
       //   if (currentNotesPath === oldDefaultNotesPath) {
-      //     // Auto-update notes_path to new code_path/docs
+      //     // Auto-update memories_path to new code_path/docs
       //     ...
       //     notesPathMode = "CODE (auto-updated)";
 
@@ -264,13 +264,13 @@ describe("edit_project tool", () => {
       const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
 
       // Should fall back to DEFAULT mode since no old code_path
-      expect(response.notes_path_mode).toBe("DEFAULT");
-      expect(response.notes_path).toBe(path.join(homeDir, "memories", "no-code-path-project"));
+      expect(response.memories_path_mode).toBe("DEFAULT");
+      expect(response.memories_path).toBe(path.join(homeDir, "memories", "no-code-path-project"));
     });
   });
 
-  describe("Explicit notes_path overrides auto-update", () => {
-    test("explicit notes_path prevents CODE auto-update", async () => {
+  describe("Explicit memories_path overrides auto-update", () => {
+    test("explicit memories_path prevents CODE auto-update", async () => {
       const oldCodePath = path.join(homeDir, "old", "code");
       const oldNotesPath = path.join(oldCodePath, "docs");
 
@@ -289,7 +289,7 @@ describe("edit_project tool", () => {
         }
         if (pStr.includes("brain-config.json")) {
           return JSON.stringify({
-            default_notes_path: "~/memories",
+            default_memories_location: "~/memories",
             code_paths: { "override-project": oldCodePath },
           });
         }
@@ -299,15 +299,15 @@ describe("edit_project tool", () => {
       const args: EditProjectArgs = {
         name: "override-project",
         code_path: "~/new/code",
-        notes_path: "/custom/notes/path",
+        memories_path: "/custom/notes/path",
       };
 
       const result = await handler(args);
       const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
 
       // Should use explicit path, not auto-update
-      expect(response.notes_path).toBe("/custom/notes/path");
-      expect(response.notes_path_mode).toBe("CUSTOM");
+      expect(response.memories_path).toBe("/custom/notes/path");
+      expect(response.memories_path_mode).toBe("CUSTOM");
     });
 
     test("explicit DEFAULT overrides CODE auto-update", async () => {
@@ -329,7 +329,7 @@ describe("edit_project tool", () => {
         }
         if (pStr.includes("brain-config.json")) {
           return JSON.stringify({
-            default_notes_path: "~/memories",
+            default_memories_location: "~/memories",
             code_paths: { "force-default": oldCodePath },
           });
         }
@@ -339,20 +339,20 @@ describe("edit_project tool", () => {
       const args: EditProjectArgs = {
         name: "force-default",
         code_path: "~/new/code",
-        notes_path: "DEFAULT",
+        memories_path: "DEFAULT",
       };
 
       const result = await handler(args);
       const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
 
       // Should use DEFAULT, not auto-update to code/docs
-      expect(response.notes_path).toBe(path.join(homeDir, "memories", "force-default"));
-      expect(response.notes_path_mode).toBe("DEFAULT");
+      expect(response.memories_path).toBe(path.join(homeDir, "memories", "force-default"));
+      expect(response.memories_path_mode).toBe("DEFAULT");
     });
   });
 
   describe("Explicit CODE mode", () => {
-    test("uses code_path/docs when notes_path is CODE", async () => {
+    test("uses code_path/docs when memories_path is CODE", async () => {
       setupExistingProject(
         "code-mode-project",
         "/old/notes"
@@ -361,14 +361,14 @@ describe("edit_project tool", () => {
       const args: EditProjectArgs = {
         name: "code-mode-project",
         code_path: "~/Dev/code-mode-project",
-        notes_path: "CODE",
+        memories_path: "CODE",
       };
 
       const result = await handler(args);
       const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
 
-      expect(response.notes_path).toBe(path.join(homeDir, "Dev", "code-mode-project", "docs"));
-      expect(response.notes_path_mode).toBe("CODE");
+      expect(response.memories_path).toBe(path.join(homeDir, "Dev", "code-mode-project", "docs"));
+      expect(response.memories_path_mode).toBe("CODE");
     });
   });
 
@@ -382,14 +382,14 @@ describe("edit_project tool", () => {
       const args: EditProjectArgs = {
         name: "custom-path-project",
         code_path: "~/Dev/custom-path-project",
-        notes_path: "/var/custom/notes",
+        memories_path: "/var/custom/notes",
       };
 
       const result = await handler(args);
       const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
 
-      expect(response.notes_path).toBe("/var/custom/notes");
-      expect(response.notes_path_mode).toBe("CUSTOM");
+      expect(response.memories_path).toBe("/var/custom/notes");
+      expect(response.memories_path_mode).toBe("CUSTOM");
     });
 
     test("expands ~ in custom path", async () => {
@@ -401,14 +401,14 @@ describe("edit_project tool", () => {
       const args: EditProjectArgs = {
         name: "tilde-custom",
         code_path: "~/Dev/tilde-custom",
-        notes_path: "~/my-notes/special",
+        memories_path: "~/my-notes/special",
       };
 
       const result = await handler(args);
       const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
 
-      expect(response.notes_path).toBe(path.join(homeDir, "my-notes", "special"));
-      expect(response.notes_path_mode).toBe("CUSTOM");
+      expect(response.memories_path).toBe(path.join(homeDir, "my-notes", "special"));
+      expect(response.memories_path_mode).toBe("CUSTOM");
     });
   });
 
@@ -441,7 +441,7 @@ describe("edit_project tool", () => {
       const args: EditProjectArgs = {
         name: "response-test",
         code_path: "~/Dev/response-test",
-        notes_path: "CODE",
+        memories_path: "CODE",
       };
 
       const result = await handler(args);
@@ -450,8 +450,8 @@ describe("edit_project tool", () => {
       expect(response).toHaveProperty("project", "response-test");
       expect(response).toHaveProperty("updates");
       expect(response).toHaveProperty("code_path");
-      expect(response).toHaveProperty("notes_path");
-      expect(response).toHaveProperty("notes_path_mode");
+      expect(response).toHaveProperty("memories_path");
+      expect(response).toHaveProperty("memories_path_mode");
       expect(Array.isArray(response.updates)).toBe(true);
     });
 
@@ -464,7 +464,7 @@ describe("edit_project tool", () => {
       const args: EditProjectArgs = {
         name: "updates-test",
         code_path: "~/Dev/updates-test",
-        notes_path: "CODE",
+        memories_path: "CODE",
       };
 
       const result = await handler(args);
@@ -473,8 +473,8 @@ describe("edit_project tool", () => {
       expect(response.updates.length).toBeGreaterThan(0);
       // Should include code path update
       expect(response.updates.some((u: string) => u.includes("code path"))).toBe(true);
-      // Should include notes path update
-      expect(response.updates.some((u: string) => u.includes("notes path"))).toBe(true);
+      // Should include memories path update
+      expect(response.updates.some((u: string) => u.includes("memories path"))).toBe(true);
     });
   });
 
@@ -578,7 +578,7 @@ describe("edit_project tool", () => {
         }
         if (pStr.includes("brain-config.json")) {
           return JSON.stringify({
-            default_notes_path: "~/memories",
+            default_memories_location: "~/memories",
             code_paths: { "migration-project": path.join(homeDir, "code") },
           });
         }
@@ -655,7 +655,7 @@ describe("edit_project tool", () => {
     }
 
     describe("Successful migration", () => {
-      test("migrates notes when notes_path changes and old directory exists", async () => {
+      test("migrates notes when memories_path changes and old directory exists", async () => {
         setupMigrationTest({
           oldPath: oldNotesPath,
           newPath: newNotesPath,
@@ -667,7 +667,7 @@ describe("edit_project tool", () => {
         const args: EditProjectArgs = {
           name: "migration-project",
           code_path: "~/code",
-          notes_path: newNotesPath,
+          memories_path: newNotesPath,
         };
 
         const result = await handler(args);
@@ -683,7 +683,7 @@ describe("edit_project tool", () => {
         expect(response.migration.new_path).toBe(newNotesPath);
 
         // Verify updates array includes migration info
-        expect(response.updates.some((u: string) => u.includes("Migrated notes"))).toBe(true);
+        expect(response.updates.some((u: string) => u.includes("Migrated memories"))).toBe(true);
       });
 
       test("includes file count in migration response", async () => {
@@ -698,7 +698,7 @@ describe("edit_project tool", () => {
         const args: EditProjectArgs = {
           name: "migration-project",
           code_path: "~/code",
-          notes_path: newNotesPath,
+          memories_path: newNotesPath,
         };
 
         const result = await handler(args);
@@ -709,7 +709,7 @@ describe("edit_project tool", () => {
     });
 
     describe("No migration when paths identical", () => {
-      test("skips migration when notes_path has not changed", async () => {
+      test("skips migration when memories_path has not changed", async () => {
         const samePath = path.join(homeDir, "same-notes", "project");
 
         mockFs.existsSync.mockImplementation((p: unknown) => {
@@ -732,7 +732,7 @@ describe("edit_project tool", () => {
         const args: EditProjectArgs = {
           name: "same-path-project",
           code_path: "~/code",
-          notes_path: samePath,
+          memories_path: samePath,
         };
 
         const result = await handler(args);
@@ -771,7 +771,7 @@ describe("edit_project tool", () => {
         const args: EditProjectArgs = {
           name: "missing-old-project",
           code_path: "~/code",
-          notes_path: newPath,
+          memories_path: newPath,
         };
 
         const result = await handler(args);
@@ -799,7 +799,7 @@ describe("edit_project tool", () => {
         const args: EditProjectArgs = {
           name: "migration-project",
           code_path: "~/code",
-          notes_path: newNotesPath,
+          memories_path: newNotesPath,
         };
 
         const result = await handler(args);
@@ -809,7 +809,7 @@ describe("edit_project tool", () => {
 
         expect(response.error).toContain("migration failed");
         expect(response.error).toContain("Copy failed");
-        expect(response.rollback).toContain("Source notes preserved");
+        expect(response.rollback).toContain("Source memories preserved");
       });
     });
 
@@ -827,7 +827,7 @@ describe("edit_project tool", () => {
         const args: EditProjectArgs = {
           name: "migration-project",
           code_path: "~/code",
-          notes_path: newNotesPath,
+          memories_path: newNotesPath,
         };
 
         const result = await handler(args);
@@ -852,7 +852,7 @@ describe("edit_project tool", () => {
         const args: EditProjectArgs = {
           name: "migration-project",
           code_path: "~/code",
-          notes_path: newNotesPath,
+          memories_path: newNotesPath,
         };
 
         const result = await handler(args);
@@ -879,7 +879,7 @@ describe("edit_project tool", () => {
         const args: EditProjectArgs = {
           name: "migration-project",
           code_path: "~/code",
-          notes_path: newNotesPath,
+          memories_path: newNotesPath,
         };
 
         const result = await handler(args);
@@ -909,7 +909,7 @@ describe("edit_project tool", () => {
         const args: EditProjectArgs = {
           name: "migration-project",
           code_path: "~/code",
-          notes_path: newNotesPath,
+          memories_path: newNotesPath,
         };
 
         const result = await handler(args);
@@ -939,7 +939,7 @@ describe("edit_project tool", () => {
         const args: EditProjectArgs = {
           name: "migration-project",
           code_path: "~/code",
-          notes_path: protectedPath,
+          memories_path: protectedPath,
         };
 
         const result = await handler(args);
@@ -965,7 +965,7 @@ describe("edit_project tool", () => {
         const args: EditProjectArgs = {
           name: "migration-project",
           code_path: "~/code",
-          notes_path: systemPath,
+          memories_path: systemPath,
         };
 
         const result = await handler(args);
@@ -993,7 +993,7 @@ describe("edit_project tool", () => {
         const args: EditProjectArgs = {
           name: "migration-project",
           code_path: "~/code",
-          notes_path: nonExistentPath,
+          memories_path: nonExistentPath,
         };
 
         const result = await handler(args);
@@ -1017,7 +1017,7 @@ describe("edit_project tool", () => {
         const args: EditProjectArgs = {
           name: "migration-project",
           code_path: "~/code",
-          notes_path: noParentPath,
+          memories_path: noParentPath,
         };
 
         const result = await handler(args);

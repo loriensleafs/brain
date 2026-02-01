@@ -1,26 +1,35 @@
 # Memory Governance Enforcement Design
 
 **Date**: 2026-01-21
-**Status**: Proposed
+**Status**: Accepted
 **ADR**: ADR-019
 
 ---
 
 ## Executive Summary
 
-This design addresses governance debt from agents calling Brain MCP write tools directly without following conventions. The solution uses a tiered enforcement approach: read operations remain unrestricted, write operations require either pre-flight validation (approved agents) or delegation to memory agent (all others).
+This design addresses governance debt from agents calling Brain MCP write tools directly without following conventions. The solution uses **validation-based governance**: all agents retain write access, but MUST complete pre-flight validation before any write operation. This approach is required by the one-level delegation architecture (subagents cannot delegate to other subagents).
 
 ---
 
 ## Problem Statement
 
 **Current State (Audit 2026-01-21)**:
+
 - 15+ agents have direct access to `write_note` and `edit_note`
 - No validation before writes
 - Observed violations: wrong folders, missing CAPS prefixes, no relations
 - Session 06 established 11 folders and 13 entity types with naming conventions
 
+**Architectural Constraint**:
+
+- Agent system uses one-level delegation
+- Subagents cannot delegate to other subagents
+- When orchestrator delegates to analyst, analyst must write directly
+- Any governance model requiring delegation to memory agent violates this constraint
+
 **Impact**:
+
 - Knowledge graph fragmentation
 - Search reliability degradation
 - Cross-session context loss
@@ -30,7 +39,7 @@ This design addresses governance debt from agents calling Brain MCP write tools 
 
 ## Design Decisions
 
-### 1. Tiered Enforcement Model
+### 1. Validation-Based Governance Model
 
 ```text
 TIER 1: Read Operations (No Enforcement)
@@ -38,32 +47,32 @@ TIER 1: Read Operations (No Enforcement)
 ├── mcp__plugin_brain_brain__read_note
 └── mcp__plugin_brain_brain__list_directory
 
-TIER 2: Write Operations (Validation Gate)
+TIER 2: Write Operations (Pre-Flight Validation REQUIRED)
 ├── mcp__plugin_brain_brain__write_note
 └── mcp__plugin_brain_brain__edit_note
+    └── ALL agents: Complete pre-flight validation checklist
 
-TIER 3: Complex Operations (Memory Agent Delegation)
+TIER 3: Complex Operations (Consult Memory Skill)
 ├── Multi-note operations
 ├── Knowledge graph reorganization
 └── Cross-domain relation management
+    └── ALL agents: Reference memory skill for guidance
 ```
 
-### 2. Agent Access Matrix
+### 2. Agent Access Matrix (All Agents Write)
 
-| Agent | Search | Read | Write | Edit | Rationale |
-|-------|--------|------|-------|------|-----------|
-| memory | Yes | Yes | Yes | Yes | Primary owner |
-| skillbook | Yes | Yes | Yes | Yes | SKILL-* entities |
-| retrospective | Yes | Yes | Yes | Yes | RETRO-* entities |
-| spec-generator | Yes | Yes | Yes | Yes | REQ/DESIGN/TASK |
-| All others | Yes | Yes | **No** | **No** | Delegate |
+| Agent | Search | Read | Write | Edit | Requirement |
+|-------|--------|------|-------|------|-------------|
+| **All agents** | Yes | Yes | **Yes** | **Yes** | Pre-flight validation |
 
-### 3. Pre-Flight Validation (for approved agents)
+**No delegation required.** All agents write directly after completing validation.
 
-Before any write operation, approved agents MUST validate:
+### 3. Pre-Flight Validation (BLOCKING - All Agents)
+
+Before ANY write operation, all agents MUST validate:
 
 ```markdown
-### Pre-Flight Checklist
+### Pre-Flight Checklist (MUST all pass before write)
 
 - [ ] Entity type valid (13 types only)
 - [ ] Folder matches entity type
@@ -73,17 +82,18 @@ Before any write operation, approved agents MUST validate:
 - [ ] Relations: 2-8 wikilinks
 ```
 
-### 4. Delegation Protocol (for non-approved agents)
+**Agents that skip validation create governance debt.** Post-hoc audit detects violations.
 
-```text
-Task(subagent_type="memory", prompt="Create [entity-type] note:
-- Folder: [folder per entity mapping]
-- Title: [CAPS-PREFIX-NNN-topic]
-- Context: [why this matters]
-- Observations: [list with categories]
-- Relations: [wikilinks to related entities]
-")
-```
+### 4. Memory Skill as Validator/Guide (Not Gatekeeper)
+
+The memory skill provides:
+
+- Entity type to folder mapping
+- Naming convention patterns
+- Quality threshold requirements
+- Compliant note examples
+
+**Role shift**: Memory skill is a validation guide, not an access controller.
 
 ---
 
@@ -139,63 +149,49 @@ inspired_by, contains, pairs_with, supersedes, leads_to, caused_by
 ### 1. Memory Skill Update [COMPLETE]
 
 Updated `apps/claude-plugin/skills/memory/SKILL.md` with:
-- Write Operations Governance section
-- Agent access matrix
-- Pre-flight validation checklist
-- Delegation protocol
+
+- Write Operations Governance section (validation-based, not access-control)
+- All agents can write with pre-flight validation
+- Pre-flight validation checklist (BLOCKING)
 - Entity type mapping
 - Anti-patterns for write violations
 
-### 2. Agent Definition Updates [TODO]
+### 2. Agent Definition Updates [NOT REQUIRED]
 
-Remove `write_note` and `edit_note` from non-approved agents:
+**No changes needed.** All agents retain `write_note` and `edit_note` access.
+
+Previous approach (access control) was rejected because it violates one-level delegation:
 
 ```yaml
-# Before (violation)
-tools:
-  - mcp__plugin_brain_brain__write_note
-  - mcp__plugin_brain_brain__edit_note
+# REJECTED approach (violates one-level delegation)
+# Do NOT remove write tools from agents
 
-# After (compliant)
+# CORRECT approach (all agents retain write access)
 tools:
   - mcp__plugin_brain_brain__search
   - mcp__plugin_brain_brain__read_note
+  - mcp__plugin_brain_brain__write_note  # All agents keep this
+  - mcp__plugin_brain_brain__edit_note   # All agents keep this
 ```
-
-Agents to update:
-- architect.md
-- planner.md
-- orchestrator.md
-- implementer.md
-- critic.md
-- analyst.md
-- qa.md
-- high-level-advisor.md
-- independent-thinker.md
-- task-generator.md
-- explainer.md
-- pr-comment-responder.md
 
 ### 3. Validation Scripts [TODO]
 
 **validate-memory-note.ps1**
+
 - Input: Note content or file path
 - Output: PASS/FAIL with violations list
 - Checks: All pre-flight validation items
 
-**validate-agent-memory-access.ps1**
-- Input: Agent definition directory
-- Output: Compliance report
-- Checks: Unauthorized write_note/edit_note access
+**audit-memory-violations.ps1**
+
+- Input: Memory notes directory
+- Output: Compliance report with violation list
+- Checks: Post-hoc detection of governance debt
 
 ### 4. CI Integration [TODO]
 
-**Workflow: validate-agent-definitions.yml**
-- Trigger: PR modifying `agents/*.md`
-- Action: Run validate-agent-memory-access.ps1
-- Gate: Block merge if unauthorized access detected
-
 **Workflow: validate-memory-notes.yml**
+
 - Trigger: PR modifying memory notes
 - Action: Run validate-memory-note.ps1
 - Gate: Block merge if validation fails
@@ -204,24 +200,29 @@ Agents to update:
 
 ## Migration Path
 
-### Phase 1: Documentation (Week 1) [IN PROGRESS]
-- [x] Create ADR-019
+### Phase 1: Documentation (Week 1) [COMPLETE]
+
+- [x] Create ADR-019 (validation-based governance)
 - [x] Update memory skill with governance section
 - [x] Create this design document
-- [ ] Update memory agent documentation
+- [x] Update to validation-based model (not access-control)
 
-### Phase 2: Agent Updates (Week 2)
-- [ ] Remove write tools from non-approved agents
-- [ ] Add delegation protocol to affected agents
-- [ ] Update agent tests
+### Phase 2: Verify Agent Definitions (Week 2)
+
+- [ ] Verify all agents have `write_note` and `edit_note` access
+- [ ] Add pre-flight validation guidance to agent prompts
+- [ ] Remove any delegation-to-memory requirements
+- [ ] Update agent documentation
 
 ### Phase 3: Validation Scripts (Week 3)
+
 - [ ] Create validate-memory-note.ps1
-- [ ] Create validate-agent-memory-access.ps1
-- [ ] Add CI workflows
+- [ ] Create audit-memory-violations.ps1
+- [ ] Add CI workflow for note validation
 - [ ] Add pre-commit hooks
 
 ### Phase 4: Cleanup (Week 4)
+
 - [ ] Audit existing notes for violations
 - [ ] Generate compliance report
 - [ ] Fix or archive non-compliant notes
@@ -233,10 +234,10 @@ Agents to update:
 
 | Metric | Target | Measurement |
 |--------|--------|-------------|
-| Agent compliance | 100% | No unauthorized write access |
-| Note compliance | 95% | Pre-flight validation pass rate |
-| Delegation success | 90% | Memory agent creates compliant notes |
+| Note compliance | 95% | Pre-flight validation pass rate (CI) |
 | Graph connectivity | 2+ relations/note | Average relations per note |
+| Audit violations | <10% | Post-hoc audit violation rate |
+| Agent autonomy | 100% | All agents can complete delegated work without sub-delegation |
 
 ---
 
@@ -244,10 +245,10 @@ Agents to update:
 
 | Risk | Impact | Mitigation |
 |------|--------|------------|
-| Memory agent bottleneck | Slow workflows | Batch delegation, async writes |
-| Agent friction | Developer pushback | Clear error messages, examples |
+| Agents skip validation | Governance debt | Post-hoc audit, CI enforcement |
 | Existing note violations | Technical debt | Phased cleanup, archive option |
 | Validation false positives | Blocked valid writes | Refinement based on feedback |
+| Complex operations lack guidance | Poor quality notes | Memory skill provides examples |
 
 ---
 

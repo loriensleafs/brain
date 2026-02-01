@@ -2035,6 +2035,7 @@ async function processGlobalConfigChange(
 **Issue**: Editor may trigger change event before file write completes. Reading partially-written file corrupts state.
 
 **Fix**: Three-layer defense:
+
 1. Increase `awaitWriteFinish.stabilityThreshold` to 1000ms (already applied above)
 2. Add checksum verification after read
 3. Skip processing if integrity check fails

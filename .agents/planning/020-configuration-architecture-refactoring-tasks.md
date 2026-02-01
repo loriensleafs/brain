@@ -10,6 +10,7 @@
 This task breakdown implements ADR-020, which refactors Brain's configuration architecture to hide basic-memory implementation details, adopt XDG-compliant paths, align terminology with "memories" (not "notes"), and migrate all .agents/ content into Brain's searchable memory system.
 
 **Round 2 Additions**:
+
 - File-watching capability (watcher.ts, diff.ts, rollback.ts)
 - Config change protocol (live reconfiguration)
 - CopyManifest for partial copy tracking
@@ -38,12 +39,14 @@ This task breakdown implements ADR-020, which refactors Brain's configuration ar
 Create TypeScript schema definitions and validation for Brain's config format at `~/.config/brain/config.json` using Zod.
 
 **Deliverables**:
+
 - [ ] `apps/mcp/src/config/schema.ts` - Zod schema definitions and TypeScript types
 - [ ] `apps/mcp/src/config/validator.ts` - Zod-based validation logic
 
 **Technology Note**: Uses Zod (already in dependencies at v3.25.0, used across 14 Brain files). No learning curve, consistent with existing codebase patterns.
 
 **Schema Definition**:
+
 ```typescript
 import { z } from "zod";
 
@@ -77,6 +80,7 @@ type BrainConfig = z.infer<typeof BrainConfigSchema>;
 ```
 
 **Acceptance Criteria**:
+
 - [ ] Zod schema validates all required fields
 - [ ] Type inference via `z.infer<typeof BrainConfigSchema>` works correctly
 - [ ] Validator using `safeParse()` rejects invalid configs (missing fields, wrong types)
@@ -88,6 +92,7 @@ type BrainConfig = z.infer<typeof BrainConfigSchema>;
   - Invalid path formats rejected
 
 **Test Cases**:
+
 - Valid config with all fields
 - Missing `version` field (FAIL)
 - Invalid `memories_mode` value (FAIL)
@@ -108,9 +113,11 @@ type BrainConfig = z.infer<typeof BrainConfigSchema>;
 Create security-focused path validation utilities to prevent directory traversal, null bytes, and system path access.
 
 **Deliverables**:
+
 - [ ] `apps/mcp/src/config/path-validator.ts` - Path validation functions
 
 **Validation Rules**:
+
 1. Reject paths containing `..` (directory traversal)
 2. Reject absolute paths to system directories (`/etc`, `/usr`, `/var`, `C:\Windows`)
 3. Reject paths with null bytes (`\0`)
@@ -119,6 +126,7 @@ Create security-focused path validation utilities to prevent directory traversal
 6. Reject paths outside user-accessible directories
 
 **Acceptance Criteria**:
+
 - [ ] `validatePath(path: string): ValidationResult` function
 - [ ] `normalizePath(path: string): string` function
 - [ ] `expandTilde(path: string): string` function
@@ -130,6 +138,7 @@ Create security-focused path validation utilities to prevent directory traversal
   - Tilde expansion works (`~` -> `/Users/peter`)
 
 **Test Cases**:
+
 - `~/memories` → Valid
 - `/Users/peter/memories` → Valid
 - `../etc/passwd` → Invalid (traversal)
@@ -152,9 +161,11 @@ Create security-focused path validation utilities to prevent directory traversal
 Implement atomic config read/write operations for `~/.config/brain/config.json` with file locking, temp files, and error handling.
 
 **Deliverables**:
+
 - [ ] `apps/mcp/src/config/brain-config.ts` - Config CRUD operations
 
 **Functions**:
+
 ```typescript
 function loadBrainConfig(): BrainConfig;
 function saveBrainConfig(config: BrainConfig): void;
@@ -163,16 +174,19 @@ function initBrainConfig(): void; // Create with defaults if missing
 ```
 
 **Atomicity Requirements**:
+
 1. Write to `config.json.tmp`
 2. Validate JSON structure via schema
 3. Atomic rename: `rename(config.json.tmp, config.json)`
 4. On failure: remove temp file, throw error
 
 **File Permissions**:
+
 - `~/.config/brain/` → 0700
 - `~/.config/brain/config.json` → 0600
 
 **Acceptance Criteria**:
+
 - [ ] `loadBrainConfig()` reads from `~/.config/brain/config.json`
 - [ ] `saveBrainConfig()` uses atomic write (temp + rename)
 - [ ] Missing config returns defaults (not error)
@@ -189,6 +203,7 @@ function initBrainConfig(): void; // Create with defaults if missing
   - Atomic write verified (temp file cleaned up)
 
 **Test Cases**:
+
 - Load missing config → defaults returned
 - Load valid config → parsed config
 - Load invalid JSON → error with parse details
@@ -209,15 +224,18 @@ function initBrainConfig(): void; // Create with defaults if missing
 Create one-way translation from Brain config to basic-memory config with field mapping and error handling.
 
 **Deliverables**:
+
 - [ ] `apps/mcp/src/config/translation-layer.ts` - Translation logic
 
 **Functions**:
+
 ```typescript
 function translateBrainToBasicMemory(brainConfig: BrainConfig): BasicMemoryConfig;
 function syncToBasicMemory(brainConfig: BrainConfig): void;
 ```
 
 **Field Mapping**:
+
 | Brain Field | basic-memory Field | Transform |
 |-------------|-------------------|-----------|
 | `defaults.memories_location` | (none) | Brain-only |
@@ -229,11 +247,13 @@ function syncToBasicMemory(brainConfig: BrainConfig): void;
 | `logging.level` | `log_level` | Direct map |
 
 **Memories Mode Resolution**:
+
 - `DEFAULT`: `${memories_location}/${project_name}`
 - `CODE`: `${code_path}/docs`
 - `CUSTOM`: Explicit `memories_path` value
 
 **Acceptance Criteria**:
+
 - [ ] Translation maps all fields correctly
 - [ ] Mode resolution works for DEFAULT, CODE, CUSTOM
 - [ ] basic-memory config written atomically
@@ -247,6 +267,7 @@ function syncToBasicMemory(brainConfig: BrainConfig): void;
   - Sync failure logs warning but continues
 
 **Test Cases**:
+
 - DEFAULT mode: `~/memories` + `brain` → `~/memories/brain`
 - CODE mode: `/Users/peter/Dev/brain` → `/Users/peter/Dev/brain/docs`
 - CUSTOM mode: `~/custom/path` → `~/custom/path`
@@ -267,6 +288,7 @@ function syncToBasicMemory(brainConfig: BrainConfig): void;
 Replace 7 hardcoded `~/memories` fallback instances with config reads.
 
 **Files to Update**:
+
 | File | Line | Current | Action |
 |------|------|---------|--------|
 | `apps/mcp/src/project/config.ts` | 43 | `"~/memories"` | Read from Brain config |
@@ -277,6 +299,7 @@ Replace 7 hardcoded `~/memories` fallback instances with config reads.
 | `apps/mcp/src/tools/projects/edit/index.ts` | 350 | `"~/memories"` | Read from Brain config |
 
 **Acceptance Criteria**:
+
 - [ ] All 6 instances replaced with config reads
 - [ ] Test files keep hardcoded values (fixture data)
 - [ ] Default value from config: `defaults.memories_location`
@@ -284,6 +307,7 @@ Replace 7 hardcoded `~/memories` fallback instances with config reads.
 - [ ] Integration tests verify config reading
 
 **Test Cases**:
+
 - Config has `memories_location: "~/custom"` → uses `~/custom`
 - Config missing → fallback to `~/memories`
 
@@ -301,6 +325,7 @@ Replace 7 hardcoded `~/memories` fallback instances with config reads.
 Rename all `notes_path`, `default_notes_path`, and related terminology to `memories_*` across TypeScript codebase.
 
 **Files to Update**:
+
 | File | Changes |
 |------|---------|
 | `apps/mcp/src/project/config.ts` | `default_notes_path` → `default_memories_location` |
@@ -311,6 +336,7 @@ Rename all `notes_path`, `default_notes_path`, and related terminology to `memor
 | Test files (`*.test.ts`) | All `notes_path` references |
 
 **Acceptance Criteria**:
+
 - [ ] All TypeScript files updated
 - [ ] Schema definitions updated
 - [ ] Function names updated
@@ -320,11 +346,13 @@ Rename all `notes_path`, `default_notes_path`, and related terminology to `memor
 - [ ] No grep hits for `notes_path` in TypeScript (except comments)
 
 **Verification Command**:
+
 ```bash
 grep -r "notes_path" apps/mcp/src --include="*.ts" | grep -v "// Legacy:"
 ```
 
 **Test Cases**:
+
 - Grep returns zero results (excluding legacy comments)
 - All unit tests pass
 - All integration tests pass
@@ -343,9 +371,11 @@ grep -r "notes_path" apps/mcp/src --include="*.ts" | grep -v "// Legacy:"
 Comprehensive unit tests for translation layer covering all field mappings, mode resolution, and error cases.
 
 **Test File**:
+
 - [ ] `apps/mcp/src/config/__tests__/translation-layer.test.ts`
 
 **Test Coverage** (target: 90%):
+
 - [ ] DEFAULT mode resolution
 - [ ] CODE mode resolution
 - [ ] CUSTOM mode resolution
@@ -360,6 +390,7 @@ Comprehensive unit tests for translation layer covering all field mappings, mode
 - [ ] Path normalization
 
 **Acceptance Criteria**:
+
 - [ ] All test cases pass
 - [ ] Code coverage: 90%+
 - [ ] Edge cases covered (empty projects, missing fields)
@@ -380,9 +411,11 @@ Comprehensive unit tests for translation layer covering all field mappings, mode
 Implement ConfigFileWatcher class using chokidar to detect manual edits to `~/.config/brain/config.json` and trigger live reconfiguration.
 
 **Deliverables**:
+
 - [ ] `apps/mcp/src/config/watcher.ts` - ConfigFileWatcher class
 
 **Features**:
+
 ```typescript
 class ConfigFileWatcher {
   private watcher: FSWatcher | null = null;
@@ -398,6 +431,7 @@ class ConfigFileWatcher {
 ```
 
 **Behavior**:
+
 1. Watch `~/.config/brain/config.json` for changes
 2. Debounce events (2 seconds) to avoid editor chunked writes
 3. Validate new config via schema validator
@@ -407,6 +441,7 @@ class ConfigFileWatcher {
 7. If invalid: log error, rollback to last known good
 
 **Acceptance Criteria**:
+
 - [ ] Watcher starts on MCP server init
 - [ ] Debouncing handles editor chunked writes
 - [ ] Schema validation prevents invalid configs
@@ -420,6 +455,7 @@ class ConfigFileWatcher {
   - Queue behavior during migration
 
 **Test Cases**:
+
 - Valid edit → reconfiguration triggered
 - Invalid edit → rejected, last known good restored
 - Edit during migration → queued, processed after
@@ -439,9 +475,11 @@ class ConfigFileWatcher {
 Implement config diff detection to identify which projects/fields changed between config versions.
 
 **Deliverables**:
+
 - [ ] `apps/mcp/src/config/diff.ts` - detectConfigDiff function
 
 **Functions**:
+
 ```typescript
 interface ConfigDiff {
   projectsAdded: string[];
@@ -454,12 +492,14 @@ function detectConfigDiff(oldConfig: BrainConfig, newConfig: BrainConfig): Confi
 ```
 
 **Detection Logic**:
+
 - Projects added: in new config but not old
 - Projects removed: in old config but not new
 - Projects modified: field changes (code_path, memories_path, memories_mode)
 - Global fields changed: defaults, sync, logging
 
 **Acceptance Criteria**:
+
 - [ ] Detects added projects
 - [ ] Detects removed projects
 - [ ] Detects modified project fields
@@ -473,6 +513,7 @@ function detectConfigDiff(oldConfig: BrainConfig, newConfig: BrainConfig): Confi
   - Identical configs (no diff)
 
 **Test Cases**:
+
 - Add project → projectsAdded populated
 - Remove project → projectsRemoved populated
 - Change code_path → projectsModified populated
@@ -493,9 +534,11 @@ function detectConfigDiff(oldConfig: BrainConfig, newConfig: BrainConfig): Confi
 Implement ConfigRollbackManager to snapshot configs and rollback on migration failures or invalid edits.
 
 **Deliverables**:
+
 - [ ] `apps/mcp/src/config/rollback.ts` - ConfigRollbackManager class
 
 **Features**:
+
 ```typescript
 class ConfigRollbackManager {
   private lastKnownGood: BrainConfig | null = null;
@@ -509,17 +552,20 @@ class ConfigRollbackManager {
 ```
 
 **Snapshot Strategy**:
+
 - `lastKnownGood`: Baseline config established on MCP server startup
 - `rollbackHistory`: Array of snapshots (max 10, FIFO)
 - Snapshots stored in `~/.config/brain/rollback/` directory
 
 **Rollback Triggers**:
+
 - Migration failure (any phase)
 - Invalid manual edit detected
 - Indexing verification failure
 - Partial write detected
 
 **Acceptance Criteria**:
+
 - [ ] Initialize loads lastKnownGood from disk
 - [ ] Snapshot saves config to rollback directory
 - [ ] Rollback restores config and syncs to basic-memory
@@ -533,6 +579,7 @@ class ConfigRollbackManager {
   - FIFO eviction when >10 snapshots
 
 **Test Cases**:
+
 - Initialize → loads lastKnownGood from disk
 - Snapshot → config persisted to rollback directory
 - Rollback to lastKnownGood → baseline restored
@@ -553,9 +600,11 @@ class ConfigRollbackManager {
 Implement hierarchical locking (global lock + project locks) to prevent concurrent migrations and config changes.
 
 **Deliverables**:
+
 - [ ] `apps/mcp/src/config/lock.ts` - Locking utilities
 
 **Functions**:
+
 ```typescript
 class LockManager {
   async acquireGlobalLock(): Promise<boolean>;
@@ -568,11 +617,13 @@ class LockManager {
 ```
 
 **Lock Hierarchy**:
+
 - **Global lock**: Required for multi-project migrations, config schema changes
 - **Project lock**: Required for single-project migrations
 - **Rule**: Global lock blocks all project locks; project locks don't block each other
 
 **Acceptance Criteria**:
+
 - [ ] Global lock acquisition blocks project locks
 - [ ] Project locks don't block each other
 - [ ] Lock release works correctly
@@ -585,6 +636,7 @@ class LockManager {
   - Timeout behavior
 
 **Test Cases**:
+
 - Acquire global lock → project lock blocked
 - Acquire project lock A → project lock B succeeds
 - Global lock timeout → error after 30s
@@ -604,9 +656,11 @@ class LockManager {
 Implement CopyManifest to track file copy progress with checksums for integrity verification and partial rollback.
 
 **Deliverables**:
+
 - [ ] `apps/mcp/src/config/copy-manifest.ts` - Manifest tracking
 
 **Interfaces**:
+
 ```typescript
 interface CopyManifestEntry {
   sourcePath: string;
@@ -629,6 +683,7 @@ interface CopyManifest {
 ```
 
 **Functions**:
+
 ```typescript
 async function createCopyManifest(project: string, sourceRoot: string, targetRoot: string, files: string[]): Promise<CopyManifest>;
 async function markEntryCopied(manifest: CopyManifest, entry: CopyManifestEntry): Promise<void>;
@@ -638,6 +693,7 @@ async function recoverIncompleteMigrations(): Promise<void>;
 ```
 
 **Manifest Lifecycle**:
+
 1. **Before copy starts**: Create manifest with all source files and checksums
 2. **After each file copied**: Mark entry as 'copied', compute target checksum
 3. **After copy completes**: Verify all entries, mark as 'verified'
@@ -645,6 +701,7 @@ async function recoverIncompleteMigrations(): Promise<void>;
 5. **On MCP startup**: Detect incomplete manifests, trigger rollback
 
 **Acceptance Criteria**:
+
 - [ ] Manifest created before copy starts
 - [ ] Entries updated after each file copied
 - [ ] Checksum verification works
@@ -658,6 +715,7 @@ async function recoverIncompleteMigrations(): Promise<void>;
   - Crash recovery
 
 **Test Cases**:
+
 - Create manifest → all entries 'pending', source checksums computed
 - Mark entry copied → status 'copied', target checksum computed
 - Verify entry → checksums match
@@ -678,9 +736,11 @@ async function recoverIncompleteMigrations(): Promise<void>;
 Implement checksum verification to detect partial file writes from editor crashes or interruptions.
 
 **Deliverables**:
+
 - [ ] `apps/mcp/src/config/integrity.ts` - Checksum utilities
 
 **Functions**:
+
 ```typescript
 async function computeFileChecksum(filePath: string): Promise<string>;
 async function verifyFileIntegrity(filePath: string, expectedChecksum: string): Promise<boolean>;
@@ -688,6 +748,7 @@ async function detectPartialWrite(filePath: string, delayMs: number): Promise<bo
 ```
 
 **Partial Write Detection**:
+
 1. Read file checksum at T=0
 2. Wait `delayMs` (default 500ms)
 3. Read file checksum at T=delayMs
@@ -695,6 +756,7 @@ async function detectPartialWrite(filePath: string, delayMs: number): Promise<bo
 5. If checksums match: file stable
 
 **Acceptance Criteria**:
+
 - [ ] Checksum computation uses SHA-256
 - [ ] Integrity verification compares checksums
 - [ ] Partial write detection waits for file stability
@@ -704,6 +766,7 @@ async function detectPartialWrite(filePath: string, delayMs: number): Promise<bo
   - Partial write detection (stable/unstable)
 
 **Test Cases**:
+
 - Compute checksum → SHA-256 hash returned
 - Verify integrity (match) → true
 - Verify integrity (mismatch) → false
@@ -725,9 +788,11 @@ async function detectPartialWrite(filePath: string, delayMs: number): Promise<bo
 Scan and categorize all existing .agents/ content to determine migration scope and category mapping.
 
 **Deliverables**:
+
 - [ ] Migration inventory document (in session log)
 
 **Inventory Fields**:
+
 - File path
 - Category (sessions, analysis, architecture, planning, etc.)
 - File size
@@ -736,12 +801,14 @@ Scan and categorize all existing .agents/ content to determine migration scope a
 - Proposed memory category
 
 **Acceptance Criteria**:
+
 - [ ] All .agents/ files cataloged
 - [ ] Category mapping verified against ADR-020
 - [ ] File count reported per category
 - [ ] Total migration size estimated
 
 **Expected Categories**:
+
 | Source Directory | Brain Memory Category | Estimated Count |
 |-----------------|----------------------|-----------------|
 | `.agents/sessions/` | `sessions` | 50+ |
@@ -769,11 +836,13 @@ Scan and categorize all existing .agents/ content to determine migration scope a
 Create transactional migration logic in MCP server to migrate .agents/ content to Brain memory via basic-memory with rollback support.
 
 **Deliverables**:
+
 - [ ] `apps/mcp/src/tools/migrate/migrate-agents.ts` - Migration logic
 - [ ] `apps/mcp/src/tools/migrate/schema.ts` - Tool schema
 - [ ] `apps/mcp/src/config/migration-transaction.ts` - Transactional wrapper
 
 **Functions**:
+
 ```typescript
 async function migrateAgentsContent(project: string, dryRun: boolean): Promise<MigrationResult>;
 function scanAgentsDirectory(agentsPath: string): AgentsFile[];
@@ -783,6 +852,7 @@ async function verifyIndexing(title: string, content: string): Promise<boolean>;
 ```
 
 **Category Mapping** (from ADR-020):
+
 - `.agents/sessions/` → `sessions` category
 - `.agents/analysis/` → `analysis` category
 - `.agents/architecture/` → `architecture` category
@@ -796,11 +866,13 @@ async function verifyIndexing(title: string, content: string): Promise<boolean>;
 - `.agents/governance/` → `governance` category
 
 **Title Transformation**:
+
 - `.agents/sessions/2026-01-31-session-44-topic.md` → `session-2026-01-31-44-topic`
 - `.agents/architecture/ADR-020-title.md` → `ADR-020-title`
 - `.agents/planning/001-feature-plan.md` → `plan-001-feature`
 
 **Migration Phases** (transactional):
+
 1. **Acquire lock**: Project lock for single-project, global lock for multi-project
 2. **Create manifest**: Track all files with source checksums
 3. **Scan**: Read `.agents/` directory in project root
@@ -813,6 +885,7 @@ async function verifyIndexing(title: string, content: string): Promise<boolean>;
 10. **Release lock**: Always release, even on failure
 
 **Rollback Triggers**:
+
 - Lock acquisition fails
 - Manifest creation fails
 - Any file copy fails
@@ -820,6 +893,7 @@ async function verifyIndexing(title: string, content: string): Promise<boolean>;
 - Partial write detected
 
 **Acceptance Criteria**:
+
 - [ ] Dry-run mode reports migration plan without executing
 - [ ] Migration writes all files to Brain memory
 - [ ] Category mapping correct for all directories
@@ -840,6 +914,7 @@ async function verifyIndexing(title: string, content: string): Promise<boolean>;
   - Lock acquisition/release
 
 **Test Cases**:
+
 - Dry-run: report files, don't migrate
 - Migrate session log: category=sessions, title transformed
 - Migrate ADR: category=architecture, title preserved
@@ -861,9 +936,11 @@ async function verifyIndexing(title: string, content: string): Promise<boolean>;
 Implement indexing verification to ensure all migrated memories are searchable by basic-memory.
 
 **Deliverables**:
+
 - [ ] `apps/mcp/src/tools/migrate/verify-indexing.ts` - Verification logic
 
 **Verification Steps**:
+
 ```typescript
 async function verifyIndexing(memory: MigratedMemory): Promise<boolean> {
   // 1. Search for the exact title
@@ -887,6 +964,7 @@ async function verifyIndexing(memory: MigratedMemory): Promise<boolean> {
 ```
 
 **Acceptance Criteria**:
+
 - [ ] Verification searches for exact title
 - [ ] Verification checks content match (first 100 chars)
 - [ ] Verification returns boolean (pass/fail)
@@ -898,6 +976,7 @@ async function verifyIndexing(memory: MigratedMemory): Promise<boolean> {
   - Content mismatch fails
 
 **Test Cases**:
+
 - Memory indexed and content matches → PASS
 - Memory not indexed → FAIL
 - Memory indexed but content differs → FAIL
@@ -916,9 +995,11 @@ async function verifyIndexing(memory: MigratedMemory): Promise<boolean> {
 Implement config migration from old format (`~/.basic-memory/brain-config.json`) to new format (`~/.config/brain/config.json`).
 
 **Deliverables**:
+
 - [ ] `apps/mcp/src/config/migration.ts` - Config migration logic
 
 **Functions**:
+
 ```typescript
 async function migrateConfig(dryRun: boolean, cleanup: boolean): Promise<MigrationResult>;
 function detectOldConfig(): boolean;
@@ -927,6 +1008,7 @@ function removeDeprecatedFiles(cleanup: boolean): void;
 ```
 
 **Old Format** (`.basic-memory/brain-config.json`):
+
 ```json
 {
   "code_paths": {
@@ -937,6 +1019,7 @@ function removeDeprecatedFiles(cleanup: boolean): void;
 ```
 
 **New Format** (`.config/brain/config.json`):
+
 ```json
 {
   "$schema": "https://brain.dev/schemas/config-v2.json",
@@ -962,6 +1045,7 @@ function removeDeprecatedFiles(cleanup: boolean): void;
 ```
 
 **Migration Steps**:
+
 1. Detect `~/.basic-memory/brain-config.json` (old location)
 2. Transform old config to new schema
 3. Create `~/.config/brain/` directory with 0700 permissions
@@ -970,11 +1054,13 @@ function removeDeprecatedFiles(cleanup: boolean): void;
 6. If `--cleanup`: remove deprecated files
 
 **Deprecated Files to Remove**:
+
 - `~/.basic-memory/brain-config.json`
 - `~/.brain/projects.json`
 - `~/.brain/` directory (if empty)
 
 **Acceptance Criteria**:
+
 - [ ] Detects old config location
 - [ ] Transforms old format to new format
 - [ ] Creates new config directory with correct permissions
@@ -989,6 +1075,7 @@ function removeDeprecatedFiles(cleanup: boolean): void;
   - Cleanup removes files
 
 **Test Cases**:
+
 - Old config exists → migrated to new location
 - Old config missing → no-op
 - Dry-run → report plan, no changes
@@ -1009,17 +1096,20 @@ function removeDeprecatedFiles(cleanup: boolean): void;
 Update memory agent to use Brain MCP tools exclusively and remove all .agents/ file system references.
 
 **Files to Update**:
+
 - [ ] `src/claude/memory.md` (Claude Code agent)
 - [ ] `src/vs-code-agents/memory.agent.md` (VS Code agent)
 - [ ] `src/copilot-cli/memory.agent.md` (Copilot CLI agent)
 
 **Changes**:
+
 1. Remove `.agents/` path references
 2. Add Brain MCP tool examples
 3. Update memory delegation protocol
 4. Add category-based storage examples
 
 **Acceptance Criteria**:
+
 - [ ] No `.agents/` path references in agent instructions
 - [ ] Brain MCP tools documented
 - [ ] Memory delegation protocol clear
@@ -1039,15 +1129,18 @@ Update memory agent to use Brain MCP tools exclusively and remove all .agents/ f
 Update memory skill to delegate to Brain memory system exclusively (no file system operations on .agents/).
 
 **Files to Update**:
+
 - [ ] `.claude/skills/memory/SKILL.md`
 - [ ] `.claude/skills/memory/scripts/*.ps1` (if any file system operations exist)
 
 **Changes**:
+
 1. Replace file system operations with Brain MCP tool calls
 2. Update skill examples to use memory categories
 3. Remove `.agents/` path handling
 
 **Acceptance Criteria**:
+
 - [ ] No file system operations on `.agents/` directory
 - [ ] Brain MCP tool delegation documented
 - [ ] Examples use memory categories
@@ -1066,6 +1159,7 @@ Update memory skill to delegate to Brain memory system exclusively (no file syst
 Update all agent instructions to remove .agents/ path references and use Brain memory delegation patterns.
 
 **Agents to Update**:
+
 | Agent | File | Changes |
 |-------|------|---------|
 | orchestrator | `src/claude/orchestrator.md` | Remove `.agents/HANDOFF.md` refs, use `brain.readNote("handoff")` |
@@ -1078,6 +1172,7 @@ Update all agent instructions to remove .agents/ path references and use Brain m
 | skillbook | `src/claude/skillbook.md` | Remove `.agents/skills/` refs, use `brain.writeNote(title, content, "skills")` |
 
 **Pattern Changes**:
+
 - Old: `Write to .agents/planning/001-feature-plan.md`
 - New: `brain.writeNote("plan-001-feature", content, "planning")`
 
@@ -1085,6 +1180,7 @@ Update all agent instructions to remove .agents/ path references and use Brain m
 - New: `brain.readNote("handoff")`
 
 **Acceptance Criteria**:
+
 - [ ] All agent instructions updated (8 agents minimum)
 - [ ] No `.agents/` path references in agent instructions
 - [ ] Brain memory delegation patterns documented
@@ -1104,16 +1200,19 @@ Update all agent instructions to remove .agents/ path references and use Brain m
 Update SESSION-PROTOCOL.md to reflect Brain memory usage for session logs and HANDOFF.md replacement.
 
 **Files to Update**:
+
 - [ ] `.agents/SESSION-PROTOCOL.md`
 - [ ] `CLAUDE.md` (session protocol quick reference)
 
 **Changes**:
+
 1. Session log creation: `brain.writeNote("session-YYYY-MM-DD-NN-topic", initialContent, "sessions")`
 2. Session updates: `brain.editNote("session-...", "append", updateContent)`
 3. HANDOFF.md access: `brain.readNote("handoff")`
 4. Remove `.agents/sessions/` path references
 
 **Acceptance Criteria**:
+
 - [ ] Session protocol updated for Brain memory
 - [ ] HANDOFF.md replacement documented
 - [ ] Session log patterns updated
@@ -1135,9 +1234,11 @@ Update SESSION-PROTOCOL.md to reflect Brain memory usage for session logs and HA
 Implement `brain config` command family in Go CLI, delegating all operations to MCP server with live reconfiguration support.
 
 **Deliverables**:
+
 - [ ] `apps/tui/cmd/config.go` - Config command implementation
 
 **Commands to Implement**:
+
 ```bash
 brain config                                  # Pretty-printed view
 brain config --json                           # Machine-readable JSON
@@ -1151,6 +1252,7 @@ brain config reset --all
 ```
 
 **MCP Tool Delegation**:
+
 - `brain config` → `config_get` tool (all fields)
 - `brain config set <key> <value>` → `config_set` tool (triggers reconfiguration)
 - `brain config get <key>` → `config_get` tool (specific field)
@@ -1158,6 +1260,7 @@ brain config reset --all
 - `brain config reset --all` → `config_reset` tool (all fields)
 
 **Acceptance Criteria**:
+
 - [ ] All commands implemented
 - [ ] Delegation to MCP server works
 - [ ] Pretty-printed output for `brain config`
@@ -1174,6 +1277,7 @@ brain config reset --all
   - Reset all
 
 **Test Cases**:
+
 - `brain config` → pretty-printed config
 - `brain config --json` → JSON output
 - `brain config set logging.level debug` → updated + reconfiguration
@@ -1193,15 +1297,18 @@ brain config reset --all
 Rename CLI flags from `--notes-path` to `--memories-path` and `--delete-notes` to `--delete-memories`.
 
 **Files to Update**:
+
 - [ ] `apps/tui/cmd/projects.go`
 
 **Flag Renames**:
+
 | Old Flag | New Flag |
 |----------|----------|
 | `--notes-path` | `--memories-path` |
 | `--delete-notes` | `--delete-memories` |
 
 **Acceptance Criteria**:
+
 - [ ] All flag references updated
 - [ ] Help text updated
 - [ ] Examples in help text use new flags
@@ -1210,6 +1317,7 @@ Rename CLI flags from `--notes-path` to `--memories-path` and `--delete-notes` t
 - [ ] All tests pass
 
 **Test Cases**:
+
 - `brain projects create --name X --code-path Y --memories-path Z` → works
 - `brain projects delete --project X --delete-memories` → works
 - `brain projects create --name X --code-path Y --notes-path Z` → warning + works (backward compat)
@@ -1227,9 +1335,11 @@ Rename CLI flags from `--notes-path` to `--memories-path` and `--delete-notes` t
 Implement migration commands in Go CLI, delegating to MCP server with rollback support.
 
 **Deliverables**:
+
 - [ ] `apps/tui/cmd/migrate.go` - Migration commands
 
 **Commands to Implement**:
+
 ```bash
 brain migrate [--dry-run] [--cleanup]
 brain migrate-agents [--project <name>] [--dry-run]
@@ -1238,12 +1348,14 @@ brain rollback [--target lastKnownGood|previous]
 ```
 
 **MCP Tool Delegation**:
+
 - `brain migrate` → `migrate_config` tool
 - `brain migrate-agents` → `migrate_agents_content` tool
 - `brain migrate-agents --verify-only` → `verify_agents_indexing` tool
 - `brain rollback` → `rollback_config` tool
 
 **Acceptance Criteria**:
+
 - [ ] All commands implemented
 - [ ] Dry-run mode reports plan without execution
 - [ ] Cleanup flag removes deprecated files
@@ -1259,6 +1371,7 @@ brain rollback [--target lastKnownGood|previous]
   - Rollback to previous
 
 **Test Cases**:
+
 - `brain migrate --dry-run` → report plan, no changes
 - `brain migrate` → config migrated
 - `brain migrate --cleanup` → deprecated files removed
@@ -1282,6 +1395,7 @@ brain rollback [--target lastKnownGood|previous]
 Create MCP tools for config operations (get, set, reset) to support CLI delegation with reconfiguration triggers.
 
 **Deliverables**:
+
 - [ ] `apps/mcp/src/tools/config/get.ts`
 - [ ] `apps/mcp/src/tools/config/set.ts`
 - [ ] `apps/mcp/src/tools/config/reset.ts`
@@ -1289,6 +1403,7 @@ Create MCP tools for config operations (get, set, reset) to support CLI delegati
 - [ ] Schemas for each tool
 
 **Tool Signatures**:
+
 ```typescript
 config_get(key?: string): BrainConfig | unknown
 config_set(key: string, value: unknown): void // triggers reconfiguration
@@ -1297,10 +1412,12 @@ config_rollback(target: 'lastKnownGood' | 'previous'): RollbackResult
 ```
 
 **Reconfiguration Triggers**:
+
 - `config_set`: Triggers ConfigFileWatcher diff detection and migration
 - `config_reset`: Triggers reconfiguration if field affects projects
 
 **Acceptance Criteria**:
+
 - [ ] All tools implemented
 - [ ] Schemas defined
 - [ ] Set/reset trigger reconfiguration when needed
@@ -1324,11 +1441,13 @@ config_rollback(target: 'lastKnownGood' | 'previous'): RollbackResult
 End-to-end integration tests for config operations, migration, CLI commands, and file-watching.
 
 **Test Files**:
+
 - [ ] `apps/mcp/src/config/__tests__/integration.test.ts`
 - [ ] `apps/tui/cmd/config_test.go`
 - [ ] `apps/tui/cmd/migrate_test.go`
 
 **Test Scenarios**:
+
 1. Config set/get round-trip
 2. Translation to basic-memory verified
 3. Migration dry-run and execution
@@ -1341,6 +1460,7 @@ End-to-end integration tests for config operations, migration, CLI commands, and
 10. CopyManifest tracks partial migrations
 
 **Acceptance Criteria**:
+
 - [ ] All integration tests pass
 - [ ] Coverage: 80%+
 - [ ] CI pipeline updated to run integration tests
@@ -1358,6 +1478,7 @@ End-to-end integration tests for config operations, migration, CLI commands, and
 Update all user-facing documentation to reflect new config architecture, CLI commands, and file-watching behavior.
 
 **Files to Update**:
+
 - [ ] `README.md` - Config location and migration
 - [ ] `CLAUDE.md` - Session protocol and memory delegation
 - [ ] `apps/tui/README.md` - CLI command updates
@@ -1365,6 +1486,7 @@ Update all user-facing documentation to reflect new config architecture, CLI com
 - [ ] `docs/` - Architecture diagrams (if any)
 
 **Acceptance Criteria**:
+
 - [ ] All docs reference `~/.config/brain/config.json`
 - [ ] Migration instructions documented
 - [ ] New CLI commands documented

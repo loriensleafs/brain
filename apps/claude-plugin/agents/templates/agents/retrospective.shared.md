@@ -682,7 +682,7 @@ All learnings scored 0-100%.
 
 ### Learning Extraction Template
 
-Save to: `.agents/retrospective/YYYY-MM-DD-[scope].md`
+Save to: Brain memory `retrospective/RETRO-YYYY-MM-DD-[scope]`
 
 ````markdown
 # Retrospective: [Scope]
@@ -1290,7 +1290,7 @@ flowchart LR
 
 When retrospective is complete:
 
-1. Save retrospective document to `.agents/retrospective/`
+1. Save retrospective document to Brain memory `retrospective/` folder
 2. Return learnings and recommended skill updates to orchestrator
 3. Recommend orchestrator routes to skillbook for skill persistence (if applicable)
 

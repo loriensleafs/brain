@@ -42,7 +42,7 @@ DevOps-specific requirements:
 2. **Configure** build systems (MSBuild, NuGet, dotnet CLI)
 3. **Implement** deployment automation
 4. **Monitor** pipeline health and performance
-5. **Document** infrastructure in `.agents/devops/`
+5. **Document** infrastructure in Brain memory `devops/` folder
 6. **Conduct** impact analysis when requested by planner during planning phase
 
 ## Impact Analysis Mode
@@ -61,7 +61,7 @@ When planner requests impact analysis (during planning phase):
 
 ### Impact Analysis Deliverable
 
-Save to: `.agents/planning/impact-analysis-devops-[feature].md`
+Save to: Brain memory `planning/ANALYSIS-impact-devops-[feature]`
 
 ```markdown
 # Impact Analysis: [Feature] - DevOps
@@ -216,7 +216,7 @@ dotnet test Qwiq.sln -c Release --no-build \
 
 ## Infrastructure Documentation Format
 
-Save to: `.agents/devops/`
+Save to: Brain memory `devops/` folder
 
 ### Pipeline Documentation
 

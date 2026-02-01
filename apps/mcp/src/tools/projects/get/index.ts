@@ -2,7 +2,7 @@
  * get_project_details tool implementation
  *
  * Gets detailed information about a specific project including
- * notes path, code path, and whether it's currently active.
+ * memories path, code path, and whether it's currently active.
  */
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import * as fs from "fs";
@@ -68,9 +68,9 @@ async function getAvailableProjects(): Promise<string[]> {
 }
 
 /**
- * Get notes path for a project from basic-memory config
+ * Get memories path for a project from basic-memory config
  */
-function getNotesPath(project: string): string | null {
+function getMemoriesPath(project: string): string | null {
   const configPath = path.join(os.homedir(), ".basic-memory", "config.json");
   try {
     if (fs.existsSync(configPath)) {
@@ -89,11 +89,11 @@ function getNotesPath(project: string): string | null {
 export async function handler(args: GetProjectDetailsArgs): Promise<CallToolResult> {
   const { project } = args;
 
-  // Get notes path from basic-memory config
-  const notesPath = getNotesPath(project);
+  // Get memories path from basic-memory config
+  const memoriesPath = getMemoriesPath(project);
 
   // If project doesn't exist, return error with available projects
-  if (!notesPath) {
+  if (!memoriesPath) {
     const availableProjects = await getAvailableProjects();
     return {
       content: [
@@ -122,7 +122,7 @@ export async function handler(args: GetProjectDetailsArgs): Promise<CallToolResu
 
   const response = {
     project,
-    notes_path: notesPath,
+    memories_path: memoriesPath,
     code_path: codePath || null,
     isActive,
   };

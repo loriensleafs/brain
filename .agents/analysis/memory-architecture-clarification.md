@@ -37,6 +37,7 @@ From `apps/mcp/src/tools/projects/create/schema.ts`:
 ### Dual-Write Pattern (DEPRECATED)
 
 Current agents write to:
+
 1. `.agents/` folder (filesystem)
 2. Brain memory (via MCP tools)
 
@@ -74,6 +75,7 @@ Agent → Brain MCP → Physical Storage (based on project config)
 ### Original Purpose (Legacy)
 
 Before Brain memory existed, `.agents/` was the artifact storage location. This was:
+
 - Git-versioned (always)
 - File-based (direct writes)
 - Agent-managed (each agent had write permissions)
@@ -89,6 +91,7 @@ Before Brain memory existed, `.agents/` was the artifact storage location. This 
 ### Recommendation: Option B - Freeze Legacy
 
 Rationale:
+
 1. Preserves historical context without migration complexity
 2. Clean break for new work
 3. Gradual deprecation reduces risk
@@ -127,18 +130,23 @@ folder: "decisions"
 title: "ADR-001 Database Selection"
 content: "[ADR content with frontmatter, observations, relations]"
 ```
+
 ```
 
-### Memory Agent Delegation
+### Direct Write (All Agents)
 
-For complex operations, delegate to memory agent:
+All agents can write directly after completing pre-flight validation:
 
 ```text
-Return to orchestrator: "Recommend routing to memory agent to persist ADR-001"
-
-Orchestrator then:
-Task(subagent_type="memory", prompt="Create ADR-001 for database selection decision...")
+# All agents can write - no delegation required
+# Complete pre-flight validation checklist first
+mcp__plugin_brain_brain__write_note
+folder: "decisions"
+title: "ADR-001 Database Selection"
+content: "[ADR content with frontmatter, observations, relations]"
 ```
+
+**Note**: Per ADR-019, delegation to memory agent is NOT required. All agents retain write access and use validation-based governance.
 
 ## Enforcement Approach (Simplified)
 
@@ -159,13 +167,15 @@ Task(subagent_type="memory", prompt="Create ADR-001 for database selection decis
 ### Constraints Update
 
 **Remove from agent instructions**:
+
 - `Save to: .agents/...` patterns
 - `Edit only .agents/...` constraints
 - File path specifications for artifacts
 
 **Add to agent instructions**:
+
 - `Use Brain memory skill for artifact persistence`
-- `Delegate to memory agent for complex operations`
+- `Complete pre-flight validation before writes`
 - `Physical storage controlled by project configuration`
 
 ## Files Requiring Updates
@@ -216,6 +226,7 @@ Based on grep analysis, these files contain `.agents/` references:
 ### Phase 2: Update Agent Instructions
 
 For each agent:
+
 1. Remove `.agents/` output paths
 2. Add Brain memory skill usage
 3. Add memory agent delegation option

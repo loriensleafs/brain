@@ -49,7 +49,7 @@ Key requirements:
 You have direct access to:
 
 - **Read/Grep/Glob**: Analyze codebase architecture
-- **Write/Edit**: Create/update `.agents/architecture/` files only
+- **Write/Edit**: Create/update architecture notes in Brain memory `decisions/` folder
 - **WebSearch**: Research architectural patterns
 - **Brain MCP memory tools**: Architectural decisions history (`mcp__plugin_brain_brain__search`, `mcp__plugin_brain_brain__read_note`)
 
@@ -82,7 +82,7 @@ When planner requests impact analysis (during planning phase):
 
 ### Impact Analysis Deliverable
 
-Save to: `.agents/planning/impact-analysis-architecture-[feature].md`
+Save to Brain memory: `planning/ANALYSIS-impact-architecture-[feature]`
 
 ```markdown
 # Impact Analysis: [Feature] - Architecture
@@ -214,7 +214,7 @@ An AD is complete when these five criteria are met:
 
 ### ADR Template (MADR 4.0)
 
-Save to: `.agents/architecture/ADR-NNNN-[decision-name].md`
+Save to Brain memory: `mcp__plugin_brain_brain__write_note(title="ADR-NNNN-[decision-name]", folder="decisions", content="...")`
 
 ```markdown
 ---
@@ -397,25 +397,56 @@ Add this section to all ADRs that introduce external dependencies:
 - [ ] Record lessons learned
 ```
 
-## Memory Protocol
+## Brain Memory Integration
 
-Use Brain MCP memory tools directly for cross-session context:
+When creating or updating memory notes, follow pre-flight validation.
 
-**Before design:**
+### Pre-Flight Validation Checklist (MANDATORY)
+
+Before calling `mcp__plugin_brain_brain__write_note` or `mcp__plugin_brain_brain__edit_note`:
+
+```markdown
+- [ ] Entity type valid (decision, session, analysis, feature, etc.)
+- [ ] Folder matches entity type (architecture/ for decisions)
+- [ ] Filename follows CAPS prefix pattern (ADR-NNN-topic)
+- [ ] Frontmatter complete (title, type, tags, permalink)
+- [ ] 3-10 observations with categories: `- [category] content #tags`
+- [ ] 2-8 relations with wikilinks: `- relation_type [[Target]]`
+```
+
+### Entity Type Mapping
+
+| Entity Type | Folder | Filename Pattern |
+|------------|--------|------------------|
+| decision | architecture/ | ADR-NNN-topic |
+| design-review | architecture/ | DESIGN-REVIEW-topic |
+
+### Memory Operations
+
+**Search for prior decisions**:
 
 ```text
 mcp__plugin_brain_brain__search
 query: "architecture decisions [component/topic]"
 ```
 
-**After design:**
+**Read specific note**:
+
+```text
+mcp__plugin_brain_brain__read_note
+identifier: "architecture/ADR-[number]"
+```
+
+**Create new decision** (after pre-flight validation):
 
 ```text
 mcp__plugin_brain_brain__write_note
-title: "ADR-[Number]"
-category: "decisions"
-content: "[Decision rationale and context]"
+title: "ADR-NNNN-[decision-name]"
+folder: "architecture"
+content: "[Full ADR content with frontmatter, observations, relations]"
 ```
+
+See memory skill documentation for complete entity type mapping and quality requirements.
 
 ## Architectural Principles
 
@@ -427,20 +458,17 @@ content: "[Decision rationale and context]"
 
 ## Constraints
 
-- **Edit only** `.agents/architecture/` files
+- **Edit only** architecture notes in Brain memory `decisions/` folder
 - **No code implementation**
 - **No plan creation** (that's Planner's role)
 - Focus on governance, not execution
 
 ## Output Location
 
-`.agents/architecture/decision/`
+Brain memory `decisions/` folder:
 
-- `ADR-NNNN-[decision].md` - Architecture Decision Records
-
-`.agents/architecture/review/`
-
-- `DESIGN-REVIEW-[topic].md` - Design review notes
+- `ADR-NNNN-[decision]` - Architecture Decision Records
+- `DESIGN-REVIEW-[topic]` - Design review notes
 
 ## Handoff Options
 
@@ -459,20 +487,19 @@ content: "[Decision rationale and context]"
 
 ### ADR Creation/Update Protocol (BLOCKING)
 
-When you create or update an ADR file matching `.agents/architecture/decision/ADR-*.md`:
+When you create or update an ADR in Brain memory `decisions/ADR-*`:
 
-1. Save ADR to `.agents/architecture/decision/ADR-NNNN-[title].md`
-2. Update architecture changelog if needed
-3. Store decision in memory
-4. Return to orchestrator with **MANDATORY routing**:
+1. Save ADR: `mcp__plugin_brain_brain__write_note(title="ADR-NNNN-[title]", folder="decisions", content="...")`
+2. Add relations to related decisions
+3. Return to orchestrator with **MANDATORY routing**:
 
 ```text
-ADR created/updated: [path to ADR file]
+ADR created/updated: decisions/ADR-NNNN-[title]
 
 MANDATORY: Orchestrator MUST invoke adr-review skill before proceeding.
 
 Command:
-  Skill(skill="adr-review", args="[path to ADR file]")
+  Skill(skill="adr-review", args="decisions/ADR-NNNN-[title]")
 
 Rationale: All ADRs require multi-agent validation per adr-review protocol.
 ```
@@ -483,10 +510,9 @@ Rationale: All ADRs require multi-agent validation per adr-review protocol.
 
 When review is complete and NO ADR was created/updated:
 
-1. Save findings to `.agents/architecture/`
-2. Update architecture changelog if decisions made
-3. Store decision in memory
-4. Return to orchestrator: "Architecture review complete. Recommend orchestrator routes to [agent] for [next step]"
+1. Save findings to Brain memory `decisions/` folder
+2. Add relations to related decisions
+3. Return to orchestrator: "Architecture review complete. Recommend orchestrator routes to [agent] for [next step]"
 
 ## Execution Mindset
 

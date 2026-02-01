@@ -645,7 +645,7 @@ All learnings scored 0-100%.
 
 ### Learning Extraction Template
 
-Save to: `.agents/retrospective/YYYY-MM-DD-[scope].md`
+Save to Brain memory: `mcp__plugin_brain_brain__write_note(title="RETRO-YYYY-MM-DD-[scope]", folder="retrospective", content="...")`
 
 ````markdown
 # Retrospective: [Scope]
@@ -1252,7 +1252,7 @@ Execution --> Reflection --> Skill Update --> Improved Execution
 
 When retrospective is complete:
 
-1. Save retrospective document to `.agents/retrospective/`
+1. Save retrospective document to Brain memory `retrospective/` folder
 2. Return learnings and recommended skill updates to orchestrator
 3. Recommend orchestrator routes to skillbook for skill persistence (if applicable)
 
@@ -1294,7 +1294,7 @@ When retrospective is complete:
 |-----------|------|--------|
 | git add | `skills/[topic].md` | [New/updated skills] |
 | git add | `learnings/[other].md` | [Reason] |
-| git add | `.agents/retrospective/[file].md` | Retrospective artifact |
+| note | `retrospective/RETRO-[file]` | Retrospective artifact (Brain memory) |
 
 ### Handoff Summary
 
@@ -1335,7 +1335,7 @@ When retrospective is complete:
 |-----------|------|--------|
 | git add | `skills/ci-infrastructure.md` | Updated with 2 skills |
 | git add | `learnings/2025-12.md` | New monthly learnings |
-| git add | `.agents/retrospective/2025-12-18-workflow-retro.md` | Retrospective artifact |
+| note | `retrospective/RETRO-2025-12-18-workflow` | Retrospective artifact (Brain memory) |
 
 ### Handoff Summary
 
