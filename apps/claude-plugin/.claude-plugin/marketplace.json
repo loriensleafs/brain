@@ -1,11 +1,11 @@
 {
-	"name": "brain",
-	"owner": { "name": "Peter Kloss" },
-	"plugins": [
-		{
-			"name": "brain",
-			"source": "./",
-			"description": "Brain knowledge graph + workflow mode management"
-		}
-	]
+  "name": "brain",
+  "owner": { "name": "Peter Kloss" },
+  "plugins": [
+    {
+      "name": "brain",
+      "source": "./",
+      "description": "Brain knowledge graph + workflow mode management"
+    }
+  ]
 }

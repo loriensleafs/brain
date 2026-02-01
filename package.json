@@ -1,44 +1,44 @@
 {
-	"name": "brain-monorepo",
-	"version": "1.0.0",
-	"private": true,
-	"type": "module",
-	"packageManager": "bun@1.3.8",
-	"workspaces": [
-		"packages/*",
-		"apps/mcp",
-		"scripts",
-		"apps/claude-plugin/skills/memory/scripts"
-	],
-	"scripts": {
-		"build": "turbo run build",
-		"generate:types": "turbo run generate:types",
-		"typecheck": "turbo run typecheck",
-		"test": "turbo run test",
-		"test:coverage": "turbo run test:coverage",
-		"lint": "biome lint --max-diagnostics=none .",
-		"lint:fix": "biome lint --write --max-diagnostics=none .",
-		"format": "biome format --max-diagnostics=none .",
-		"format:fix": "biome format --write --max-diagnostics=none .",
-		"check": "biome check --max-diagnostics=none .",
-		"check:fix": "biome check --write --max-diagnostics=none .",
-		"dev": "turbo run dev",
-		"clean": "turbo run clean",
-		"build:tui": "cd apps/tui && go build -o brain ./main.go"
-	},
-	"dependencies": {
-		"@brain/utils": "workspace:*",
-		"@brain/validation": "workspace:*"
-	},
-	"devDependencies": {
-		"@biomejs/biome": "^2.3.13",
-		"@types/bun": "latest",
-		"@types/node": "^25.0.8",
-		"bun-types": "^1.3.8",
-		"turbo": "^2.8.1",
-		"typescript": "^5.7.0"
-	},
-	"engines": {
-		"bun": ">=1.3.8"
-	}
+  "name": "brain-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "bun@1.3.8",
+  "workspaces": [
+    "packages/*",
+    "apps/mcp",
+    "scripts",
+    "apps/claude-plugin/skills/memory/scripts"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "generate:types": "turbo run generate:types",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:coverage": "turbo run test:coverage",
+    "lint": "biome lint --max-diagnostics=none .",
+    "lint:fix": "biome lint --write --max-diagnostics=none .",
+    "format": "biome format --max-diagnostics=none .",
+    "format:fix": "biome format --write --max-diagnostics=none .",
+    "check": "biome check --max-diagnostics=none .",
+    "check:fix": "biome check --write --max-diagnostics=none .",
+    "dev": "turbo run dev",
+    "clean": "turbo run clean",
+    "build:tui": "cd apps/tui && go build -o brain ./main.go"
+  },
+  "dependencies": {
+    "@brain/utils": "workspace:*",
+    "@brain/validation": "workspace:*"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.3.13",
+    "@types/bun": "latest",
+    "@types/node": "^25.0.8",
+    "bun-types": "^1.3.8",
+    "turbo": "^2.8.1",
+    "typescript": "^5.7.0"
+  },
+  "engines": {
+    "bun": ">=1.3.8"
+  }
 }

@@ -25,27 +25,27 @@ let sharedClient: OllamaClient | null = null;
  * Reusing a single client prevents connection overhead per request.
  */
 function getOllamaClient(): OllamaClient {
-	if (!sharedClient) {
-		sharedClient = new OllamaClient(ollamaConfig);
-	}
-	return sharedClient;
+  if (!sharedClient) {
+    sharedClient = new OllamaClient(ollamaConfig);
+  }
+  return sharedClient;
 }
 
 /**
  * Sleep for specified milliseconds.
  */
 function sleep(ms: number): Promise<void> {
-	return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
  * Check if an error is retryable (5xx server errors).
  */
 function isRetryableError(error: unknown): boolean {
-	if (error instanceof OllamaError) {
-		return error.statusCode >= 500 && error.statusCode < 600;
-	}
-	return false;
+  if (error instanceof OllamaError) {
+    return error.statusCode >= 500 && error.statusCode < 600;
+  }
+  return false;
 }
 
 /**
@@ -62,60 +62,60 @@ function isRetryableError(error: unknown): boolean {
  * @throws OllamaError on non-retryable errors or after max retries exceeded
  */
 export async function generateEmbedding(
-	text: string,
+  text: string,
 ): Promise<number[] | null> {
-	if (!text || text.trim().length === 0) {
-		return null;
-	}
+  if (!text || text.trim().length === 0) {
+    return null;
+  }
 
-	const client = getOllamaClient();
-	let lastError: Error | null = null;
+  const client = getOllamaClient();
+  let lastError: Error | null = null;
 
-	for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-		try {
-			return await client.generateEmbedding(
-				text,
-				"search_document",
-				"nomic-embed-text",
-			);
-		} catch (error) {
-			lastError = error instanceof Error ? error : new Error(String(error));
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      return await client.generateEmbedding(
+        text,
+        "search_document",
+        "nomic-embed-text",
+      );
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
 
-			if (!isRetryableError(error)) {
-				// Non-retryable error (4xx client errors, etc.) - fail immediately
-				throw error;
-			}
+      if (!isRetryableError(error)) {
+        // Non-retryable error (4xx client errors, etc.) - fail immediately
+        throw error;
+      }
 
-			// Calculate exponential backoff delay
-			const delay = BASE_DELAY_MS * 2 ** attempt;
-			const statusCode =
-				error instanceof OllamaError ? error.statusCode : "unknown";
+      // Calculate exponential backoff delay
+      const delay = BASE_DELAY_MS * 2 ** attempt;
+      const statusCode =
+        error instanceof OllamaError ? error.statusCode : "unknown";
 
-			logger.warn(
-				{
-					attempt: attempt + 1,
-					maxRetries: MAX_RETRIES,
-					delay,
-					statusCode,
-				},
-				"Ollama server error, retrying with backoff",
-			);
+      logger.warn(
+        {
+          attempt: attempt + 1,
+          maxRetries: MAX_RETRIES,
+          delay,
+          statusCode,
+        },
+        "Ollama server error, retrying with backoff",
+      );
 
-			await sleep(delay);
-		}
-	}
+      await sleep(delay);
+    }
+  }
 
-	// All retries exhausted
-	logger.error(
-		{ maxRetries: MAX_RETRIES, lastError: lastError?.message },
-		"Max retries exceeded for embedding generation",
-	);
-	throw lastError ?? new OllamaError("Max retries exceeded", 500);
+  // All retries exhausted
+  logger.error(
+    { maxRetries: MAX_RETRIES, lastError: lastError?.message },
+    "Max retries exceeded for embedding generation",
+  );
+  throw lastError ?? new OllamaError("Max retries exceeded", 500);
 }
 
 /**
  * Reset the shared client (useful for testing or reconfiguration).
  */
 export function resetOllamaClient(): void {
-	sharedClient = null;
+  sharedClient = null;
 }

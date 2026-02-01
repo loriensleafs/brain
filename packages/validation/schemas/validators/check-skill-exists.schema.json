@@ -1,124 +1,124 @@
 {
-	"$schema": "http://json-schema.org/draft-07/schema#",
-	"$id": "https://brain.dev/schemas/validators/check-skill-exists.json",
-	"title": "CheckSkillExistsValidation",
-	"description": "Schema for skill existence check parameters and results.",
-	"definitions": {
-		"Check": {
-			"type": "object",
-			"description": "A single validation check result",
-			"properties": {
-				"name": {
-					"type": "string",
-					"minLength": 1,
-					"description": "Check identifier"
-				},
-				"passed": {
-					"type": "boolean",
-					"description": "Whether the check passed"
-				},
-				"message": {
-					"type": "string",
-					"description": "Human-readable check result message"
-				}
-			},
-			"required": ["name", "passed", "message"],
-			"additionalProperties": false
-		},
-		"SkillExistsInput": {
-			"type": "object",
-			"description": "Input parameters for skill existence check",
-			"properties": {
-				"basePath": {
-					"type": "string",
-					"minLength": 1,
-					"description": "Repository root path"
-				},
-				"skillName": {
-					"type": "string",
-					"pattern": "^[a-z0-9-]+$",
-					"minLength": 1,
-					"maxLength": 64,
-					"description": "Skill name to check (kebab-case)"
-				}
-			},
-			"required": ["basePath", "skillName"],
-			"additionalProperties": false
-		},
-		"SkillExistsResult": {
-			"type": "object",
-			"description": "Result of skill existence check",
-			"properties": {
-				"exists": {
-					"type": "boolean",
-					"description": "Whether the skill file exists"
-				},
-				"skillName": {
-					"type": "string",
-					"description": "The skill name that was checked"
-				},
-				"skillPath": {
-					"type": "string",
-					"description": "Full path to the SKILL.md file"
-				},
-				"name": {
-					"type": "string",
-					"description": "Parsed name from frontmatter"
-				},
-				"description": {
-					"type": "string",
-					"description": "Parsed description from frontmatter"
-				},
-				"message": {
-					"type": "string",
-					"description": "Summary message"
-				},
-				"checks": {
-					"type": "array",
-					"items": {
-						"$ref": "#/definitions/Check"
-					},
-					"description": "Individual check results"
-				}
-			},
-			"required": ["exists", "skillName", "message", "checks"],
-			"additionalProperties": false
-		},
-		"SkillScriptInput": {
-			"type": "object",
-			"description": "Input parameters for skill script check",
-			"properties": {
-				"basePath": {
-					"type": "string",
-					"minLength": 1,
-					"description": "Repository root path"
-				},
-				"operation": {
-					"type": "string",
-					"enum": ["pr", "issue", "reactions", "label", "milestone"],
-					"description": "Operation type"
-				},
-				"action": {
-					"type": "string",
-					"minLength": 1,
-					"description": "Action name to search for"
-				}
-			},
-			"required": ["basePath", "operation", "action"],
-			"additionalProperties": false
-		}
-	},
-	"type": "object",
-	"properties": {
-		"skillInput": {
-			"$ref": "#/definitions/SkillExistsInput"
-		},
-		"skillResult": {
-			"$ref": "#/definitions/SkillExistsResult"
-		},
-		"scriptInput": {
-			"$ref": "#/definitions/SkillScriptInput"
-		}
-	},
-	"additionalProperties": false
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://brain.dev/schemas/validators/check-skill-exists.json",
+  "title": "CheckSkillExistsValidation",
+  "description": "Schema for skill existence check parameters and results.",
+  "definitions": {
+    "Check": {
+      "type": "object",
+      "description": "A single validation check result",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Check identifier"
+        },
+        "passed": {
+          "type": "boolean",
+          "description": "Whether the check passed"
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable check result message"
+        }
+      },
+      "required": ["name", "passed", "message"],
+      "additionalProperties": false
+    },
+    "SkillExistsInput": {
+      "type": "object",
+      "description": "Input parameters for skill existence check",
+      "properties": {
+        "basePath": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Repository root path"
+        },
+        "skillName": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$",
+          "minLength": 1,
+          "maxLength": 64,
+          "description": "Skill name to check (kebab-case)"
+        }
+      },
+      "required": ["basePath", "skillName"],
+      "additionalProperties": false
+    },
+    "SkillExistsResult": {
+      "type": "object",
+      "description": "Result of skill existence check",
+      "properties": {
+        "exists": {
+          "type": "boolean",
+          "description": "Whether the skill file exists"
+        },
+        "skillName": {
+          "type": "string",
+          "description": "The skill name that was checked"
+        },
+        "skillPath": {
+          "type": "string",
+          "description": "Full path to the SKILL.md file"
+        },
+        "name": {
+          "type": "string",
+          "description": "Parsed name from frontmatter"
+        },
+        "description": {
+          "type": "string",
+          "description": "Parsed description from frontmatter"
+        },
+        "message": {
+          "type": "string",
+          "description": "Summary message"
+        },
+        "checks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Check"
+          },
+          "description": "Individual check results"
+        }
+      },
+      "required": ["exists", "skillName", "message", "checks"],
+      "additionalProperties": false
+    },
+    "SkillScriptInput": {
+      "type": "object",
+      "description": "Input parameters for skill script check",
+      "properties": {
+        "basePath": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Repository root path"
+        },
+        "operation": {
+          "type": "string",
+          "enum": ["pr", "issue", "reactions", "label", "milestone"],
+          "description": "Operation type"
+        },
+        "action": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Action name to search for"
+        }
+      },
+      "required": ["basePath", "operation", "action"],
+      "additionalProperties": false
+    }
+  },
+  "type": "object",
+  "properties": {
+    "skillInput": {
+      "$ref": "#/definitions/SkillExistsInput"
+    },
+    "skillResult": {
+      "$ref": "#/definitions/SkillExistsResult"
+    },
+    "scriptInput": {
+      "$ref": "#/definitions/SkillScriptInput"
+    }
+  },
+  "additionalProperties": false
 }

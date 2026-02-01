@@ -19,9 +19,9 @@ import { logger } from "../internal/logger";
  * Lock file path for brain config operations
  */
 const CONFIG_LOCK_PATH = path.join(
-	os.homedir(),
-	".basic-memory",
-	".brain-config.lock",
+  os.homedir(),
+  ".basic-memory",
+  ".brain-config.lock",
 );
 
 /**
@@ -40,13 +40,13 @@ const LOCK_RETRY_INTERVAL_MS = 100;
 const STALE_LOCK_THRESHOLD_MS = 30000;
 
 export interface LockResult {
-	acquired: boolean;
-	error?: string;
+  acquired: boolean;
+  error?: string;
 }
 
 export interface ConfigLockOptions {
-	/** Timeout in milliseconds for lock acquisition (default: 5000ms) */
-	timeoutMs?: number;
+  /** Timeout in milliseconds for lock acquisition (default: 5000ms) */
+  timeoutMs?: number;
 }
 
 /**
@@ -56,13 +56,13 @@ export interface ConfigLockOptions {
  * @returns true if lock exists and is stale
  */
 function isLockStale(lockPath: string): boolean {
-	try {
-		const stats = fs.statSync(lockPath);
-		const age = Date.now() - stats.mtimeMs;
-		return age > STALE_LOCK_THRESHOLD_MS;
-	} catch {
-		return false;
-	}
+  try {
+    const stats = fs.statSync(lockPath);
+    const age = Date.now() - stats.mtimeMs;
+    return age > STALE_LOCK_THRESHOLD_MS;
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -73,31 +73,31 @@ function isLockStale(lockPath: string): boolean {
  * @returns true if lock was acquired
  */
 function tryAcquireLock(lockPath: string): boolean {
-	try {
-		// O_CREAT | O_EXCL ensures atomic creation - fails if file exists
-		const fd = fs.openSync(
-			lockPath,
-			fs.constants.O_CREAT | fs.constants.O_EXCL | fs.constants.O_WRONLY,
-		);
+  try {
+    // O_CREAT | O_EXCL ensures atomic creation - fails if file exists
+    const fd = fs.openSync(
+      lockPath,
+      fs.constants.O_CREAT | fs.constants.O_EXCL | fs.constants.O_WRONLY,
+    );
 
-		// Write process info for debugging stale locks
-		const lockInfo = JSON.stringify({
-			pid: process.pid,
-			timestamp: Date.now(),
-			hostname: os.hostname(),
-		});
-		fs.writeSync(fd, lockInfo);
-		fs.closeSync(fd);
+    // Write process info for debugging stale locks
+    const lockInfo = JSON.stringify({
+      pid: process.pid,
+      timestamp: Date.now(),
+      hostname: os.hostname(),
+    });
+    fs.writeSync(fd, lockInfo);
+    fs.closeSync(fd);
 
-		return true;
-	} catch (error) {
-		// EEXIST means lock already held
-		if ((error as NodeJS.ErrnoException).code === "EEXIST") {
-			return false;
-		}
-		// Other errors (permissions, etc.) should be thrown
-		throw error;
-	}
+    return true;
+  } catch (error) {
+    // EEXIST means lock already held
+    if ((error as NodeJS.ErrnoException).code === "EEXIST") {
+      return false;
+    }
+    // Other errors (permissions, etc.) should be thrown
+    throw error;
+  }
 }
 
 /**
@@ -108,55 +108,55 @@ function tryAcquireLock(lockPath: string): boolean {
  * @returns LockResult indicating success or failure
  */
 export async function acquireConfigLock(
-	options: ConfigLockOptions = {},
+  options: ConfigLockOptions = {},
 ): Promise<LockResult> {
-	const { timeoutMs = DEFAULT_LOCK_TIMEOUT_MS } = options;
-	const startTime = Date.now();
+  const { timeoutMs = DEFAULT_LOCK_TIMEOUT_MS } = options;
+  const startTime = Date.now();
 
-	// Ensure lock directory exists
-	const lockDir = path.dirname(CONFIG_LOCK_PATH);
-	if (!fs.existsSync(lockDir)) {
-		fs.mkdirSync(lockDir, { recursive: true });
-	}
+  // Ensure lock directory exists
+  const lockDir = path.dirname(CONFIG_LOCK_PATH);
+  if (!fs.existsSync(lockDir)) {
+    fs.mkdirSync(lockDir, { recursive: true });
+  }
 
-	while (true) {
-		// Check timeout
-		const elapsed = Date.now() - startTime;
-		if (elapsed >= timeoutMs) {
-			logger.warn({ timeoutMs, elapsed }, "Config lock acquisition timed out");
-			return {
-				acquired: false,
-				error: `Lock acquisition timed out after ${timeoutMs}ms`,
-			};
-		}
+  while (true) {
+    // Check timeout
+    const elapsed = Date.now() - startTime;
+    if (elapsed >= timeoutMs) {
+      logger.warn({ timeoutMs, elapsed }, "Config lock acquisition timed out");
+      return {
+        acquired: false,
+        error: `Lock acquisition timed out after ${timeoutMs}ms`,
+      };
+    }
 
-		// Check for stale lock
-		if (fs.existsSync(CONFIG_LOCK_PATH) && isLockStale(CONFIG_LOCK_PATH)) {
-			logger.info({ lockPath: CONFIG_LOCK_PATH }, "Removing stale config lock");
-			try {
-				fs.unlinkSync(CONFIG_LOCK_PATH);
-			} catch {
-				// Ignore removal errors - another process may have grabbed it
-			}
-		}
+    // Check for stale lock
+    if (fs.existsSync(CONFIG_LOCK_PATH) && isLockStale(CONFIG_LOCK_PATH)) {
+      logger.info({ lockPath: CONFIG_LOCK_PATH }, "Removing stale config lock");
+      try {
+        fs.unlinkSync(CONFIG_LOCK_PATH);
+      } catch {
+        // Ignore removal errors - another process may have grabbed it
+      }
+    }
 
-		// Attempt to acquire
-		try {
-			if (tryAcquireLock(CONFIG_LOCK_PATH)) {
-				logger.debug({ pid: process.pid }, "Config lock acquired");
-				return { acquired: true };
-			}
-		} catch (error) {
-			// Non-EEXIST errors are real failures
-			return {
-				acquired: false,
-				error: `Lock acquisition failed: ${error instanceof Error ? error.message : String(error)}`,
-			};
-		}
+    // Attempt to acquire
+    try {
+      if (tryAcquireLock(CONFIG_LOCK_PATH)) {
+        logger.debug({ pid: process.pid }, "Config lock acquired");
+        return { acquired: true };
+      }
+    } catch (error) {
+      // Non-EEXIST errors are real failures
+      return {
+        acquired: false,
+        error: `Lock acquisition failed: ${error instanceof Error ? error.message : String(error)}`,
+      };
+    }
 
-		// Wait before retry
-		await new Promise((resolve) => setTimeout(resolve, LOCK_RETRY_INTERVAL_MS));
-	}
+    // Wait before retry
+    await new Promise((resolve) => setTimeout(resolve, LOCK_RETRY_INTERVAL_MS));
+  }
 }
 
 /**
@@ -165,17 +165,17 @@ export async function acquireConfigLock(
  * @returns true if lock was released, false if lock wasn't held
  */
 export function releaseConfigLock(): boolean {
-	try {
-		if (fs.existsSync(CONFIG_LOCK_PATH)) {
-			fs.unlinkSync(CONFIG_LOCK_PATH);
-			logger.debug({ pid: process.pid }, "Config lock released");
-			return true;
-		}
-		return false;
-	} catch (error) {
-		logger.warn({ error }, "Failed to release config lock");
-		return false;
-	}
+  try {
+    if (fs.existsSync(CONFIG_LOCK_PATH)) {
+      fs.unlinkSync(CONFIG_LOCK_PATH);
+      logger.debug({ pid: process.pid }, "Config lock released");
+      return true;
+    }
+    return false;
+  } catch (error) {
+    logger.warn({ error }, "Failed to release config lock");
+    return false;
+  }
 }
 
 /**
@@ -188,20 +188,20 @@ export function releaseConfigLock(): boolean {
  * @throws If lock cannot be acquired or operation throws
  */
 export async function withConfigLock<T>(
-	operation: () => Promise<T>,
-	options: ConfigLockOptions = {},
+  operation: () => Promise<T>,
+  options: ConfigLockOptions = {},
 ): Promise<T> {
-	const lockResult = await acquireConfigLock(options);
+  const lockResult = await acquireConfigLock(options);
 
-	if (!lockResult.acquired) {
-		throw new Error(lockResult.error || "Failed to acquire config lock");
-	}
+  if (!lockResult.acquired) {
+    throw new Error(lockResult.error || "Failed to acquire config lock");
+  }
 
-	try {
-		return await operation();
-	} finally {
-		releaseConfigLock();
-	}
+  try {
+    return await operation();
+  } finally {
+    releaseConfigLock();
+  }
 }
 
 /**
@@ -214,48 +214,48 @@ export async function withConfigLock<T>(
  * @throws If lock cannot be acquired or operation throws
  */
 export function withConfigLockSync<T>(
-	operation: () => T,
-	options: ConfigLockOptions = {},
+  operation: () => T,
+  options: ConfigLockOptions = {},
 ): T {
-	const { timeoutMs = DEFAULT_LOCK_TIMEOUT_MS } = options;
-	const startTime = Date.now();
+  const { timeoutMs = DEFAULT_LOCK_TIMEOUT_MS } = options;
+  const startTime = Date.now();
 
-	// Ensure lock directory exists
-	const lockDir = path.dirname(CONFIG_LOCK_PATH);
-	if (!fs.existsSync(lockDir)) {
-		fs.mkdirSync(lockDir, { recursive: true });
-	}
+  // Ensure lock directory exists
+  const lockDir = path.dirname(CONFIG_LOCK_PATH);
+  if (!fs.existsSync(lockDir)) {
+    fs.mkdirSync(lockDir, { recursive: true });
+  }
 
-	// Busy-wait loop for lock acquisition
-	while (true) {
-		const elapsed = Date.now() - startTime;
-		if (elapsed >= timeoutMs) {
-			throw new Error(`Lock acquisition timed out after ${timeoutMs}ms`);
-		}
+  // Busy-wait loop for lock acquisition
+  while (true) {
+    const elapsed = Date.now() - startTime;
+    if (elapsed >= timeoutMs) {
+      throw new Error(`Lock acquisition timed out after ${timeoutMs}ms`);
+    }
 
-		// Check for stale lock
-		if (fs.existsSync(CONFIG_LOCK_PATH) && isLockStale(CONFIG_LOCK_PATH)) {
-			try {
-				fs.unlinkSync(CONFIG_LOCK_PATH);
-			} catch {
-				// Ignore
-			}
-		}
+    // Check for stale lock
+    if (fs.existsSync(CONFIG_LOCK_PATH) && isLockStale(CONFIG_LOCK_PATH)) {
+      try {
+        fs.unlinkSync(CONFIG_LOCK_PATH);
+      } catch {
+        // Ignore
+      }
+    }
 
-		if (tryAcquireLock(CONFIG_LOCK_PATH)) {
-			break;
-		}
+    if (tryAcquireLock(CONFIG_LOCK_PATH)) {
+      break;
+    }
 
-		// Brief sleep using sync approach
-		const sleepUntil = Date.now() + LOCK_RETRY_INTERVAL_MS;
-		while (Date.now() < sleepUntil) {
-			// Busy wait
-		}
-	}
+    // Brief sleep using sync approach
+    const sleepUntil = Date.now() + LOCK_RETRY_INTERVAL_MS;
+    while (Date.now() < sleepUntil) {
+      // Busy wait
+    }
+  }
 
-	try {
-		return operation();
-	} finally {
-		releaseConfigLock();
-	}
+  try {
+    return operation();
+  } finally {
+    releaseConfigLock();
+  }
 }

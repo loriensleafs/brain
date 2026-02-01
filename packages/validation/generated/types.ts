@@ -7,7 +7,7 @@
  * To regenerate: bun run generate:types
  * Source schemas: packages/validation/schemas/*.schema.json
  *
- * Generated: 2026-02-01T15:28:39.223Z
+ * Generated: 2026-02-01T15:36:29.388Z
  */
 
 // Source: schemas/config/brain-config.schema.json
@@ -196,7 +196,15 @@ export interface ScenarioResult {
   /**
    * The detected scenario type
    */
-  scenario?: "BUG" | "FEATURE" | "SPEC" | "ANALYSIS" | "RESEARCH" | "DECISION" | "TESTING" | "";
+  scenario?:
+    | "BUG"
+    | "FEATURE"
+    | "SPEC"
+    | "ANALYSIS"
+    | "RESEARCH"
+    | "DECISION"
+    | "TESTING"
+    | "";
   /**
    * Keywords that matched
    */
@@ -451,7 +459,12 @@ export type SessionLogFilename = string;
 /**
  * Required sections in a session log
  */
-export type RequiredSections = ("Session Info" | "Protocol Compliance" | "Session Start" | "Session End")[];
+export type RequiredSections = (
+  | "Session Info"
+  | "Protocol Compliance"
+  | "Session Start"
+  | "Session End"
+)[];
 /**
  * Patterns that indicate Brain MCP initialization
  */
@@ -524,11 +537,19 @@ export type AgentType =
 /**
  * Orchestrator workflow phases
  */
-export type WorkflowPhase = "planning" | "implementation" | "validation" | "complete";
+export type WorkflowPhase =
+  | "planning"
+  | "implementation"
+  | "validation"
+  | "complete";
 /**
  * Status of an agent invocation
  */
-export type InvocationStatus = "in_progress" | "completed" | "failed" | "blocked";
+export type InvocationStatus =
+  | "in_progress"
+  | "completed"
+  | "failed"
+  | "blocked";
 /**
  * Types of decisions recorded in workflow
  */
@@ -536,7 +557,11 @@ export type DecisionType = "architectural" | "technical" | "process" | "scope";
 /**
  * Verdict outcomes from agent validation
  */
-export type VerdictDecision = "approve" | "reject" | "conditional" | "needs_revision";
+export type VerdictDecision =
+  | "approve"
+  | "reject"
+  | "conditional"
+  | "needs_revision";
 
 /**
  * Session state structure for persistent context. Contains critical information that must survive context compaction: workflow mode, mode history, protocol status, orchestrator workflow, active feature/task, and version for optimistic locking.
@@ -662,7 +687,13 @@ export interface SessionWorkflowState {
   /**
    * Current workflow mode
    */
-  mode?: "" | "analysis" | "planning" | "coding" | "implementation" | "disabled";
+  mode?:
+    | ""
+    | "analysis"
+    | "planning"
+    | "coding"
+    | "implementation"
+    | "disabled";
   /**
    * Current task description
    */
@@ -854,7 +885,7 @@ export interface ListFeaturesByPriorityArgs {
 /**
  * Schema for list_workflows tool arguments. Lists all available workflow functions and their event triggers.
  */
-export interface ListWorkflowsArgs {}
+export type ListWorkflowsArgs = {};
 
 // Source: schemas/tools/projects/active-project.schema.json
 /**
@@ -939,7 +970,7 @@ export interface GetProjectDetailsArgs {
 /**
  * Schema for list_projects tool arguments. Lists all available Brain memory projects. Returns a simple array of project names. Use get_project_details for detailed information about a specific project.
  */
-export interface ListProjectsArgs {}
+export type ListProjectsArgs = {};
 
 // Source: schemas/tools/search.schema.json
 /**
@@ -1234,7 +1265,12 @@ export interface SkillScriptInput {
 /**
  * Status of a task
  */
-export type TaskStatus = "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED" | "BLOCKED" | "DEFERRED";
+export type TaskStatus =
+  | "NOT_STARTED"
+  | "IN_PROGRESS"
+  | "COMPLETED"
+  | "BLOCKED"
+  | "DEFERRED";
 
 /**
  * Schema for task validation input and results.
@@ -1334,7 +1370,11 @@ export type MergeableState = "MERGEABLE" | "CONFLICTING" | "UNKNOWN";
 /**
  * GitHub review decision
  */
-export type ReviewDecision = "APPROVED" | "CHANGES_REQUESTED" | "REVIEW_REQUIRED" | "";
+export type ReviewDecision =
+  | "APPROVED"
+  | "CHANGES_REQUESTED"
+  | "REVIEW_REQUIRED"
+  | "";
 /**
  * CI check state
  */
@@ -1342,7 +1382,12 @@ export type CheckState = "SUCCESS" | "FAILURE" | "ERROR" | "PENDING";
 /**
  * CI check conclusion
  */
-export type CheckConclusion = "SUCCESS" | "FAILURE" | "NEUTRAL" | "SKIPPED" | "";
+export type CheckConclusion =
+  | "SUCCESS"
+  | "FAILURE"
+  | "NEUTRAL"
+  | "SKIPPED"
+  | "";
 /**
  * Classification of PR author or state
  */
@@ -1526,7 +1571,13 @@ export interface RateLimitInfo {
 /**
  * Programming language supported for test coverage detection
  */
-export type SupportedLanguage = "go" | "powershell" | "typescript" | "javascript" | "python" | "csharp";
+export type SupportedLanguage =
+  | "go"
+  | "powershell"
+  | "typescript"
+  | "javascript"
+  | "python"
+  | "csharp";
 
 /**
  * Schema for test coverage gap detection options and results.
@@ -1546,7 +1597,13 @@ export interface TestCoverageGapOptions {
   /**
    * Language to check. Empty triggers auto-detection.
    */
-  language?: "go" | "powershell" | "typescript" | "javascript" | "python" | "csharp";
+  language?:
+    | "go"
+    | "powershell"
+    | "typescript"
+    | "javascript"
+    | "python"
+    | "csharp";
   /**
    * Only check git-staged files
    */

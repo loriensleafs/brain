@@ -14,12 +14,12 @@ import * as path from "node:path";
  * Result of path validation.
  */
 export interface PathValidationResult {
-	/** Whether the path is valid. */
-	valid: boolean;
-	/** Error message if validation failed. */
-	error?: string;
-	/** Normalized path if validation succeeded. */
-	normalizedPath?: string;
+  /** Whether the path is valid. */
+  valid: boolean;
+  /** Error message if validation failed. */
+  error?: string;
+  /** Normalized path if validation succeeded. */
+  normalizedPath?: string;
 }
 
 /**
@@ -29,38 +29,38 @@ export interface PathValidationResult {
  * as memories locations or code paths.
  */
 const BLOCKED_SYSTEM_PATHS_UNIX: readonly string[] = [
-	"/etc",
-	"/usr",
-	"/var",
-	"/bin",
-	"/sbin",
-	"/lib",
-	"/lib64",
-	"/boot",
-	"/dev",
-	"/proc",
-	"/sys",
-	"/run",
-	"/tmp",
-	"/root",
+  "/etc",
+  "/usr",
+  "/var",
+  "/bin",
+  "/sbin",
+  "/lib",
+  "/lib64",
+  "/boot",
+  "/dev",
+  "/proc",
+  "/sys",
+  "/run",
+  "/tmp",
+  "/root",
 ] as const;
 
 const BLOCKED_SYSTEM_PATHS_WINDOWS: readonly string[] = [
-	"C:\\Windows",
-	"C:\\Program Files",
-	"C:\\Program Files (x86)",
-	"C:\\ProgramData",
-	"C:\\System Volume Information",
+  "C:\\Windows",
+  "C:\\Program Files",
+  "C:\\Program Files (x86)",
+  "C:\\ProgramData",
+  "C:\\System Volume Information",
 ] as const;
 
 /**
  * Get the appropriate blocked paths for the current platform.
  */
 function getBlockedSystemPaths(): readonly string[] {
-	if (process.platform === "win32") {
-		return BLOCKED_SYSTEM_PATHS_WINDOWS;
-	}
-	return BLOCKED_SYSTEM_PATHS_UNIX;
+  if (process.platform === "win32") {
+    return BLOCKED_SYSTEM_PATHS_WINDOWS;
+  }
+  return BLOCKED_SYSTEM_PATHS_UNIX;
 }
 
 /**
@@ -76,16 +76,16 @@ function getBlockedSystemPaths(): readonly string[] {
  * ```
  */
 export function expandTilde(inputPath: string): string {
-	if (inputPath === "~") {
-		return os.homedir();
-	}
-	if (inputPath.startsWith("~/")) {
-		return path.join(os.homedir(), inputPath.slice(2));
-	}
-	if (inputPath.startsWith("~\\")) {
-		return path.join(os.homedir(), inputPath.slice(2));
-	}
-	return inputPath;
+  if (inputPath === "~") {
+    return os.homedir();
+  }
+  if (inputPath.startsWith("~/")) {
+    return path.join(os.homedir(), inputPath.slice(2));
+  }
+  if (inputPath.startsWith("~\\")) {
+    return path.join(os.homedir(), inputPath.slice(2));
+  }
+  return inputPath;
 }
 
 /**
@@ -105,8 +105,8 @@ export function expandTilde(inputPath: string): string {
  * ```
  */
 export function normalizePath(inputPath: string): string {
-	const expanded = expandTilde(inputPath);
-	return path.normalize(path.resolve(expanded));
+  const expanded = expandTilde(inputPath);
+  return path.normalize(path.resolve(expanded));
 }
 
 /**
@@ -116,21 +116,21 @@ export function normalizePath(inputPath: string): string {
  * @returns true if path contains traversal sequences
  */
 function containsTraversal(inputPath: string): boolean {
-	// Check for .. in various forms
-	const traversalPatterns = ["..", "..\\", "../"];
+  // Check for .. in various forms
+  const traversalPatterns = ["..", "..\\", "../"];
 
-	for (const pattern of traversalPatterns) {
-		if (inputPath.includes(pattern)) {
-			return true;
-		}
-	}
+  for (const pattern of traversalPatterns) {
+    if (inputPath.includes(pattern)) {
+      return true;
+    }
+  }
 
-	// Also check for encoded traversal
-	if (inputPath.includes("%2e%2e") || inputPath.includes("%2E%2E")) {
-		return true;
-	}
+  // Also check for encoded traversal
+  if (inputPath.includes("%2e%2e") || inputPath.includes("%2E%2E")) {
+    return true;
+  }
 
-	return false;
+  return false;
 }
 
 /**
@@ -143,7 +143,7 @@ function containsTraversal(inputPath: string): boolean {
  * @returns true if path contains null bytes
  */
 function containsNullBytes(inputPath: string): boolean {
-	return inputPath.includes("\0");
+  return inputPath.includes("\0");
 }
 
 /**
@@ -153,22 +153,22 @@ function containsNullBytes(inputPath: string): boolean {
  * @returns true if path is within a blocked system directory
  */
 function isBlockedSystemPath(normalizedPath: string): boolean {
-	const blockedPaths = getBlockedSystemPaths();
-	const lowerPath = normalizedPath.toLowerCase();
+  const blockedPaths = getBlockedSystemPaths();
+  const lowerPath = normalizedPath.toLowerCase();
 
-	for (const blockedPath of blockedPaths) {
-		const lowerBlocked = blockedPath.toLowerCase();
+  for (const blockedPath of blockedPaths) {
+    const lowerBlocked = blockedPath.toLowerCase();
 
-		// Check exact match or if path is under blocked directory
-		if (
-			lowerPath === lowerBlocked ||
-			lowerPath.startsWith(lowerBlocked + path.sep)
-		) {
-			return true;
-		}
-	}
+    // Check exact match or if path is under blocked directory
+    if (
+      lowerPath === lowerBlocked ||
+      lowerPath.startsWith(lowerBlocked + path.sep)
+    ) {
+      return true;
+    }
+  }
 
-	return false;
+  return false;
 }
 
 /**
@@ -198,56 +198,56 @@ function isBlockedSystemPath(normalizedPath: string): boolean {
  * ```
  */
 export function validatePath(inputPath: string): PathValidationResult {
-	// Check for empty path
-	if (!inputPath || inputPath.trim() === "") {
-		return { valid: false, error: "Path cannot be empty" };
-	}
+  // Check for empty path
+  if (!inputPath || inputPath.trim() === "") {
+    return { valid: false, error: "Path cannot be empty" };
+  }
 
-	// Check for null bytes BEFORE any processing
-	if (containsNullBytes(inputPath)) {
-		return {
-			valid: false,
-			error: "Invalid path characters: null byte detected",
-		};
-	}
+  // Check for null bytes BEFORE any processing
+  if (containsNullBytes(inputPath)) {
+    return {
+      valid: false,
+      error: "Invalid path characters: null byte detected",
+    };
+  }
 
-	// Check for directory traversal BEFORE normalization
-	// This catches attempts to use .. to escape directories
-	if (containsTraversal(inputPath)) {
-		return { valid: false, error: "Path traversal not allowed" };
-	}
+  // Check for directory traversal BEFORE normalization
+  // This catches attempts to use .. to escape directories
+  if (containsTraversal(inputPath)) {
+    return { valid: false, error: "Path traversal not allowed" };
+  }
 
-	// Normalize the path
-	let normalizedPath: string;
-	try {
-		normalizedPath = normalizePath(inputPath);
-	} catch {
-		return { valid: false, error: "Failed to normalize path" };
-	}
+  // Normalize the path
+  let normalizedPath: string;
+  try {
+    normalizedPath = normalizePath(inputPath);
+  } catch {
+    return { valid: false, error: "Failed to normalize path" };
+  }
 
-	// Check if normalized path is a system path
-	if (isBlockedSystemPath(normalizedPath)) {
-		// Find which system path was matched for better error message
-		const blockedPaths = getBlockedSystemPaths();
-		const lowerPath = normalizedPath.toLowerCase();
+  // Check if normalized path is a system path
+  if (isBlockedSystemPath(normalizedPath)) {
+    // Find which system path was matched for better error message
+    const blockedPaths = getBlockedSystemPaths();
+    const lowerPath = normalizedPath.toLowerCase();
 
-		for (const blockedPath of blockedPaths) {
-			const lowerBlocked = blockedPath.toLowerCase();
-			if (
-				lowerPath === lowerBlocked ||
-				lowerPath.startsWith(lowerBlocked + path.sep)
-			) {
-				return {
-					valid: false,
-					error: `System path not allowed: ${blockedPath}`,
-				};
-			}
-		}
+    for (const blockedPath of blockedPaths) {
+      const lowerBlocked = blockedPath.toLowerCase();
+      if (
+        lowerPath === lowerBlocked ||
+        lowerPath.startsWith(lowerBlocked + path.sep)
+      ) {
+        return {
+          valid: false,
+          error: `System path not allowed: ${blockedPath}`,
+        };
+      }
+    }
 
-		return { valid: false, error: "System path not allowed" };
-	}
+    return { valid: false, error: "System path not allowed" };
+  }
 
-	return { valid: true, normalizedPath };
+  return { valid: true, normalizedPath };
 }
 
 /**
@@ -270,11 +270,11 @@ export function validatePath(inputPath: string): PathValidationResult {
  * ```
  */
 export function validatePathOrThrow(inputPath: string): string {
-	const result = validatePath(inputPath);
-	if (!result.valid) {
-		throw new Error(result.error);
-	}
-	return result.normalizedPath!;
+  const result = validatePath(inputPath);
+  if (!result.valid) {
+    throw new Error(result.error);
+  }
+  return result.normalizedPath!;
 }
 
 /**
@@ -293,18 +293,18 @@ export function validatePathOrThrow(inputPath: string): string {
  * ```
  */
 export function isPathWithin(inputPath: string, basePath: string): boolean {
-	const normalizedInput = normalizePath(inputPath);
-	const normalizedBase = normalizePath(basePath);
+  const normalizedInput = normalizePath(inputPath);
+  const normalizedBase = normalizePath(basePath);
 
-	// Ensure base path ends with separator for accurate comparison
-	const baseWithSep = normalizedBase.endsWith(path.sep)
-		? normalizedBase
-		: normalizedBase + path.sep;
+  // Ensure base path ends with separator for accurate comparison
+  const baseWithSep = normalizedBase.endsWith(path.sep)
+    ? normalizedBase
+    : normalizedBase + path.sep;
 
-	return (
-		normalizedInput === normalizedBase ||
-		normalizedInput.startsWith(baseWithSep)
-	);
+  return (
+    normalizedInput === normalizedBase ||
+    normalizedInput.startsWith(baseWithSep)
+  );
 }
 
 /**
@@ -314,26 +314,26 @@ export function isPathWithin(inputPath: string, basePath: string): boolean {
  * @returns Description of validation issues or "Path is valid"
  */
 export function explainPathValidation(inputPath: string): string {
-	if (!inputPath || inputPath.trim() === "") {
-		return "Path is empty or contains only whitespace";
-	}
+  if (!inputPath || inputPath.trim() === "") {
+    return "Path is empty or contains only whitespace";
+  }
 
-	if (containsNullBytes(inputPath)) {
-		return "Path contains null bytes which could be used for path truncation attacks";
-	}
+  if (containsNullBytes(inputPath)) {
+    return "Path contains null bytes which could be used for path truncation attacks";
+  }
 
-	if (containsTraversal(inputPath)) {
-		return "Path contains '..' sequences which could be used to escape directory boundaries";
-	}
+  if (containsTraversal(inputPath)) {
+    return "Path contains '..' sequences which could be used to escape directory boundaries";
+  }
 
-	try {
-		const normalizedPath = normalizePath(inputPath);
-		if (isBlockedSystemPath(normalizedPath)) {
-			return `Path resolves to a system directory which is blocked for security reasons`;
-		}
-	} catch {
-		return "Path cannot be normalized due to invalid format";
-	}
+  try {
+    const normalizedPath = normalizePath(inputPath);
+    if (isBlockedSystemPath(normalizedPath)) {
+      return `Path resolves to a system directory which is blocked for security reasons`;
+    }
+  } catch {
+    return "Path cannot be normalized due to invalid format";
+  }
 
-	return "Path is valid";
+  return "Path is valid";
 }

@@ -1,20 +1,20 @@
 {
-	"$schema": "http://json-schema.org/draft-07/schema#",
-	"$id": "https://brain.dev/schemas/tools/send-workflow-event.json",
-	"title": "SendWorkflowEventArgs",
-	"description": "Schema for send_workflow_event tool arguments. Triggers a workflow by sending an event.",
-	"type": "object",
-	"properties": {
-		"event_name": {
-			"type": "string",
-			"description": "The event name to trigger (e.g., 'feature/completion.requested')"
-		},
-		"data": {
-			"type": "object",
-			"additionalProperties": true,
-			"description": "The payload required by the workflow"
-		}
-	},
-	"required": ["event_name"],
-	"additionalProperties": false
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://brain.dev/schemas/tools/send-workflow-event.json",
+  "title": "SendWorkflowEventArgs",
+  "description": "Schema for send_workflow_event tool arguments. Triggers a workflow by sending an event.",
+  "type": "object",
+  "properties": {
+    "event_name": {
+      "type": "string",
+      "description": "The event name to trigger (e.g., 'feature/completion.requested')"
+    },
+    "data": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "The payload required by the workflow"
+    }
+  },
+  "required": ["event_name"],
+  "additionalProperties": false
 }

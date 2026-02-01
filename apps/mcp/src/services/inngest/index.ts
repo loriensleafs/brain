@@ -8,15 +8,15 @@
  */
 
 import {
-	checkInngestAvailability,
-	inngest,
-	isInngestAvailable,
+  checkInngestAvailability,
+  inngest,
+  isInngestAvailable,
 } from "../../inngest/client";
 import { featureCompletionWorkflow } from "../../inngest/workflows/featureCompletion";
 import { hitlApprovalWorkflow } from "../../inngest/workflows/hitlApproval";
 import {
-	sessionStateQueryWorkflow,
-	sessionStateWorkflow,
+  sessionStateQueryWorkflow,
+  sessionStateWorkflow,
 } from "../../inngest/workflows/sessionState";
 import { logger } from "../../utils/internal/logger";
 
@@ -24,10 +24,10 @@ import { logger } from "../../utils/internal/logger";
  * All registered workflow functions.
  */
 const WORKFLOW_FUNCTIONS = [
-	featureCompletionWorkflow,
-	hitlApprovalWorkflow,
-	sessionStateWorkflow,
-	sessionStateQueryWorkflow,
+  featureCompletionWorkflow,
+  hitlApprovalWorkflow,
+  sessionStateWorkflow,
+  sessionStateQueryWorkflow,
 ];
 
 /**
@@ -39,17 +39,17 @@ const WORKFLOW_FUNCTIONS = [
  * @returns Promise<boolean> - true if Inngest is available
  */
 export async function initInngestService(): Promise<boolean> {
-	logger.debug("Checking Inngest dev server availability...");
-	const available = await checkInngestAvailability();
+  logger.debug("Checking Inngest dev server availability...");
+  const available = await checkInngestAvailability();
 
-	if (!available) {
-		logger.info(
-			"Inngest dev server not available. Workflow features disabled. " +
-				"Start with: npx inngest-cli@latest dev",
-		);
-	}
+  if (!available) {
+    logger.info(
+      "Inngest dev server not available. Workflow features disabled. " +
+        "Start with: npx inngest-cli@latest dev",
+    );
+  }
 
-	return available;
+  return available;
 }
 
 /**
@@ -58,7 +58,7 @@ export async function initInngestService(): Promise<boolean> {
  * @returns boolean - true if Inngest is available and workflows can run
  */
 export function isWorkflowAvailable(): boolean {
-	return isInngestAvailable();
+  return isInngestAvailable();
 }
 
 /**
@@ -67,7 +67,7 @@ export function isWorkflowAvailable(): boolean {
  * @returns The Inngest client instance
  */
 export function getInngestClient() {
-	return inngest;
+  return inngest;
 }
 
 /**
@@ -76,7 +76,7 @@ export function getInngestClient() {
  * @returns Array of workflow functions
  */
 export function getWorkflowFunctions() {
-	return WORKFLOW_FUNCTIONS;
+  return WORKFLOW_FUNCTIONS;
 }
 
 /**
@@ -86,30 +86,30 @@ export function getWorkflowFunctions() {
  * @returns Promise with send result or error if unavailable
  */
 export async function sendWorkflowEvent(event: {
-	name: string;
-	data: Record<string, unknown>;
+  name: string;
+  data: Record<string, unknown>;
 }): Promise<{ success: boolean; ids?: string[]; error?: string }> {
-	if (!isInngestAvailable()) {
-		return {
-			success: false,
-			error:
-				"Inngest unavailable. Start dev server: npx inngest-cli@latest dev",
-		};
-	}
+  if (!isInngestAvailable()) {
+    return {
+      success: false,
+      error:
+        "Inngest unavailable. Start dev server: npx inngest-cli@latest dev",
+    };
+  }
 
-	try {
-		const result = await inngest.send(event);
-		logger.debug(
-			{ eventName: event.name, ids: result.ids },
-			"Sent workflow event",
-		);
-		return { success: true, ids: result.ids };
-	} catch (error) {
-		const message = error instanceof Error ? error.message : String(error);
-		logger.error(
-			{ eventName: event.name, error: message },
-			"Failed to send workflow event",
-		);
-		return { success: false, error: message };
-	}
+  try {
+    const result = await inngest.send(event);
+    logger.debug(
+      { eventName: event.name, ids: result.ids },
+      "Sent workflow event",
+    );
+    return { success: true, ids: result.ids };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    logger.error(
+      { eventName: event.name, error: message },
+      "Failed to send workflow event",
+    );
+    return { success: false, error: message };
+  }
 }

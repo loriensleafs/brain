@@ -8,8 +8,8 @@
 import { createVectorConnection } from "../../db/connection";
 import { ensureEmbeddingTables } from "../../db/schema";
 import {
-	type ChunkEmbeddingInput,
-	storeChunkedEmbeddings,
+  type ChunkEmbeddingInput,
+  storeChunkedEmbeddings,
 } from "../../db/vectors";
 import { logger } from "../../utils/internal/logger";
 import { chunkText } from "./chunking";
@@ -24,28 +24,28 @@ import { generateEmbedding } from "./generateEmbedding";
  * @returns Array of chunk embeddings or null if any chunk fails
  */
 async function generateChunkedEmbeddings(
-	content: string,
+  content: string,
 ): Promise<ChunkEmbeddingInput[] | null> {
-	const chunks = chunkText(content);
-	const results: ChunkEmbeddingInput[] = [];
+  const chunks = chunkText(content);
+  const results: ChunkEmbeddingInput[] = [];
 
-	for (const chunk of chunks) {
-		const embedding = await generateEmbedding(chunk.text);
-		if (!embedding) {
-			return null;
-		}
+  for (const chunk of chunks) {
+    const embedding = await generateEmbedding(chunk.text);
+    if (!embedding) {
+      return null;
+    }
 
-		results.push({
-			chunkIndex: chunk.chunkIndex,
-			totalChunks: chunk.totalChunks,
-			chunkStart: chunk.start,
-			chunkEnd: chunk.end,
-			chunkText: chunk.text,
-			embedding,
-		});
-	}
+    results.push({
+      chunkIndex: chunk.chunkIndex,
+      totalChunks: chunk.totalChunks,
+      chunkStart: chunk.start,
+      chunkEnd: chunk.end,
+      chunkText: chunk.text,
+      embedding,
+    });
+  }
 
-	return results;
+  return results;
 }
 
 /**
@@ -55,26 +55,26 @@ async function generateChunkedEmbeddings(
  * @param content - Note content to embed
  */
 export function triggerEmbedding(noteId: string, content: string): void {
-	// Check if embedding is enabled (will be implemented in TASK-2-4)
-	// For now, always attempt
+  // Check if embedding is enabled (will be implemented in TASK-2-4)
+  // For now, always attempt
 
-	generateChunkedEmbeddings(content)
-		.then((chunkEmbeddings) => {
-			if (chunkEmbeddings && chunkEmbeddings.length > 0) {
-				const db = createVectorConnection();
-				try {
-					ensureEmbeddingTables(db);
-					storeChunkedEmbeddings(db, noteId, chunkEmbeddings);
-					logger.debug(
-						`Embedding stored for note: ${noteId} (${chunkEmbeddings.length} chunks)`,
-					);
-				} finally {
-					db.close();
-				}
-			}
-		})
-		.catch((error: Error) => {
-			logger.warn(`Embedding failed for note ${noteId}: ${error.message}`);
-			// Queue for retry will be added in TASK-2-6
-		});
+  generateChunkedEmbeddings(content)
+    .then((chunkEmbeddings) => {
+      if (chunkEmbeddings && chunkEmbeddings.length > 0) {
+        const db = createVectorConnection();
+        try {
+          ensureEmbeddingTables(db);
+          storeChunkedEmbeddings(db, noteId, chunkEmbeddings);
+          logger.debug(
+            `Embedding stored for note: ${noteId} (${chunkEmbeddings.length} chunks)`,
+          );
+        } finally {
+          db.close();
+        }
+      }
+    })
+    .catch((error: Error) => {
+      logger.warn(`Embedding failed for note ${noteId}: ${error.message}`);
+      // Queue for retry will be added in TASK-2-6
+    });
 }

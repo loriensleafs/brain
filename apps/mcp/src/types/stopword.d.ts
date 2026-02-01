@@ -6,8 +6,8 @@
  */
 
 declare module "stopword" {
-	/**
-	 * Remove stopwords from an array of strings
-	 */
-	export function removeStopwords(input: string[]): string[];
+  /**
+   * Remove stopwords from an array of strings
+   */
+  export function removeStopwords(input: string[]): string[];
 }

@@ -14,9 +14,9 @@ import { logger } from "../utils/internal/logger";
  * Communication happens via stdin/stdout.
  */
 export async function startStdioTransport(server: McpServer): Promise<void> {
-	const transport = new StdioServerTransport();
+  const transport = new StdioServerTransport();
 
-	await server.connect(transport);
+  await server.connect(transport);
 
-	logger.info("Stdio transport started - ready for MCP communication");
+  logger.info("Stdio transport started - ready for MCP communication");
 }

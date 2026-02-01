@@ -17,14 +17,14 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import {
-	acquireConfigLock,
-	releaseConfigLock,
+  acquireConfigLock,
+  releaseConfigLock,
 } from "../utils/security/configLock";
 import { validatePathOrThrow } from "./path-validator";
 import {
-	type BrainConfig,
-	DEFAULT_BRAIN_CONFIG,
-	validateBrainConfig,
+  type BrainConfig,
+  DEFAULT_BRAIN_CONFIG,
+  validateBrainConfig,
 } from "./schema";
 
 /**
@@ -32,7 +32,7 @@ import {
  * Uses ~/.config/brain/ on Unix-like systems.
  */
 const XDG_CONFIG_HOME =
-	process.env.XDG_CONFIG_HOME || path.join(os.homedir(), ".config");
+  process.env.XDG_CONFIG_HOME || path.join(os.homedir(), ".config");
 const BRAIN_CONFIG_DIR = path.join(XDG_CONFIG_HOME, "brain");
 const BRAIN_CONFIG_FILE = "config.json";
 const BRAIN_CONFIG_TEMP_FILE = "config.json.tmp";
@@ -54,26 +54,26 @@ const DEFAULT_LOCK_TIMEOUT_MS = 5000;
  * Error class for Brain configuration operations.
  */
 export class BrainConfigError extends Error {
-	constructor(
-		message: string,
-		public readonly code:
-			| "PARSE_ERROR"
-			| "VALIDATION_ERROR"
-			| "IO_ERROR"
-			| "LOCK_ERROR",
-		public readonly cause?: unknown,
-	) {
-		super(message);
-		this.name = "BrainConfigError";
-	}
+  constructor(
+    message: string,
+    public readonly code:
+      | "PARSE_ERROR"
+      | "VALIDATION_ERROR"
+      | "IO_ERROR"
+      | "LOCK_ERROR",
+    public readonly cause?: unknown,
+  ) {
+    super(message);
+    this.name = "BrainConfigError";
+  }
 }
 
 /**
  * Options for configuration operations.
  */
 export interface BrainConfigOptions {
-	/** Lock timeout in milliseconds (default: 5000) */
-	lockTimeoutMs?: number;
+  /** Lock timeout in milliseconds (default: 5000) */
+  lockTimeoutMs?: number;
 }
 
 /**
@@ -82,7 +82,7 @@ export interface BrainConfigOptions {
  * @returns Absolute path to ~/.config/brain/
  */
 export function getBrainConfigDir(): string {
-	return BRAIN_CONFIG_DIR;
+  return BRAIN_CONFIG_DIR;
 }
 
 /**
@@ -91,7 +91,7 @@ export function getBrainConfigDir(): string {
  * @returns Absolute path to ~/.config/brain/config.json
  */
 export function getBrainConfigPath(): string {
-	return path.join(BRAIN_CONFIG_DIR, BRAIN_CONFIG_FILE);
+  return path.join(BRAIN_CONFIG_DIR, BRAIN_CONFIG_FILE);
 }
 
 /**
@@ -100,7 +100,7 @@ export function getBrainConfigPath(): string {
  * @returns Absolute path to ~/.config/brain/config.json.tmp
  */
 function getTempConfigPath(): string {
-	return path.join(BRAIN_CONFIG_DIR, BRAIN_CONFIG_TEMP_FILE);
+  return path.join(BRAIN_CONFIG_DIR, BRAIN_CONFIG_TEMP_FILE);
 }
 
 /**
@@ -109,29 +109,29 @@ function getTempConfigPath(): string {
  * @throws BrainConfigError if directory creation fails
  */
 function ensureConfigDir(): void {
-	const configDir = getBrainConfigDir();
+  const configDir = getBrainConfigDir();
 
-	if (!fs.existsSync(configDir)) {
-		try {
-			fs.mkdirSync(configDir, { recursive: true, mode: DIR_MODE });
-		} catch (error) {
-			throw new BrainConfigError(
-				`Failed to create config directory: ${configDir}`,
-				"IO_ERROR",
-				error,
-			);
-		}
-	}
+  if (!fs.existsSync(configDir)) {
+    try {
+      fs.mkdirSync(configDir, { recursive: true, mode: DIR_MODE });
+    } catch (error) {
+      throw new BrainConfigError(
+        `Failed to create config directory: ${configDir}`,
+        "IO_ERROR",
+        error,
+      );
+    }
+  }
 
-	// Verify/fix permissions on existing directory
-	try {
-		const stats = fs.statSync(configDir);
-		if ((stats.mode & 0o777) !== DIR_MODE) {
-			fs.chmodSync(configDir, DIR_MODE);
-		}
-	} catch {
-		// Ignore permission check errors on non-Unix systems
-	}
+  // Verify/fix permissions on existing directory
+  try {
+    const stats = fs.statSync(configDir);
+    if ((stats.mode & 0o777) !== DIR_MODE) {
+      fs.chmodSync(configDir, DIR_MODE);
+    }
+  } catch {
+    // Ignore permission check errors on non-Unix systems
+  }
 }
 
 /**
@@ -140,11 +140,11 @@ function ensureConfigDir(): void {
  * @param filePath - Path to the file
  */
 function setSecureFilePermissions(filePath: string): void {
-	try {
-		fs.chmodSync(filePath, FILE_MODE);
-	} catch {
-		// Ignore permission errors on non-Unix systems (e.g., Windows)
-	}
+  try {
+    fs.chmodSync(filePath, FILE_MODE);
+  } catch {
+    // Ignore permission errors on non-Unix systems (e.g., Windows)
+  }
 }
 
 /**
@@ -164,68 +164,68 @@ function setSecureFilePermissions(filePath: string): void {
  * ```
  */
 export async function loadBrainConfig(
-	options: BrainConfigOptions = {},
+  options: BrainConfigOptions = {},
 ): Promise<BrainConfig> {
-	const configPath = getBrainConfigPath();
-	const { lockTimeoutMs = DEFAULT_LOCK_TIMEOUT_MS } = options;
+  const configPath = getBrainConfigPath();
+  const { lockTimeoutMs = DEFAULT_LOCK_TIMEOUT_MS } = options;
 
-	// Acquire lock for reading (prevents partial reads during writes)
-	const lockResult = await acquireConfigLock({ timeoutMs: lockTimeoutMs });
-	if (!lockResult.acquired) {
-		throw new BrainConfigError(
-			lockResult.error || "Failed to acquire config lock for reading",
-			"LOCK_ERROR",
-		);
-	}
+  // Acquire lock for reading (prevents partial reads during writes)
+  const lockResult = await acquireConfigLock({ timeoutMs: lockTimeoutMs });
+  if (!lockResult.acquired) {
+    throw new BrainConfigError(
+      lockResult.error || "Failed to acquire config lock for reading",
+      "LOCK_ERROR",
+    );
+  }
 
-	try {
-		// Check if file exists
-		if (!fs.existsSync(configPath)) {
-			return { ...DEFAULT_BRAIN_CONFIG };
-		}
+  try {
+    // Check if file exists
+    if (!fs.existsSync(configPath)) {
+      return { ...DEFAULT_BRAIN_CONFIG };
+    }
 
-		// Read file content
-		let content: string;
-		try {
-			content = fs.readFileSync(configPath, "utf-8");
-		} catch (error) {
-			throw new BrainConfigError(
-				`Failed to read config file: ${configPath}`,
-				"IO_ERROR",
-				error,
-			);
-		}
+    // Read file content
+    let content: string;
+    try {
+      content = fs.readFileSync(configPath, "utf-8");
+    } catch (error) {
+      throw new BrainConfigError(
+        `Failed to read config file: ${configPath}`,
+        "IO_ERROR",
+        error,
+      );
+    }
 
-		// Parse JSON
-		let parsed: unknown;
-		try {
-			parsed = JSON.parse(content);
-		} catch (error) {
-			throw new BrainConfigError(
-				`Invalid JSON in config file: ${error instanceof SyntaxError ? error.message : "parse error"}`,
-				"PARSE_ERROR",
-				error,
-			);
-		}
+    // Parse JSON
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(content);
+    } catch (error) {
+      throw new BrainConfigError(
+        `Invalid JSON in config file: ${error instanceof SyntaxError ? error.message : "parse error"}`,
+        "PARSE_ERROR",
+        error,
+      );
+    }
 
-		// Validate against schema
-		const result = validateBrainConfig(parsed);
-		if (!result.success) {
-			const errors = result.errors || [];
-			const errorDetails = errors
-				.map((error) => `${error.field || "root"}: ${error.message}`)
-				.join("; ");
-			throw new BrainConfigError(
-				`Config validation failed: ${errorDetails}`,
-				"VALIDATION_ERROR",
-				new Error(errorDetails),
-			);
-		}
+    // Validate against schema
+    const result = validateBrainConfig(parsed);
+    if (!result.success) {
+      const errors = result.errors || [];
+      const errorDetails = errors
+        .map((error) => `${error.field || "root"}: ${error.message}`)
+        .join("; ");
+      throw new BrainConfigError(
+        `Config validation failed: ${errorDetails}`,
+        "VALIDATION_ERROR",
+        new Error(errorDetails),
+      );
+    }
 
-		return result.data!;
-	} finally {
-		releaseConfigLock();
-	}
+    return result.data!;
+  } finally {
+    releaseConfigLock();
+  }
 }
 
 /**
@@ -237,25 +237,25 @@ export async function loadBrainConfig(
  * @returns Validated BrainConfig object or default config on error
  */
 export function loadBrainConfigSync(): BrainConfig {
-	const configPath = getBrainConfigPath();
+  const configPath = getBrainConfigPath();
 
-	try {
-		if (!fs.existsSync(configPath)) {
-			return { ...DEFAULT_BRAIN_CONFIG };
-		}
+  try {
+    if (!fs.existsSync(configPath)) {
+      return { ...DEFAULT_BRAIN_CONFIG };
+    }
 
-		const content = fs.readFileSync(configPath, "utf-8");
-		const parsed = JSON.parse(content);
-		const result = validateBrainConfig(parsed);
+    const content = fs.readFileSync(configPath, "utf-8");
+    const parsed = JSON.parse(content);
+    const result = validateBrainConfig(parsed);
 
-		if (result.success) {
-			return result.data!;
-		}
-	} catch {
-		// Return defaults on any error
-	}
+    if (result.success) {
+      return result.data!;
+    }
+  } catch {
+    // Return defaults on any error
+  }
 
-	return { ...DEFAULT_BRAIN_CONFIG };
+  return { ...DEFAULT_BRAIN_CONFIG };
 }
 
 /**
@@ -279,96 +279,96 @@ export function loadBrainConfigSync(): BrainConfig {
  * ```
  */
 export async function saveBrainConfig(
-	config: BrainConfig,
-	options: BrainConfigOptions = {},
+  config: BrainConfig,
+  options: BrainConfigOptions = {},
 ): Promise<void> {
-	const { lockTimeoutMs = DEFAULT_LOCK_TIMEOUT_MS } = options;
+  const { lockTimeoutMs = DEFAULT_LOCK_TIMEOUT_MS } = options;
 
-	// Validate config before writing
-	const result = validateBrainConfig(config);
-	if (!result.success) {
-		const errors = result.errors || [];
-		const errorDetails = errors
-			.map((error) => `${error.field || "root"}: ${error.message}`)
-			.join("; ");
-		throw new BrainConfigError(
-			`Invalid config: ${errorDetails}`,
-			"VALIDATION_ERROR",
-			new Error(errorDetails),
-		);
-	}
+  // Validate config before writing
+  const result = validateBrainConfig(config);
+  if (!result.success) {
+    const errors = result.errors || [];
+    const errorDetails = errors
+      .map((error) => `${error.field || "root"}: ${error.message}`)
+      .join("; ");
+    throw new BrainConfigError(
+      `Invalid config: ${errorDetails}`,
+      "VALIDATION_ERROR",
+      new Error(errorDetails),
+    );
+  }
 
-	// Validate all paths in the config
-	validateConfigPaths(config);
+  // Validate all paths in the config
+  validateConfigPaths(config);
 
-	// Acquire lock for writing
-	const lockResult = await acquireConfigLock({ timeoutMs: lockTimeoutMs });
-	if (!lockResult.acquired) {
-		throw new BrainConfigError(
-			lockResult.error || "Failed to acquire config lock for writing",
-			"LOCK_ERROR",
-		);
-	}
+  // Acquire lock for writing
+  const lockResult = await acquireConfigLock({ timeoutMs: lockTimeoutMs });
+  if (!lockResult.acquired) {
+    throw new BrainConfigError(
+      lockResult.error || "Failed to acquire config lock for writing",
+      "LOCK_ERROR",
+    );
+  }
 
-	const configPath = getBrainConfigPath();
-	const tempPath = getTempConfigPath();
+  const configPath = getBrainConfigPath();
+  const tempPath = getTempConfigPath();
 
-	try {
-		// Ensure directory exists
-		ensureConfigDir();
+  try {
+    // Ensure directory exists
+    ensureConfigDir();
 
-		// Serialize config
-		const content = JSON.stringify(config, null, 2);
+    // Serialize config
+    const content = JSON.stringify(config, null, 2);
 
-		// Write to temp file
-		try {
-			fs.writeFileSync(tempPath, content, {
-				encoding: "utf-8",
-				mode: FILE_MODE,
-			});
-		} catch (error) {
-			throw new BrainConfigError(
-				`Failed to write temp config file: ${tempPath}`,
-				"IO_ERROR",
-				error,
-			);
-		}
+    // Write to temp file
+    try {
+      fs.writeFileSync(tempPath, content, {
+        encoding: "utf-8",
+        mode: FILE_MODE,
+      });
+    } catch (error) {
+      throw new BrainConfigError(
+        `Failed to write temp config file: ${tempPath}`,
+        "IO_ERROR",
+        error,
+      );
+    }
 
-		// Verify temp file is valid JSON (guards against partial writes)
-		try {
-			const verifyContent = fs.readFileSync(tempPath, "utf-8");
-			JSON.parse(verifyContent);
-		} catch (error) {
-			// Clean up invalid temp file
-			cleanupTempFile(tempPath);
-			throw new BrainConfigError(
-				"Temp file verification failed: written JSON is invalid",
-				"PARSE_ERROR",
-				error,
-			);
-		}
+    // Verify temp file is valid JSON (guards against partial writes)
+    try {
+      const verifyContent = fs.readFileSync(tempPath, "utf-8");
+      JSON.parse(verifyContent);
+    } catch (error) {
+      // Clean up invalid temp file
+      cleanupTempFile(tempPath);
+      throw new BrainConfigError(
+        "Temp file verification failed: written JSON is invalid",
+        "PARSE_ERROR",
+        error,
+      );
+    }
 
-		// Atomic rename
-		try {
-			fs.renameSync(tempPath, configPath);
-		} catch (error) {
-			cleanupTempFile(tempPath);
-			throw new BrainConfigError(
-				`Failed to rename temp file to config: ${error instanceof Error ? error.message : "rename error"}`,
-				"IO_ERROR",
-				error,
-			);
-		}
+    // Atomic rename
+    try {
+      fs.renameSync(tempPath, configPath);
+    } catch (error) {
+      cleanupTempFile(tempPath);
+      throw new BrainConfigError(
+        `Failed to rename temp file to config: ${error instanceof Error ? error.message : "rename error"}`,
+        "IO_ERROR",
+        error,
+      );
+    }
 
-		// Set secure permissions on final file
-		setSecureFilePermissions(configPath);
-	} finally {
-		// Always release lock
-		releaseConfigLock();
+    // Set secure permissions on final file
+    setSecureFilePermissions(configPath);
+  } finally {
+    // Always release lock
+    releaseConfigLock();
 
-		// Clean up temp file if it still exists (shouldn't happen on success)
-		cleanupTempFile(tempPath);
-	}
+    // Clean up temp file if it still exists (shouldn't happen on success)
+    cleanupTempFile(tempPath);
+  }
 }
 
 /**
@@ -386,16 +386,16 @@ export async function saveBrainConfig(
  * ```
  */
 export async function initBrainConfig(
-	options: BrainConfigOptions = {},
+  options: BrainConfigOptions = {},
 ): Promise<BrainConfig> {
-	const configPath = getBrainConfigPath();
+  const configPath = getBrainConfigPath();
 
-	if (!fs.existsSync(configPath)) {
-		await saveBrainConfig(DEFAULT_BRAIN_CONFIG, options);
-		return { ...DEFAULT_BRAIN_CONFIG };
-	}
+  if (!fs.existsSync(configPath)) {
+    await saveBrainConfig(DEFAULT_BRAIN_CONFIG, options);
+    return { ...DEFAULT_BRAIN_CONFIG };
+  }
 
-	return loadBrainConfig(options);
+  return loadBrainConfig(options);
 }
 
 /**
@@ -405,47 +405,47 @@ export async function initBrainConfig(
  * @throws BrainConfigError if any path is invalid
  */
 function validateConfigPaths(config: BrainConfig): void {
-	// Validate memories_location
-	try {
-		validatePathOrThrow(config.defaults.memories_location);
-	} catch (error) {
-		throw new BrainConfigError(
-			`Invalid memories_location: ${error instanceof Error ? error.message : "validation error"}`,
-			"VALIDATION_ERROR",
-			error,
-		);
-	}
+  // Validate memories_location
+  try {
+    validatePathOrThrow(config.defaults.memories_location);
+  } catch (error) {
+    throw new BrainConfigError(
+      `Invalid memories_location: ${error instanceof Error ? error.message : "validation error"}`,
+      "VALIDATION_ERROR",
+      error,
+    );
+  }
 
-	// Validate project paths
-	for (const [projectName, projectConfig] of Object.entries(
-		config.projects ?? {},
-	)) {
-		if (!projectConfig) continue;
+  // Validate project paths
+  for (const [projectName, projectConfig] of Object.entries(
+    config.projects ?? {},
+  )) {
+    if (!projectConfig) continue;
 
-		// Validate code_path
-		try {
-			validatePathOrThrow(projectConfig.code_path);
-		} catch (error) {
-			throw new BrainConfigError(
-				`Invalid code_path for project '${projectName}': ${error instanceof Error ? error.message : "validation error"}`,
-				"VALIDATION_ERROR",
-				error,
-			);
-		}
+    // Validate code_path
+    try {
+      validatePathOrThrow(projectConfig.code_path);
+    } catch (error) {
+      throw new BrainConfigError(
+        `Invalid code_path for project '${projectName}': ${error instanceof Error ? error.message : "validation error"}`,
+        "VALIDATION_ERROR",
+        error,
+      );
+    }
 
-		// Validate memories_path if set
-		if (projectConfig.memories_path) {
-			try {
-				validatePathOrThrow(projectConfig.memories_path);
-			} catch (error) {
-				throw new BrainConfigError(
-					`Invalid memories_path for project '${projectName}': ${error instanceof Error ? error.message : "validation error"}`,
-					"VALIDATION_ERROR",
-					error,
-				);
-			}
-		}
-	}
+    // Validate memories_path if set
+    if (projectConfig.memories_path) {
+      try {
+        validatePathOrThrow(projectConfig.memories_path);
+      } catch (error) {
+        throw new BrainConfigError(
+          `Invalid memories_path for project '${projectName}': ${error instanceof Error ? error.message : "validation error"}`,
+          "VALIDATION_ERROR",
+          error,
+        );
+      }
+    }
+  }
 }
 
 /**
@@ -454,13 +454,13 @@ function validateConfigPaths(config: BrainConfig): void {
  * @param tempPath - Path to temp file
  */
 function cleanupTempFile(tempPath: string): void {
-	try {
-		if (fs.existsSync(tempPath)) {
-			fs.unlinkSync(tempPath);
-		}
-	} catch {
-		// Ignore cleanup errors
-	}
+  try {
+    if (fs.existsSync(tempPath)) {
+      fs.unlinkSync(tempPath);
+    }
+  } catch {
+    // Ignore cleanup errors
+  }
 }
 
 /**
@@ -469,7 +469,7 @@ function cleanupTempFile(tempPath: string): void {
  * @returns true if config file exists
  */
 export function brainConfigExists(): boolean {
-	return fs.existsSync(getBrainConfigPath());
+  return fs.existsSync(getBrainConfigPath());
 }
 
 /**
@@ -488,8 +488,8 @@ export function brainConfigExists(): boolean {
  * ```
  */
 export function getDefaultMemoriesLocation(): string {
-	const config = loadBrainConfigSync();
-	return config.defaults.memories_location;
+  const config = loadBrainConfigSync();
+  return config.defaults.memories_location;
 }
 
 /**
@@ -501,32 +501,32 @@ export function getDefaultMemoriesLocation(): string {
  * @throws BrainConfigError if deletion fails
  */
 export async function deleteBrainConfig(
-	options: BrainConfigOptions = {},
+  options: BrainConfigOptions = {},
 ): Promise<void> {
-	const { lockTimeoutMs = DEFAULT_LOCK_TIMEOUT_MS } = options;
-	const configPath = getBrainConfigPath();
+  const { lockTimeoutMs = DEFAULT_LOCK_TIMEOUT_MS } = options;
+  const configPath = getBrainConfigPath();
 
-	if (!fs.existsSync(configPath)) {
-		return;
-	}
+  if (!fs.existsSync(configPath)) {
+    return;
+  }
 
-	const lockResult = await acquireConfigLock({ timeoutMs: lockTimeoutMs });
-	if (!lockResult.acquired) {
-		throw new BrainConfigError(
-			lockResult.error || "Failed to acquire config lock for deletion",
-			"LOCK_ERROR",
-		);
-	}
+  const lockResult = await acquireConfigLock({ timeoutMs: lockTimeoutMs });
+  if (!lockResult.acquired) {
+    throw new BrainConfigError(
+      lockResult.error || "Failed to acquire config lock for deletion",
+      "LOCK_ERROR",
+    );
+  }
 
-	try {
-		fs.unlinkSync(configPath);
-	} catch (error) {
-		throw new BrainConfigError(
-			`Failed to delete config file: ${configPath}`,
-			"IO_ERROR",
-			error,
-		);
-	} finally {
-		releaseConfigLock();
-	}
+  try {
+    fs.unlinkSync(configPath);
+  } catch (error) {
+    throw new BrainConfigError(
+      `Failed to delete config file: ${configPath}`,
+      "IO_ERROR",
+      error,
+    );
+  } finally {
+    releaseConfigLock();
+  }
 }

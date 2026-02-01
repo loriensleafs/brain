@@ -50,23 +50,23 @@ const AGENT_CONTEXT_PREFIX = "sessions/agent-";
  * Error thrown when Brain MCP is unavailable.
  */
 export class BrainUnavailableError extends Error {
-	constructor(
-		message: string,
-		public readonly cause?: Error,
-	) {
-		super(message);
-		this.name = "BrainUnavailableError";
-	}
+  constructor(
+    message: string,
+    public readonly cause?: Error,
+  ) {
+    super(message);
+    this.name = "BrainUnavailableError";
+  }
 }
 
 /**
  * Error thrown when session is not found.
  */
 export class SessionNotFoundError extends Error {
-	constructor() {
-		super("Session not found");
-		this.name = "SessionNotFoundError";
-	}
+  constructor() {
+    super("Session not found");
+    this.name = "SessionNotFoundError";
+  }
 }
 
 // ============================================================================
@@ -77,22 +77,22 @@ export class SessionNotFoundError extends Error {
  * Response structure from read_note tool.
  */
 interface ReadNoteResult {
-	content?: Array<{ type: string; text?: string }>;
+  content?: Array<{ type: string; text?: string }>;
 }
 
 /**
  * Options for BrainSessionPersistence constructor.
  */
 export interface BrainPersistenceOptions {
-	/**
-	 * Optional custom Brain MCP client. If not provided, uses shared client.
-	 */
-	client?: Client;
+  /**
+   * Optional custom Brain MCP client. If not provided, uses shared client.
+   */
+  client?: Client;
 
-	/**
-	 * Project path for Brain notes. Defaults to process.cwd().
-	 */
-	projectPath?: string;
+  /**
+   * Project path for Brain notes. Defaults to process.cwd().
+   */
+  projectPath?: string;
 }
 
 // ============================================================================
@@ -117,215 +117,215 @@ export interface BrainPersistenceOptions {
  * ```
  */
 export class BrainSessionPersistence {
-	private client: Client | null = null;
-	private readonly projectPath: string;
-	private readonly customClient?: Client;
+  private client: Client | null = null;
+  private readonly projectPath: string;
+  private readonly customClient?: Client;
 
-	constructor(options: BrainPersistenceOptions = {}) {
-		this.customClient = options.client;
-		this.projectPath = options.projectPath ?? process.cwd();
-	}
+  constructor(options: BrainPersistenceOptions = {}) {
+    this.customClient = options.client;
+    this.projectPath = options.projectPath ?? process.cwd();
+  }
 
-	/**
-	 * Get Brain MCP client, creating connection if needed.
-	 *
-	 * @returns Connected Brain MCP client
-	 * @throws BrainUnavailableError if connection fails
-	 */
-	private async getClient(): Promise<Client> {
-		if (this.customClient) {
-			return this.customClient;
-		}
+  /**
+   * Get Brain MCP client, creating connection if needed.
+   *
+   * @returns Connected Brain MCP client
+   * @throws BrainUnavailableError if connection fails
+   */
+  private async getClient(): Promise<Client> {
+    if (this.customClient) {
+      return this.customClient;
+    }
 
-		try {
-			this.client = await getBasicMemoryClient();
-			return this.client;
-		} catch (error) {
-			throw new BrainUnavailableError(
-				"Failed to connect to Brain MCP",
-				error instanceof Error ? error : undefined,
-			);
-		}
-	}
+    try {
+      this.client = await getBasicMemoryClient();
+      return this.client;
+    } catch (error) {
+      throw new BrainUnavailableError(
+        "Failed to connect to Brain MCP",
+        error instanceof Error ? error : undefined,
+      );
+    }
+  }
 
-	/**
-	 * Save session state to Brain note.
-	 *
-	 * Writes to fixed path `sessions/session`.
-	 * Uses Last-Write-Wins conflict resolution.
-	 *
-	 * @param session - Session state to save
-	 * @throws BrainUnavailableError if Brain MCP is unavailable
-	 */
-	async saveSession(session: SessionState): Promise<void> {
-		const client = await this.getClient();
+  /**
+   * Save session state to Brain note.
+   *
+   * Writes to fixed path `sessions/session`.
+   * Uses Last-Write-Wins conflict resolution.
+   *
+   * @param session - Session state to save
+   * @throws BrainUnavailableError if Brain MCP is unavailable
+   */
+  async saveSession(session: SessionState): Promise<void> {
+    const client = await this.getClient();
 
-		logger.debug(
-			{ notePath: SESSION_PATH, version: session.version },
-			"Saving session to Brain note",
-		);
+    logger.debug(
+      { notePath: SESSION_PATH, version: session.version },
+      "Saving session to Brain note",
+    );
 
-		// Write session state to Brain note
-		await client.callTool({
-			name: "write_note",
-			arguments: {
-				path: SESSION_PATH,
-				content: JSON.stringify(session, null, 2),
-				project: this.projectPath,
-			},
-		});
+    // Write session state to Brain note
+    await client.callTool({
+      name: "write_note",
+      arguments: {
+        path: SESSION_PATH,
+        content: JSON.stringify(session, null, 2),
+        project: this.projectPath,
+      },
+    });
 
-		logger.info({ version: session.version }, "Session saved to Brain note");
-	}
+    logger.info({ version: session.version }, "Session saved to Brain note");
+  }
 
-	/**
-	 * Load session state from Brain note.
-	 *
-	 * Reads from fixed path `sessions/session`.
-	 *
-	 * @returns Session state or null if not found
-	 * @throws BrainUnavailableError if Brain MCP is unavailable
-	 */
-	async loadSession(): Promise<SessionState | null> {
-		const client = await this.getClient();
+  /**
+   * Load session state from Brain note.
+   *
+   * Reads from fixed path `sessions/session`.
+   *
+   * @returns Session state or null if not found
+   * @throws BrainUnavailableError if Brain MCP is unavailable
+   */
+  async loadSession(): Promise<SessionState | null> {
+    const client = await this.getClient();
 
-		logger.debug({ notePath: SESSION_PATH }, "Loading session from Brain note");
+    logger.debug({ notePath: SESSION_PATH }, "Loading session from Brain note");
 
-		try {
-			const result = (await client.callTool({
-				name: "read_note",
-				arguments: {
-					identifier: SESSION_PATH,
-					project: this.projectPath,
-				},
-			})) as ReadNoteResult;
+    try {
+      const result = (await client.callTool({
+        name: "read_note",
+        arguments: {
+          identifier: SESSION_PATH,
+          project: this.projectPath,
+        },
+      })) as ReadNoteResult;
 
-			// Extract content from response
-			const textContent = result.content?.find((c) => c.type === "text")?.text;
-			if (!textContent) {
-				logger.debug("Session note empty or not found");
-				return null;
-			}
+      // Extract content from response
+      const textContent = result.content?.find((c) => c.type === "text")?.text;
+      if (!textContent) {
+        logger.debug("Session note empty or not found");
+        return null;
+      }
 
-			// Parse JSON
-			let state: SessionState;
-			try {
-				state = JSON.parse(textContent) as SessionState;
-			} catch {
-				logger.warn("Failed to parse session state JSON");
-				return null;
-			}
+      // Parse JSON
+      let state: SessionState;
+      try {
+        state = JSON.parse(textContent) as SessionState;
+      } catch {
+        logger.warn("Failed to parse session state JSON");
+        return null;
+      }
 
-			logger.debug(
-				{ version: state.version },
-				"Session loaded from Brain note",
-			);
+      logger.debug(
+        { version: state.version },
+        "Session loaded from Brain note",
+      );
 
-			return state;
-		} catch (error) {
-			// Log and return null for errors (note not found, etc.)
-			logger.debug({ error }, "Failed to load session - may not exist");
-			return null;
-		}
-	}
+      return state;
+    } catch (error) {
+      // Log and return null for errors (note not found, etc.)
+      logger.debug({ error }, "Failed to load session - may not exist");
+      return null;
+    }
+  }
 
-	/**
-	 * Delete session state from Brain note.
-	 *
-	 * Writes a tombstone to the fixed path.
-	 *
-	 * @throws BrainUnavailableError if Brain MCP is unavailable
-	 */
-	async deleteSession(): Promise<void> {
-		const client = await this.getClient();
+  /**
+   * Delete session state from Brain note.
+   *
+   * Writes a tombstone to the fixed path.
+   *
+   * @throws BrainUnavailableError if Brain MCP is unavailable
+   */
+  async deleteSession(): Promise<void> {
+    const client = await this.getClient();
 
-		logger.debug(
-			{ notePath: SESSION_PATH },
-			"Deleting session from Brain note",
-		);
+    logger.debug(
+      { notePath: SESSION_PATH },
+      "Deleting session from Brain note",
+    );
 
-		// Write tombstone content to mark as deleted
-		const tombstone = {
-			deleted: true,
-			deletedAt: new Date().toISOString(),
-		};
+    // Write tombstone content to mark as deleted
+    const tombstone = {
+      deleted: true,
+      deletedAt: new Date().toISOString(),
+    };
 
-		await client.callTool({
-			name: "write_note",
-			arguments: {
-				path: SESSION_PATH,
-				content: JSON.stringify(tombstone, null, 2),
-				project: this.projectPath,
-			},
-		});
+    await client.callTool({
+      name: "write_note",
+      arguments: {
+        path: SESSION_PATH,
+        content: JSON.stringify(tombstone, null, 2),
+        project: this.projectPath,
+      },
+    });
 
-		logger.info("Session deleted from Brain note");
-	}
+    logger.info("Session deleted from Brain note");
+  }
 
-	/**
-	 * Save agent invocation context to a separate Brain note.
-	 *
-	 * Used by brain specialist agents to persist their context for
-	 * later reconstruction after context compaction.
-	 *
-	 * @param agent - Agent type
-	 * @param invocation - Agent invocation data
-	 * @throws BrainUnavailableError if Brain MCP is unavailable
-	 */
-	async saveAgentContext(
-		agent: AgentType,
-		invocation: AgentInvocation,
-	): Promise<void> {
-		const client = await this.getClient();
+  /**
+   * Save agent invocation context to a separate Brain note.
+   *
+   * Used by brain specialist agents to persist their context for
+   * later reconstruction after context compaction.
+   *
+   * @param agent - Agent type
+   * @param invocation - Agent invocation data
+   * @throws BrainUnavailableError if Brain MCP is unavailable
+   */
+  async saveAgentContext(
+    agent: AgentType,
+    invocation: AgentInvocation,
+  ): Promise<void> {
+    const client = await this.getClient();
 
-		const notePath = `${AGENT_CONTEXT_PREFIX}${agent}`;
+    const notePath = `${AGENT_CONTEXT_PREFIX}${agent}`;
 
-		logger.debug({ agent, notePath }, "Saving agent context to Brain note");
+    logger.debug({ agent, notePath }, "Saving agent context to Brain note");
 
-		await client.callTool({
-			name: "write_note",
-			arguments: {
-				path: notePath,
-				content: JSON.stringify(invocation, null, 2),
-				project: this.projectPath,
-			},
-		});
+    await client.callTool({
+      name: "write_note",
+      arguments: {
+        path: notePath,
+        content: JSON.stringify(invocation, null, 2),
+        project: this.projectPath,
+      },
+    });
 
-		logger.info({ agent }, "Agent context saved to Brain note");
-	}
+    logger.info({ agent }, "Agent context saved to Brain note");
+  }
 
-	/**
-	 * Load agent invocation context from Brain note.
-	 *
-	 * @param agent - Agent type
-	 * @returns Agent invocation or null if not found
-	 * @throws BrainUnavailableError if Brain MCP is unavailable
-	 */
-	async loadAgentContext(agent: AgentType): Promise<AgentInvocation | null> {
-		const client = await this.getClient();
+  /**
+   * Load agent invocation context from Brain note.
+   *
+   * @param agent - Agent type
+   * @returns Agent invocation or null if not found
+   * @throws BrainUnavailableError if Brain MCP is unavailable
+   */
+  async loadAgentContext(agent: AgentType): Promise<AgentInvocation | null> {
+    const client = await this.getClient();
 
-		const notePath = `${AGENT_CONTEXT_PREFIX}${agent}`;
+    const notePath = `${AGENT_CONTEXT_PREFIX}${agent}`;
 
-		try {
-			const result = (await client.callTool({
-				name: "read_note",
-				arguments: {
-					identifier: notePath,
-					project: this.projectPath,
-				},
-			})) as ReadNoteResult;
+    try {
+      const result = (await client.callTool({
+        name: "read_note",
+        arguments: {
+          identifier: notePath,
+          project: this.projectPath,
+        },
+      })) as ReadNoteResult;
 
-			const textContent = result.content?.find((c) => c.type === "text")?.text;
-			if (!textContent) {
-				return null;
-			}
+      const textContent = result.content?.find((c) => c.type === "text")?.text;
+      if (!textContent) {
+        return null;
+      }
 
-			return JSON.parse(textContent) as AgentInvocation;
-		} catch {
-			logger.debug({ agent }, "Agent context not found");
-			return null;
-		}
-	}
+      return JSON.parse(textContent) as AgentInvocation;
+    } catch {
+      logger.debug({ agent }, "Agent context not found");
+      return null;
+    }
+  }
 }
 
 // ============================================================================
@@ -342,10 +342,10 @@ let defaultPersistence: BrainSessionPersistence | null = null;
  * @returns Default persistence instance
  */
 export function getDefaultPersistence(): BrainSessionPersistence {
-	if (!defaultPersistence) {
-		defaultPersistence = new BrainSessionPersistence();
-	}
-	return defaultPersistence;
+  if (!defaultPersistence) {
+    defaultPersistence = new BrainSessionPersistence();
+  }
+  return defaultPersistence;
 }
 
 /**
@@ -353,5 +353,5 @@ export function getDefaultPersistence(): BrainSessionPersistence {
  * Primarily for testing.
  */
 export function resetDefaultPersistence(): void {
-	defaultPersistence = null;
+  defaultPersistence = null;
 }

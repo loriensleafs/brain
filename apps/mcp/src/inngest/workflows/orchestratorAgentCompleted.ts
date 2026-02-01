@@ -28,10 +28,10 @@ import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { getBasicMemoryClient } from "../../proxy/client";
 import { BrainSessionPersistence } from "../../services/session";
 import type {
-	AgentInvocation,
-	CompactionEntry,
-	OrchestratorWorkflow,
-	SessionState,
+  AgentInvocation,
+  CompactionEntry,
+  OrchestratorWorkflow,
+  SessionState,
 } from "../../services/session/types";
 import { logger } from "../../utils/internal/logger";
 import { inngest } from "../client";
@@ -61,11 +61,11 @@ const INVOCATIONS_TO_KEEP = 3;
  * Result type for agent completion recording.
  */
 export interface AgentCompletedResult {
-	success: boolean;
-	sessionId: string;
-	agent: string;
-	compacted: boolean;
-	compactionNotePath?: string;
+  success: boolean;
+  sessionId: string;
+  agent: string;
+  compacted: boolean;
+  compactionNotePath?: string;
 }
 
 // ============================================================================
@@ -79,33 +79,33 @@ export interface AgentCompletedResult {
  * @throws NonRetriableError if data is invalid
  */
 function validateEventData(data: {
-	sessionId?: string;
-	agent?: string;
-	output?: AgentInvocationOutputData;
+  sessionId?: string;
+  agent?: string;
+  output?: AgentInvocationOutputData;
 }): void {
-	if (!data.sessionId || typeof data.sessionId !== "string") {
-		throw createNonRetriableError(
-			WorkflowErrorType.VALIDATION_ERROR,
-			"Event data must include a valid sessionId string",
-			{ context: { providedData: data } },
-		);
-	}
+  if (!data.sessionId || typeof data.sessionId !== "string") {
+    throw createNonRetriableError(
+      WorkflowErrorType.VALIDATION_ERROR,
+      "Event data must include a valid sessionId string",
+      { context: { providedData: data } },
+    );
+  }
 
-	if (!data.agent || typeof data.agent !== "string") {
-		throw createNonRetriableError(
-			WorkflowErrorType.VALIDATION_ERROR,
-			"Event data must include a valid agent string",
-			{ context: { providedData: data } },
-		);
-	}
+  if (!data.agent || typeof data.agent !== "string") {
+    throw createNonRetriableError(
+      WorkflowErrorType.VALIDATION_ERROR,
+      "Event data must include a valid agent string",
+      { context: { providedData: data } },
+    );
+  }
 
-	if (!data.output || typeof data.output !== "object") {
-		throw createNonRetriableError(
-			WorkflowErrorType.VALIDATION_ERROR,
-			"Event data must include an output object",
-			{ context: { providedData: data } },
-		);
-	}
+  if (!data.output || typeof data.output !== "object") {
+    throw createNonRetriableError(
+      WorkflowErrorType.VALIDATION_ERROR,
+      "Event data must include an output object",
+      { context: { providedData: data } },
+    );
+  }
 }
 
 /**
@@ -116,16 +116,16 @@ function validateEventData(data: {
  * @returns Index of the invocation or -1 if not found
  */
 function findInProgressInvocation(
-	history: AgentInvocation[],
-	agent: string,
+  history: AgentInvocation[],
+  agent: string,
 ): number {
-	// Search from the end to find the most recent in-progress invocation
-	for (let i = history.length - 1; i >= 0; i--) {
-		if (history[i].agent === agent && history[i].status === "in_progress") {
-			return i;
-		}
-	}
-	return -1;
+  // Search from the end to find the most recent in-progress invocation
+  for (let i = history.length - 1; i >= 0; i--) {
+    if (history[i].agent === agent && history[i].status === "in_progress") {
+      return i;
+    }
+  }
+  return -1;
 }
 
 /**
@@ -139,27 +139,27 @@ function findInProgressInvocation(
  * @returns Updated invocation
  */
 function completeInvocation(
-	invocation: AgentInvocation,
-	output: AgentInvocationOutputData,
-	handoffTo: string | null,
-	handoffReason: string,
-	timestamp: string,
+  invocation: AgentInvocation,
+  output: AgentInvocationOutputData,
+  handoffTo: string | null,
+  handoffReason: string,
+  timestamp: string,
 ): AgentInvocation {
-	const hasBlockers = output.blockers && output.blockers.length > 0;
+  const hasBlockers = output.blockers && output.blockers.length > 0;
 
-	return {
-		...invocation,
-		completedAt: timestamp,
-		status: hasBlockers ? "blocked" : "completed",
-		output: {
-			artifacts: output.artifacts,
-			summary: output.summary,
-			recommendations: output.recommendations,
-			blockers: output.blockers,
-		},
-		handoffTo: handoffTo as AgentInvocation["handoffTo"],
-		handoffReason,
-	};
+  return {
+    ...invocation,
+    completedAt: timestamp,
+    status: hasBlockers ? "blocked" : "completed",
+    output: {
+      artifacts: output.artifacts,
+      summary: output.summary,
+      recommendations: output.recommendations,
+      blockers: output.blockers,
+    },
+    handoffTo: handoffTo as AgentInvocation["handoffTo"],
+    handoffReason,
+  };
 }
 
 /**
@@ -169,7 +169,7 @@ function completeInvocation(
  * @returns True if compaction should be triggered
  */
 function needsCompaction(workflow: OrchestratorWorkflow): boolean {
-	return workflow.agentHistory.length > COMPACTION_THRESHOLD;
+  return workflow.agentHistory.length > COMPACTION_THRESHOLD;
 }
 
 /**
@@ -181,11 +181,11 @@ function needsCompaction(workflow: OrchestratorWorkflow): boolean {
  * @returns Markdown content for the history note
  */
 function generateCompactionNoteContent(
-	invocations: AgentInvocation[],
-	sessionId: string,
-	timestamp: string,
+  invocations: AgentInvocation[],
+  sessionId: string,
+  timestamp: string,
 ): string {
-	const header = `# Agent History Archive
+  const header = `# Agent History Archive
 
 **Session ID**: ${sessionId}
 **Archived At**: ${timestamp}
@@ -195,9 +195,9 @@ function generateCompactionNoteContent(
 
 `;
 
-	const invocationEntries = invocations
-		.map((inv, index) => {
-			return `### ${index + 1}. ${inv.agent}
+  const invocationEntries = invocations
+    .map((inv, index) => {
+      return `### ${index + 1}. ${inv.agent}
 
 - **Started**: ${inv.startedAt}
 - **Completed**: ${inv.completedAt ?? "N/A"}
@@ -214,18 +214,18 @@ function generateCompactionNoteContent(
 #### Output
 
 ${
-	inv.output
-		? `- **Summary**: ${inv.output.summary}
+  inv.output
+    ? `- **Summary**: ${inv.output.summary}
 - **Artifacts**: ${inv.output.artifacts.length > 0 ? inv.output.artifacts.join(", ") : "None"}
 - **Recommendations**: ${inv.output.recommendations.length > 0 ? inv.output.recommendations.join(", ") : "None"}
 - **Blockers**: ${inv.output.blockers.length > 0 ? inv.output.blockers.join(", ") : "None"}`
-		: "Not completed"
+    : "Not completed"
 }
 `;
-		})
-		.join("\n---\n\n");
+    })
+    .join("\n---\n\n");
 
-	return header + invocationEntries;
+  return header + invocationEntries;
 }
 
 /**
@@ -238,64 +238,64 @@ ${
  * @returns Updated workflow with compacted history
  */
 async function compactAgentHistory(
-	workflow: OrchestratorWorkflow,
-	sessionId: string,
-	client: Client,
-	projectPath: string,
+  workflow: OrchestratorWorkflow,
+  sessionId: string,
+  client: Client,
+  projectPath: string,
 ): Promise<{ workflow: OrchestratorWorkflow; notePath: string }> {
-	const timestamp = new Date().toISOString();
-	const historyLength = workflow.agentHistory.length;
+  const timestamp = new Date().toISOString();
+  const historyLength = workflow.agentHistory.length;
 
-	// Calculate how many to archive
-	const toArchive = historyLength - INVOCATIONS_TO_KEEP;
+  // Calculate how many to archive
+  const toArchive = historyLength - INVOCATIONS_TO_KEEP;
 
-	// Split history: archive older invocations, keep recent ones
-	const archiveInvocations = workflow.agentHistory.slice(0, toArchive);
-	const keepInvocations = workflow.agentHistory.slice(toArchive);
+  // Split history: archive older invocations, keep recent ones
+  const archiveInvocations = workflow.agentHistory.slice(0, toArchive);
+  const keepInvocations = workflow.agentHistory.slice(toArchive);
 
-	// Generate note path and content
-	const notePath = `sessions/session-${sessionId}-history-${timestamp.replace(/[:.]/g, "-")}`;
-	const noteContent = generateCompactionNoteContent(
-		archiveInvocations,
-		sessionId,
-		timestamp,
-	);
+  // Generate note path and content
+  const notePath = `sessions/session-${sessionId}-history-${timestamp.replace(/[:.]/g, "-")}`;
+  const noteContent = generateCompactionNoteContent(
+    archiveInvocations,
+    sessionId,
+    timestamp,
+  );
 
-	// Write to Brain note
-	await client.callTool({
-		name: "write_note",
-		arguments: {
-			path: notePath,
-			content: noteContent,
-			project: projectPath,
-		},
-	});
+  // Write to Brain note
+  await client.callTool({
+    name: "write_note",
+    arguments: {
+      path: notePath,
+      content: noteContent,
+      project: projectPath,
+    },
+  });
 
-	logger.info(
-		{
-			sessionId,
-			notePath,
-			archivedCount: archiveInvocations.length,
-			keptCount: keepInvocations.length,
-		},
-		"Agent history compacted to Brain note",
-	);
+  logger.info(
+    {
+      sessionId,
+      notePath,
+      archivedCount: archiveInvocations.length,
+      keptCount: keepInvocations.length,
+    },
+    "Agent history compacted to Brain note",
+  );
 
-	// Create compaction entry
-	const compactionEntry: CompactionEntry = {
-		notePath,
-		compactedAt: timestamp,
-		count: archiveInvocations.length,
-	};
+  // Create compaction entry
+  const compactionEntry: CompactionEntry = {
+    notePath,
+    compactedAt: timestamp,
+    count: archiveInvocations.length,
+  };
 
-	// Return updated workflow
-	const updatedWorkflow: OrchestratorWorkflow = {
-		...workflow,
-		agentHistory: keepInvocations,
-		compactionHistory: [...workflow.compactionHistory, compactionEntry],
-	};
+  // Return updated workflow
+  const updatedWorkflow: OrchestratorWorkflow = {
+    ...workflow,
+    agentHistory: keepInvocations,
+    compactionHistory: [...workflow.compactionHistory, compactionEntry],
+  };
 
-	return { workflow: updatedWorkflow, notePath };
+  return { workflow: updatedWorkflow, notePath };
 }
 
 // ============================================================================
@@ -320,210 +320,210 @@ async function compactAgentHistory(
  * - "emit-state-update": Emit state update event
  */
 export const orchestratorAgentCompletedWorkflow = inngest.createFunction(
-	{
-		id: "orchestrator-agent-completed",
-		name: "Orchestrator Agent Completed",
-		retries: 3,
-	},
-	{ event: "orchestrator/agent.completed" },
-	async ({ event, step }): Promise<AgentCompletedResult> => {
-		const { sessionId, agent, output, handoffTo, handoffReason, timestamp } =
-			event.data;
+  {
+    id: "orchestrator-agent-completed",
+    name: "Orchestrator Agent Completed",
+    retries: 3,
+  },
+  { event: "orchestrator/agent.completed" },
+  async ({ event, step }): Promise<AgentCompletedResult> => {
+    const { sessionId, agent, output, handoffTo, handoffReason, timestamp } =
+      event.data;
 
-		// Step 0: Validate input data
-		await step.run("validate-input", async (): Promise<void> => {
-			validateEventData(event.data);
-			logger.info(
-				{ sessionId, agent, handoffTo },
-				"Orchestrator agent completion workflow initiated",
-			);
-		});
+    // Step 0: Validate input data
+    await step.run("validate-input", async (): Promise<void> => {
+      validateEventData(event.data);
+      logger.info(
+        { sessionId, agent, handoffTo },
+        "Orchestrator agent completion workflow initiated",
+      );
+    });
 
-		// Step 1: Load current session state
-		const currentState = await step.run(
-			"load-session",
-			async (): Promise<SessionState> => {
-				const persistence = new BrainSessionPersistence();
-				const state = await persistence.loadSession();
+    // Step 1: Load current session state
+    const currentState = await step.run(
+      "load-session",
+      async (): Promise<SessionState> => {
+        const persistence = new BrainSessionPersistence();
+        const state = await persistence.loadSession();
 
-				if (!state) {
-					throw createNonRetriableError(
-						WorkflowErrorType.VALIDATION_ERROR,
-						"Session not found",
-						{ context: { sessionId } },
-					);
-				}
+        if (!state) {
+          throw createNonRetriableError(
+            WorkflowErrorType.VALIDATION_ERROR,
+            "Session not found",
+            { context: { sessionId } },
+          );
+        }
 
-				if (!state.orchestratorWorkflow) {
-					throw createNonRetriableError(
-						WorkflowErrorType.VALIDATION_ERROR,
-						"Session has no orchestrator workflow",
-						{ context: { sessionId } },
-					);
-				}
+        if (!state.orchestratorWorkflow) {
+          throw createNonRetriableError(
+            WorkflowErrorType.VALIDATION_ERROR,
+            "Session has no orchestrator workflow",
+            { context: { sessionId } },
+          );
+        }
 
-				return state;
-			},
-		);
+        return state;
+      },
+    );
 
-		// Step 2: Update invocation with completion data
-		const stateWithCompletion = await step.run(
-			"complete-invocation",
-			async (): Promise<SessionState> => {
-				const workflow = currentState.orchestratorWorkflow!;
+    // Step 2: Update invocation with completion data
+    const stateWithCompletion = await step.run(
+      "complete-invocation",
+      async (): Promise<SessionState> => {
+        const workflow = currentState.orchestratorWorkflow!;
 
-				// Find the in-progress invocation for this agent
-				const invocationIndex = findInProgressInvocation(
-					workflow.agentHistory,
-					agent,
-				);
+        // Find the in-progress invocation for this agent
+        const invocationIndex = findInProgressInvocation(
+          workflow.agentHistory,
+          agent,
+        );
 
-				if (invocationIndex === -1) {
-					logger.warn(
-						{ sessionId, agent },
-						"No in-progress invocation found for agent - creating completion record",
-					);
-					// This can happen if the invocation event was missed
-					// We still record the completion
-				}
+        if (invocationIndex === -1) {
+          logger.warn(
+            { sessionId, agent },
+            "No in-progress invocation found for agent - creating completion record",
+          );
+          // This can happen if the invocation event was missed
+          // We still record the completion
+        }
 
-				// Update the invocation
-				const updatedHistory = [...workflow.agentHistory];
+        // Update the invocation
+        const updatedHistory = [...workflow.agentHistory];
 
-				if (invocationIndex >= 0) {
-					updatedHistory[invocationIndex] = completeInvocation(
-						workflow.agentHistory[invocationIndex],
-						output,
-						handoffTo,
-						handoffReason,
-						timestamp,
-					);
-				}
+        if (invocationIndex >= 0) {
+          updatedHistory[invocationIndex] = completeInvocation(
+            workflow.agentHistory[invocationIndex],
+            output,
+            handoffTo,
+            handoffReason,
+            timestamp,
+          );
+        }
 
-				const updatedWorkflow: OrchestratorWorkflow = {
-					...workflow,
-					activeAgent: handoffTo as OrchestratorWorkflow["activeAgent"],
-					agentHistory: updatedHistory,
-					lastAgentChange: timestamp,
-				};
+        const updatedWorkflow: OrchestratorWorkflow = {
+          ...workflow,
+          activeAgent: handoffTo as OrchestratorWorkflow["activeAgent"],
+          agentHistory: updatedHistory,
+          lastAgentChange: timestamp,
+        };
 
-				return {
-					...currentState,
-					orchestratorWorkflow: updatedWorkflow,
-					updatedAt: new Date().toISOString(),
-					version: currentState.version + 1,
-				};
-			},
-		);
+        return {
+          ...currentState,
+          orchestratorWorkflow: updatedWorkflow,
+          updatedAt: new Date().toISOString(),
+          version: currentState.version + 1,
+        };
+      },
+    );
 
-		// Step 3: Check if compaction is needed
-		const shouldCompact = await step.run(
-			"check-compaction",
-			async (): Promise<boolean> => {
-				const workflow = stateWithCompletion.orchestratorWorkflow!;
-				const result = needsCompaction(workflow);
+    // Step 3: Check if compaction is needed
+    const shouldCompact = await step.run(
+      "check-compaction",
+      async (): Promise<boolean> => {
+        const workflow = stateWithCompletion.orchestratorWorkflow!;
+        const result = needsCompaction(workflow);
 
-				logger.debug(
-					{
-						sessionId,
-						historyLength: workflow.agentHistory.length,
-						threshold: COMPACTION_THRESHOLD,
-						needsCompaction: result,
-					},
-					"Compaction check completed",
-				);
+        logger.debug(
+          {
+            sessionId,
+            historyLength: workflow.agentHistory.length,
+            threshold: COMPACTION_THRESHOLD,
+            needsCompaction: result,
+          },
+          "Compaction check completed",
+        );
 
-				return result;
-			},
-		);
+        return result;
+      },
+    );
 
-		// Step 4: Compact history if needed
-		let finalState = stateWithCompletion;
-		let compactionNotePath: string | undefined;
+    // Step 4: Compact history if needed
+    let finalState = stateWithCompletion;
+    let compactionNotePath: string | undefined;
 
-		if (shouldCompact) {
-			const compactionResult = await step.run(
-				"compact-history",
-				async (): Promise<{ state: SessionState; notePath: string }> => {
-					let client: Client;
-					try {
-						client = await getBasicMemoryClient();
-					} catch (error) {
-						logger.warn(
-							{ error },
-							"Brain MCP unavailable - skipping compaction",
-						);
-						// Return current state without compaction
-						return { state: stateWithCompletion, notePath: "" };
-					}
+    if (shouldCompact) {
+      const compactionResult = await step.run(
+        "compact-history",
+        async (): Promise<{ state: SessionState; notePath: string }> => {
+          let client: Client;
+          try {
+            client = await getBasicMemoryClient();
+          } catch (error) {
+            logger.warn(
+              { error },
+              "Brain MCP unavailable - skipping compaction",
+            );
+            // Return current state without compaction
+            return { state: stateWithCompletion, notePath: "" };
+          }
 
-					const { workflow, notePath } = await compactAgentHistory(
-						stateWithCompletion.orchestratorWorkflow!,
-						sessionId,
-						client,
-						process.cwd(),
-					);
+          const { workflow, notePath } = await compactAgentHistory(
+            stateWithCompletion.orchestratorWorkflow!,
+            sessionId,
+            client,
+            process.cwd(),
+          );
 
-					const newState: SessionState = {
-						...stateWithCompletion,
-						orchestratorWorkflow: workflow,
-						updatedAt: new Date().toISOString(),
-						version: stateWithCompletion.version + 1,
-					};
+          const newState: SessionState = {
+            ...stateWithCompletion,
+            orchestratorWorkflow: workflow,
+            updatedAt: new Date().toISOString(),
+            version: stateWithCompletion.version + 1,
+          };
 
-					return { state: newState, notePath };
-				},
-			);
+          return { state: newState, notePath };
+        },
+      );
 
-			finalState = compactionResult.state;
-			compactionNotePath = compactionResult.notePath || undefined;
-		}
+      finalState = compactionResult.state;
+      compactionNotePath = compactionResult.notePath || undefined;
+    }
 
-		// Step 5: Persist updated session state
-		await step.run("save-session", async (): Promise<void> => {
-			const persistence = new BrainSessionPersistence();
-			await persistence.saveSession(finalState);
+    // Step 5: Persist updated session state
+    await step.run("save-session", async (): Promise<void> => {
+      const persistence = new BrainSessionPersistence();
+      await persistence.saveSession(finalState);
 
-			logger.info(
-				{
-					sessionId,
-					version: finalState.version,
-					historyLength: finalState.orchestratorWorkflow?.agentHistory.length,
-				},
-				"Session state saved with agent completion",
-			);
-		});
+      logger.info(
+        {
+          sessionId,
+          version: finalState.version,
+          historyLength: finalState.orchestratorWorkflow?.agentHistory.length,
+        },
+        "Session state saved with agent completion",
+      );
+    });
 
-		// Step 6: Emit state update event for downstream workflows
-		await step.sendEvent("emit-state-update", {
-			name: "session/state.update",
-			data: {
-				sessionId,
-				updateType: "task" as const,
-				task: handoffTo ? `${handoffTo}:pending` : undefined,
-			},
-		});
+    // Step 6: Emit state update event for downstream workflows
+    await step.sendEvent("emit-state-update", {
+      name: "session/state.update",
+      data: {
+        sessionId,
+        updateType: "task" as const,
+        task: handoffTo ? `${handoffTo}:pending` : undefined,
+      },
+    });
 
-		logger.info(
-			{
-				sessionId,
-				agent,
-				handoffTo,
-				compacted: shouldCompact,
-				compactionNotePath,
-				historyLength: finalState.orchestratorWorkflow?.agentHistory.length,
-			},
-			"Orchestrator agent completion workflow completed",
-		);
+    logger.info(
+      {
+        sessionId,
+        agent,
+        handoffTo,
+        compacted: shouldCompact,
+        compactionNotePath,
+        historyLength: finalState.orchestratorWorkflow?.agentHistory.length,
+      },
+      "Orchestrator agent completion workflow completed",
+    );
 
-		return {
-			success: true,
-			sessionId,
-			agent,
-			compacted: shouldCompact && !!compactionNotePath,
-			compactionNotePath,
-		};
-	},
+    return {
+      success: true,
+      sessionId,
+      agent,
+      compacted: shouldCompact && !!compactionNotePath,
+      compactionNotePath,
+    };
+  },
 );
 
 /**
@@ -532,14 +532,14 @@ export const orchestratorAgentCompletedWorkflow = inngest.createFunction(
  * @returns Array of compaction entries or empty array
  */
 export async function getCompactionHistory(): Promise<CompactionEntry[]> {
-	const persistence = new BrainSessionPersistence();
-	const state = await persistence.loadSession();
+  const persistence = new BrainSessionPersistence();
+  const state = await persistence.loadSession();
 
-	if (!state?.orchestratorWorkflow) {
-		return [];
-	}
+  if (!state?.orchestratorWorkflow) {
+    return [];
+  }
 
-	return state.orchestratorWorkflow.compactionHistory;
+  return state.orchestratorWorkflow.compactionHistory;
 }
 
 /**
@@ -548,19 +548,19 @@ export async function getCompactionHistory(): Promise<CompactionEntry[]> {
  * @returns Total count of all invocations
  */
 export async function getTotalInvocationCount(): Promise<number> {
-	const persistence = new BrainSessionPersistence();
-	const state = await persistence.loadSession();
+  const persistence = new BrainSessionPersistence();
+  const state = await persistence.loadSession();
 
-	if (!state?.orchestratorWorkflow) {
-		return 0;
-	}
+  if (!state?.orchestratorWorkflow) {
+    return 0;
+  }
 
-	const workflow = state.orchestratorWorkflow;
-	const currentCount = workflow.agentHistory.length;
-	const compactedCount = workflow.compactionHistory.reduce(
-		(sum, entry) => sum + entry.count,
-		0,
-	);
+  const workflow = state.orchestratorWorkflow;
+  const currentCount = workflow.agentHistory.length;
+  const compactedCount = workflow.compactionHistory.reduce(
+    (sum, entry) => sum + entry.count,
+    0,
+  );
 
-	return currentCount + compactedCount;
+  return currentCount + compactedCount;
 }

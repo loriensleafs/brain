@@ -1,63 +1,63 @@
 {
-	"$schema": "http://json-schema.org/draft-07/schema#",
-	"$id": "https://brain.dev/schemas/domain/scenario-result.json",
-	"title": "ScenarioResult",
-	"description": "Schema for scenario detection result. Validates the output of detect-scenario operations.",
-	"type": "object",
-	"properties": {
-		"detected": {
-			"type": "boolean",
-			"description": "Whether a scenario was detected"
-		},
-		"scenario": {
-			"type": "string",
-			"enum": [
-				"BUG",
-				"FEATURE",
-				"SPEC",
-				"ANALYSIS",
-				"RESEARCH",
-				"DECISION",
-				"TESTING",
-				""
-			],
-			"description": "The detected scenario type"
-		},
-		"keywords": {
-			"type": "array",
-			"items": {
-				"type": "string"
-			},
-			"description": "Keywords that matched"
-		},
-		"recommended": {
-			"type": "string",
-			"description": "Recommended action"
-		},
-		"directory": {
-			"type": "string",
-			"description": "Target directory"
-		},
-		"noteType": {
-			"type": "string",
-			"description": "Note type to create"
-		}
-	},
-	"required": ["detected"],
-	"additionalProperties": false,
-	"if": {
-		"properties": {
-			"detected": { "const": true }
-		}
-	},
-	"then": {
-		"required": [
-			"detected",
-			"scenario",
-			"keywords",
-			"recommended",
-			"directory",
-			"noteType"
-		]
-	}
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://brain.dev/schemas/domain/scenario-result.json",
+  "title": "ScenarioResult",
+  "description": "Schema for scenario detection result. Validates the output of detect-scenario operations.",
+  "type": "object",
+  "properties": {
+    "detected": {
+      "type": "boolean",
+      "description": "Whether a scenario was detected"
+    },
+    "scenario": {
+      "type": "string",
+      "enum": [
+        "BUG",
+        "FEATURE",
+        "SPEC",
+        "ANALYSIS",
+        "RESEARCH",
+        "DECISION",
+        "TESTING",
+        ""
+      ],
+      "description": "The detected scenario type"
+    },
+    "keywords": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Keywords that matched"
+    },
+    "recommended": {
+      "type": "string",
+      "description": "Recommended action"
+    },
+    "directory": {
+      "type": "string",
+      "description": "Target directory"
+    },
+    "noteType": {
+      "type": "string",
+      "description": "Note type to create"
+    }
+  },
+  "required": ["detected"],
+  "additionalProperties": false,
+  "if": {
+    "properties": {
+      "detected": { "const": true }
+    }
+  },
+  "then": {
+    "required": [
+      "detected",
+      "scenario",
+      "keywords",
+      "recommended",
+      "directory",
+      "noteType"
+    ]
+  }
 }

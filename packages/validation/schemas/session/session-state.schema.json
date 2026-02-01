@@ -1,281 +1,281 @@
 {
-	"$schema": "http://json-schema.org/draft-07/schema#",
-	"$id": "https://brain.dev/schemas/session/session-state.json",
-	"title": "SessionState",
-	"description": "Session state structure for persistent context. Contains critical information that must survive context compaction: workflow mode, mode history, protocol status, orchestrator workflow, active feature/task, and version for optimistic locking.",
-	"definitions": {
-		"AgentType": {
-			"type": "string",
-			"enum": [
-				"orchestrator",
-				"analyst",
-				"architect",
-				"planner",
-				"implementer",
-				"critic",
-				"qa",
-				"security",
-				"devops",
-				"retrospective",
-				"memory",
-				"skillbook",
-				"independent-thinker",
-				"high-level-advisor",
-				"explainer",
-				"task-generator",
-				"pr-comment-responder"
-			],
-			"description": "All agent types in the multi-agent system"
-		},
-		"WorkflowMode": {
-			"type": "string",
-			"enum": ["analysis", "planning", "coding", "disabled"],
-			"description": "Available workflow modes controlling tool access"
-		},
-		"WorkflowPhase": {
-			"type": "string",
-			"enum": ["planning", "implementation", "validation", "complete"],
-			"description": "Orchestrator workflow phases"
-		},
-		"InvocationStatus": {
-			"type": "string",
-			"enum": ["in_progress", "completed", "failed", "blocked"],
-			"description": "Status of an agent invocation"
-		},
-		"DecisionType": {
-			"type": "string",
-			"enum": ["architectural", "technical", "process", "scope"],
-			"description": "Types of decisions recorded in workflow"
-		},
-		"VerdictDecision": {
-			"type": "string",
-			"enum": ["approve", "reject", "conditional", "needs_revision"],
-			"description": "Verdict outcomes from agent validation"
-		},
-		"ModeHistoryEntry": {
-			"type": "object",
-			"properties": {
-				"mode": { "$ref": "#/definitions/WorkflowMode" },
-				"timestamp": { "type": "string", "format": "date-time" }
-			},
-			"required": ["mode", "timestamp"],
-			"additionalProperties": false
-		},
-		"AgentInvocationInput": {
-			"type": "object",
-			"properties": {
-				"prompt": { "type": "string" },
-				"context": { "type": "object", "additionalProperties": true },
-				"artifacts": { "type": "array", "items": { "type": "string" } }
-			},
-			"required": ["prompt", "context", "artifacts"],
-			"additionalProperties": false
-		},
-		"AgentInvocationOutput": {
-			"type": "object",
-			"properties": {
-				"artifacts": { "type": "array", "items": { "type": "string" } },
-				"summary": { "type": "string" },
-				"recommendations": { "type": "array", "items": { "type": "string" } },
-				"blockers": { "type": "array", "items": { "type": "string" } }
-			},
-			"required": ["artifacts", "summary", "recommendations", "blockers"],
-			"additionalProperties": false
-		},
-		"AgentInvocation": {
-			"type": "object",
-			"properties": {
-				"agent": { "$ref": "#/definitions/AgentType" },
-				"startedAt": { "type": "string", "format": "date-time" },
-				"completedAt": { "type": ["string", "null"], "format": "date-time" },
-				"status": { "$ref": "#/definitions/InvocationStatus" },
-				"input": { "$ref": "#/definitions/AgentInvocationInput" },
-				"output": {
-					"oneOf": [
-						{ "$ref": "#/definitions/AgentInvocationOutput" },
-						{ "type": "null" }
-					]
-				},
-				"handoffFrom": {
-					"oneOf": [{ "$ref": "#/definitions/AgentType" }, { "type": "null" }]
-				},
-				"handoffTo": {
-					"oneOf": [{ "$ref": "#/definitions/AgentType" }, { "type": "null" }]
-				},
-				"handoffReason": { "type": "string" }
-			},
-			"required": [
-				"agent",
-				"startedAt",
-				"completedAt",
-				"status",
-				"input",
-				"output",
-				"handoffFrom",
-				"handoffTo",
-				"handoffReason"
-			],
-			"additionalProperties": false
-		},
-		"Decision": {
-			"type": "object",
-			"properties": {
-				"id": { "type": "string", "format": "uuid" },
-				"type": { "$ref": "#/definitions/DecisionType" },
-				"description": { "type": "string" },
-				"rationale": { "type": "string" },
-				"decidedBy": { "$ref": "#/definitions/AgentType" },
-				"approvedBy": {
-					"type": "array",
-					"items": { "$ref": "#/definitions/AgentType" }
-				},
-				"rejectedBy": {
-					"type": "array",
-					"items": { "$ref": "#/definitions/AgentType" }
-				},
-				"timestamp": { "type": "string", "format": "date-time" }
-			},
-			"required": [
-				"id",
-				"type",
-				"description",
-				"rationale",
-				"decidedBy",
-				"approvedBy",
-				"rejectedBy",
-				"timestamp"
-			],
-			"additionalProperties": false
-		},
-		"Verdict": {
-			"type": "object",
-			"properties": {
-				"agent": { "$ref": "#/definitions/AgentType" },
-				"decision": { "$ref": "#/definitions/VerdictDecision" },
-				"confidence": { "type": "number", "minimum": 0, "maximum": 1 },
-				"reasoning": { "type": "string" },
-				"conditions": { "type": "array", "items": { "type": "string" } },
-				"blockers": { "type": "array", "items": { "type": "string" } },
-				"timestamp": { "type": "string", "format": "date-time" }
-			},
-			"required": ["agent", "decision", "confidence", "reasoning", "timestamp"],
-			"additionalProperties": false
-		},
-		"Handoff": {
-			"type": "object",
-			"properties": {
-				"fromAgent": { "$ref": "#/definitions/AgentType" },
-				"toAgent": { "$ref": "#/definitions/AgentType" },
-				"reason": { "type": "string" },
-				"context": { "type": "string" },
-				"artifacts": { "type": "array", "items": { "type": "string" } },
-				"preservedContext": { "type": "object", "additionalProperties": true },
-				"createdAt": { "type": "string", "format": "date-time" }
-			},
-			"required": [
-				"fromAgent",
-				"toAgent",
-				"reason",
-				"context",
-				"artifacts",
-				"createdAt"
-			],
-			"additionalProperties": false
-		},
-		"CompactionEntry": {
-			"type": "object",
-			"properties": {
-				"notePath": { "type": "string" },
-				"compactedAt": { "type": "string", "format": "date-time" },
-				"count": { "type": "integer", "minimum": 1 }
-			},
-			"required": ["notePath", "compactedAt", "count"],
-			"additionalProperties": false
-		},
-		"OrchestratorWorkflow": {
-			"type": "object",
-			"properties": {
-				"activeAgent": {
-					"oneOf": [{ "$ref": "#/definitions/AgentType" }, { "type": "null" }]
-				},
-				"workflowPhase": { "$ref": "#/definitions/WorkflowPhase" },
-				"agentHistory": {
-					"type": "array",
-					"items": { "$ref": "#/definitions/AgentInvocation" }
-				},
-				"decisions": {
-					"type": "array",
-					"items": { "$ref": "#/definitions/Decision" }
-				},
-				"verdicts": {
-					"type": "array",
-					"items": { "$ref": "#/definitions/Verdict" }
-				},
-				"pendingHandoffs": {
-					"type": "array",
-					"items": { "$ref": "#/definitions/Handoff" }
-				},
-				"compactionHistory": {
-					"type": "array",
-					"items": { "$ref": "#/definitions/CompactionEntry" }
-				},
-				"startedAt": { "type": "string", "format": "date-time" },
-				"lastAgentChange": { "type": "string", "format": "date-time" }
-			},
-			"required": [
-				"activeAgent",
-				"workflowPhase",
-				"agentHistory",
-				"decisions",
-				"verdicts",
-				"pendingHandoffs",
-				"compactionHistory",
-				"startedAt",
-				"lastAgentChange"
-			],
-			"additionalProperties": false
-		}
-	},
-	"type": "object",
-	"properties": {
-		"currentMode": { "$ref": "#/definitions/WorkflowMode" },
-		"modeHistory": {
-			"type": "array",
-			"items": { "$ref": "#/definitions/ModeHistoryEntry" }
-		},
-		"protocolStartComplete": { "type": "boolean" },
-		"protocolEndComplete": { "type": "boolean" },
-		"protocolStartEvidence": {
-			"type": "object",
-			"additionalProperties": { "type": "string" }
-		},
-		"protocolEndEvidence": {
-			"type": "object",
-			"additionalProperties": { "type": "string" }
-		},
-		"orchestratorWorkflow": {
-			"oneOf": [
-				{ "$ref": "#/definitions/OrchestratorWorkflow" },
-				{ "type": "null" }
-			]
-		},
-		"activeFeature": { "type": "string" },
-		"activeTask": { "type": "string" },
-		"version": { "type": "integer", "minimum": 0 },
-		"createdAt": { "type": "string", "format": "date-time" },
-		"updatedAt": { "type": "string", "format": "date-time" }
-	},
-	"required": [
-		"currentMode",
-		"modeHistory",
-		"protocolStartComplete",
-		"protocolEndComplete",
-		"protocolStartEvidence",
-		"protocolEndEvidence",
-		"orchestratorWorkflow",
-		"version",
-		"createdAt",
-		"updatedAt"
-	],
-	"additionalProperties": false
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://brain.dev/schemas/session/session-state.json",
+  "title": "SessionState",
+  "description": "Session state structure for persistent context. Contains critical information that must survive context compaction: workflow mode, mode history, protocol status, orchestrator workflow, active feature/task, and version for optimistic locking.",
+  "definitions": {
+    "AgentType": {
+      "type": "string",
+      "enum": [
+        "orchestrator",
+        "analyst",
+        "architect",
+        "planner",
+        "implementer",
+        "critic",
+        "qa",
+        "security",
+        "devops",
+        "retrospective",
+        "memory",
+        "skillbook",
+        "independent-thinker",
+        "high-level-advisor",
+        "explainer",
+        "task-generator",
+        "pr-comment-responder"
+      ],
+      "description": "All agent types in the multi-agent system"
+    },
+    "WorkflowMode": {
+      "type": "string",
+      "enum": ["analysis", "planning", "coding", "disabled"],
+      "description": "Available workflow modes controlling tool access"
+    },
+    "WorkflowPhase": {
+      "type": "string",
+      "enum": ["planning", "implementation", "validation", "complete"],
+      "description": "Orchestrator workflow phases"
+    },
+    "InvocationStatus": {
+      "type": "string",
+      "enum": ["in_progress", "completed", "failed", "blocked"],
+      "description": "Status of an agent invocation"
+    },
+    "DecisionType": {
+      "type": "string",
+      "enum": ["architectural", "technical", "process", "scope"],
+      "description": "Types of decisions recorded in workflow"
+    },
+    "VerdictDecision": {
+      "type": "string",
+      "enum": ["approve", "reject", "conditional", "needs_revision"],
+      "description": "Verdict outcomes from agent validation"
+    },
+    "ModeHistoryEntry": {
+      "type": "object",
+      "properties": {
+        "mode": { "$ref": "#/definitions/WorkflowMode" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["mode", "timestamp"],
+      "additionalProperties": false
+    },
+    "AgentInvocationInput": {
+      "type": "object",
+      "properties": {
+        "prompt": { "type": "string" },
+        "context": { "type": "object", "additionalProperties": true },
+        "artifacts": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["prompt", "context", "artifacts"],
+      "additionalProperties": false
+    },
+    "AgentInvocationOutput": {
+      "type": "object",
+      "properties": {
+        "artifacts": { "type": "array", "items": { "type": "string" } },
+        "summary": { "type": "string" },
+        "recommendations": { "type": "array", "items": { "type": "string" } },
+        "blockers": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["artifacts", "summary", "recommendations", "blockers"],
+      "additionalProperties": false
+    },
+    "AgentInvocation": {
+      "type": "object",
+      "properties": {
+        "agent": { "$ref": "#/definitions/AgentType" },
+        "startedAt": { "type": "string", "format": "date-time" },
+        "completedAt": { "type": ["string", "null"], "format": "date-time" },
+        "status": { "$ref": "#/definitions/InvocationStatus" },
+        "input": { "$ref": "#/definitions/AgentInvocationInput" },
+        "output": {
+          "oneOf": [
+            { "$ref": "#/definitions/AgentInvocationOutput" },
+            { "type": "null" }
+          ]
+        },
+        "handoffFrom": {
+          "oneOf": [{ "$ref": "#/definitions/AgentType" }, { "type": "null" }]
+        },
+        "handoffTo": {
+          "oneOf": [{ "$ref": "#/definitions/AgentType" }, { "type": "null" }]
+        },
+        "handoffReason": { "type": "string" }
+      },
+      "required": [
+        "agent",
+        "startedAt",
+        "completedAt",
+        "status",
+        "input",
+        "output",
+        "handoffFrom",
+        "handoffTo",
+        "handoffReason"
+      ],
+      "additionalProperties": false
+    },
+    "Decision": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "format": "uuid" },
+        "type": { "$ref": "#/definitions/DecisionType" },
+        "description": { "type": "string" },
+        "rationale": { "type": "string" },
+        "decidedBy": { "$ref": "#/definitions/AgentType" },
+        "approvedBy": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/AgentType" }
+        },
+        "rejectedBy": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/AgentType" }
+        },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "id",
+        "type",
+        "description",
+        "rationale",
+        "decidedBy",
+        "approvedBy",
+        "rejectedBy",
+        "timestamp"
+      ],
+      "additionalProperties": false
+    },
+    "Verdict": {
+      "type": "object",
+      "properties": {
+        "agent": { "$ref": "#/definitions/AgentType" },
+        "decision": { "$ref": "#/definitions/VerdictDecision" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "reasoning": { "type": "string" },
+        "conditions": { "type": "array", "items": { "type": "string" } },
+        "blockers": { "type": "array", "items": { "type": "string" } },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["agent", "decision", "confidence", "reasoning", "timestamp"],
+      "additionalProperties": false
+    },
+    "Handoff": {
+      "type": "object",
+      "properties": {
+        "fromAgent": { "$ref": "#/definitions/AgentType" },
+        "toAgent": { "$ref": "#/definitions/AgentType" },
+        "reason": { "type": "string" },
+        "context": { "type": "string" },
+        "artifacts": { "type": "array", "items": { "type": "string" } },
+        "preservedContext": { "type": "object", "additionalProperties": true },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "fromAgent",
+        "toAgent",
+        "reason",
+        "context",
+        "artifacts",
+        "createdAt"
+      ],
+      "additionalProperties": false
+    },
+    "CompactionEntry": {
+      "type": "object",
+      "properties": {
+        "notePath": { "type": "string" },
+        "compactedAt": { "type": "string", "format": "date-time" },
+        "count": { "type": "integer", "minimum": 1 }
+      },
+      "required": ["notePath", "compactedAt", "count"],
+      "additionalProperties": false
+    },
+    "OrchestratorWorkflow": {
+      "type": "object",
+      "properties": {
+        "activeAgent": {
+          "oneOf": [{ "$ref": "#/definitions/AgentType" }, { "type": "null" }]
+        },
+        "workflowPhase": { "$ref": "#/definitions/WorkflowPhase" },
+        "agentHistory": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/AgentInvocation" }
+        },
+        "decisions": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/Decision" }
+        },
+        "verdicts": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/Verdict" }
+        },
+        "pendingHandoffs": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/Handoff" }
+        },
+        "compactionHistory": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/CompactionEntry" }
+        },
+        "startedAt": { "type": "string", "format": "date-time" },
+        "lastAgentChange": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "activeAgent",
+        "workflowPhase",
+        "agentHistory",
+        "decisions",
+        "verdicts",
+        "pendingHandoffs",
+        "compactionHistory",
+        "startedAt",
+        "lastAgentChange"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "type": "object",
+  "properties": {
+    "currentMode": { "$ref": "#/definitions/WorkflowMode" },
+    "modeHistory": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/ModeHistoryEntry" }
+    },
+    "protocolStartComplete": { "type": "boolean" },
+    "protocolEndComplete": { "type": "boolean" },
+    "protocolStartEvidence": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "protocolEndEvidence": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "orchestratorWorkflow": {
+      "oneOf": [
+        { "$ref": "#/definitions/OrchestratorWorkflow" },
+        { "type": "null" }
+      ]
+    },
+    "activeFeature": { "type": "string" },
+    "activeTask": { "type": "string" },
+    "version": { "type": "integer", "minimum": 0 },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "updatedAt": { "type": "string", "format": "date-time" }
+  },
+  "required": [
+    "currentMode",
+    "modeHistory",
+    "protocolStartComplete",
+    "protocolEndComplete",
+    "protocolStartEvidence",
+    "protocolEndEvidence",
+    "orchestratorWorkflow",
+    "version",
+    "createdAt",
+    "updatedAt"
+  ],
+  "additionalProperties": false
 }

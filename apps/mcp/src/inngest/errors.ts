@@ -29,26 +29,26 @@ import { logger } from "../utils/internal/logger";
  * - AGENT_FAILURE: Agent execution failed in a non-recoverable way
  */
 export const WorkflowErrorType = {
-	VALIDATION_ERROR: "VALIDATION_ERROR",
-	CONFIGURATION_ERROR: "CONFIGURATION_ERROR",
-	AGENT_FAILURE: "AGENT_FAILURE",
+  VALIDATION_ERROR: "VALIDATION_ERROR",
+  CONFIGURATION_ERROR: "CONFIGURATION_ERROR",
+  AGENT_FAILURE: "AGENT_FAILURE",
 } as const;
 
 export type WorkflowErrorType =
-	(typeof WorkflowErrorType)[keyof typeof WorkflowErrorType];
+  (typeof WorkflowErrorType)[keyof typeof WorkflowErrorType];
 
 /**
  * Extended error info attached to NonRetriableError.
  */
 export interface WorkflowErrorInfo {
-	/** Error type category */
-	type: WorkflowErrorType;
-	/** Human-readable error message */
-	message: string;
-	/** Original error if wrapping another error */
-	cause?: unknown;
-	/** Additional context for debugging */
-	context?: Record<string, unknown>;
+  /** Error type category */
+  type: WorkflowErrorType;
+  /** Human-readable error message */
+  message: string;
+  /** Original error if wrapping another error */
+  cause?: unknown;
+  /** Additional context for debugging */
+  context?: Record<string, unknown>;
 }
 
 /**
@@ -85,34 +85,34 @@ export interface WorkflowErrorInfo {
  * ```
  */
 export function createNonRetriableError(
-	type: WorkflowErrorType,
-	message: string,
-	options?: {
-		cause?: unknown;
-		context?: Record<string, unknown>;
-	},
+  type: WorkflowErrorType,
+  message: string,
+  options?: {
+    cause?: unknown;
+    context?: Record<string, unknown>;
+  },
 ): NonRetriableError {
-	const fullMessage = `[${type}] ${message}`;
+  const fullMessage = `[${type}] ${message}`;
 
-	logger.error(
-		{
-			errorType: type,
-			message,
-			cause: options?.cause,
-			context: options?.context,
-		},
-		"Creating non-retriable error",
-	);
+  logger.error(
+    {
+      errorType: type,
+      message,
+      cause: options?.cause,
+      context: options?.context,
+    },
+    "Creating non-retriable error",
+  );
 
-	return new NonRetriableError(fullMessage, {
-		cause: options?.cause
-			? {
-					type,
-					originalError: serializeError(options.cause),
-					context: options.context,
-				}
-			: { type, context: options?.context },
-	});
+  return new NonRetriableError(fullMessage, {
+    cause: options?.cause
+      ? {
+          type,
+          originalError: serializeError(options.cause),
+          context: options.context,
+        }
+      : { type, context: options?.context },
+  });
 }
 
 /**
@@ -138,25 +138,25 @@ export function createNonRetriableError(
  * ```
  */
 export function isRetriable(error: unknown): boolean {
-	if (error instanceof NonRetriableError) {
-		return false;
-	}
+  if (error instanceof NonRetriableError) {
+    return false;
+  }
 
-	// Check for known non-retriable error patterns
-	if (error instanceof Error) {
-		const nonRetriablePatterns = [
-			/invalid.*id/i,
-			/not found/i,
-			/missing required/i,
-			/configuration error/i,
-			/validation failed/i,
-		];
+  // Check for known non-retriable error patterns
+  if (error instanceof Error) {
+    const nonRetriablePatterns = [
+      /invalid.*id/i,
+      /not found/i,
+      /missing required/i,
+      /configuration error/i,
+      /validation failed/i,
+    ];
 
-		return !nonRetriablePatterns.some((pattern) => pattern.test(error.message));
-	}
+    return !nonRetriablePatterns.some((pattern) => pattern.test(error.message));
+  }
 
-	// Unknown error types are considered retriable
-	return true;
+  // Unknown error types are considered retriable
+  return true;
 }
 
 /**
@@ -175,21 +175,21 @@ export function isRetriable(error: unknown): boolean {
  * ```
  */
 export function validateFeatureId(featureId: string, agentName: string): void {
-	if (!featureId || typeof featureId !== "string") {
-		throw createNonRetriableError(
-			WorkflowErrorType.VALIDATION_ERROR,
-			"Feature ID is required and must be a non-empty string",
-			{ context: { agentName, providedValue: featureId } },
-		);
-	}
+  if (!featureId || typeof featureId !== "string") {
+    throw createNonRetriableError(
+      WorkflowErrorType.VALIDATION_ERROR,
+      "Feature ID is required and must be a non-empty string",
+      { context: { agentName, providedValue: featureId } },
+    );
+  }
 
-	if (featureId.trim().length === 0) {
-		throw createNonRetriableError(
-			WorkflowErrorType.VALIDATION_ERROR,
-			"Feature ID cannot be empty or whitespace only",
-			{ context: { agentName, providedValue: featureId } },
-		);
-	}
+  if (featureId.trim().length === 0) {
+    throw createNonRetriableError(
+      WorkflowErrorType.VALIDATION_ERROR,
+      "Feature ID cannot be empty or whitespace only",
+      { context: { agentName, providedValue: featureId } },
+    );
+  }
 }
 
 /**
@@ -206,28 +206,28 @@ export function validateFeatureId(featureId: string, agentName: string): void {
  * ```
  */
 export function validateRequiredContext(
-	context: Record<string, unknown>,
-	requiredFields: string[],
-	agentName: string,
+  context: Record<string, unknown>,
+  requiredFields: string[],
+  agentName: string,
 ): void {
-	const missingFields = requiredFields.filter(
-		(field) => context[field] === undefined || context[field] === null,
-	);
+  const missingFields = requiredFields.filter(
+    (field) => context[field] === undefined || context[field] === null,
+  );
 
-	if (missingFields.length > 0) {
-		throw createNonRetriableError(
-			WorkflowErrorType.VALIDATION_ERROR,
-			`Missing required context fields: ${missingFields.join(", ")}`,
-			{
-				context: {
-					agentName,
-					requiredFields,
-					missingFields,
-					providedFields: Object.keys(context),
-				},
-			},
-		);
-	}
+  if (missingFields.length > 0) {
+    throw createNonRetriableError(
+      WorkflowErrorType.VALIDATION_ERROR,
+      `Missing required context fields: ${missingFields.join(", ")}`,
+      {
+        context: {
+          agentName,
+          requiredFields,
+          missingFields,
+          providedFields: Object.keys(context),
+        },
+      },
+    );
+  }
 }
 
 /**
@@ -250,37 +250,37 @@ export function validateRequiredContext(
  * ```
  */
 export async function wrapAgentExecution<T>(
-	agentName: string,
-	operation: () => Promise<T>,
+  agentName: string,
+  operation: () => Promise<T>,
 ): Promise<T> {
-	try {
-		return await operation();
-	} catch (error) {
-		// Re-throw if already a NonRetriableError
-		if (error instanceof NonRetriableError) {
-			throw error;
-		}
+  try {
+    return await operation();
+  } catch (error) {
+    // Re-throw if already a NonRetriableError
+    if (error instanceof NonRetriableError) {
+      throw error;
+    }
 
-		// Check if error should be retriable
-		if (!isRetriable(error)) {
-			throw createNonRetriableError(
-				WorkflowErrorType.AGENT_FAILURE,
-				`Agent ${agentName} failed with non-retriable error`,
-				{ cause: error, context: { agentName } },
-			);
-		}
+    // Check if error should be retriable
+    if (!isRetriable(error)) {
+      throw createNonRetriableError(
+        WorkflowErrorType.AGENT_FAILURE,
+        `Agent ${agentName} failed with non-retriable error`,
+        { cause: error, context: { agentName } },
+      );
+    }
 
-		// Log retriable error and re-throw for Inngest retry
-		logger.warn(
-			{
-				agentName,
-				error: serializeError(error),
-			},
-			"Agent encountered retriable error",
-		);
+    // Log retriable error and re-throw for Inngest retry
+    logger.warn(
+      {
+        agentName,
+        error: serializeError(error),
+      },
+      "Agent encountered retriable error",
+    );
 
-		throw error;
-	}
+    throw error;
+  }
 }
 
 /**
@@ -290,17 +290,17 @@ export async function wrapAgentExecution<T>(
  * @returns Serialized error object
  */
 function serializeError(error: unknown): Record<string, unknown> {
-	if (error instanceof Error) {
-		return {
-			name: error.name,
-			message: error.message,
-			stack: error.stack,
-		};
-	}
+  if (error instanceof Error) {
+    return {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+    };
+  }
 
-	if (typeof error === "object" && error !== null) {
-		return { ...error };
-	}
+  if (typeof error === "object" && error !== null) {
+    return { ...error };
+  }
 
-	return { value: String(error) };
+  return { value: String(error) };
 }

@@ -1,52 +1,52 @@
 {
-	"$schema": "http://json-schema.org/draft-07/schema#",
-	"$id": "https://brain.dev/schemas/tools/search.json",
-	"title": "SearchArgs",
-	"description": "Schema for unified search tool arguments. Defines input validation for semantic/keyword search with automatic fallback behavior.",
-	"type": "object",
-	"properties": {
-		"query": {
-			"type": "string",
-			"minLength": 1,
-			"description": "Search query text"
-		},
-		"limit": {
-			"type": "integer",
-			"minimum": 1,
-			"maximum": 100,
-			"default": 10,
-			"description": "Maximum number of results to return"
-		},
-		"threshold": {
-			"type": "number",
-			"minimum": 0,
-			"maximum": 1,
-			"default": 0.7,
-			"description": "Similarity threshold for semantic search (0-1)"
-		},
-		"mode": {
-			"type": "string",
-			"enum": ["auto", "semantic", "keyword", "hybrid"],
-			"default": "auto",
-			"description": "Search mode: auto, semantic, keyword, or hybrid"
-		},
-		"depth": {
-			"type": "integer",
-			"minimum": 0,
-			"maximum": 3,
-			"default": 0,
-			"description": "Relation depth: follow wikilinks N levels from results (0-3)"
-		},
-		"project": {
-			"type": "string",
-			"description": "Project name to search in"
-		},
-		"full_context": {
-			"type": "boolean",
-			"default": false,
-			"description": "When true, include full note content instead of snippets (limited to 5000 chars per note)"
-		}
-	},
-	"required": ["query"],
-	"additionalProperties": false
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://brain.dev/schemas/tools/search.json",
+  "title": "SearchArgs",
+  "description": "Schema for unified search tool arguments. Defines input validation for semantic/keyword search with automatic fallback behavior.",
+  "type": "object",
+  "properties": {
+    "query": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Search query text"
+    },
+    "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100,
+      "default": 10,
+      "description": "Maximum number of results to return"
+    },
+    "threshold": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "default": 0.7,
+      "description": "Similarity threshold for semantic search (0-1)"
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["auto", "semantic", "keyword", "hybrid"],
+      "default": "auto",
+      "description": "Search mode: auto, semantic, keyword, or hybrid"
+    },
+    "depth": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 3,
+      "default": 0,
+      "description": "Relation depth: follow wikilinks N levels from results (0-3)"
+    },
+    "project": {
+      "type": "string",
+      "description": "Project name to search in"
+    },
+    "full_context": {
+      "type": "boolean",
+      "default": false,
+      "description": "When true, include full note content instead of snippets (limited to 5000 chars per note)"
+    }
+  },
+  "required": ["query"],
+  "additionalProperties": false
 }

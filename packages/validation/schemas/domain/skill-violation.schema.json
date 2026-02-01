@@ -1,85 +1,85 @@
 {
-	"$schema": "http://json-schema.org/draft-07/schema#",
-	"$id": "https://brain.dev/schemas/domain/skill-violation.json",
-	"title": "SkillViolationResult",
-	"description": "Schema for skill violation detection result. Validates the output of detect-skill-violation operations.",
-	"type": "object",
-	"properties": {
-		"valid": {
-			"type": "boolean",
-			"description": "Whether validation passed (violations are warnings, not failures)"
-		},
-		"checks": {
-			"type": "array",
-			"items": {
-				"type": "object",
-				"properties": {
-					"name": { "type": "string" },
-					"passed": { "type": "boolean" },
-					"message": { "type": "string" }
-				},
-				"required": ["name", "passed", "message"]
-			},
-			"description": "Individual check results"
-		},
-		"message": {
-			"type": "string",
-			"description": "Overall result message"
-		},
-		"remediation": {
-			"type": "string",
-			"description": "Remediation guidance"
-		},
-		"skillsDir": {
-			"type": "string",
-			"description": "Path to skills directory"
-		},
-		"filesChecked": {
-			"type": "integer",
-			"minimum": 0,
-			"description": "Number of files checked"
-		},
-		"violations": {
-			"type": "array",
-			"items": {
-				"$ref": "#/$defs/skillViolation"
-			},
-			"description": "List of detected violations"
-		},
-		"capabilityGaps": {
-			"type": "array",
-			"items": {
-				"type": "string"
-			},
-			"description": "Missing skill capabilities detected"
-		}
-	},
-	"required": ["valid", "filesChecked"],
-	"additionalProperties": false,
-	"$defs": {
-		"skillViolation": {
-			"type": "object",
-			"properties": {
-				"file": {
-					"type": "string",
-					"description": "File path where violation was detected"
-				},
-				"line": {
-					"type": "integer",
-					"minimum": 1,
-					"description": "Line number of violation"
-				},
-				"pattern": {
-					"type": "string",
-					"description": "Regex pattern that matched"
-				},
-				"command": {
-					"type": "string",
-					"description": "Extracted gh subcommand"
-				}
-			},
-			"required": ["file", "line", "pattern"],
-			"additionalProperties": false
-		}
-	}
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://brain.dev/schemas/domain/skill-violation.json",
+  "title": "SkillViolationResult",
+  "description": "Schema for skill violation detection result. Validates the output of detect-skill-violation operations.",
+  "type": "object",
+  "properties": {
+    "valid": {
+      "type": "boolean",
+      "description": "Whether validation passed (violations are warnings, not failures)"
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "passed": { "type": "boolean" },
+          "message": { "type": "string" }
+        },
+        "required": ["name", "passed", "message"]
+      },
+      "description": "Individual check results"
+    },
+    "message": {
+      "type": "string",
+      "description": "Overall result message"
+    },
+    "remediation": {
+      "type": "string",
+      "description": "Remediation guidance"
+    },
+    "skillsDir": {
+      "type": "string",
+      "description": "Path to skills directory"
+    },
+    "filesChecked": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of files checked"
+    },
+    "violations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/skillViolation"
+      },
+      "description": "List of detected violations"
+    },
+    "capabilityGaps": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Missing skill capabilities detected"
+    }
+  },
+  "required": ["valid", "filesChecked"],
+  "additionalProperties": false,
+  "$defs": {
+    "skillViolation": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "type": "string",
+          "description": "File path where violation was detected"
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Line number of violation"
+        },
+        "pattern": {
+          "type": "string",
+          "description": "Regex pattern that matched"
+        },
+        "command": {
+          "type": "string",
+          "description": "Extracted gh subcommand"
+        }
+      },
+      "required": ["file", "line", "pattern"],
+      "additionalProperties": false
+    }
+  }
 }

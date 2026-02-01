@@ -1,50 +1,50 @@
 {
-	"hooks": {
-		"UserPromptSubmit": [
-			{
-				"matcher": "",
-				"hooks": [
-					{
-						"type": "command",
-						"command": "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/brain-hooks user-prompt",
-						"timeout": 5
-					}
-				]
-			}
-		],
-		"SessionStart": [
-			{
-				"matcher": "startup",
-				"hooks": [
-					{
-						"type": "command",
-						"command": "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/brain-hooks session-start",
-						"timeout": 15
-					}
-				]
-			},
-			{
-				"matcher": "compact",
-				"hooks": [
-					{
-						"type": "command",
-						"command": "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/brain-hooks session-start",
-						"timeout": 15
-					}
-				]
-			}
-		],
-		"Stop": [
-			{
-				"matcher": "",
-				"hooks": [
-					{
-						"type": "command",
-						"command": "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/brain-hooks stop",
-						"timeout": 10
-					}
-				]
-			}
-		]
-	}
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/brain-hooks user-prompt",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/brain-hooks session-start",
+            "timeout": 15
+          }
+        ]
+      },
+      {
+        "matcher": "compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/brain-hooks session-start",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/scripts/brain-hooks stop",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
 }

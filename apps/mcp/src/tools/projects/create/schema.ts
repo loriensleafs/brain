@@ -11,16 +11,16 @@
  */
 
 import {
-	type CreateProjectArgs,
-	parseCreateProjectArgs,
-	validateCreateProjectArgs,
+  type CreateProjectArgs,
+  parseCreateProjectArgs,
+  validateCreateProjectArgs,
 } from "@brain/validation";
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 
 export {
-	validateCreateProjectArgs,
-	parseCreateProjectArgs,
-	type CreateProjectArgs,
+  validateCreateProjectArgs,
+  parseCreateProjectArgs,
+  type CreateProjectArgs,
 };
 
 /**
@@ -33,19 +33,19 @@ export type MemoriesPathOption = "DEFAULT" | "CODE" | string;
 
 // Re-export for backward compatibility
 export const CreateProjectArgsSchema = {
-	parse: parseCreateProjectArgs,
-	safeParse: (data: unknown) => {
-		try {
-			return { success: true as const, data: parseCreateProjectArgs(data) };
-		} catch (error) {
-			return { success: false as const, error };
-		}
-	},
+  parse: parseCreateProjectArgs,
+  safeParse: (data: unknown) => {
+    try {
+      return { success: true as const, data: parseCreateProjectArgs(data) };
+    } catch (error) {
+      return { success: false as const, error };
+    }
+  },
 };
 
 export const toolDefinition: Tool = {
-	name: "create_project",
-	description: `Create a new Brain memory project.
+  name: "create_project",
+  description: `Create a new Brain memory project.
 
 Required parameters:
 - name: Project name to create
@@ -65,23 +65,23 @@ Examples:
 - Create with default (memories folder): create_project with name="myproject", code_path="~/Dev/myproject"
 - Create in code/docs: create_project with name="myproject", code_path="~/Dev/myproject", memories_path="CODE"
 - Create with custom path: create_project with name="myproject", code_path="~/Dev/myproject", memories_path="~/custom/memories"`,
-	inputSchema: {
-		type: "object" as const,
-		properties: {
-			name: {
-				type: "string",
-				description: "Project name to create",
-			},
-			code_path: {
-				type: "string",
-				description: "Code directory path (use ~ for home). Required.",
-			},
-			memories_path: {
-				type: "string",
-				description:
-					"Memories directory path. Options: 'DEFAULT' (${default_memories_location}/${name}), 'CODE' (${code_path}/docs), or absolute path. Defaults to 'DEFAULT'.",
-			},
-		},
-		required: ["name", "code_path"],
-	},
+  inputSchema: {
+    type: "object" as const,
+    properties: {
+      name: {
+        type: "string",
+        description: "Project name to create",
+      },
+      code_path: {
+        type: "string",
+        description: "Code directory path (use ~ for home). Required.",
+      },
+      memories_path: {
+        type: "string",
+        description:
+          "Memories directory path. Options: 'DEFAULT' (${default_memories_location}/${name}), 'CODE' (${code_path}/docs), or absolute path. Defaults to 'DEFAULT'.",
+      },
+    },
+    required: ["name", "code_path"],
+  },
 };

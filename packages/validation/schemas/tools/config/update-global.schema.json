@@ -1,25 +1,25 @@
 {
-	"$schema": "http://json-schema.org/draft-07/schema#",
-	"$id": "https://brain.dev/schemas/tools/config/update-global.json",
-	"title": "ConfigUpdateGlobalArgs",
-	"description": "Schema for config_update_global tool arguments. Updates default settings that affect new projects and optionally migrates existing projects using DEFAULT mode.",
-	"type": "object",
-	"properties": {
-		"memories_location": {
-			"type": "string",
-			"description": "New default memories location. Use ~ for home directory."
-		},
-		"memories_mode": {
-			"type": "string",
-			"enum": ["DEFAULT", "CODE", "CUSTOM"],
-			"description": "New default memories mode for new projects."
-		},
-		"migrate_affected": {
-			"type": "boolean",
-			"default": true,
-			"description": "Whether to migrate memories for all affected projects when default location changes. Default: true."
-		}
-	},
-	"required": [],
-	"additionalProperties": false
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://brain.dev/schemas/tools/config/update-global.json",
+  "title": "ConfigUpdateGlobalArgs",
+  "description": "Schema for config_update_global tool arguments. Updates default settings that affect new projects and optionally migrates existing projects using DEFAULT mode.",
+  "type": "object",
+  "properties": {
+    "memories_location": {
+      "type": "string",
+      "description": "New default memories location. Use ~ for home directory."
+    },
+    "memories_mode": {
+      "type": "string",
+      "enum": ["DEFAULT", "CODE", "CUSTOM"],
+      "description": "New default memories mode for new projects."
+    },
+    "migrate_affected": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to migrate memories for all affected projects when default location changes. Default: true."
+    }
+  },
+  "required": [],
+  "additionalProperties": false
 }

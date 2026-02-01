@@ -6,33 +6,33 @@
  */
 
 import {
-	type GetProjectDetailsArgs,
-	parseGetProjectDetailsArgs,
-	validateGetProjectDetailsArgs,
+  type GetProjectDetailsArgs,
+  parseGetProjectDetailsArgs,
+  validateGetProjectDetailsArgs,
 } from "@brain/validation";
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 
 export {
-	validateGetProjectDetailsArgs,
-	parseGetProjectDetailsArgs,
-	type GetProjectDetailsArgs,
+  validateGetProjectDetailsArgs,
+  parseGetProjectDetailsArgs,
+  type GetProjectDetailsArgs,
 };
 
 // Re-export for backward compatibility
 export const GetProjectDetailsArgsSchema = {
-	parse: parseGetProjectDetailsArgs,
-	safeParse: (data: unknown) => {
-		try {
-			return { success: true as const, data: parseGetProjectDetailsArgs(data) };
-		} catch (error) {
-			return { success: false as const, error };
-		}
-	},
+  parse: parseGetProjectDetailsArgs,
+  safeParse: (data: unknown) => {
+    try {
+      return { success: true as const, data: parseGetProjectDetailsArgs(data) };
+    } catch (error) {
+      return { success: false as const, error };
+    }
+  },
 };
 
 export const toolDefinition: Tool = {
-	name: "get_project_details",
-	description: `Get detailed information about a specific Brain memory project.
+  name: "get_project_details",
+  description: `Get detailed information about a specific Brain memory project.
 
 Returns:
 - project: Project name
@@ -43,14 +43,14 @@ Returns:
 If project does not exist, returns an error with a list of available projects.
 
 Use this to inspect project configuration before editing.`,
-	inputSchema: {
-		type: "object" as const,
-		properties: {
-			project: {
-				type: "string",
-				description: "Project name to get details for",
-			},
-		},
-		required: ["project"],
-	},
+  inputSchema: {
+    type: "object" as const,
+    properties: {
+      project: {
+        type: "string",
+        description: "Project name to get details for",
+      },
+    },
+    required: ["project"],
+  },
 };

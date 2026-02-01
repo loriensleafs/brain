@@ -1,10 +1,10 @@
 {
-	"extends": "../../../../../tsconfig.json",
-	"compilerOptions": {
-		"strict": false,
-		"allowImportingTsExtensions": true,
-		"allowJs": true
-	},
-	"include": ["*.ts"],
-	"exclude": ["node_modules"]
+  "extends": "../../../../../tsconfig.json",
+  "compilerOptions": {
+    "strict": false,
+    "allowImportingTsExtensions": true,
+    "allowJs": true
+  },
+  "include": ["*.ts"],
+  "exclude": ["node_modules"]
 }

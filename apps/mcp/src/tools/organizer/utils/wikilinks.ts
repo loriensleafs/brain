@@ -19,20 +19,20 @@
  * // Returns: ["Page", "Other"]
  */
 export function extractWikilinks(content: string): string[] {
-	const links: string[] = [];
+  const links: string[] = [];
 
-	// Pattern: [[Target]] or [[Target|Display]]
-	// Captures only the target (before optional |)
-	const pattern = /\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g;
-	let match;
+  // Pattern: [[Target]] or [[Target|Display]]
+  // Captures only the target (before optional |)
+  const pattern = /\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g;
+  let match;
 
-	while ((match = pattern.exec(content)) !== null) {
-		const target = match[1].trim();
-		if (target) {
-			links.push(target);
-		}
-	}
+  while ((match = pattern.exec(content)) !== null) {
+    const target = match[1].trim();
+    if (target) {
+      links.push(target);
+    }
+  }
 
-	// Deduplicate
-	return Array.from(new Set(links));
+  // Deduplicate
+  return Array.from(new Set(links));
 }

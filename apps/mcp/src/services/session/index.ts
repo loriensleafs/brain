@@ -14,8 +14,8 @@
 
 import { logger } from "../../utils/internal/logger";
 import {
-	type BrainSessionPersistence,
-	getDefaultPersistence,
+  type BrainSessionPersistence,
+  getDefaultPersistence,
 } from "./brain-persistence";
 import type { ModeHistoryEntry, SessionState, WorkflowMode } from "./types";
 import { createDefaultSessionState } from "./types";
@@ -31,10 +31,10 @@ export type { WorkflowMode, ModeHistoryEntry };
  * Mode descriptions for user display.
  */
 export const MODE_DESCRIPTIONS: Record<WorkflowMode, string> = {
-	analysis: "Read-only exploration. Blocks Edit, Write, Bash.",
-	planning: "Design phase. Blocks Edit, Write. Allows Bash for research.",
-	coding: "Full access. All tools allowed.",
-	disabled: "Mode enforcement disabled. All tools allowed.",
+  analysis: "Read-only exploration. Blocks Edit, Write, Bash.",
+  planning: "Design phase. Blocks Edit, Write. Allows Bash for research.",
+  coding: "Full access. All tools allowed.",
+  disabled: "Mode enforcement disabled. All tools allowed.",
 };
 
 /**
@@ -47,12 +47,12 @@ export const DEFAULT_MODE: WorkflowMode = "analysis";
  * Updates that can be applied to session state.
  */
 export interface SessionUpdates {
-	/** New workflow mode */
-	mode?: WorkflowMode;
-	/** New active task */
-	task?: string;
-	/** New active feature */
-	feature?: string;
+  /** New workflow mode */
+  mode?: WorkflowMode;
+  /** New active task */
+  task?: string;
+  /** New active feature */
+  feature?: string;
 }
 
 // ============================================================================
@@ -67,10 +67,10 @@ let persistence: BrainSessionPersistence | null = null;
  * @returns BrainSessionPersistence instance
  */
 function getPersistence(): BrainSessionPersistence {
-	if (!persistence) {
-		persistence = getDefaultPersistence();
-	}
-	return persistence;
+  if (!persistence) {
+    persistence = getDefaultPersistence();
+  }
+  return persistence;
 }
 
 // ============================================================================
@@ -86,15 +86,15 @@ export { createDefaultSessionState };
  * @returns Session state or null if session not found
  */
 export async function getSession(): Promise<SessionState | null> {
-	let state = await getPersistence().loadSession();
+  let state = await getPersistence().loadSession();
 
-	// Initialize if not exists
-	if (!state) {
-		state = createDefaultSessionState();
-		await getPersistence().saveSession(state);
-	}
+  // Initialize if not exists
+  if (!state) {
+    state = createDefaultSessionState();
+    await getPersistence().saveSession(state);
+  }
 
-	return state;
+  return state;
 }
 
 /**
@@ -104,54 +104,54 @@ export async function getSession(): Promise<SessionState | null> {
  * @returns Updated session state or null on error
  */
 export async function setSession(
-	updates: SessionUpdates,
+  updates: SessionUpdates,
 ): Promise<SessionState | null> {
-	// Get or create current state from Brain notes
-	let state = await getPersistence().loadSession();
-	if (!state) {
-		state = createDefaultSessionState();
-	}
+  // Get or create current state from Brain notes
+  let state = await getPersistence().loadSession();
+  if (!state) {
+    state = createDefaultSessionState();
+  }
 
-	const now = new Date().toISOString();
+  const now = new Date().toISOString();
 
-	// Apply mode update
-	if (updates.mode !== undefined && updates.mode !== state.currentMode) {
-		state = {
-			...state,
-			currentMode: updates.mode,
-			modeHistory: [
-				...state.modeHistory,
-				{ mode: updates.mode, timestamp: now },
-			],
-			updatedAt: now,
-		};
-		logger.info({ mode: updates.mode }, "Session mode updated");
-	}
+  // Apply mode update
+  if (updates.mode !== undefined && updates.mode !== state.currentMode) {
+    state = {
+      ...state,
+      currentMode: updates.mode,
+      modeHistory: [
+        ...state.modeHistory,
+        { mode: updates.mode, timestamp: now },
+      ],
+      updatedAt: now,
+    };
+    logger.info({ mode: updates.mode }, "Session mode updated");
+  }
 
-	// Apply task update
-	if (updates.task !== undefined) {
-		state = {
-			...state,
-			activeTask: updates.task || undefined,
-			updatedAt: now,
-		};
-	}
+  // Apply task update
+  if (updates.task !== undefined) {
+    state = {
+      ...state,
+      activeTask: updates.task || undefined,
+      updatedAt: now,
+    };
+  }
 
-	// Apply feature update
-	if (updates.feature !== undefined) {
-		state = {
-			...state,
-			activeFeature: updates.feature || undefined,
-			// Clear task when feature changes
-			activeTask: updates.task ?? undefined,
-			updatedAt: now,
-		};
-	}
+  // Apply feature update
+  if (updates.feature !== undefined) {
+    state = {
+      ...state,
+      activeFeature: updates.feature || undefined,
+      // Clear task when feature changes
+      activeTask: updates.task ?? undefined,
+      updatedAt: now,
+    };
+  }
 
-	// Persist updated state to Brain notes
-	await getPersistence().saveSession(state);
+  // Persist updated state to Brain notes
+  await getPersistence().saveSession(state);
 
-	return state;
+  return state;
 }
 
 // ============================================================================
@@ -167,16 +167,16 @@ export async function setSession(
  * @returns Updated SessionState with mode change recorded in history
  */
 export function withModeChange(
-	state: SessionState,
-	newMode: WorkflowMode,
+  state: SessionState,
+  newMode: WorkflowMode,
 ): SessionState {
-	const now = new Date().toISOString();
-	return {
-		...state,
-		currentMode: newMode,
-		modeHistory: [...state.modeHistory, { mode: newMode, timestamp: now }],
-		updatedAt: now,
-	};
+  const now = new Date().toISOString();
+  return {
+    ...state,
+    currentMode: newMode,
+    modeHistory: [...state.modeHistory, { mode: newMode, timestamp: now }],
+    updatedAt: now,
+  };
 }
 
 /**
@@ -188,15 +188,15 @@ export function withModeChange(
  * @returns Updated SessionState with new active feature
  */
 export function withFeatureChange(
-	state: SessionState,
-	feature: string | undefined,
+  state: SessionState,
+  feature: string | undefined,
 ): SessionState {
-	return {
-		...state,
-		activeFeature: feature,
-		activeTask: undefined, // Clear task when feature changes
-		updatedAt: new Date().toISOString(),
-	};
+  return {
+    ...state,
+    activeFeature: feature,
+    activeTask: undefined, // Clear task when feature changes
+    updatedAt: new Date().toISOString(),
+  };
 }
 
 /**
@@ -208,14 +208,14 @@ export function withFeatureChange(
  * @returns Updated SessionState with new active task
  */
 export function withTaskChange(
-	state: SessionState,
-	task: string | undefined,
+  state: SessionState,
+  task: string | undefined,
 ): SessionState {
-	return {
-		...state,
-		activeTask: task,
-		updatedAt: new Date().toISOString(),
-	};
+  return {
+    ...state,
+    activeTask: task,
+    updatedAt: new Date().toISOString(),
+  };
 }
 
 // ============================================================================
@@ -230,7 +230,7 @@ export function withTaskChange(
  * @returns JSON string representation
  */
 export function serializeSessionState(state: SessionState): string {
-	return JSON.stringify(state);
+  return JSON.stringify(state);
 }
 
 /**
@@ -241,19 +241,19 @@ export function serializeSessionState(state: SessionState): string {
  * @returns Parsed SessionState or null if invalid
  */
 export function deserializeSessionState(json: string): SessionState | null {
-	try {
-		const parsed = JSON.parse(json) as SessionState;
-		// Basic validation
-		if (
-			typeof parsed.currentMode !== "string" ||
-			!Array.isArray(parsed.modeHistory)
-		) {
-			return null;
-		}
-		return parsed;
-	} catch {
-		return null;
-	}
+  try {
+    const parsed = JSON.parse(json) as SessionState;
+    // Basic validation
+    if (
+      typeof parsed.currentMode !== "string" ||
+      !Array.isArray(parsed.modeHistory)
+    ) {
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -265,10 +265,10 @@ export function deserializeSessionState(json: string): SessionState | null {
  * @returns Array of recent mode history entries
  */
 export function getRecentModeHistory(
-	state: SessionState,
-	count: number = 5,
+  state: SessionState,
+  count: number = 5,
 ): ModeHistoryEntry[] {
-	return state.modeHistory.slice(-count);
+  return state.modeHistory.slice(-count);
 }
 
 // ============================================================================
@@ -277,39 +277,39 @@ export function getRecentModeHistory(
 
 // Re-export brain persistence layer
 export {
-	type BrainPersistenceOptions,
-	BrainSessionPersistence,
-	BrainUnavailableError,
-	getDefaultPersistence,
-	resetDefaultPersistence,
-	SessionNotFoundError,
+  type BrainPersistenceOptions,
+  BrainSessionPersistence,
+  BrainUnavailableError,
+  getDefaultPersistence,
+  resetDefaultPersistence,
+  SessionNotFoundError,
 } from "./brain-persistence";
 
 // Re-export types from types.ts
 export type {
-	AgentInvocation,
-	AgentInvocationInput,
-	AgentInvocationOutput,
-	AgentType,
-	CompactionEntry,
-	Decision,
-	DecisionType,
-	Handoff,
-	InvocationStatus,
-	OrchestratorWorkflow,
-	SessionState,
-	Verdict,
-	VerdictDecision,
-	WorkflowPhase,
+  AgentInvocation,
+  AgentInvocationInput,
+  AgentInvocationOutput,
+  AgentType,
+  CompactionEntry,
+  Decision,
+  DecisionType,
+  Handoff,
+  InvocationStatus,
+  OrchestratorWorkflow,
+  SessionState,
+  Verdict,
+  VerdictDecision,
+  WorkflowPhase,
 } from "./types";
 
 export {
-	createEmptyWorkflow,
-	getSessionStateErrors,
-	isAgentType,
-	isSessionState,
-	isWorkflowMode,
-	parseSessionState,
-	safeParseSessionState,
-	validateSessionState,
+  createEmptyWorkflow,
+  getSessionStateErrors,
+  isAgentType,
+  isSessionState,
+  isWorkflowMode,
+  parseSessionState,
+  safeParseSessionState,
+  validateSessionState,
 } from "./types";

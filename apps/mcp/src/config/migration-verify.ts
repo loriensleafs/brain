@@ -21,66 +21,66 @@ import { logger } from "../utils/internal/logger";
  * Result of verifying a single memory note.
  */
 export interface MemoryVerificationResult {
-	/** Title of the memory being verified */
-	title: string;
+  /** Title of the memory being verified */
+  title: string;
 
-	/** Permalink of the memory */
-	permalink: string;
+  /** Permalink of the memory */
+  permalink: string;
 
-	/** Verification status */
-	status: "found" | "missing" | "mismatched";
+  /** Verification status */
+  status: "found" | "missing" | "mismatched";
 
-	/** Expected content prefix (first 100 chars) */
-	expectedPrefix?: string;
+  /** Expected content prefix (first 100 chars) */
+  expectedPrefix?: string;
 
-	/** Actual content prefix found (first 100 chars) */
-	actualPrefix?: string;
+  /** Actual content prefix found (first 100 chars) */
+  actualPrefix?: string;
 
-	/** Similarity score from search */
-	similarityScore?: number;
+  /** Similarity score from search */
+  similarityScore?: number;
 
-	/** Error message if verification failed */
-	error?: string;
+  /** Error message if verification failed */
+  error?: string;
 }
 
 /**
  * Summary of memory indexing verification.
  */
 export interface VerificationSummary {
-	/** Total memories verified */
-	total: number;
+  /** Total memories verified */
+  total: number;
 
-	/** Successfully found and matched */
-	found: number;
+  /** Successfully found and matched */
+  found: number;
 
-	/** Not found in search */
-	missing: number;
+  /** Not found in search */
+  missing: number;
 
-	/** Found but content mismatch */
-	mismatched: number;
+  /** Found but content mismatch */
+  mismatched: number;
 
-	/** Verification passed (all found and matched) */
-	success: boolean;
+  /** Verification passed (all found and matched) */
+  success: boolean;
 
-	/** Individual verification results */
-	results: MemoryVerificationResult[];
+  /** Individual verification results */
+  results: MemoryVerificationResult[];
 
-	/** Timestamp of verification */
-	verifiedAt: Date;
+  /** Timestamp of verification */
+  verifiedAt: Date;
 }
 
 /**
  * Memory entry to verify.
  */
 export interface MemoryToVerify {
-	/** Title of the memory note */
-	title: string;
+  /** Title of the memory note */
+  title: string;
 
-	/** Expected permalink path */
-	permalink: string;
+  /** Expected permalink path */
+  permalink: string;
 
-	/** Expected content (at least first 100 chars) */
-	content: string;
+  /** Expected content (at least first 100 chars) */
+  content: string;
 }
 
 /**
@@ -126,48 +126,48 @@ const SEARCH_LIMIT = 5;
  * ```
  */
 export async function verifyMemoryIndexing(
-	memories: MemoryToVerify[],
-	project?: string,
+  memories: MemoryToVerify[],
+  project?: string,
 ): Promise<VerificationSummary> {
-	const searchService = new SearchService(project);
-	const results: MemoryVerificationResult[] = [];
+  const searchService = new SearchService(project);
+  const results: MemoryVerificationResult[] = [];
 
-	logger.info(
-		{ count: memories.length, project },
-		"Starting memory indexing verification",
-	);
+  logger.info(
+    { count: memories.length, project },
+    "Starting memory indexing verification",
+  );
 
-	for (const memory of memories) {
-		const result = await verifySingleMemory(memory, searchService, project);
-		results.push(result);
-	}
+  for (const memory of memories) {
+    const result = await verifySingleMemory(memory, searchService, project);
+    results.push(result);
+  }
 
-	const found = results.filter((r) => r.status === "found").length;
-	const missing = results.filter((r) => r.status === "missing").length;
-	const mismatched = results.filter((r) => r.status === "mismatched").length;
+  const found = results.filter((r) => r.status === "found").length;
+  const missing = results.filter((r) => r.status === "missing").length;
+  const mismatched = results.filter((r) => r.status === "mismatched").length;
 
-	const summary: VerificationSummary = {
-		total: memories.length,
-		found,
-		missing,
-		mismatched,
-		success: found === memories.length,
-		results,
-		verifiedAt: new Date(),
-	};
+  const summary: VerificationSummary = {
+    total: memories.length,
+    found,
+    missing,
+    mismatched,
+    success: found === memories.length,
+    results,
+    verifiedAt: new Date(),
+  };
 
-	logger.info(
-		{
-			total: summary.total,
-			found: summary.found,
-			missing: summary.missing,
-			mismatched: summary.mismatched,
-			success: summary.success,
-		},
-		"Memory indexing verification complete",
-	);
+  logger.info(
+    {
+      total: summary.total,
+      found: summary.found,
+      missing: summary.missing,
+      mismatched: summary.mismatched,
+      success: summary.success,
+    },
+    "Memory indexing verification complete",
+  );
 
-	return summary;
+  return summary;
 }
 
 /**
@@ -179,106 +179,106 @@ export async function verifyMemoryIndexing(
  * @returns Verification result for the memory
  */
 async function verifySingleMemory(
-	memory: MemoryToVerify,
-	searchService: SearchService,
-	project?: string,
+  memory: MemoryToVerify,
+  searchService: SearchService,
+  project?: string,
 ): Promise<MemoryVerificationResult> {
-	const expectedPrefix = memory.content.slice(0, CONTENT_PREFIX_LENGTH).trim();
+  const expectedPrefix = memory.content.slice(0, CONTENT_PREFIX_LENGTH).trim();
 
-	try {
-		// Search by title
-		const searchResponse = await searchService.search(memory.title, {
-			limit: SEARCH_LIMIT,
-			threshold: SEARCH_THRESHOLD,
-			mode: "auto",
-			project,
-		});
+  try {
+    // Search by title
+    const searchResponse = await searchService.search(memory.title, {
+      limit: SEARCH_LIMIT,
+      threshold: SEARCH_THRESHOLD,
+      mode: "auto",
+      project,
+    });
 
-		// Look for exact permalink match in results
-		const exactMatch = searchResponse.results.find(
-			(r) =>
-				normalizePermalink(r.permalink) ===
-				normalizePermalink(memory.permalink),
-		);
+    // Look for exact permalink match in results
+    const exactMatch = searchResponse.results.find(
+      (r) =>
+        normalizePermalink(r.permalink) ===
+        normalizePermalink(memory.permalink),
+    );
 
-		if (exactMatch) {
-			// Found by permalink, verify content
-			const actualContent = await fetchMemoryContent(memory.permalink, project);
-			const actualPrefix =
-				actualContent?.slice(0, CONTENT_PREFIX_LENGTH).trim() ?? "";
+    if (exactMatch) {
+      // Found by permalink, verify content
+      const actualContent = await fetchMemoryContent(memory.permalink, project);
+      const actualPrefix =
+        actualContent?.slice(0, CONTENT_PREFIX_LENGTH).trim() ?? "";
 
-			const contentMatches =
-				normalizeContent(actualPrefix) === normalizeContent(expectedPrefix);
+      const contentMatches =
+        normalizeContent(actualPrefix) === normalizeContent(expectedPrefix);
 
-			if (contentMatches) {
-				return {
-					title: memory.title,
-					permalink: memory.permalink,
-					status: "found",
-					expectedPrefix,
-					actualPrefix,
-					similarityScore: exactMatch.similarity_score,
-				};
-			} else {
-				return {
-					title: memory.title,
-					permalink: memory.permalink,
-					status: "mismatched",
-					expectedPrefix,
-					actualPrefix,
-					similarityScore: exactMatch.similarity_score,
-					error: "Content prefix does not match",
-				};
-			}
-		}
+      if (contentMatches) {
+        return {
+          title: memory.title,
+          permalink: memory.permalink,
+          status: "found",
+          expectedPrefix,
+          actualPrefix,
+          similarityScore: exactMatch.similarity_score,
+        };
+      } else {
+        return {
+          title: memory.title,
+          permalink: memory.permalink,
+          status: "mismatched",
+          expectedPrefix,
+          actualPrefix,
+          similarityScore: exactMatch.similarity_score,
+          error: "Content prefix does not match",
+        };
+      }
+    }
 
-		// Check if any result has similar title
-		const titleMatch = searchResponse.results.find(
-			(r) => normalizeTitle(r.title) === normalizeTitle(memory.title),
-		);
+    // Check if any result has similar title
+    const titleMatch = searchResponse.results.find(
+      (r) => normalizeTitle(r.title) === normalizeTitle(memory.title),
+    );
 
-		if (titleMatch) {
-			// Found by title but different permalink
-			const actualContent = await fetchMemoryContent(
-				titleMatch.permalink,
-				project,
-			);
-			const actualPrefix =
-				actualContent?.slice(0, CONTENT_PREFIX_LENGTH).trim() ?? "";
+    if (titleMatch) {
+      // Found by title but different permalink
+      const actualContent = await fetchMemoryContent(
+        titleMatch.permalink,
+        project,
+      );
+      const actualPrefix =
+        actualContent?.slice(0, CONTENT_PREFIX_LENGTH).trim() ?? "";
 
-			return {
-				title: memory.title,
-				permalink: memory.permalink,
-				status: "mismatched",
-				expectedPrefix,
-				actualPrefix,
-				similarityScore: titleMatch.similarity_score,
-				error: `Found at different permalink: ${titleMatch.permalink}`,
-			};
-		}
+      return {
+        title: memory.title,
+        permalink: memory.permalink,
+        status: "mismatched",
+        expectedPrefix,
+        actualPrefix,
+        similarityScore: titleMatch.similarity_score,
+        error: `Found at different permalink: ${titleMatch.permalink}`,
+      };
+    }
 
-		// Not found
-		return {
-			title: memory.title,
-			permalink: memory.permalink,
-			status: "missing",
-			expectedPrefix,
-			error: "Memory not found in search results",
-		};
-	} catch (error) {
-		logger.debug(
-			{ error, title: memory.title, permalink: memory.permalink },
-			"Error verifying memory",
-		);
+    // Not found
+    return {
+      title: memory.title,
+      permalink: memory.permalink,
+      status: "missing",
+      expectedPrefix,
+      error: "Memory not found in search results",
+    };
+  } catch (error) {
+    logger.debug(
+      { error, title: memory.title, permalink: memory.permalink },
+      "Error verifying memory",
+    );
 
-		return {
-			title: memory.title,
-			permalink: memory.permalink,
-			status: "missing",
-			expectedPrefix,
-			error: error instanceof Error ? error.message : "Verification failed",
-		};
-	}
+    return {
+      title: memory.title,
+      permalink: memory.permalink,
+      status: "missing",
+      expectedPrefix,
+      error: error instanceof Error ? error.message : "Verification failed",
+    };
+  }
 }
 
 /**
@@ -289,39 +289,39 @@ async function verifySingleMemory(
  * @returns Content string or null if not found
  */
 async function fetchMemoryContent(
-	permalink: string,
-	project?: string,
+  permalink: string,
+  project?: string,
 ): Promise<string | null> {
-	try {
-		const client = await getBasicMemoryClient();
+  try {
+    const client = await getBasicMemoryClient();
 
-		const args: Record<string, unknown> = {
-			identifier: permalink,
-		};
+    const args: Record<string, unknown> = {
+      identifier: permalink,
+    };
 
-		if (project) {
-			args.project = project;
-		}
+    if (project) {
+      args.project = project;
+    }
 
-		const result = await client.callTool({
-			name: "read_note",
-			arguments: args,
-		});
+    const result = await client.callTool({
+      name: "read_note",
+      arguments: args,
+    });
 
-		if (result.content && Array.isArray(result.content)) {
-			const textContent = result.content.find(
-				(c: { type: string }) => c.type === "text",
-			);
-			if (textContent && "text" in textContent) {
-				return textContent.text as string;
-			}
-		}
+    if (result.content && Array.isArray(result.content)) {
+      const textContent = result.content.find(
+        (c: { type: string }) => c.type === "text",
+      );
+      if (textContent && "text" in textContent) {
+        return textContent.text as string;
+      }
+    }
 
-		return null;
-	} catch (error) {
-		logger.debug({ error, permalink }, "Failed to fetch memory content");
-		return null;
-	}
+    return null;
+  } catch (error) {
+    logger.debug({ error, permalink }, "Failed to fetch memory content");
+    return null;
+  }
 }
 
 /**
@@ -329,7 +329,7 @@ async function fetchMemoryContent(
  * Removes leading/trailing slashes and normalizes case.
  */
 function normalizePermalink(permalink: string): string {
-	return permalink.toLowerCase().replace(/^\/+|\/+$/g, "");
+  return permalink.toLowerCase().replace(/^\/+|\/+$/g, "");
 }
 
 /**
@@ -337,7 +337,7 @@ function normalizePermalink(permalink: string): string {
  * Removes extra whitespace and normalizes case.
  */
 function normalizeTitle(title: string): string {
-	return title.toLowerCase().replace(/\s+/g, " ").trim();
+  return title.toLowerCase().replace(/\s+/g, " ").trim();
 }
 
 /**
@@ -345,11 +345,11 @@ function normalizeTitle(title: string): string {
  * Removes extra whitespace and normalizes line endings.
  */
 function normalizeContent(content: string): string {
-	return content
-		.replace(/\r\n/g, "\n")
-		.replace(/\s+/g, " ")
-		.trim()
-		.toLowerCase();
+  return content
+    .replace(/\r\n/g, "\n")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
 }
 
 /**
@@ -363,28 +363,28 @@ function normalizeContent(content: string): string {
  * @returns True if found at expected permalink
  */
 export async function isMemoryIndexed(
-	title: string,
-	expectedPermalink: string,
-	project?: string,
+  title: string,
+  expectedPermalink: string,
+  project?: string,
 ): Promise<boolean> {
-	const searchService = new SearchService(project);
+  const searchService = new SearchService(project);
 
-	try {
-		const response = await searchService.search(title, {
-			limit: SEARCH_LIMIT,
-			threshold: SEARCH_THRESHOLD,
-			mode: "auto",
-			project,
-		});
+  try {
+    const response = await searchService.search(title, {
+      limit: SEARCH_LIMIT,
+      threshold: SEARCH_THRESHOLD,
+      mode: "auto",
+      project,
+    });
 
-		return response.results.some(
-			(r) =>
-				normalizePermalink(r.permalink) ===
-				normalizePermalink(expectedPermalink),
-		);
-	} catch {
-		return false;
-	}
+    return response.results.some(
+      (r) =>
+        normalizePermalink(r.permalink) ===
+        normalizePermalink(expectedPermalink),
+    );
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -394,9 +394,9 @@ export async function isMemoryIndexed(
  * @returns Array of problem memories with details
  */
 export function getProblematicMemories(
-	summary: VerificationSummary,
+  summary: VerificationSummary,
 ): MemoryVerificationResult[] {
-	return summary.results.filter(
-		(r) => r.status === "missing" || r.status === "mismatched",
-	);
+  return summary.results.filter(
+    (r) => r.status === "missing" || r.status === "mismatched",
+  );
 }

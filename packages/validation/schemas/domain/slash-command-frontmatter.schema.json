@@ -1,27 +1,27 @@
 {
-	"$schema": "http://json-schema.org/draft-07/schema#",
-	"$id": "https://brain.dev/schemas/domain/slash-command-frontmatter.json",
-	"title": "SlashCommandFrontmatter",
-	"description": "Schema for slash command file frontmatter validation. Validates the YAML frontmatter in .md command files.",
-	"type": "object",
-	"properties": {
-		"description": {
-			"type": "string",
-			"minLength": 1,
-			"description": "Command description, should start with action verb or 'Use when...'"
-		},
-		"argument-hint": {
-			"type": "string",
-			"description": "Hint for expected arguments (e.g., '<file-path>')"
-		},
-		"allowed-tools": {
-			"type": "array",
-			"items": {
-				"type": "string"
-			},
-			"description": "List of allowed tools for bash execution"
-		}
-	},
-	"required": ["description"],
-	"additionalProperties": true
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://brain.dev/schemas/domain/slash-command-frontmatter.json",
+  "title": "SlashCommandFrontmatter",
+  "description": "Schema for slash command file frontmatter validation. Validates the YAML frontmatter in .md command files.",
+  "type": "object",
+  "properties": {
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Command description, should start with action verb or 'Use when...'"
+    },
+    "argument-hint": {
+      "type": "string",
+      "description": "Hint for expected arguments (e.g., '<file-path>')"
+    },
+    "allowed-tools": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of allowed tools for bash execution"
+    }
+  },
+  "required": ["description"],
+  "additionalProperties": true
 }

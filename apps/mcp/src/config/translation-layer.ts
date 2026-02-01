@@ -18,15 +18,15 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import {
-	acquireConfigLock,
-	releaseConfigLock,
+  acquireConfigLock,
+  releaseConfigLock,
 } from "../utils/security/configLock";
 import { expandTilde, normalizePath, validatePath } from "./path-validator";
 import type {
-	BrainConfig,
-	LogLevel,
-	MemoriesMode,
-	ProjectConfig,
+  BrainConfig,
+  LogLevel,
+  MemoriesMode,
+  ProjectConfig,
 } from "./schema";
 
 /**
@@ -53,63 +53,63 @@ const DEFAULT_LOCK_TIMEOUT_MS = 5000;
  * We only define the fields we actively manage; other fields are preserved as-is.
  */
 export interface BasicMemoryConfig {
-	/** Project name to memories path mapping */
-	projects?: Record<string, string>;
+  /** Project name to memories path mapping */
+  projects?: Record<string, string>;
 
-	/** Default project name (preserved from existing config) */
-	default_project?: string;
+  /** Default project name (preserved from existing config) */
+  default_project?: string;
 
-	/** Enable file sync */
-	sync_changes?: boolean;
+  /** Enable file sync */
+  sync_changes?: boolean;
 
-	/** Sync delay in milliseconds */
-	sync_delay?: number;
+  /** Sync delay in milliseconds */
+  sync_delay?: number;
 
-	/** Log level */
-	log_level?: string;
+  /** Log level */
+  log_level?: string;
 
-	/** Use kebab-case filenames (preserved) */
-	kebab_filenames?: boolean;
+  /** Use kebab-case filenames (preserved) */
+  kebab_filenames?: boolean;
 
-	/** Cloud mode (preserved) */
-	cloud_mode?: boolean;
+  /** Cloud mode (preserved) */
+  cloud_mode?: boolean;
 
-	/** Allow unknown fields for forward compatibility */
-	[key: string]: unknown;
+  /** Allow unknown fields for forward compatibility */
+  [key: string]: unknown;
 }
 
 /**
  * Error class for translation layer operations.
  */
 export class TranslationError extends Error {
-	constructor(
-		message: string,
-		public readonly code: "IO_ERROR" | "VALIDATION_ERROR" | "LOCK_ERROR",
-		public readonly cause?: unknown,
-	) {
-		super(message);
-		this.name = "TranslationError";
-	}
+  constructor(
+    message: string,
+    public readonly code: "IO_ERROR" | "VALIDATION_ERROR" | "LOCK_ERROR",
+    public readonly cause?: unknown,
+  ) {
+    super(message);
+    this.name = "TranslationError";
+  }
 }
 
 /**
  * Options for translation operations.
  */
 export interface TranslationOptions {
-	/** Lock timeout in milliseconds (default: 5000) */
-	lockTimeoutMs?: number;
+  /** Lock timeout in milliseconds (default: 5000) */
+  lockTimeoutMs?: number;
 }
 
 /**
  * Result of memories path resolution.
  */
 export interface ResolvedMemoriesPath {
-	/** The resolved absolute path */
-	path: string;
-	/** How the path was resolved */
-	mode: MemoriesMode;
-	/** Error if resolution failed */
-	error?: string;
+  /** The resolved absolute path */
+  path: string;
+  /** How the path was resolved */
+  mode: MemoriesMode;
+  /** Error if resolution failed */
+  error?: string;
 }
 
 /**
@@ -118,7 +118,7 @@ export interface ResolvedMemoriesPath {
  * @returns Absolute path to ~/.basic-memory/
  */
 export function getBasicMemoryConfigDir(): string {
-	return BASIC_MEMORY_CONFIG_DIR;
+  return BASIC_MEMORY_CONFIG_DIR;
 }
 
 /**
@@ -127,7 +127,7 @@ export function getBasicMemoryConfigDir(): string {
  * @returns Absolute path to ~/.basic-memory/config.json
  */
 export function getBasicMemoryConfigPath(): string {
-	return path.join(BASIC_MEMORY_CONFIG_DIR, BASIC_MEMORY_CONFIG_FILE);
+  return path.join(BASIC_MEMORY_CONFIG_DIR, BASIC_MEMORY_CONFIG_FILE);
 }
 
 /**
@@ -159,94 +159,94 @@ export function getBasicMemoryConfigPath(): string {
  * ```
  */
 export function resolveMemoriesPath(
-	projectName: string,
-	projectConfig: ProjectConfig,
-	defaultMemoriesLocation: string,
+  projectName: string,
+  projectConfig: ProjectConfig,
+  defaultMemoriesLocation: string,
 ): ResolvedMemoriesPath {
-	// Determine which mode to use
-	const mode: MemoriesMode = projectConfig.memories_mode || "DEFAULT";
+  // Determine which mode to use
+  const mode: MemoriesMode = projectConfig.memories_mode || "DEFAULT";
 
-	try {
-		switch (mode) {
-			case "DEFAULT": {
-				// ${memories_location}/${project_name}
-				const expandedLocation = expandTilde(defaultMemoriesLocation);
-				const resolvedPath = path.join(expandedLocation, projectName);
-				const normalizedPath = normalizePath(resolvedPath);
+  try {
+    switch (mode) {
+      case "DEFAULT": {
+        // ${memories_location}/${project_name}
+        const expandedLocation = expandTilde(defaultMemoriesLocation);
+        const resolvedPath = path.join(expandedLocation, projectName);
+        const normalizedPath = normalizePath(resolvedPath);
 
-				// Validate the resulting path
-				const validation = validatePath(normalizedPath);
-				if (!validation.valid) {
-					return {
-						path: normalizedPath,
-						mode,
-						error: validation.error,
-					};
-				}
+        // Validate the resulting path
+        const validation = validatePath(normalizedPath);
+        if (!validation.valid) {
+          return {
+            path: normalizedPath,
+            mode,
+            error: validation.error,
+          };
+        }
 
-				return { path: validation.normalizedPath!, mode };
-			}
+        return { path: validation.normalizedPath!, mode };
+      }
 
-			case "CODE": {
-				// ${code_path}/docs
-				const expandedCodePath = expandTilde(projectConfig.code_path);
-				const resolvedPath = path.join(expandedCodePath, "docs");
-				const normalizedPath = normalizePath(resolvedPath);
+      case "CODE": {
+        // ${code_path}/docs
+        const expandedCodePath = expandTilde(projectConfig.code_path);
+        const resolvedPath = path.join(expandedCodePath, "docs");
+        const normalizedPath = normalizePath(resolvedPath);
 
-				// Validate the resulting path
-				const validation = validatePath(normalizedPath);
-				if (!validation.valid) {
-					return {
-						path: normalizedPath,
-						mode,
-						error: validation.error,
-					};
-				}
+        // Validate the resulting path
+        const validation = validatePath(normalizedPath);
+        if (!validation.valid) {
+          return {
+            path: normalizedPath,
+            mode,
+            error: validation.error,
+          };
+        }
 
-				return { path: validation.normalizedPath!, mode };
-			}
+        return { path: validation.normalizedPath!, mode };
+      }
 
-			case "CUSTOM": {
-				// Explicit memories_path value
-				if (!projectConfig.memories_path) {
-					return {
-						path: "",
-						mode,
-						error: "CUSTOM mode requires memories_path to be set",
-					};
-				}
+      case "CUSTOM": {
+        // Explicit memories_path value
+        if (!projectConfig.memories_path) {
+          return {
+            path: "",
+            mode,
+            error: "CUSTOM mode requires memories_path to be set",
+          };
+        }
 
-				const normalizedPath = normalizePath(projectConfig.memories_path);
+        const normalizedPath = normalizePath(projectConfig.memories_path);
 
-				// Validate the resulting path
-				const validation = validatePath(normalizedPath);
-				if (!validation.valid) {
-					return {
-						path: normalizedPath,
-						mode,
-						error: validation.error,
-					};
-				}
+        // Validate the resulting path
+        const validation = validatePath(normalizedPath);
+        if (!validation.valid) {
+          return {
+            path: normalizedPath,
+            mode,
+            error: validation.error,
+          };
+        }
 
-				return { path: validation.normalizedPath!, mode };
-			}
+        return { path: validation.normalizedPath!, mode };
+      }
 
-			default: {
-				// Should never happen due to TypeScript enum exhaustiveness
-				return {
-					path: "",
-					mode: "DEFAULT",
-					error: `Unknown memories mode: ${mode}`,
-				};
-			}
-		}
-	} catch (error) {
-		return {
-			path: "",
-			mode,
-			error: error instanceof Error ? error.message : "Path resolution failed",
-		};
-	}
+      default: {
+        // Should never happen due to TypeScript enum exhaustiveness
+        return {
+          path: "",
+          mode: "DEFAULT",
+          error: `Unknown memories mode: ${mode}`,
+        };
+      }
+    }
+  } catch (error) {
+    return {
+      path: "",
+      mode,
+      error: error instanceof Error ? error.message : "Path resolution failed",
+    };
+  }
 }
 
 /**
@@ -289,40 +289,40 @@ export function resolveMemoriesPath(
  * ```
  */
 export function translateBrainToBasicMemory(
-	brainConfig: BrainConfig,
-	existingConfig?: BasicMemoryConfig,
+  brainConfig: BrainConfig,
+  existingConfig?: BasicMemoryConfig,
 ): BasicMemoryConfig {
-	// Start with existing config to preserve unknown fields
-	const result: BasicMemoryConfig = existingConfig ? { ...existingConfig } : {};
+  // Start with existing config to preserve unknown fields
+  const result: BasicMemoryConfig = existingConfig ? { ...existingConfig } : {};
 
-	// Translate projects with resolved paths
-	result.projects = {};
-	for (const [projectName, projectConfig] of Object.entries(
-		brainConfig.projects,
-	)) {
-		if (!projectConfig) continue;
+  // Translate projects with resolved paths
+  result.projects = {};
+  for (const [projectName, projectConfig] of Object.entries(
+    brainConfig.projects,
+  )) {
+    if (!projectConfig) continue;
 
-		const resolved = resolveMemoriesPath(
-			projectName,
-			projectConfig,
-			brainConfig.defaults.memories_location,
-		);
+    const resolved = resolveMemoriesPath(
+      projectName,
+      projectConfig,
+      brainConfig.defaults.memories_location,
+    );
 
-		// Only include projects with successfully resolved paths
-		if (!resolved.error && resolved.path) {
-			result.projects[projectName] = resolved.path;
-		}
-		// Note: Failed resolutions are logged but don't block the entire translation
-	}
+    // Only include projects with successfully resolved paths
+    if (!resolved.error && resolved.path) {
+      result.projects[projectName] = resolved.path;
+    }
+    // Note: Failed resolutions are logged but don't block the entire translation
+  }
 
-	// Translate sync settings
-	result.sync_changes = brainConfig.sync.enabled;
-	result.sync_delay = brainConfig.sync.delay_ms;
+  // Translate sync settings
+  result.sync_changes = brainConfig.sync.enabled;
+  result.sync_delay = brainConfig.sync.delay_ms;
 
-	// Translate logging
-	result.log_level = brainConfig.logging.level;
+  // Translate logging
+  result.log_level = brainConfig.logging.level;
 
-	return result;
+  return result;
 }
 
 /**
@@ -331,29 +331,29 @@ export function translateBrainToBasicMemory(
  * @returns Existing config or empty object
  */
 function loadExistingBasicMemoryConfig(): BasicMemoryConfig {
-	const configPath = getBasicMemoryConfigPath();
+  const configPath = getBasicMemoryConfigPath();
 
-	try {
-		if (fs.existsSync(configPath)) {
-			const content = fs.readFileSync(configPath, "utf-8");
-			return JSON.parse(content) as BasicMemoryConfig;
-		}
-	} catch {
-		// Return empty config on error
-	}
+  try {
+    if (fs.existsSync(configPath)) {
+      const content = fs.readFileSync(configPath, "utf-8");
+      return JSON.parse(content) as BasicMemoryConfig;
+    }
+  } catch {
+    // Return empty config on error
+  }
 
-	return {};
+  return {};
 }
 
 /**
  * Ensure the basic-memory config directory exists.
  */
 function ensureBasicMemoryConfigDir(): void {
-	const configDir = getBasicMemoryConfigDir();
+  const configDir = getBasicMemoryConfigDir();
 
-	if (!fs.existsSync(configDir)) {
-		fs.mkdirSync(configDir, { recursive: true });
-	}
+  if (!fs.existsSync(configDir)) {
+    fs.mkdirSync(configDir, { recursive: true });
+  }
 }
 
 /**
@@ -363,45 +363,45 @@ function ensureBasicMemoryConfigDir(): void {
  * @throws TranslationError if write fails
  */
 function writeBasicMemoryConfig(config: BasicMemoryConfig): void {
-	const configPath = getBasicMemoryConfigPath();
-	const tempPath = `${configPath}.tmp`;
+  const configPath = getBasicMemoryConfigPath();
+  const tempPath = `${configPath}.tmp`;
 
-	try {
-		ensureBasicMemoryConfigDir();
+  try {
+    ensureBasicMemoryConfigDir();
 
-		// Write to temp file
-		const content = JSON.stringify(config, null, 2);
-		fs.writeFileSync(tempPath, content, { encoding: "utf-8", mode: FILE_MODE });
+    // Write to temp file
+    const content = JSON.stringify(config, null, 2);
+    fs.writeFileSync(tempPath, content, { encoding: "utf-8", mode: FILE_MODE });
 
-		// Verify temp file
-		const verifyContent = fs.readFileSync(tempPath, "utf-8");
-		JSON.parse(verifyContent); // Throws if invalid
+    // Verify temp file
+    const verifyContent = fs.readFileSync(tempPath, "utf-8");
+    JSON.parse(verifyContent); // Throws if invalid
 
-		// Atomic rename
-		fs.renameSync(tempPath, configPath);
+    // Atomic rename
+    fs.renameSync(tempPath, configPath);
 
-		// Set permissions
-		try {
-			fs.chmodSync(configPath, FILE_MODE);
-		} catch {
-			// Ignore permission errors on non-Unix systems
-		}
-	} catch (error) {
-		// Clean up temp file
-		try {
-			if (fs.existsSync(tempPath)) {
-				fs.unlinkSync(tempPath);
-			}
-		} catch {
-			// Ignore cleanup errors
-		}
+    // Set permissions
+    try {
+      fs.chmodSync(configPath, FILE_MODE);
+    } catch {
+      // Ignore permission errors on non-Unix systems
+    }
+  } catch (error) {
+    // Clean up temp file
+    try {
+      if (fs.existsSync(tempPath)) {
+        fs.unlinkSync(tempPath);
+      }
+    } catch {
+      // Ignore cleanup errors
+    }
 
-		throw new TranslationError(
-			`Failed to write basic-memory config: ${error instanceof Error ? error.message : "unknown error"}`,
-			"IO_ERROR",
-			error,
-		);
-	}
+    throw new TranslationError(
+      `Failed to write basic-memory config: ${error instanceof Error ? error.message : "unknown error"}`,
+      "IO_ERROR",
+      error,
+    );
+  }
 }
 
 /**
@@ -425,35 +425,35 @@ function writeBasicMemoryConfig(config: BasicMemoryConfig): void {
  * ```
  */
 export async function syncConfigToBasicMemory(
-	brainConfig: BrainConfig,
-	options: TranslationOptions = {},
+  brainConfig: BrainConfig,
+  options: TranslationOptions = {},
 ): Promise<void> {
-	const { lockTimeoutMs = DEFAULT_LOCK_TIMEOUT_MS } = options;
+  const { lockTimeoutMs = DEFAULT_LOCK_TIMEOUT_MS } = options;
 
-	// Acquire lock for writing
-	const lockResult = await acquireConfigLock({ timeoutMs: lockTimeoutMs });
-	if (!lockResult.acquired) {
-		throw new TranslationError(
-			lockResult.error || "Failed to acquire lock for basic-memory sync",
-			"LOCK_ERROR",
-		);
-	}
+  // Acquire lock for writing
+  const lockResult = await acquireConfigLock({ timeoutMs: lockTimeoutMs });
+  if (!lockResult.acquired) {
+    throw new TranslationError(
+      lockResult.error || "Failed to acquire lock for basic-memory sync",
+      "LOCK_ERROR",
+    );
+  }
 
-	try {
-		// Load existing config to preserve unknown fields
-		const existingConfig = loadExistingBasicMemoryConfig();
+  try {
+    // Load existing config to preserve unknown fields
+    const existingConfig = loadExistingBasicMemoryConfig();
 
-		// Translate Brain config
-		const translatedConfig = translateBrainToBasicMemory(
-			brainConfig,
-			existingConfig,
-		);
+    // Translate Brain config
+    const translatedConfig = translateBrainToBasicMemory(
+      brainConfig,
+      existingConfig,
+    );
 
-		// Write to basic-memory config
-		writeBasicMemoryConfig(translatedConfig);
-	} finally {
-		releaseConfigLock();
-	}
+    // Write to basic-memory config
+    writeBasicMemoryConfig(translatedConfig);
+  } finally {
+    releaseConfigLock();
+  }
 }
 
 /**
@@ -466,16 +466,16 @@ export async function syncConfigToBasicMemory(
  * @returns Result with success status and optional error
  */
 export async function trySyncConfigToBasicMemory(
-	brainConfig: BrainConfig,
-	options: TranslationOptions = {},
+  brainConfig: BrainConfig,
+  options: TranslationOptions = {},
 ): Promise<{ success: boolean; error?: string }> {
-	try {
-		await syncConfigToBasicMemory(brainConfig, options);
-		return { success: true };
-	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : "Sync failed";
-		return { success: false, error: errorMessage };
-	}
+  try {
+    await syncConfigToBasicMemory(brainConfig, options);
+    return { success: true };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Sync failed";
+    return { success: false, error: errorMessage };
+  }
 }
 
 /**
@@ -495,48 +495,48 @@ export async function trySyncConfigToBasicMemory(
  * ```
  */
 export function validateTranslation(brainConfig: BrainConfig): string[] {
-	const errors: string[] = [];
+  const errors: string[] = [];
 
-	// Check that at least one project can be resolved
-	let _resolvedCount = 0;
-	for (const [projectName, projectConfig] of Object.entries(
-		brainConfig.projects,
-	)) {
-		if (!projectConfig) continue;
+  // Check that at least one project can be resolved
+  let _resolvedCount = 0;
+  for (const [projectName, projectConfig] of Object.entries(
+    brainConfig.projects,
+  )) {
+    if (!projectConfig) continue;
 
-		const resolved = resolveMemoriesPath(
-			projectName,
-			projectConfig,
-			brainConfig.defaults.memories_location,
-		);
+    const resolved = resolveMemoriesPath(
+      projectName,
+      projectConfig,
+      brainConfig.defaults.memories_location,
+    );
 
-		if (resolved.error) {
-			errors.push(`Project '${projectName}': ${resolved.error}`);
-		} else {
-			_resolvedCount++;
-		}
-	}
+    if (resolved.error) {
+      errors.push(`Project '${projectName}': ${resolved.error}`);
+    } else {
+      _resolvedCount++;
+    }
+  }
 
-	// Validate log level
-	const validLogLevels: LogLevel[] = [
-		"trace",
-		"debug",
-		"info",
-		"warn",
-		"error",
-	];
-	const logLevel = brainConfig.logging.level ?? "info";
-	if (!validLogLevels.includes(logLevel)) {
-		errors.push(`Invalid log level: ${logLevel}`);
-	}
+  // Validate log level
+  const validLogLevels: LogLevel[] = [
+    "trace",
+    "debug",
+    "info",
+    "warn",
+    "error",
+  ];
+  const logLevel = brainConfig.logging.level ?? "info";
+  if (!validLogLevels.includes(logLevel)) {
+    errors.push(`Invalid log level: ${logLevel}`);
+  }
 
-	// Validate sync delay
-	const syncDelayMs = brainConfig.sync.delay_ms ?? 500;
-	if (syncDelayMs < 0) {
-		errors.push(`Invalid sync delay: ${syncDelayMs} (must be >= 0)`);
-	}
+  // Validate sync delay
+  const syncDelayMs = brainConfig.sync.delay_ms ?? 500;
+  if (syncDelayMs < 0) {
+    errors.push(`Invalid sync delay: ${syncDelayMs} (must be >= 0)`);
+  }
 
-	return errors;
+  return errors;
 }
 
 /**
@@ -548,25 +548,25 @@ export function validateTranslation(brainConfig: BrainConfig): string[] {
  * @returns Translated configuration with resolution details
  */
 export function previewTranslation(brainConfig: BrainConfig): {
-	config: BasicMemoryConfig;
-	resolutions: Record<string, ResolvedMemoriesPath>;
+  config: BasicMemoryConfig;
+  resolutions: Record<string, ResolvedMemoriesPath>;
 } {
-	const resolutions: Record<string, ResolvedMemoriesPath> = {};
+  const resolutions: Record<string, ResolvedMemoriesPath> = {};
 
-	// Resolve all projects
-	for (const [projectName, projectConfig] of Object.entries(
-		brainConfig.projects,
-	)) {
-		if (!projectConfig) continue;
-		resolutions[projectName] = resolveMemoriesPath(
-			projectName,
-			projectConfig,
-			brainConfig.defaults.memories_location,
-		);
-	}
+  // Resolve all projects
+  for (const [projectName, projectConfig] of Object.entries(
+    brainConfig.projects,
+  )) {
+    if (!projectConfig) continue;
+    resolutions[projectName] = resolveMemoriesPath(
+      projectName,
+      projectConfig,
+      brainConfig.defaults.memories_location,
+    );
+  }
 
-	// Get the translated config
-	const config = translateBrainToBasicMemory(brainConfig);
+  // Get the translated config
+  const config = translateBrainToBasicMemory(brainConfig);
 
-	return { config, resolutions };
+  return { config, resolutions };
 }

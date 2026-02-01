@@ -1,136 +1,136 @@
 {
-	"$schema": "http://json-schema.org/draft-07/schema#",
-	"$id": "https://brain.dev/schemas/validators/check-tasks.json",
-	"title": "CheckTasksValidation",
-	"description": "Schema for task validation input and results.",
-	"definitions": {
-		"TaskStatus": {
-			"type": "string",
-			"enum": [
-				"NOT_STARTED",
-				"IN_PROGRESS",
-				"COMPLETED",
-				"BLOCKED",
-				"DEFERRED"
-			],
-			"description": "Status of a task"
-		},
-		"Task": {
-			"type": "object",
-			"description": "A task to validate",
-			"properties": {
-				"name": {
-					"type": "string",
-					"minLength": 1,
-					"description": "Task name/identifier"
-				},
-				"status": {
-					"$ref": "#/definitions/TaskStatus"
-				},
-				"completed": {
-					"type": "boolean",
-					"description": "Whether the task is completed"
-				},
-				"description": {
-					"type": "string",
-					"description": "Task description"
-				},
-				"assignee": {
-					"type": "string",
-					"description": "Task assignee"
-				},
-				"dueDate": {
-					"type": "string",
-					"format": "date",
-					"description": "Task due date in ISO format"
-				},
-				"priority": {
-					"type": "string",
-					"enum": ["P0", "P1", "P2", "P3"],
-					"description": "Task priority"
-				}
-			},
-			"additionalProperties": true
-		},
-		"Check": {
-			"type": "object",
-			"description": "A single validation check result",
-			"properties": {
-				"name": {
-					"type": "string",
-					"minLength": 1,
-					"description": "Check identifier"
-				},
-				"passed": {
-					"type": "boolean",
-					"description": "Whether the check passed"
-				},
-				"message": {
-					"type": "string",
-					"description": "Human-readable check result message"
-				}
-			},
-			"required": ["name", "passed", "message"],
-			"additionalProperties": false
-		},
-		"TasksInput": {
-			"type": "object",
-			"description": "Input for task validation",
-			"properties": {
-				"tasks": {
-					"type": "array",
-					"items": {
-						"$ref": "#/definitions/Task"
-					},
-					"description": "Array of tasks to validate"
-				}
-			},
-			"required": ["tasks"],
-			"additionalProperties": false
-		},
-		"TasksValidationResult": {
-			"type": "object",
-			"description": "Result of task validation",
-			"properties": {
-				"valid": {
-					"type": "boolean",
-					"description": "Overall validation result"
-				},
-				"checks": {
-					"type": "array",
-					"items": {
-						"$ref": "#/definitions/Check"
-					},
-					"description": "Individual check results"
-				},
-				"message": {
-					"type": "string",
-					"description": "Summary message"
-				},
-				"remediation": {
-					"type": "string",
-					"description": "Remediation steps if validation failed"
-				},
-				"incompleteTasks": {
-					"type": "array",
-					"items": {
-						"type": "string"
-					},
-					"description": "Names of incomplete in-progress tasks"
-				}
-			},
-			"required": ["valid", "checks", "message"],
-			"additionalProperties": false
-		}
-	},
-	"type": "object",
-	"properties": {
-		"input": {
-			"$ref": "#/definitions/TasksInput"
-		},
-		"result": {
-			"$ref": "#/definitions/TasksValidationResult"
-		}
-	},
-	"additionalProperties": false
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://brain.dev/schemas/validators/check-tasks.json",
+  "title": "CheckTasksValidation",
+  "description": "Schema for task validation input and results.",
+  "definitions": {
+    "TaskStatus": {
+      "type": "string",
+      "enum": [
+        "NOT_STARTED",
+        "IN_PROGRESS",
+        "COMPLETED",
+        "BLOCKED",
+        "DEFERRED"
+      ],
+      "description": "Status of a task"
+    },
+    "Task": {
+      "type": "object",
+      "description": "A task to validate",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Task name/identifier"
+        },
+        "status": {
+          "$ref": "#/definitions/TaskStatus"
+        },
+        "completed": {
+          "type": "boolean",
+          "description": "Whether the task is completed"
+        },
+        "description": {
+          "type": "string",
+          "description": "Task description"
+        },
+        "assignee": {
+          "type": "string",
+          "description": "Task assignee"
+        },
+        "dueDate": {
+          "type": "string",
+          "format": "date",
+          "description": "Task due date in ISO format"
+        },
+        "priority": {
+          "type": "string",
+          "enum": ["P0", "P1", "P2", "P3"],
+          "description": "Task priority"
+        }
+      },
+      "additionalProperties": true
+    },
+    "Check": {
+      "type": "object",
+      "description": "A single validation check result",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Check identifier"
+        },
+        "passed": {
+          "type": "boolean",
+          "description": "Whether the check passed"
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable check result message"
+        }
+      },
+      "required": ["name", "passed", "message"],
+      "additionalProperties": false
+    },
+    "TasksInput": {
+      "type": "object",
+      "description": "Input for task validation",
+      "properties": {
+        "tasks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Task"
+          },
+          "description": "Array of tasks to validate"
+        }
+      },
+      "required": ["tasks"],
+      "additionalProperties": false
+    },
+    "TasksValidationResult": {
+      "type": "object",
+      "description": "Result of task validation",
+      "properties": {
+        "valid": {
+          "type": "boolean",
+          "description": "Overall validation result"
+        },
+        "checks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Check"
+          },
+          "description": "Individual check results"
+        },
+        "message": {
+          "type": "string",
+          "description": "Summary message"
+        },
+        "remediation": {
+          "type": "string",
+          "description": "Remediation steps if validation failed"
+        },
+        "incompleteTasks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Names of incomplete in-progress tasks"
+        }
+      },
+      "required": ["valid", "checks", "message"],
+      "additionalProperties": false
+    }
+  },
+  "type": "object",
+  "properties": {
+    "input": {
+      "$ref": "#/definitions/TasksInput"
+    },
+    "result": {
+      "$ref": "#/definitions/TasksValidationResult"
+    }
+  },
+  "additionalProperties": false
 }

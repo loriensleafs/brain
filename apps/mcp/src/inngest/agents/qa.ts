@@ -25,29 +25,29 @@ const AGENT_NAME = "qa";
  * @throws NonRetriableError if featureId is invalid
  */
 export async function runQaAgent(
-	featureId: string,
-	context: Record<string, unknown>,
+  featureId: string,
+  context: Record<string, unknown>,
 ): Promise<AgentVerdict> {
-	// Validate required inputs - throws NonRetriableError if invalid
-	validateFeatureId(featureId, AGENT_NAME);
+  // Validate required inputs - throws NonRetriableError if invalid
+  validateFeatureId(featureId, AGENT_NAME);
 
-	return wrapAgentExecution(AGENT_NAME, async () => {
-		logger.debug(
-			{ featureId, context, agent: AGENT_NAME },
-			"Running QA agent validation",
-		);
+  return wrapAgentExecution(AGENT_NAME, async () => {
+    logger.debug(
+      { featureId, context, agent: AGENT_NAME },
+      "Running QA agent validation",
+    );
 
-		// Placeholder: actual QA validation logic deferred per C-001
-		// Future implementation will:
-		// - Check test coverage metrics
-		// - Verify all tests pass
-		// - Validate quality gates
-		// - Review test documentation
+    // Placeholder: actual QA validation logic deferred per C-001
+    // Future implementation will:
+    // - Check test coverage metrics
+    // - Verify all tests pass
+    // - Validate quality gates
+    // - Review test documentation
 
-		return {
-			agent: AGENT_NAME,
-			verdict: "PASS",
-			details: "QA validation placeholder - actual implementation deferred",
-		};
-	});
+    return {
+      agent: AGENT_NAME,
+      verdict: "PASS",
+      details: "QA validation placeholder - actual implementation deferred",
+    };
+  });
 }

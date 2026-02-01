@@ -40,31 +40,31 @@ This server wraps basic-memory with proactive memory management patterns.`;
  * Create and configure the Brain MCP server.
  */
 export async function createServer(): Promise<McpServer> {
-	const server = new McpServer(
-		{
-			name: "🧠 brain",
-			version: "1.0.0",
-		},
-		{
-			capabilities: {
-				tools: {},
-				resources: {},
-				prompts: {},
-			},
-			instructions: SERVER_INSTRUCTIONS,
-		},
-	);
+  const server = new McpServer(
+    {
+      name: "🧠 brain",
+      version: "1.0.0",
+    },
+    {
+      capabilities: {
+        tools: {},
+        resources: {},
+        prompts: {},
+      },
+      instructions: SERVER_INSTRUCTIONS,
+    },
+  );
 
-	// Discover and register ALL tools (wrapper + proxied) via low-level handlers
-	// This must be done before any registerTool calls to avoid conflicts
-	await discoverAndRegisterTools(server);
+  // Discover and register ALL tools (wrapper + proxied) via low-level handlers
+  // This must be done before any registerTool calls to avoid conflicts
+  await discoverAndRegisterTools(server);
 
-	// Discover and register resources (Brain guides + basic-memory)
-	await discoverAndRegisterResources(server);
+  // Discover and register resources (Brain guides + basic-memory)
+  await discoverAndRegisterResources(server);
 
-	// Discover and register prompts (proxied from basic-memory)
-	await discoverAndRegisterPrompts(server);
+  // Discover and register prompts (proxied from basic-memory)
+  await discoverAndRegisterPrompts(server);
 
-	logger.info("Brain MCP server created");
-	return server;
+  logger.info("Brain MCP server created");
+  return server;
 }

@@ -1,16 +1,16 @@
 {
-	"$schema": "http://json-schema.org/draft-07/schema#",
-	"$id": "https://brain.dev/schemas/tools/config/rollback.json",
-	"title": "ConfigRollbackArgs",
-	"description": "Schema for config_rollback tool arguments. Restores configuration from snapshots created before risky operations.",
-	"type": "object",
-	"properties": {
-		"target": {
-			"type": "string",
-			"enum": ["lastKnownGood", "previous"],
-			"description": "Rollback target: 'lastKnownGood' (baseline from startup) or 'previous' (most recent snapshot)."
-		}
-	},
-	"required": ["target"],
-	"additionalProperties": false
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://brain.dev/schemas/tools/config/rollback.json",
+  "title": "ConfigRollbackArgs",
+  "description": "Schema for config_rollback tool arguments. Restores configuration from snapshots created before risky operations.",
+  "type": "object",
+  "properties": {
+    "target": {
+      "type": "string",
+      "enum": ["lastKnownGood", "previous"],
+      "description": "Rollback target: 'lastKnownGood' (baseline from startup) or 'previous' (most recent snapshot)."
+    }
+  },
+  "required": ["target"],
+  "additionalProperties": false
 }

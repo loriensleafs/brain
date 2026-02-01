@@ -25,30 +25,30 @@ const AGENT_NAME = "architect";
  * @throws NonRetriableError if featureId is invalid
  */
 export async function runArchitectAgent(
-	featureId: string,
-	context: Record<string, unknown>,
+  featureId: string,
+  context: Record<string, unknown>,
 ): Promise<AgentVerdict> {
-	// Validate required inputs - throws NonRetriableError if invalid
-	validateFeatureId(featureId, AGENT_NAME);
+  // Validate required inputs - throws NonRetriableError if invalid
+  validateFeatureId(featureId, AGENT_NAME);
 
-	return wrapAgentExecution(AGENT_NAME, async () => {
-		logger.debug(
-			{ featureId, context, agent: AGENT_NAME },
-			"Running architect agent validation",
-		);
+  return wrapAgentExecution(AGENT_NAME, async () => {
+    logger.debug(
+      { featureId, context, agent: AGENT_NAME },
+      "Running architect agent validation",
+    );
 
-		// Placeholder: actual architect validation logic deferred per C-001
-		// Future implementation will:
-		// - Review architectural decisions
-		// - Validate design pattern usage
-		// - Check code structure and organization
-		// - Verify technical debt is documented
+    // Placeholder: actual architect validation logic deferred per C-001
+    // Future implementation will:
+    // - Review architectural decisions
+    // - Validate design pattern usage
+    // - Check code structure and organization
+    // - Verify technical debt is documented
 
-		return {
-			agent: AGENT_NAME,
-			verdict: "PASS",
-			details:
-				"Architect validation placeholder - actual implementation deferred",
-		};
-	});
+    return {
+      agent: AGENT_NAME,
+      verdict: "PASS",
+      details:
+        "Architect validation placeholder - actual implementation deferred",
+    };
+  });
 }

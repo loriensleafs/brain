@@ -1,217 +1,217 @@
 {
-	"$schema": "http://json-schema.org/draft-07/schema#",
-	"$id": "https://brain.dev/schemas/session/session-protocol.json",
-	"title": "SessionProtocol",
-	"description": "Schema for session protocol validation. Validates session log structure, checklist completion, and evidence requirements.",
-	"definitions": {
-		"SessionLogFilename": {
-			"type": "string",
-			"pattern": "^\\d{4}-\\d{2}-\\d{2}-session-\\d+\\.md$",
-			"description": "Session log filename in YYYY-MM-DD-session-NN.md format"
-		},
-		"RequirementLevel": {
-			"type": "string",
-			"enum": ["MUST", "SHOULD", "MAY"],
-			"description": "RFC 2119 requirement level"
-		},
-		"CheckboxStatus": {
-			"type": "string",
-			"pattern": "^\\[[ xX]\\]$",
-			"description": "Checkbox status: [ ] unchecked, [x] or [X] checked"
-		},
-		"ChecklistRow": {
-			"type": "object",
-			"properties": {
-				"requirement": {
-					"$ref": "#/definitions/RequirementLevel"
-				},
-				"step": {
-					"type": "string",
-					"minLength": 1
-				},
-				"status": {
-					"$ref": "#/definitions/CheckboxStatus"
-				},
-				"evidence": {
-					"type": "string"
-				},
-				"rawLine": {
-					"type": "string"
-				}
-			},
-			"required": ["requirement", "step", "status"]
-		},
-		"RequiredSections": {
-			"type": "array",
-			"items": {
-				"type": "string",
-				"enum": [
-					"Session Info",
-					"Protocol Compliance",
-					"Session Start",
-					"Session End"
-				]
-			},
-			"uniqueItems": true,
-			"description": "Required sections in a session log"
-		},
-		"BrainInitializationPatterns": {
-			"type": "array",
-			"items": {
-				"type": "string"
-			},
-			"default": [
-				"mcp__plugin_brain_brain__build_context",
-				"mcp__plugin_brain_brain__bootstrap_context",
-				"brain__build_context",
-				"brain__bootstrap_context",
-				"Brain MCP initialized",
-				"Initialize Brain"
-			],
-			"description": "Patterns that indicate Brain MCP initialization"
-		},
-		"BrainUpdatePatterns": {
-			"type": "array",
-			"items": {
-				"type": "string"
-			},
-			"default": [
-				"mcp__plugin_brain_brain__write_note",
-				"mcp__plugin_brain_brain__edit_note",
-				"brain__write_note",
-				"brain__edit_note",
-				"Note write confirmed",
-				"note write confirmed",
-				"Brain note updated",
-				"Update Brain note"
-			],
-			"description": "Patterns that indicate Brain note update"
-		},
-		"BranchPatterns": {
-			"type": "array",
-			"items": {
-				"type": "string"
-			},
-			"default": ["**Branch**:", "Branch:", "Current Branch:", "- Branch:"],
-			"description": "Patterns that indicate git branch documentation"
-		},
-		"BranchPlaceholders": {
-			"type": "array",
-			"items": {
-				"type": "string"
-			},
-			"default": ["[branch name]", "[branch name - REQUIRED]"],
-			"description": "Placeholder values that are NOT valid branch names"
-		},
-		"CommitSHAPattern": {
-			"type": "string",
-			"pattern": "[a-f0-9]{7,40}",
-			"description": "Git commit SHA pattern"
-		},
-		"LintEvidencePatterns": {
-			"type": "array",
-			"items": {
-				"type": "string"
-			},
-			"default": [
-				"markdownlint",
-				"Lint output",
-				"lint output",
-				"Lint Output",
-				"npx markdownlint-cli2"
-			],
-			"description": "Patterns that indicate markdown lint execution"
-		},
-		"MemoryPlaceholderPatterns": {
-			"type": "array",
-			"items": {
-				"type": "string"
-			},
-			"default": ["^\\s*$", "^List memories loaded$", "^\\[.*\\]$", "^-+$"],
-			"description": "Regex patterns for invalid memory evidence placeholders"
-		},
-		"MemoryNamePattern": {
-			"type": "string",
-			"pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)+$",
-			"description": "Valid memory name pattern (kebab-case with at least 2 segments)"
-		},
-		"ChecklistValidation": {
-			"type": "object",
-			"properties": {
-				"totalMustItems": {
-					"type": "integer",
-					"minimum": 0
-				},
-				"completedMustItems": {
-					"type": "integer",
-					"minimum": 0
-				},
-				"totalShouldItems": {
-					"type": "integer",
-					"minimum": 0
-				},
-				"completedShouldItems": {
-					"type": "integer",
-					"minimum": 0
-				},
-				"missingMustItems": {
-					"type": "array",
-					"items": {
-						"type": "string"
-					}
-				},
-				"missingShouldItems": {
-					"type": "array",
-					"items": {
-						"type": "string"
-					}
-				}
-			},
-			"required": [
-				"totalMustItems",
-				"completedMustItems",
-				"totalShouldItems",
-				"completedShouldItems"
-			]
-		}
-	},
-	"type": "object",
-	"properties": {
-		"sessionLogPath": {
-			"type": "string",
-			"minLength": 1,
-			"description": "Path to the session log file"
-		},
-		"filename": {
-			"$ref": "#/definitions/SessionLogFilename"
-		},
-		"requiredSections": {
-			"$ref": "#/definitions/RequiredSections",
-			"default": [
-				"Session Info",
-				"Protocol Compliance",
-				"Session Start",
-				"Session End"
-			]
-		},
-		"brainInitializationPatterns": {
-			"$ref": "#/definitions/BrainInitializationPatterns"
-		},
-		"brainUpdatePatterns": {
-			"$ref": "#/definitions/BrainUpdatePatterns"
-		},
-		"branchPatterns": {
-			"$ref": "#/definitions/BranchPatterns"
-		},
-		"branchPlaceholders": {
-			"$ref": "#/definitions/BranchPlaceholders"
-		},
-		"lintEvidencePatterns": {
-			"$ref": "#/definitions/LintEvidencePatterns"
-		},
-		"memoryPlaceholderPatterns": {
-			"$ref": "#/definitions/MemoryPlaceholderPatterns"
-		}
-	},
-	"additionalProperties": false
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://brain.dev/schemas/session/session-protocol.json",
+  "title": "SessionProtocol",
+  "description": "Schema for session protocol validation. Validates session log structure, checklist completion, and evidence requirements.",
+  "definitions": {
+    "SessionLogFilename": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}-session-\\d+\\.md$",
+      "description": "Session log filename in YYYY-MM-DD-session-NN.md format"
+    },
+    "RequirementLevel": {
+      "type": "string",
+      "enum": ["MUST", "SHOULD", "MAY"],
+      "description": "RFC 2119 requirement level"
+    },
+    "CheckboxStatus": {
+      "type": "string",
+      "pattern": "^\\[[ xX]\\]$",
+      "description": "Checkbox status: [ ] unchecked, [x] or [X] checked"
+    },
+    "ChecklistRow": {
+      "type": "object",
+      "properties": {
+        "requirement": {
+          "$ref": "#/definitions/RequirementLevel"
+        },
+        "step": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "$ref": "#/definitions/CheckboxStatus"
+        },
+        "evidence": {
+          "type": "string"
+        },
+        "rawLine": {
+          "type": "string"
+        }
+      },
+      "required": ["requirement", "step", "status"]
+    },
+    "RequiredSections": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "Session Info",
+          "Protocol Compliance",
+          "Session Start",
+          "Session End"
+        ]
+      },
+      "uniqueItems": true,
+      "description": "Required sections in a session log"
+    },
+    "BrainInitializationPatterns": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [
+        "mcp__plugin_brain_brain__build_context",
+        "mcp__plugin_brain_brain__bootstrap_context",
+        "brain__build_context",
+        "brain__bootstrap_context",
+        "Brain MCP initialized",
+        "Initialize Brain"
+      ],
+      "description": "Patterns that indicate Brain MCP initialization"
+    },
+    "BrainUpdatePatterns": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [
+        "mcp__plugin_brain_brain__write_note",
+        "mcp__plugin_brain_brain__edit_note",
+        "brain__write_note",
+        "brain__edit_note",
+        "Note write confirmed",
+        "note write confirmed",
+        "Brain note updated",
+        "Update Brain note"
+      ],
+      "description": "Patterns that indicate Brain note update"
+    },
+    "BranchPatterns": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": ["**Branch**:", "Branch:", "Current Branch:", "- Branch:"],
+      "description": "Patterns that indicate git branch documentation"
+    },
+    "BranchPlaceholders": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": ["[branch name]", "[branch name - REQUIRED]"],
+      "description": "Placeholder values that are NOT valid branch names"
+    },
+    "CommitSHAPattern": {
+      "type": "string",
+      "pattern": "[a-f0-9]{7,40}",
+      "description": "Git commit SHA pattern"
+    },
+    "LintEvidencePatterns": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [
+        "markdownlint",
+        "Lint output",
+        "lint output",
+        "Lint Output",
+        "npx markdownlint-cli2"
+      ],
+      "description": "Patterns that indicate markdown lint execution"
+    },
+    "MemoryPlaceholderPatterns": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": ["^\\s*$", "^List memories loaded$", "^\\[.*\\]$", "^-+$"],
+      "description": "Regex patterns for invalid memory evidence placeholders"
+    },
+    "MemoryNamePattern": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)+$",
+      "description": "Valid memory name pattern (kebab-case with at least 2 segments)"
+    },
+    "ChecklistValidation": {
+      "type": "object",
+      "properties": {
+        "totalMustItems": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "completedMustItems": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "totalShouldItems": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "completedShouldItems": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "missingMustItems": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "missingShouldItems": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "totalMustItems",
+        "completedMustItems",
+        "totalShouldItems",
+        "completedShouldItems"
+      ]
+    }
+  },
+  "type": "object",
+  "properties": {
+    "sessionLogPath": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Path to the session log file"
+    },
+    "filename": {
+      "$ref": "#/definitions/SessionLogFilename"
+    },
+    "requiredSections": {
+      "$ref": "#/definitions/RequiredSections",
+      "default": [
+        "Session Info",
+        "Protocol Compliance",
+        "Session Start",
+        "Session End"
+      ]
+    },
+    "brainInitializationPatterns": {
+      "$ref": "#/definitions/BrainInitializationPatterns"
+    },
+    "brainUpdatePatterns": {
+      "$ref": "#/definitions/BrainUpdatePatterns"
+    },
+    "branchPatterns": {
+      "$ref": "#/definitions/BranchPatterns"
+    },
+    "branchPlaceholders": {
+      "$ref": "#/definitions/BranchPlaceholders"
+    },
+    "lintEvidencePatterns": {
+      "$ref": "#/definitions/LintEvidencePatterns"
+    },
+    "memoryPlaceholderPatterns": {
+      "$ref": "#/definitions/MemoryPlaceholderPatterns"
+    }
+  },
+  "additionalProperties": false
 }

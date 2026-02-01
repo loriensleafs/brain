@@ -17,7 +17,7 @@ import type { Database } from "bun:sqlite";
  * This allows multiple embeddings per note while maintaining uniqueness.
  */
 export function createEmbeddingsTable(db: Database): void {
-	db.run(`
+  db.run(`
     CREATE VIRTUAL TABLE IF NOT EXISTS brain_embeddings USING vec0(
       chunk_id TEXT PRIMARY KEY,
       embedding FLOAT[768],
@@ -36,40 +36,40 @@ export function createEmbeddingsTable(db: Database): void {
  * Creates the chunked embeddings table if it does not exist.
  */
 export function ensureEmbeddingTables(db: Database): void {
-	createEmbeddingsTable(db);
+  createEmbeddingsTable(db);
 }
 
 /**
  * TypeScript type for chunked embedding records.
  */
 export interface ChunkedEmbedding {
-	chunk_id: string;
-	entity_id: string;
-	chunk_index: number;
-	embedding: Float32Array;
-	chunk_start: number;
-	chunk_end: number;
-	total_chunks: number;
-	chunk_text: string;
+  chunk_id: string;
+  entity_id: string;
+  chunk_index: number;
+  embedding: Float32Array;
+  chunk_start: number;
+  chunk_end: number;
+  total_chunks: number;
+  chunk_text: string;
 }
 
 /**
  * Generate a unique chunk ID from entity_id and chunk_index.
  */
 export function makeChunkId(entityId: string, chunkIndex: number): string {
-	return `${entityId}#chunk-${chunkIndex}`;
+  return `${entityId}#chunk-${chunkIndex}`;
 }
 
 /**
  * Parse a chunk ID back to entity_id and chunk_index.
  */
 export function parseChunkId(
-	chunkId: string,
+  chunkId: string,
 ): { entityId: string; chunkIndex: number } | null {
-	const match = chunkId.match(/^(.+)#chunk-(\d+)$/);
-	if (!match) return null;
-	return {
-		entityId: match[1],
-		chunkIndex: parseInt(match[2], 10),
-	};
+  const match = chunkId.match(/^(.+)#chunk-(\d+)$/);
+  if (!match) return null;
+  return {
+    entityId: match[1],
+    chunkIndex: parseInt(match[2], 10),
+  };
 }

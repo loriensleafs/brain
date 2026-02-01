@@ -1,179 +1,179 @@
 {
-	"$schema": "http://json-schema.org/draft-07/schema#",
-	"$id": "https://brain.dev/schemas/validators/batch-pr-review.json",
-	"title": "BatchPRReviewValidation",
-	"description": "Schema for batch PR review configuration and results.",
-	"definitions": {
-		"BatchPRReviewOperation": {
-			"type": "string",
-			"enum": ["Setup", "Status", "Cleanup", "All"],
-			"description": "Operation to perform on PR worktrees"
-		},
-		"BatchPRReviewConfig": {
-			"type": "object",
-			"description": "Configuration for batch PR review operations",
-			"properties": {
-				"prNumbers": {
-					"type": "array",
-					"items": {
-						"type": "integer",
-						"minimum": 1
-					},
-					"minItems": 1,
-					"description": "PR numbers to process"
-				},
-				"operation": {
-					"$ref": "#/definitions/BatchPRReviewOperation"
-				},
-				"worktreeRoot": {
-					"type": "string",
-					"description": "Root directory for worktrees. Empty uses parent of repo root."
-				},
-				"force": {
-					"type": "boolean",
-					"default": false,
-					"description": "Force operations (skip safety checks)"
-				}
-			},
-			"required": ["prNumbers", "operation"],
-			"additionalProperties": false
-		},
-		"WorktreeStatus": {
-			"type": "object",
-			"description": "Status of a single worktree",
-			"properties": {
-				"pr": {
-					"type": "integer",
-					"minimum": 1,
-					"description": "PR number"
-				},
-				"path": {
-					"type": "string",
-					"description": "Worktree path"
-				},
-				"exists": {
-					"type": "boolean",
-					"description": "Whether worktree exists"
-				},
-				"clean": {
-					"type": "boolean",
-					"description": "Whether worktree has no uncommitted changes"
-				},
-				"branch": {
-					"type": "string",
-					"description": "Current branch name"
-				},
-				"commit": {
-					"type": "string",
-					"pattern": "^[0-9a-f]{7,40}$",
-					"description": "Current commit SHA"
-				},
-				"unpushed": {
-					"type": "boolean",
-					"description": "Whether worktree has unpushed commits"
-				}
-			},
-			"required": ["pr", "path", "exists"],
-			"additionalProperties": false
-		},
-		"WorktreeOperationResult": {
-			"type": "object",
-			"description": "Result of a worktree operation",
-			"properties": {
-				"pr": {
-					"type": "integer",
-					"minimum": 1,
-					"description": "PR number"
-				},
-				"success": {
-					"type": "boolean",
-					"description": "Whether operation succeeded"
-				},
-				"message": {
-					"type": "string",
-					"description": "Success message"
-				},
-				"error": {
-					"type": "string",
-					"description": "Error message if failed"
-				}
-			},
-			"required": ["pr", "success"],
-			"additionalProperties": false
-		},
-		"Check": {
-			"type": "object",
-			"description": "A single validation check result",
-			"properties": {
-				"name": {
-					"type": "string",
-					"minLength": 1
-				},
-				"passed": {
-					"type": "boolean"
-				},
-				"message": {
-					"type": "string"
-				}
-			},
-			"required": ["name", "passed", "message"],
-			"additionalProperties": false
-		},
-		"BatchPRReviewResult": {
-			"type": "object",
-			"description": "Result of batch PR review operation",
-			"properties": {
-				"valid": {
-					"type": "boolean",
-					"description": "Overall success"
-				},
-				"checks": {
-					"type": "array",
-					"items": {
-						"$ref": "#/definitions/Check"
-					}
-				},
-				"message": {
-					"type": "string",
-					"description": "Summary message"
-				},
-				"remediation": {
-					"type": "string"
-				},
-				"operation": {
-					"$ref": "#/definitions/BatchPRReviewOperation"
-				},
-				"worktreeRoot": {
-					"type": "string",
-					"description": "Resolved worktree root path"
-				},
-				"statuses": {
-					"type": "array",
-					"items": {
-						"$ref": "#/definitions/WorktreeStatus"
-					},
-					"description": "Worktree statuses (for Status/All operations)"
-				},
-				"results": {
-					"type": "array",
-					"items": {
-						"$ref": "#/definitions/WorktreeOperationResult"
-					},
-					"description": "Operation results (for Setup/Cleanup/All operations)"
-				}
-			},
-			"required": ["valid", "checks", "message", "operation", "worktreeRoot"],
-			"additionalProperties": false
-		}
-	},
-	"type": "object",
-	"properties": {
-		"config": {
-			"$ref": "#/definitions/BatchPRReviewConfig"
-		},
-		"result": {
-			"$ref": "#/definitions/BatchPRReviewResult"
-		}
-	},
-	"additionalProperties": false
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://brain.dev/schemas/validators/batch-pr-review.json",
+  "title": "BatchPRReviewValidation",
+  "description": "Schema for batch PR review configuration and results.",
+  "definitions": {
+    "BatchPRReviewOperation": {
+      "type": "string",
+      "enum": ["Setup", "Status", "Cleanup", "All"],
+      "description": "Operation to perform on PR worktrees"
+    },
+    "BatchPRReviewConfig": {
+      "type": "object",
+      "description": "Configuration for batch PR review operations",
+      "properties": {
+        "prNumbers": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "minItems": 1,
+          "description": "PR numbers to process"
+        },
+        "operation": {
+          "$ref": "#/definitions/BatchPRReviewOperation"
+        },
+        "worktreeRoot": {
+          "type": "string",
+          "description": "Root directory for worktrees. Empty uses parent of repo root."
+        },
+        "force": {
+          "type": "boolean",
+          "default": false,
+          "description": "Force operations (skip safety checks)"
+        }
+      },
+      "required": ["prNumbers", "operation"],
+      "additionalProperties": false
+    },
+    "WorktreeStatus": {
+      "type": "object",
+      "description": "Status of a single worktree",
+      "properties": {
+        "pr": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "PR number"
+        },
+        "path": {
+          "type": "string",
+          "description": "Worktree path"
+        },
+        "exists": {
+          "type": "boolean",
+          "description": "Whether worktree exists"
+        },
+        "clean": {
+          "type": "boolean",
+          "description": "Whether worktree has no uncommitted changes"
+        },
+        "branch": {
+          "type": "string",
+          "description": "Current branch name"
+        },
+        "commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{7,40}$",
+          "description": "Current commit SHA"
+        },
+        "unpushed": {
+          "type": "boolean",
+          "description": "Whether worktree has unpushed commits"
+        }
+      },
+      "required": ["pr", "path", "exists"],
+      "additionalProperties": false
+    },
+    "WorktreeOperationResult": {
+      "type": "object",
+      "description": "Result of a worktree operation",
+      "properties": {
+        "pr": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "PR number"
+        },
+        "success": {
+          "type": "boolean",
+          "description": "Whether operation succeeded"
+        },
+        "message": {
+          "type": "string",
+          "description": "Success message"
+        },
+        "error": {
+          "type": "string",
+          "description": "Error message if failed"
+        }
+      },
+      "required": ["pr", "success"],
+      "additionalProperties": false
+    },
+    "Check": {
+      "type": "object",
+      "description": "A single validation check result",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "passed": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": ["name", "passed", "message"],
+      "additionalProperties": false
+    },
+    "BatchPRReviewResult": {
+      "type": "object",
+      "description": "Result of batch PR review operation",
+      "properties": {
+        "valid": {
+          "type": "boolean",
+          "description": "Overall success"
+        },
+        "checks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Check"
+          }
+        },
+        "message": {
+          "type": "string",
+          "description": "Summary message"
+        },
+        "remediation": {
+          "type": "string"
+        },
+        "operation": {
+          "$ref": "#/definitions/BatchPRReviewOperation"
+        },
+        "worktreeRoot": {
+          "type": "string",
+          "description": "Resolved worktree root path"
+        },
+        "statuses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/WorktreeStatus"
+          },
+          "description": "Worktree statuses (for Status/All operations)"
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/WorktreeOperationResult"
+          },
+          "description": "Operation results (for Setup/Cleanup/All operations)"
+        }
+      },
+      "required": ["valid", "checks", "message", "operation", "worktreeRoot"],
+      "additionalProperties": false
+    }
+  },
+  "type": "object",
+  "properties": {
+    "config": {
+      "$ref": "#/definitions/BatchPRReviewConfig"
+    },
+    "result": {
+      "$ref": "#/definitions/BatchPRReviewResult"
+    }
+  },
+  "additionalProperties": false
 }

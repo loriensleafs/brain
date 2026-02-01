@@ -13,9 +13,9 @@ import { loadBrainConfig } from "../../config/brain-config";
 import { type ConfigGetArgs, ConfigGetArgsSchema } from "./schema";
 
 export {
-	type ConfigGetArgs,
-	ConfigGetArgsSchema,
-	configGetToolDefinition as toolDefinition,
+  type ConfigGetArgs,
+  ConfigGetArgsSchema,
+  configGetToolDefinition as toolDefinition,
 } from "./schema";
 
 /**
@@ -26,21 +26,21 @@ export {
  * @returns The value at the path, or undefined if not found
  */
 function getNestedValue(obj: Record<string, unknown>, path: string): unknown {
-	const keys = path.split(".");
-	let current: unknown = obj;
+  const keys = path.split(".");
+  let current: unknown = obj;
 
-	for (const key of keys) {
-		if (
-			current === null ||
-			current === undefined ||
-			typeof current !== "object"
-		) {
-			return undefined;
-		}
-		current = (current as Record<string, unknown>)[key];
-	}
+  for (const key of keys) {
+    if (
+      current === null ||
+      current === undefined ||
+      typeof current !== "object"
+    ) {
+      return undefined;
+    }
+    current = (current as Record<string, unknown>)[key];
+  }
 
-	return current;
+  return current;
 }
 
 /**
@@ -50,90 +50,90 @@ function getNestedValue(obj: Record<string, unknown>, path: string): unknown {
  * @returns CallToolResult with config data or error
  */
 export async function handler(
-	args: Record<string, unknown>,
+  args: Record<string, unknown>,
 ): Promise<CallToolResult> {
-	try {
-		// Validate and parse input using AJV
-		const parsed: ConfigGetArgs = ConfigGetArgsSchema.parse(args);
+  try {
+    // Validate and parse input using AJV
+    const parsed: ConfigGetArgs = ConfigGetArgsSchema.parse(args);
 
-		const config = await loadBrainConfig();
+    const config = await loadBrainConfig();
 
-		// If no key specified, return entire config
-		if (!parsed.key) {
-			return {
-				content: [
-					{
-						type: "text" as const,
-						text: JSON.stringify(config, null, 2),
-					},
-				],
-			};
-		}
+    // If no key specified, return entire config
+    if (!parsed.key) {
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: JSON.stringify(config, null, 2),
+          },
+        ],
+      };
+    }
 
-		// Get specific key using dot notation
-		const value = getNestedValue(
-			config as unknown as Record<string, unknown>,
-			parsed.key,
-		);
+    // Get specific key using dot notation
+    const value = getNestedValue(
+      config as unknown as Record<string, unknown>,
+      parsed.key,
+    );
 
-		if (value === undefined) {
-			return {
-				content: [
-					{
-						type: "text" as const,
-						text: JSON.stringify(
-							{
-								error: `Key not found: ${parsed.key}`,
-								available_keys: [
-									"defaults.memories_location",
-									"defaults.memories_mode",
-									"projects",
-									"sync.enabled",
-									"sync.delay_ms",
-									"logging.level",
-									"watcher.enabled",
-									"watcher.debounce_ms",
-								],
-							},
-							null,
-							2,
-						),
-					},
-				],
-				isError: true,
-			};
-		}
+    if (value === undefined) {
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: JSON.stringify(
+              {
+                error: `Key not found: ${parsed.key}`,
+                available_keys: [
+                  "defaults.memories_location",
+                  "defaults.memories_mode",
+                  "projects",
+                  "sync.enabled",
+                  "sync.delay_ms",
+                  "logging.level",
+                  "watcher.enabled",
+                  "watcher.debounce_ms",
+                ],
+              },
+              null,
+              2,
+            ),
+          },
+        ],
+        isError: true,
+      };
+    }
 
-		return {
-			content: [
-				{
-					type: "text" as const,
-					text: JSON.stringify(
-						{
-							key: parsed.key,
-							value,
-						},
-						null,
-						2,
-					),
-				},
-			],
-		};
-	} catch (error) {
-		return {
-			content: [
-				{
-					type: "text" as const,
-					text: JSON.stringify(
-						{
-							error: `Failed to get config: ${error instanceof Error ? error.message : String(error)}`,
-						},
-						null,
-						2,
-					),
-				},
-			],
-			isError: true,
-		};
-	}
+    return {
+      content: [
+        {
+          type: "text" as const,
+          text: JSON.stringify(
+            {
+              key: parsed.key,
+              value,
+            },
+            null,
+            2,
+          ),
+        },
+      ],
+    };
+  } catch (error) {
+    return {
+      content: [
+        {
+          type: "text" as const,
+          text: JSON.stringify(
+            {
+              error: `Failed to get config: ${error instanceof Error ? error.message : String(error)}`,
+            },
+            null,
+            2,
+          ),
+        },
+      ],
+      isError: true,
+    };
+  }
 }

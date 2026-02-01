@@ -1,61 +1,61 @@
 {
-	"$schema": "http://json-schema.org/draft-07/schema#",
-	"$id": "https://brain.dev/schemas/pr/pr-description-config.json",
-	"title": "PRDescriptionConfig",
-	"description": "Configuration for PR description validation. Defines the PR body text, files in the PR, and patterns for significant files that should be mentioned.",
-	"type": "object",
-	"properties": {
-		"description": {
-			"type": "string",
-			"description": "The PR body/description text"
-		},
-		"filesInPR": {
-			"type": "array",
-			"items": {
-				"type": "string"
-			},
-			"default": [],
-			"description": "List of files changed in the PR"
-		},
-		"significantExtensions": {
-			"type": "array",
-			"items": {
-				"type": "string",
-				"pattern": "^\\."
-			},
-			"default": [".ps1", ".cs", ".ts", ".js", ".py", ".yml", ".yaml", ".go"],
-			"description": "File extensions considered significant for warning when not mentioned"
-		},
-		"significantPaths": {
-			"type": "array",
-			"items": {
-				"type": "string"
-			},
-			"default": [
-				".github",
-				"scripts",
-				"src",
-				".agents",
-				"cmd",
-				"pkg",
-				"internal"
-			],
-			"description": "Path prefixes for files that should be mentioned in PR description"
-		},
-		"requiredSections": {
-			"type": "array",
-			"items": {
-				"type": "string"
-			},
-			"default": ["Summary", "Test Plan"],
-			"description": "Required sections in PR description (matched as ## or ### headers)"
-		},
-		"validateChecklist": {
-			"type": "boolean",
-			"default": true,
-			"description": "Whether to validate that checklist items are completed"
-		}
-	},
-	"required": ["description"],
-	"additionalProperties": false
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://brain.dev/schemas/pr/pr-description-config.json",
+  "title": "PRDescriptionConfig",
+  "description": "Configuration for PR description validation. Defines the PR body text, files in the PR, and patterns for significant files that should be mentioned.",
+  "type": "object",
+  "properties": {
+    "description": {
+      "type": "string",
+      "description": "The PR body/description text"
+    },
+    "filesInPR": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "List of files changed in the PR"
+    },
+    "significantExtensions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^\\."
+      },
+      "default": [".ps1", ".cs", ".ts", ".js", ".py", ".yml", ".yaml", ".go"],
+      "description": "File extensions considered significant for warning when not mentioned"
+    },
+    "significantPaths": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [
+        ".github",
+        "scripts",
+        "src",
+        ".agents",
+        "cmd",
+        "pkg",
+        "internal"
+      ],
+      "description": "Path prefixes for files that should be mentioned in PR description"
+    },
+    "requiredSections": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": ["Summary", "Test Plan"],
+      "description": "Required sections in PR description (matched as ## or ### headers)"
+    },
+    "validateChecklist": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to validate that checklist items are completed"
+    }
+  },
+  "required": ["description"],
+  "additionalProperties": false
 }

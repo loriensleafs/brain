@@ -19,18 +19,18 @@ import type { StructuredContent } from "./structuredOutput";
  * Cache entry with value and expiration
  */
 interface CacheEntry {
-	value: StructuredContent;
-	expiresAt: number;
-	createdAt: number;
+  value: StructuredContent;
+  expiresAt: number;
+  createdAt: number;
 }
 
 /**
  * Cache options
  */
 export interface CacheOptions {
-	project: string;
-	timeframe: string;
-	includeReferenced: boolean;
+  project: string;
+  timeframe: string;
+  includeReferenced: boolean;
 }
 
 /**
@@ -47,10 +47,10 @@ const cache = new Map<string, CacheEntry>();
  * Statistics for debugging
  */
 let stats = {
-	hits: 0,
-	misses: 0,
-	invalidations: 0,
-	expirations: 0,
+  hits: 0,
+  misses: 0,
+  invalidations: 0,
+  expirations: 0,
 };
 
 /**
@@ -59,8 +59,8 @@ let stats = {
  * Key format: `{project}:{timeframe}:{includeReferenced}`
  */
 export function generateCacheKey(options: CacheOptions): string {
-	const { project, timeframe, includeReferenced } = options;
-	return `${project}:${timeframe}:${includeReferenced}`;
+  const { project, timeframe, includeReferenced } = options;
+  return `${project}:${timeframe}:${includeReferenced}`;
 }
 
 /**
@@ -69,48 +69,48 @@ export function generateCacheKey(options: CacheOptions): string {
  * @returns Cached content or null if not found/expired
  */
 export function getCachedContext(
-	options: CacheOptions,
+  options: CacheOptions,
 ): StructuredContent | null {
-	const key = generateCacheKey(options);
-	const entry = cache.get(key);
+  const key = generateCacheKey(options);
+  const entry = cache.get(key);
 
-	if (!entry) {
-		stats.misses++;
-		logger.debug({ key }, "Cache miss: entry not found");
-		return null;
-	}
+  if (!entry) {
+    stats.misses++;
+    logger.debug({ key }, "Cache miss: entry not found");
+    return null;
+  }
 
-	const now = Date.now();
+  const now = Date.now();
 
-	// Check if expired
-	if (now > entry.expiresAt) {
-		stats.expirations++;
-		cache.delete(key);
-		logger.debug(
-			{
-				key,
-				age: now - entry.createdAt,
-				ttl: DEFAULT_TTL_MS,
-			},
-			"Cache miss: entry expired",
-		);
-		return null;
-	}
+  // Check if expired
+  if (now > entry.expiresAt) {
+    stats.expirations++;
+    cache.delete(key);
+    logger.debug(
+      {
+        key,
+        age: now - entry.createdAt,
+        ttl: DEFAULT_TTL_MS,
+      },
+      "Cache miss: entry expired",
+    );
+    return null;
+  }
 
-	stats.hits++;
-	const age = now - entry.createdAt;
-	const remainingTtl = entry.expiresAt - now;
+  stats.hits++;
+  const age = now - entry.createdAt;
+  const remainingTtl = entry.expiresAt - now;
 
-	logger.debug(
-		{
-			key,
-			age,
-			remainingTtl,
-		},
-		"Cache hit",
-	);
+  logger.debug(
+    {
+      key,
+      age,
+      remainingTtl,
+    },
+    "Cache hit",
+  );
 
-	return entry.value;
+  return entry.value;
 }
 
 /**
@@ -121,29 +121,29 @@ export function getCachedContext(
  * @param ttlMs - Time to live in milliseconds (default 45s)
  */
 export function setCachedContext(
-	options: CacheOptions,
-	content: StructuredContent,
-	ttlMs: number = DEFAULT_TTL_MS,
+  options: CacheOptions,
+  content: StructuredContent,
+  ttlMs: number = DEFAULT_TTL_MS,
 ): void {
-	const key = generateCacheKey(options);
-	const now = Date.now();
+  const key = generateCacheKey(options);
+  const now = Date.now();
 
-	const entry: CacheEntry = {
-		value: content,
-		createdAt: now,
-		expiresAt: now + ttlMs,
-	};
+  const entry: CacheEntry = {
+    value: content,
+    createdAt: now,
+    expiresAt: now + ttlMs,
+  };
 
-	cache.set(key, entry);
+  cache.set(key, entry);
 
-	logger.debug(
-		{
-			key,
-			ttlMs,
-			noteCount: content.metadata.note_count,
-		},
-		"Cache set",
-	);
+  logger.debug(
+    {
+      key,
+      ttlMs,
+      noteCount: content.metadata.note_count,
+    },
+    "Cache set",
+  );
 }
 
 /**
@@ -155,78 +155,78 @@ export function setCachedContext(
  * @param project - Project to invalidate cache for (optional, invalidates all if not specified)
  */
 export function invalidateCache(project?: string): void {
-	if (!project) {
-		// Invalidate entire cache
-		const count = cache.size;
-		cache.clear();
-		stats.invalidations += count;
-		logger.debug({ count }, "Cache invalidated: all entries cleared");
-		return;
-	}
+  if (!project) {
+    // Invalidate entire cache
+    const count = cache.size;
+    cache.clear();
+    stats.invalidations += count;
+    logger.debug({ count }, "Cache invalidated: all entries cleared");
+    return;
+  }
 
-	// Invalidate entries for specific project
-	let count = 0;
-	for (const key of cache.keys()) {
-		if (key.startsWith(`${project}:`)) {
-			cache.delete(key);
-			count++;
-		}
-	}
+  // Invalidate entries for specific project
+  let count = 0;
+  for (const key of cache.keys()) {
+    if (key.startsWith(`${project}:`)) {
+      cache.delete(key);
+      count++;
+    }
+  }
 
-	stats.invalidations += count;
-	logger.debug(
-		{ project, count },
-		"Cache invalidated: project entries cleared",
-	);
+  stats.invalidations += count;
+  logger.debug(
+    { project, count },
+    "Cache invalidated: project entries cleared",
+  );
 }
 
 /**
  * Get cache statistics for debugging
  */
 export function getCacheStats(): typeof stats & { size: number } {
-	return {
-		...stats,
-		size: cache.size,
-	};
+  return {
+    ...stats,
+    size: cache.size,
+  };
 }
 
 /**
  * Reset cache statistics (for testing)
  */
 export function resetCacheStats(): void {
-	stats = {
-		hits: 0,
-		misses: 0,
-		invalidations: 0,
-		expirations: 0,
-	};
+  stats = {
+    hits: 0,
+    misses: 0,
+    invalidations: 0,
+    expirations: 0,
+  };
 }
 
 /**
  * Clear the entire cache (for testing)
  */
 export function clearCache(): void {
-	cache.clear();
+  cache.clear();
 }
 
 /**
  * Check if a project has cached content
  */
 export function hasCachedContent(project: string): boolean {
-	for (const key of cache.keys()) {
-		if (key.startsWith(`${project}:`)) {
-			const entry = cache.get(key);
-			if (entry && Date.now() <= entry.expiresAt) {
-				return true;
-			}
-		}
-	}
-	return false;
+  for (const key of cache.keys()) {
+    if (key.startsWith(`${project}:`)) {
+      const entry = cache.get(key);
+      if (entry && Date.now() <= entry.expiresAt) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 /**
  * Get the TTL constant for external use
  */
 export function getDefaultTtl(): number {
-	return DEFAULT_TTL_MS;
+  return DEFAULT_TTL_MS;
 }
