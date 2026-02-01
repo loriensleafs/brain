@@ -9,22 +9,30 @@
  * - delete_notes defaults to false (safety by default)
  * - Path validation prevents traversal attacks
  * - Symlink resolution prevents symlink attacks
+ *
+ * Migrated from Zod to JSON Schema + AJV per ADR-022.
+ * JSON Schema source: packages/validation/schemas/tools/projects/delete-project.schema.json
  */
-import { z } from "zod";
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
+import {
+  validateDeleteProjectArgs,
+  parseDeleteProjectArgs,
+  type DeleteProjectArgs,
+} from "@brain/validation";
 
-export const DeleteProjectArgsSchema = z.object({
-  project: z.string().describe("Project name to delete"),
-  delete_notes: z
-    .boolean()
-    .optional()
-    .default(false)
-    .describe(
-      "If true, also delete the notes directory. DESTRUCTIVE - defaults to false for safety."
-    ),
-});
+export { validateDeleteProjectArgs, parseDeleteProjectArgs, type DeleteProjectArgs };
 
-export type DeleteProjectArgs = z.infer<typeof DeleteProjectArgsSchema>;
+// Re-export for backward compatibility
+export const DeleteProjectArgsSchema = {
+  parse: parseDeleteProjectArgs,
+  safeParse: (data: unknown) => {
+    try {
+      return { success: true as const, data: parseDeleteProjectArgs(data) };
+    } catch (error) {
+      return { success: false as const, error };
+    }
+  },
+};
 
 export const toolDefinition: Tool = {
   name: "delete_project",

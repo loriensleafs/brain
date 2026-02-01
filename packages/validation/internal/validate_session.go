@@ -1,12 +1,125 @@
 package internal
 
 import (
+	"encoding/json"
+	"fmt"
 	"path/filepath"
 	"regexp"
 	"strings"
-	
+	"sync"
 
+	"github.com/santhosh-tekuri/jsonschema/v6"
 )
+
+// SessionValidationConfig holds schema-driven configuration for session validation.
+// This replaces hardcoded values with schema-defined patterns.
+type SessionValidationConfig struct {
+	InvestigationAllowlistPatterns []string `json:"investigationAllowlistPatterns"`
+	AuditArtifactPatterns          []string `json:"auditArtifactPatterns"`
+	MemoryPlaceholderPatterns      []string `json:"memoryPlaceholderPatterns"`
+	MemoryNamePattern              string   `json:"memoryNamePattern"`
+	CommitSHAPattern               string   `json:"commitShaPattern"`
+	DocsExtension                  string   `json:"docsExtension"`
+	ExpectedSessionDirectory       string   `json:"expectedSessionDirectory"`
+}
+
+// DefaultSessionValidationConfig returns the default configuration values.
+// These match the schema defaults in session-validation.schema.json.
+var DefaultSessionValidationConfig = SessionValidationConfig{
+	InvestigationAllowlistPatterns: []string{
+		`^\.agents/sessions/`,
+		`^\.agents/analysis/`,
+		`^\.agents/retrospective/`,
+		`^\.serena/memories($|/)`,
+		`^\.agents/security/`,
+	},
+	AuditArtifactPatterns: []string{
+		`^\.agents/sessions/`,
+		`^\.agents/analysis/`,
+		`^\.serena/memories($|/)`,
+	},
+	MemoryPlaceholderPatterns: []string{
+		`^\s*$`,
+		`^List memories loaded$`,
+		`^\[.*\]$`,
+		`^-+$`,
+	},
+	MemoryNamePattern:        `[a-z][a-z0-9]*(?:-[a-z0-9]+)+`,
+	CommitSHAPattern:         `[0-9a-f]{7,40}`,
+	DocsExtension:            ".md",
+	ExpectedSessionDirectory: ".agents/sessions",
+}
+
+var (
+	sessionValidationSchemaOnce     sync.Once
+	sessionValidationSchemaCompiled *jsonschema.Schema
+	sessionValidationSchemaErr      error
+	sessionValidationSchemaData     []byte
+)
+
+// SetSessionValidationSchemaData sets the schema data for session validation.
+// This must be called before any schema-based validation functions are used.
+// The data is typically embedded by the parent package.
+func SetSessionValidationSchemaData(data []byte) {
+	sessionValidationSchemaData = data
+}
+
+// getSessionValidationSchema returns the compiled session validation schema, loading it once.
+func getSessionValidationSchema() (*jsonschema.Schema, error) {
+	sessionValidationSchemaOnce.Do(func() {
+		if sessionValidationSchemaData == nil {
+			sessionValidationSchemaErr = fmt.Errorf("session validation schema data not set; call SetSessionValidationSchemaData first")
+			return
+		}
+
+		var schemaDoc any
+		if err := json.Unmarshal(sessionValidationSchemaData, &schemaDoc); err != nil {
+			sessionValidationSchemaErr = fmt.Errorf("failed to parse session validation schema: %w", err)
+			return
+		}
+
+		c := jsonschema.NewCompiler()
+		if err := c.AddResource("session-validation.schema.json", schemaDoc); err != nil {
+			sessionValidationSchemaErr = fmt.Errorf("failed to add session validation schema resource: %w", err)
+			return
+		}
+
+		sessionValidationSchemaCompiled, sessionValidationSchemaErr = c.Compile("session-validation.schema.json")
+	})
+	return sessionValidationSchemaCompiled, sessionValidationSchemaErr
+}
+
+// ValidateSessionValidationInput validates input data against the session validation schema.
+// Returns true if valid, false otherwise.
+func ValidateSessionValidationInput(data any) bool {
+	schema, err := getSessionValidationSchema()
+	if err != nil {
+		return false
+	}
+
+	err = schema.Validate(data)
+	return err == nil
+}
+
+// GetSessionValidationErrors returns structured validation errors for input data.
+// Returns empty slice if valid.
+func GetSessionValidationErrors(data any) []ValidationError {
+	schema, err := getSessionValidationSchema()
+	if err != nil {
+		return []ValidationError{{
+			Field:      "",
+			Constraint: "schema",
+			Message:    err.Error(),
+		}}
+	}
+
+	err = schema.Validate(data)
+	if err == nil {
+		return []ValidationError{}
+	}
+
+	return ExtractValidationErrors(err)
+}
 
 // ValidateStopReadiness validates that it's safe to pause/stop the session.
 // This is called by stop hooks during interruptions (Ctrl+C, context switches).
@@ -259,21 +372,13 @@ type QASkipResult struct {
 
 // InvestigationAllowlist defines paths that qualify for investigation-only QA skip.
 // Sessions that only modify these paths can skip QA with "SKIPPED: investigation-only".
-var InvestigationAllowlist = []string{
-	`^\.agents/sessions/`,
-	`^\.agents/analysis/`,
-	`^\.agents/retrospective/`,
-	`^\.serena/memories($|/)`,
-	`^\.agents/security/`,
-}
+// Deprecated: Use DefaultSessionValidationConfig.InvestigationAllowlistPatterns for schema-driven configuration.
+var InvestigationAllowlist = DefaultSessionValidationConfig.InvestigationAllowlistPatterns
 
 // AuditArtifacts defines paths that are exempt from QA validation.
 // These are audit trail files, not implementation.
-var AuditArtifacts = []string{
-	`^\.agents/sessions/`,
-	`^\.agents/analysis/`,
-	`^\.serena/memories($|/)`,
-}
+// Deprecated: Use DefaultSessionValidationConfig.AuditArtifactPatterns for schema-driven configuration.
+var AuditArtifacts = DefaultSessionValidationConfig.AuditArtifactPatterns
 
 // CheckQASkipEligibility determines if a session can skip QA validation.
 // It analyzes the changed files to determine if the session is docs-only
@@ -318,14 +423,20 @@ func CheckQASkipEligibility(changedFiles []string) QASkipResult {
 }
 
 // IsDocsOnly returns true if all files are markdown documentation.
+// Uses the default docs extension from DefaultSessionValidationConfig.
 func IsDocsOnly(files []string) bool {
+	return IsDocsOnlyWithConfig(files, DefaultSessionValidationConfig)
+}
+
+// IsDocsOnlyWithConfig returns true if all files match the docs extension in the config.
+func IsDocsOnlyWithConfig(files []string, config SessionValidationConfig) bool {
 	if len(files) == 0 {
 		return true
 	}
 
 	for _, f := range files {
 		ext := strings.ToLower(filepath.Ext(f))
-		if ext != ".md" {
+		if ext != config.DocsExtension {
 			return false
 		}
 	}
@@ -333,7 +444,14 @@ func IsDocsOnly(files []string) bool {
 }
 
 // CheckInvestigationOnlyEligibility tests if all files are in the investigation allowlist.
+// Uses schema-driven patterns from DefaultSessionValidationConfig.
 func CheckInvestigationOnlyEligibility(files []string) QASkipResult {
+	return CheckInvestigationOnlyEligibilityWithConfig(files, DefaultSessionValidationConfig)
+}
+
+// CheckInvestigationOnlyEligibilityWithConfig tests if all files are in the investigation allowlist
+// using the provided configuration patterns.
+func CheckInvestigationOnlyEligibilityWithConfig(files []string, config SessionValidationConfig) QASkipResult {
 	result := QASkipResult{
 		Eligible:            true,
 		ImplementationFiles: []string{},
@@ -350,7 +468,7 @@ func CheckInvestigationOnlyEligibility(files []string) QASkipResult {
 		normalizedFile := strings.ReplaceAll(file, "\\", "/")
 
 		isAllowed := false
-		for _, pattern := range InvestigationAllowlist {
+		for _, pattern := range config.InvestigationAllowlistPatterns {
 			matched, err := regexp.MatchString(pattern, normalizedFile)
 			if err == nil && matched {
 				isAllowed = true
@@ -373,7 +491,13 @@ func CheckInvestigationOnlyEligibility(files []string) QASkipResult {
 
 // GetImplementationFiles filters out audit artifacts from a file list.
 // Returns only files that are implementation (code, ADRs, config, tests).
+// Uses schema-driven patterns from DefaultSessionValidationConfig.
 func GetImplementationFiles(files []string) []string {
+	return GetImplementationFilesWithConfig(files, DefaultSessionValidationConfig)
+}
+
+// GetImplementationFilesWithConfig filters out audit artifacts using the provided configuration.
+func GetImplementationFilesWithConfig(files []string, config SessionValidationConfig) []string {
 	if len(files) == 0 {
 		return []string{}
 	}
@@ -384,7 +508,7 @@ func GetImplementationFiles(files []string) []string {
 		normalizedFile := strings.ReplaceAll(file, "\\", "/")
 
 		isAuditArtifact := false
-		for _, pattern := range AuditArtifacts {
+		for _, pattern := range config.AuditArtifactPatterns {
 			matched, err := regexp.MatchString(pattern, normalizedFile)
 			if err == nil && matched {
 				isAuditArtifact = true
@@ -410,21 +534,21 @@ type MemoryEvidenceResult struct {
 
 // ValidateMemoryEvidence validates that memory-related checklist rows have valid evidence.
 // It extracts memory names from the evidence column and optionally validates they exist.
+// Uses schema-driven configuration from DefaultSessionValidationConfig.
 func ValidateMemoryEvidence(evidence string) MemoryEvidenceResult {
+	return ValidateMemoryEvidenceWithConfig(evidence, DefaultSessionValidationConfig)
+}
+
+// ValidateMemoryEvidenceWithConfig validates memory evidence using the provided configuration.
+// This allows schema-driven configuration of validation patterns.
+func ValidateMemoryEvidenceWithConfig(evidence string, config SessionValidationConfig) MemoryEvidenceResult {
 	result := MemoryEvidenceResult{
 		Valid:         true,
 		MemoriesFound: []string{},
 	}
 
-	// Check for empty or placeholder evidence
-	placeholderPatterns := []string{
-		`^\s*$`,
-		`^List memories loaded$`,
-		`^\[.*\]$`,
-		`^-+$`,
-	}
-
-	for _, pattern := range placeholderPatterns {
+	// Check for empty or placeholder evidence using schema-defined patterns
+	for _, pattern := range config.MemoryPlaceholderPatterns {
 		matched, err := regexp.MatchString(pattern, evidence)
 		if err == nil && matched {
 			result.Valid = false
@@ -434,8 +558,8 @@ func ValidateMemoryEvidence(evidence string) MemoryEvidenceResult {
 		}
 	}
 
-	// Extract memory names (kebab-case identifiers with at least 2 segments)
-	memoryPattern := regexp.MustCompile(`[a-z][a-z0-9]*(?:-[a-z0-9]+)+`)
+	// Extract memory names using schema-defined pattern
+	memoryPattern := regexp.MustCompile(config.MemoryNamePattern)
 	matches := memoryPattern.FindAllString(strings.ToLower(evidence), -1)
 
 	// Deduplicate
@@ -566,7 +690,14 @@ type PathEscapeResult struct {
 
 // ValidateSessionLogPath validates that a session log path is under the expected directory.
 // This provides CWE-22 (path traversal) protection.
+// Uses the default expected directory from DefaultSessionValidationConfig.
 func ValidateSessionLogPath(sessionLogPath, repoRoot string) PathEscapeResult {
+	return ValidateSessionLogPathWithConfig(sessionLogPath, repoRoot, DefaultSessionValidationConfig)
+}
+
+// ValidateSessionLogPathWithConfig validates that a session log path is under the expected directory
+// using the provided configuration.
+func ValidateSessionLogPathWithConfig(sessionLogPath, repoRoot string, config SessionValidationConfig) PathEscapeResult {
 	result := PathEscapeResult{Valid: true}
 
 	// Normalize paths
@@ -584,8 +715,9 @@ func ValidateSessionLogPath(sessionLogPath, repoRoot string) PathEscapeResult {
 		return result
 	}
 
-	// Expected directory is .agents/sessions/ under repo root
-	expectedDir := filepath.Join(repoAbs, ".agents", "sessions")
+	// Expected directory from config (e.g., ".agents/sessions")
+	expectedDirParts := strings.Split(config.ExpectedSessionDirectory, "/")
+	expectedDir := filepath.Join(append([]string{repoAbs}, expectedDirParts...)...)
 
 	// Ensure session path is under expected directory
 	// Add separator to prevent prefix bypass (e.g., .agents/sessions-evil)
@@ -595,7 +727,7 @@ func ValidateSessionLogPath(sessionLogPath, repoRoot string) PathEscapeResult {
 	if !strings.HasPrefix(sessionNormalized+string(filepath.Separator), expectedDirWithSep) &&
 		sessionNormalized != expectedDir {
 		result.Valid = false
-		result.ErrorMessage = "Session log must be under .agents/sessions/: " + sessionLogPath
+		result.ErrorMessage = "Session log must be under " + config.ExpectedSessionDirectory + "/: " + sessionLogPath
 		return result
 	}
 
@@ -610,11 +742,19 @@ type StartingCommitResult struct {
 }
 
 // ExtractStartingCommit extracts the starting commit SHA from session log content.
+// Uses the default commit SHA pattern from DefaultSessionValidationConfig.
 func ExtractStartingCommit(content string) StartingCommitResult {
+	return ExtractStartingCommitWithConfig(content, DefaultSessionValidationConfig)
+}
+
+// ExtractStartingCommitWithConfig extracts the starting commit SHA using the provided configuration.
+func ExtractStartingCommitWithConfig(content string, config SessionValidationConfig) StartingCommitResult {
 	result := StartingCommitResult{Found: false}
 
+	shaPattern := config.CommitSHAPattern
+
 	// Pattern 1: - **Starting Commit**: `sha` or without backticks
-	pattern1 := regexp.MustCompile(`(?m)^\s*-\s*\*\*Starting Commit\*\*\s*:\s*` + "`?" + `([0-9a-f]{7,40})` + "`?" + `\s*$`)
+	pattern1 := regexp.MustCompile(`(?m)^\s*-\s*\*\*Starting Commit\*\*\s*:\s*` + "`?" + `(` + shaPattern + `)` + "`?" + `\s*$`)
 	if matches := pattern1.FindStringSubmatch(content); matches != nil {
 		result.Found = true
 		result.SHA = matches[1]
@@ -623,7 +763,7 @@ func ExtractStartingCommit(content string) StartingCommitResult {
 	}
 
 	// Pattern 2: Starting Commit: sha (plain format)
-	pattern2 := regexp.MustCompile(`(?m)^\s*Starting Commit\s*:\s*([0-9a-f]{7,40})\s*$`)
+	pattern2 := regexp.MustCompile(`(?m)^\s*Starting Commit\s*:\s*(` + shaPattern + `)\s*$`)
 	if matches := pattern2.FindStringSubmatch(content); matches != nil {
 		result.Found = true
 		result.SHA = matches[1]
@@ -740,11 +880,18 @@ type CommitEvidenceResult struct {
 }
 
 // ValidateCommitSHAEvidence validates the commit SHA in the evidence column.
+// Uses the default commit SHA pattern from DefaultSessionValidationConfig.
 func ValidateCommitSHAEvidence(evidence string) CommitEvidenceResult {
+	return ValidateCommitSHAEvidenceWithConfig(evidence, DefaultSessionValidationConfig)
+}
+
+// ValidateCommitSHAEvidenceWithConfig validates commit SHA evidence using the provided configuration.
+func ValidateCommitSHAEvidenceWithConfig(evidence string, config SessionValidationConfig) CommitEvidenceResult {
 	result := CommitEvidenceResult{Valid: false}
 
 	// Pattern: Commit SHA: `sha` or Commit SHA: sha
-	pattern := regexp.MustCompile(`(?i)Commit\s+SHA:\s*` + "`?" + `([0-9a-f]{7,40})` + "`?")
+	shaPattern := config.CommitSHAPattern
+	pattern := regexp.MustCompile(`(?i)Commit\s+SHA:\s*` + "`?" + `(` + shaPattern + `)` + "`?")
 	matches := pattern.FindStringSubmatch(evidence)
 
 	if matches != nil && len(matches) > 1 {

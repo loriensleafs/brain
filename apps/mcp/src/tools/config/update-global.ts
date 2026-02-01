@@ -271,6 +271,7 @@ export async function handler(args: ConfigUpdateGlobalArgs): Promise<CallToolRes
     if (migrate_affected && affectedProjects.length > 0 && memories_location) {
       for (const projectName of affectedProjects) {
         const projectConfig = oldConfig.projects[projectName];
+        if (!projectConfig) continue;
 
         // Resolve old and new paths
         const oldResolved = resolveMemoriesPath(

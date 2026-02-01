@@ -71,21 +71,21 @@ type BrainConfig struct {
 
 // BrainConfigDefaults contains default values for BrainConfig.
 var BrainConfigDefaults = struct {
-	Version          string
-	MemoriesMode     MemoriesMode
-	SyncEnabled      bool
-	SyncDelayMs      int
-	LogLevel         LogLevel
-	WatcherEnabled   bool
-	WatcherDebounce  int
+	Version         string
+	MemoriesMode    MemoriesMode
+	SyncEnabled     bool
+	SyncDelayMs     int
+	LogLevel        LogLevel
+	WatcherEnabled  bool
+	WatcherDebounce int
 }{
-	Version:          "2.0.0",
-	MemoriesMode:     MemoriesModeDefault,
-	SyncEnabled:      true,
-	SyncDelayMs:      500,
-	LogLevel:         LogLevelInfo,
-	WatcherEnabled:   true,
-	WatcherDebounce:  2000,
+	Version:         "2.0.0",
+	MemoriesMode:    MemoriesModeDefault,
+	SyncEnabled:     true,
+	SyncDelayMs:     500,
+	LogLevel:        LogLevelInfo,
+	WatcherEnabled:  true,
+	WatcherDebounce: 2000,
 }
 
 var (

@@ -6,20 +6,18 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-	
-
 )
 
 // TraceabilityValidationResult extends ValidationResult with traceability-specific fields.
 type TraceabilityValidationResult struct {
 	ValidationResult
-	SpecsPath   string                 `json:"specsPath,omitempty"`
-	Strict      bool                   `json:"strict"`
-	Stats       TraceabilityStats      `json:"stats"`
-	Errors      []TraceabilityIssue    `json:"errors,omitempty"`
-	Warnings    []TraceabilityIssue    `json:"warnings,omitempty"`
-	Info        []TraceabilityIssue    `json:"info,omitempty"`
-	ExitCode    int                    `json:"exitCode"`
+	SpecsPath string              `json:"specsPath,omitempty"`
+	Strict    bool                `json:"strict"`
+	Stats     TraceabilityStats   `json:"stats"`
+	Errors    []TraceabilityIssue `json:"errors,omitempty"`
+	Warnings  []TraceabilityIssue `json:"warnings,omitempty"`
+	Info      []TraceabilityIssue `json:"info,omitempty"`
+	ExitCode  int                 `json:"exitCode"`
 }
 
 // TraceabilityStats contains counts of specs and valid chains.

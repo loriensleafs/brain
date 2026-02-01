@@ -7,8 +7,6 @@ import (
 	"testing"
 
 	"github.com/peterkloss/brain/packages/validation/internal"
-	
-
 )
 
 // Tests for ValidateSlashCommandFromContent - Frontmatter Validation

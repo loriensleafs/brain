@@ -1,14 +1,29 @@
 /**
  * Schema for get_project_details tool
+ *
+ * Migrated from Zod to JSON Schema + AJV per ADR-022.
+ * JSON Schema source: packages/validation/schemas/tools/projects/get-project-details.schema.json
  */
-import { z } from "zod";
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
+import {
+  validateGetProjectDetailsArgs,
+  parseGetProjectDetailsArgs,
+  type GetProjectDetailsArgs,
+} from "@brain/validation";
 
-export const GetProjectDetailsArgsSchema = z.object({
-  project: z.string().describe("Project name to get details for"),
-});
+export { validateGetProjectDetailsArgs, parseGetProjectDetailsArgs, type GetProjectDetailsArgs };
 
-export type GetProjectDetailsArgs = z.infer<typeof GetProjectDetailsArgsSchema>;
+// Re-export for backward compatibility
+export const GetProjectDetailsArgsSchema = {
+  parse: parseGetProjectDetailsArgs,
+  safeParse: (data: unknown) => {
+    try {
+      return { success: true as const, data: parseGetProjectDetailsArgs(data) };
+    } catch (error) {
+      return { success: false as const, error };
+    }
+  },
+};
 
 export const toolDefinition: Tool = {
   name: "get_project_details",

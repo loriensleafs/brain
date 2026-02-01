@@ -1,21 +1,24 @@
 package internal
 
 import (
+	"encoding/json"
+	"fmt"
 	"regexp"
 	"strings"
-	
+	"sync"
 
+	"github.com/santhosh-tekuri/jsonschema/v6"
 )
 
 // PRDescriptionValidationResult extends ValidationResult with PR description-specific fields.
 type PRDescriptionValidationResult struct {
 	ValidationResult
-	PRNumber           int                     `json:"prNumber,omitempty"`
-	FilesInPR          []string                `json:"filesInPR"`
-	MentionedFiles     []string                `json:"mentionedFiles"`
-	Issues             []PRDescriptionIssue    `json:"issues"`
-	CriticalCount      int                     `json:"criticalCount"`
-	WarningCount       int                     `json:"warningCount"`
+	PRNumber       int                  `json:"prNumber,omitempty"`
+	FilesInPR      []string             `json:"filesInPR"`
+	MentionedFiles []string             `json:"mentionedFiles"`
+	Issues         []PRDescriptionIssue `json:"issues"`
+	CriticalCount  int                  `json:"criticalCount"`
+	WarningCount   int                  `json:"warningCount"`
 }
 
 // PRDescriptionIssue represents a single issue found in PR description validation.
@@ -29,20 +32,153 @@ type PRDescriptionIssue struct {
 // PRDescriptionConfig contains configuration for PR description validation.
 type PRDescriptionConfig struct {
 	// Description is the PR body/description text
-	Description string
+	Description string `json:"description"`
 	// FilesInPR is the list of files changed in the PR
-	FilesInPR []string
+	FilesInPR []string `json:"filesInPR"`
 	// SignificantExtensions are file extensions considered significant for warning
-	SignificantExtensions []string
+	SignificantExtensions []string `json:"significantExtensions"`
 	// SignificantPaths are path prefixes for files that should be mentioned
-	SignificantPaths []string
+	SignificantPaths []string `json:"significantPaths"`
+	// RequiredSections are sections that must be present in PR description
+	RequiredSections []string `json:"requiredSections"`
+	// ValidateChecklist indicates whether to validate checklist completion
+	ValidateChecklist *bool `json:"validateChecklist,omitempty"`
+}
+
+// PRDescriptionConfigDefaults contains default values for PRDescriptionConfig.
+var PRDescriptionConfigDefaults = struct {
+	SignificantExtensions []string
+	SignificantPaths      []string
+	RequiredSections      []string
+	ValidateChecklist     bool
+}{
+	SignificantExtensions: []string{".ps1", ".cs", ".ts", ".js", ".py", ".yml", ".yaml", ".go"},
+	SignificantPaths:      []string{".github", "scripts", "src", ".agents", "cmd", "pkg", "internal"},
+	RequiredSections:      []string{"Summary", "Test Plan"},
+	ValidateChecklist:     true,
+}
+
+var (
+	prDescriptionSchemaOnce     sync.Once
+	prDescriptionSchemaCompiled *jsonschema.Schema
+	prDescriptionSchemaErr      error
+	prDescriptionSchemaData     []byte
+)
+
+// SetPRDescriptionSchemaData sets the schema data for PR description config validation.
+// This must be called before any validation functions are used.
+// The data is typically embedded by the parent package.
+func SetPRDescriptionSchemaData(data []byte) {
+	prDescriptionSchemaData = data
+}
+
+// getPRDescriptionSchema returns the compiled PR description config schema, loading it once.
+func getPRDescriptionSchema() (*jsonschema.Schema, error) {
+	prDescriptionSchemaOnce.Do(func() {
+		if prDescriptionSchemaData == nil {
+			prDescriptionSchemaErr = fmt.Errorf("PR description schema data not set; call SetPRDescriptionSchemaData first")
+			return
+		}
+
+		var schemaDoc any
+		if err := json.Unmarshal(prDescriptionSchemaData, &schemaDoc); err != nil {
+			prDescriptionSchemaErr = fmt.Errorf("failed to parse PR description schema: %w", err)
+			return
+		}
+
+		c := jsonschema.NewCompiler()
+		if err := c.AddResource("pr-description-config.schema.json", schemaDoc); err != nil {
+			prDescriptionSchemaErr = fmt.Errorf("failed to add PR description schema resource: %w", err)
+			return
+		}
+
+		prDescriptionSchemaCompiled, prDescriptionSchemaErr = c.Compile("pr-description-config.schema.json")
+	})
+	return prDescriptionSchemaCompiled, prDescriptionSchemaErr
+}
+
+// ValidatePRDescriptionConfig validates data against the PRDescriptionConfig JSON Schema.
+// Returns true if valid, false otherwise.
+func ValidatePRDescriptionConfig(data any) bool {
+	schema, err := getPRDescriptionSchema()
+	if err != nil {
+		return false
+	}
+	err = schema.Validate(data)
+	return err == nil
+}
+
+// ParsePRDescriptionConfig validates and parses data into PRDescriptionConfig with defaults applied.
+// Returns validated PRDescriptionConfig or error with structured message.
+func ParsePRDescriptionConfig(data any) (*PRDescriptionConfig, error) {
+	schema, err := getPRDescriptionSchema()
+	if err != nil {
+		return nil, fmt.Errorf("schema error: %w", err)
+	}
+
+	if err := schema.Validate(data); err != nil {
+		return nil, FormatSchemaError(err)
+	}
+
+	jsonBytes, err := json.Marshal(data)
+	if err != nil {
+		return nil, fmt.Errorf("marshal error: %w", err)
+	}
+
+	var config PRDescriptionConfig
+	if err := json.Unmarshal(jsonBytes, &config); err != nil {
+		return nil, fmt.Errorf("unmarshal error: %w", err)
+	}
+
+	applyPRDescriptionConfigDefaults(&config)
+	return &config, nil
+}
+
+// applyPRDescriptionConfigDefaults applies default values to optional fields.
+func applyPRDescriptionConfigDefaults(config *PRDescriptionConfig) {
+	if len(config.SignificantExtensions) == 0 {
+		config.SignificantExtensions = PRDescriptionConfigDefaults.SignificantExtensions
+	}
+	if len(config.SignificantPaths) == 0 {
+		config.SignificantPaths = PRDescriptionConfigDefaults.SignificantPaths
+	}
+	if len(config.RequiredSections) == 0 {
+		config.RequiredSections = PRDescriptionConfigDefaults.RequiredSections
+	}
+	if config.ValidateChecklist == nil {
+		v := PRDescriptionConfigDefaults.ValidateChecklist
+		config.ValidateChecklist = &v
+	}
+}
+
+// GetPRDescriptionConfigErrors returns structured validation errors for data.
+// Returns empty slice if valid.
+func GetPRDescriptionConfigErrors(data any) []ValidationError {
+	schema, err := getPRDescriptionSchema()
+	if err != nil {
+		return []ValidationError{{
+			Field:      "",
+			Constraint: "schema",
+			Message:    err.Error(),
+		}}
+	}
+
+	err = schema.Validate(data)
+	if err == nil {
+		return []ValidationError{}
+	}
+
+	return ExtractValidationErrors(err)
 }
 
 // DefaultPRDescriptionConfig returns default configuration.
 func DefaultPRDescriptionConfig() PRDescriptionConfig {
+	validateChecklist := PRDescriptionConfigDefaults.ValidateChecklist
 	return PRDescriptionConfig{
-		SignificantExtensions: []string{".ps1", ".cs", ".ts", ".js", ".py", ".yml", ".yaml", ".go"},
-		SignificantPaths:      []string{".github", "scripts", "src", ".agents", "cmd", "pkg", "internal"},
+		SignificantExtensions: PRDescriptionConfigDefaults.SignificantExtensions,
+		SignificantPaths:      PRDescriptionConfigDefaults.SignificantPaths,
+		RequiredSections:      PRDescriptionConfigDefaults.RequiredSections,
+		ValidateChecklist:     &validateChecklist,
 	}
 }
 

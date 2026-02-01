@@ -42,15 +42,15 @@ type ModeHistoryEntry struct {
 
 // OrchestratorWorkflow tracks the full state of an orchestrator-managed workflow.
 type OrchestratorWorkflow struct {
-	ActiveAgent      *string `json:"activeAgent"`
-	WorkflowPhase    string  `json:"workflowPhase"`
-	AgentHistory     []any   `json:"agentHistory"`
-	Decisions        []any   `json:"decisions"`
-	Verdicts         []any   `json:"verdicts"`
-	PendingHandoffs  []any   `json:"pendingHandoffs"`
-	CompactionHist   []any   `json:"compactionHistory"`
-	StartedAt        string  `json:"startedAt"`
-	LastAgentChange  string  `json:"lastAgentChange"`
+	ActiveAgent     *string `json:"activeAgent"`
+	WorkflowPhase   string  `json:"workflowPhase"`
+	AgentHistory    []any   `json:"agentHistory"`
+	Decisions       []any   `json:"decisions"`
+	Verdicts        []any   `json:"verdicts"`
+	PendingHandoffs []any   `json:"pendingHandoffs"`
+	CompactionHist  []any   `json:"compactionHistory"`
+	StartedAt       string  `json:"startedAt"`
+	LastAgentChange string  `json:"lastAgentChange"`
 }
 
 // SessionState represents the full session state from Brain MCP.

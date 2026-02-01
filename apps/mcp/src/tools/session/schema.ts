@@ -2,31 +2,33 @@
  * Schema for session tool
  *
  * Unified session management tool with get/set operations.
+ *
+ * Validation: Uses JSON Schema via AJV from @brain/validation
  */
-import { z } from "zod";
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
+import {
+  parseSessionArgs as _parseSessionArgs,
+  type SessionArgs,
+} from "@brain/validation";
+import sessionSchema from "@brain/validation/schemas/tools/session.schema.json";
 
-export const SessionArgsSchema = z.object({
-  operation: z
-    .enum(["get", "set"])
-    .describe("Operation: 'get' retrieves session state, 'set' updates it"),
-  mode: z
-    .enum(["analysis", "planning", "coding", "disabled"])
-    .optional()
-    .describe(
-      "Workflow mode (for set operation): analysis (read-only), planning (design), coding (full access), disabled (no restrictions)"
-    ),
-  task: z
-    .string()
-    .optional()
-    .describe("Description of current task (for set operation)"),
-  feature: z
-    .string()
-    .optional()
-    .describe("Active feature slug/path (for set operation)"),
-});
+// Re-export type for backward compatibility
+export type { SessionArgs };
 
-export type SessionArgs = z.infer<typeof SessionArgsSchema>;
+/**
+ * SessionArgsSchema provides Zod-compatible interface.
+ * Uses AJV validation under the hood for 5-18x better performance.
+ */
+export const SessionArgsSchema = {
+  parse: _parseSessionArgs,
+  safeParse: (data: unknown): { success: true; data: SessionArgs } | { success: false; error: Error } => {
+    try {
+      return { success: true, data: _parseSessionArgs(data) };
+    } catch (e) {
+      return { success: false, error: e instanceof Error ? e : new Error(String(e)) };
+    }
+  },
+};
 
 export const toolDefinition: Tool = {
   name: "session",
@@ -43,30 +45,5 @@ Modes control what tools are allowed:
 - **disabled**: Mode enforcement disabled. All tools allowed.
 
 Use 'set' with mode='coding' before starting implementation work.`,
-  inputSchema: {
-    type: "object" as const,
-    properties: {
-      operation: {
-        type: "string",
-        enum: ["get", "set"],
-        description:
-          "Operation: 'get' retrieves session state, 'set' updates it",
-      },
-      mode: {
-        type: "string",
-        enum: ["analysis", "planning", "coding", "disabled"],
-        description:
-          "Workflow mode (for set operation): analysis (read-only), planning (design), coding (full access), disabled (no restrictions)",
-      },
-      task: {
-        type: "string",
-        description: "Description of current task (for set operation)",
-      },
-      feature: {
-        type: "string",
-        description: "Active feature slug/path (for set operation)",
-      },
-    },
-    required: ["operation"],
-  },
+  inputSchema: sessionSchema as Tool["inputSchema"],
 };

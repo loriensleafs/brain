@@ -1,10 +1,25 @@
 package internal_test
 
 import (
+	"os"
+	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/peterkloss/brain/packages/validation/internal"
 )
+
+func init() {
+	// Load schema data for tests
+	_, currentFile, _, _ := runtime.Caller(0)
+	packageRoot := filepath.Dir(filepath.Dir(currentFile))
+	schemaPath := filepath.Join(packageRoot, "schemas", "pr", "pr-description-config.schema.json")
+	data, err := os.ReadFile(schemaPath)
+	if err != nil {
+		panic("failed to load PR description schema for tests: " + err.Error())
+	}
+	internal.SetPRDescriptionSchemaData(data)
+}
 
 // Tests for ValidatePRDescription
 
@@ -680,5 +695,140 @@ func BenchmarkExtractMentionedFiles(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		internal.ValidatePRDescription(description, []string{})
+	}
+}
+
+// Tests for JSON Schema validation functions
+
+func TestValidatePRDescriptionConfig_Valid(t *testing.T) {
+	tests := []struct {
+		name  string
+		data  map[string]any
+		valid bool
+	}{
+		{
+			name:  "minimal valid",
+			data:  map[string]any{"description": "test description"},
+			valid: true,
+		},
+		{
+			name: "full valid",
+			data: map[string]any{
+				"description":           "test description",
+				"filesInPR":             []any{"file1.go", "file2.ts"},
+				"significantExtensions": []any{".go", ".ts"},
+				"significantPaths":      []any{"src", "cmd"},
+				"requiredSections":      []any{"Summary", "Test Plan"},
+				"validateChecklist":     true,
+			},
+			valid: true,
+		},
+		{
+			name:  "missing required description",
+			data:  map[string]any{},
+			valid: false,
+		},
+		{
+			name:  "invalid additional property",
+			data:  map[string]any{"description": "test", "unknownProp": "value"},
+			valid: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := internal.ValidatePRDescriptionConfig(tt.data)
+			if result != tt.valid {
+				t.Errorf("ValidatePRDescriptionConfig() = %v, want %v", result, tt.valid)
+			}
+		})
+	}
+}
+
+func TestParsePRDescriptionConfig_AppliesDefaults(t *testing.T) {
+	config, err := internal.ParsePRDescriptionConfig(map[string]any{
+		"description": "test description",
+	})
+	if err != nil {
+		t.Fatalf("ParsePRDescriptionConfig() error = %v", err)
+	}
+
+	if config.Description != "test description" {
+		t.Errorf("Description = %v, want %v", config.Description, "test description")
+	}
+	if len(config.SignificantExtensions) == 0 {
+		t.Error("SignificantExtensions should have defaults applied")
+	}
+	if len(config.SignificantPaths) == 0 {
+		t.Error("SignificantPaths should have defaults applied")
+	}
+	if len(config.RequiredSections) == 0 {
+		t.Error("RequiredSections should have defaults applied")
+	}
+	if config.ValidateChecklist == nil {
+		t.Error("ValidateChecklist should have default applied")
+	}
+}
+
+func TestParsePRDescriptionConfig_PreservesProvidedValues(t *testing.T) {
+	config, err := internal.ParsePRDescriptionConfig(map[string]any{
+		"description":           "my description",
+		"filesInPR":             []any{"main.go"},
+		"significantExtensions": []any{".custom"},
+		"significantPaths":      []any{"custom-path"},
+		"requiredSections":      []any{"Custom Section"},
+		"validateChecklist":     false,
+	})
+	if err != nil {
+		t.Fatalf("ParsePRDescriptionConfig() error = %v", err)
+	}
+
+	if config.Description != "my description" {
+		t.Errorf("Description = %v, want %v", config.Description, "my description")
+	}
+	if len(config.FilesInPR) != 1 || config.FilesInPR[0] != "main.go" {
+		t.Errorf("FilesInPR = %v, want [main.go]", config.FilesInPR)
+	}
+	if len(config.SignificantExtensions) != 1 || config.SignificantExtensions[0] != ".custom" {
+		t.Errorf("SignificantExtensions = %v, want [.custom]", config.SignificantExtensions)
+	}
+	if len(config.SignificantPaths) != 1 || config.SignificantPaths[0] != "custom-path" {
+		t.Errorf("SignificantPaths = %v, want [custom-path]", config.SignificantPaths)
+	}
+	if len(config.RequiredSections) != 1 || config.RequiredSections[0] != "Custom Section" {
+		t.Errorf("RequiredSections = %v, want [Custom Section]", config.RequiredSections)
+	}
+	if config.ValidateChecklist == nil || *config.ValidateChecklist != false {
+		t.Error("ValidateChecklist should be false")
+	}
+}
+
+func TestParsePRDescriptionConfig_InvalidData(t *testing.T) {
+	_, err := internal.ParsePRDescriptionConfig(map[string]any{})
+	if err == nil {
+		t.Error("ParsePRDescriptionConfig() should return error for missing description")
+	}
+}
+
+func TestGetPRDescriptionConfigErrors_ValidData(t *testing.T) {
+	errors := internal.GetPRDescriptionConfigErrors(map[string]any{"description": "test"})
+	if len(errors) != 0 {
+		t.Errorf("GetPRDescriptionConfigErrors() returned %d errors, want 0", len(errors))
+	}
+}
+
+func TestGetPRDescriptionConfigErrors_InvalidData(t *testing.T) {
+	errors := internal.GetPRDescriptionConfigErrors(map[string]any{})
+	if len(errors) == 0 {
+		t.Error("GetPRDescriptionConfigErrors() should return errors for missing description")
+	}
+	// Check error structure
+	for _, e := range errors {
+		if e.Constraint == "" {
+			t.Error("ValidationError.Constraint should not be empty")
+		}
+		if e.Message == "" {
+			t.Error("ValidationError.Message should not be empty")
+		}
 	}
 }

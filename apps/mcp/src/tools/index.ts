@@ -210,7 +210,7 @@ const WRAPPER_TOOLS: Map<string, WrapperTool> = new Map([
     "get_project_details",
     {
       definition: projects.getProjectDetails.toolDefinition,
-      handler: projects.getProjectDetails.handler as (
+      handler: projects.getProjectDetails.handler as unknown as (
         args: Record<string, unknown>
       ) => Promise<CallToolResult>,
     },
@@ -219,7 +219,7 @@ const WRAPPER_TOOLS: Map<string, WrapperTool> = new Map([
     "edit_project",
     {
       definition: projects.editProject.toolDefinition,
-      handler: projects.editProject.handler as (
+      handler: projects.editProject.handler as unknown as (
         args: Record<string, unknown>
       ) => Promise<CallToolResult>,
     },
@@ -228,7 +228,7 @@ const WRAPPER_TOOLS: Map<string, WrapperTool> = new Map([
     "create_project",
     {
       definition: projects.createProject.toolDefinition,
-      handler: projects.createProject.handler as (
+      handler: projects.createProject.handler as unknown as (
         args: Record<string, unknown>
       ) => Promise<CallToolResult>,
     },
@@ -237,7 +237,7 @@ const WRAPPER_TOOLS: Map<string, WrapperTool> = new Map([
     "delete_project",
     {
       definition: projects.deleteProject.toolDefinition,
-      handler: projects.deleteProject.handler as (
+      handler: projects.deleteProject.handler as unknown as (
         args: Record<string, unknown>
       ) => Promise<CallToolResult>,
     },
@@ -246,7 +246,7 @@ const WRAPPER_TOOLS: Map<string, WrapperTool> = new Map([
     "migrate_agents",
     {
       definition: migrateAgents.toolDefinition,
-      handler: migrateAgents.handler as (
+      handler: migrateAgents.handler as unknown as (
         args: Record<string, unknown>
       ) => Promise<CallToolResult>,
     },

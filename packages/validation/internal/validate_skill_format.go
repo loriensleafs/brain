@@ -1,12 +1,15 @@
 package internal
 
 import (
+	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
-	
+	"sync"
 
+	"github.com/santhosh-tekuri/jsonschema/v6"
 )
 
 // Skill name format: lowercase letters, numbers, and hyphens, 1-64 characters.
@@ -20,6 +23,78 @@ var skillPrefixPattern = regexp.MustCompile(`^skill-`)
 
 // Maximum description length in characters.
 const maxDescriptionLength = 1024
+
+var (
+	skillFrontmatterSchemaOnce     sync.Once
+	skillFrontmatterSchemaCompiled *jsonschema.Schema
+	skillFrontmatterSchemaErr      error
+	skillFrontmatterSchemaData     []byte
+)
+
+// SetSkillFrontmatterSchemaData sets the schema data for skill frontmatter validation.
+// This must be called before any validation functions are used.
+// The data is typically embedded by the parent package.
+func SetSkillFrontmatterSchemaData(data []byte) {
+	skillFrontmatterSchemaData = data
+}
+
+// getSkillFrontmatterSchema returns the compiled skill frontmatter schema, loading it once.
+func getSkillFrontmatterSchema() (*jsonschema.Schema, error) {
+	skillFrontmatterSchemaOnce.Do(func() {
+		if skillFrontmatterSchemaData == nil {
+			skillFrontmatterSchemaErr = fmt.Errorf("skill frontmatter schema data not set; call SetSkillFrontmatterSchemaData first")
+			return
+		}
+
+		// Parse JSON schema into interface{}
+		var schemaDoc any
+		if err := json.Unmarshal(skillFrontmatterSchemaData, &schemaDoc); err != nil {
+			skillFrontmatterSchemaErr = fmt.Errorf("failed to parse skill frontmatter schema: %w", err)
+			return
+		}
+
+		c := jsonschema.NewCompiler()
+		if err := c.AddResource("skill-frontmatter.schema.json", schemaDoc); err != nil {
+			skillFrontmatterSchemaErr = fmt.Errorf("failed to add skill frontmatter schema resource: %w", err)
+			return
+		}
+
+		skillFrontmatterSchemaCompiled, skillFrontmatterSchemaErr = c.Compile("skill-frontmatter.schema.json")
+	})
+	return skillFrontmatterSchemaCompiled, skillFrontmatterSchemaErr
+}
+
+// ValidateSkillFrontmatter validates frontmatter data against the SkillFrontmatter JSON Schema.
+// Returns true if valid, false otherwise.
+func ValidateSkillFrontmatter(data any) bool {
+	schema, err := getSkillFrontmatterSchema()
+	if err != nil {
+		return false
+	}
+
+	err = schema.Validate(data)
+	return err == nil
+}
+
+// GetSkillFrontmatterErrors returns structured validation errors for frontmatter data.
+// Returns empty slice if valid.
+func GetSkillFrontmatterErrors(data any) []ValidationError {
+	schema, err := getSkillFrontmatterSchema()
+	if err != nil {
+		return []ValidationError{{
+			Field:      "",
+			Constraint: "schema",
+			Message:    err.Error(),
+		}}
+	}
+
+	err = schema.Validate(data)
+	if err == nil {
+		return []ValidationError{}
+	}
+
+	return ExtractValidationErrors(err)
+}
 
 // ValidateSkillFormat validates a skill file for format and frontmatter compliance.
 // filePath is the path to the skill file to validate.
@@ -135,7 +210,7 @@ func ValidateSkillFormatFromContent(content, fileName string) SkillFormatValidat
 			})
 		}
 
-		// Validate name field
+		// Validate name field using regex pattern (primary validation)
 		nameResult := validateNameField(frontmatter.Name)
 		result.FieldValidation.NamePresent = nameResult.present
 		result.FieldValidation.NameValid = nameResult.valid
@@ -163,7 +238,7 @@ func ValidateSkillFormatFromContent(content, fileName string) SkillFormatValidat
 			})
 		}
 
-		// Validate description field
+		// Validate description field using length check (primary validation)
 		descResult := validateDescriptionField(frontmatter.Description)
 		result.FieldValidation.DescriptionPresent = descResult.present
 		result.FieldValidation.DescriptionValid = descResult.valid
@@ -204,6 +279,63 @@ func ValidateSkillFormatFromContent(content, fileName string) SkillFormatValidat
 		result.Remediation = buildSkillRemediation(checks)
 	}
 
+	return result
+}
+
+// fieldValidationResult holds the result of validating a single field.
+type fieldValidationResult struct {
+	present bool
+	valid   bool
+	err     string
+}
+
+// validateNameField validates the name field.
+func validateNameField(name string) fieldValidationResult {
+	result := fieldValidationResult{}
+
+	if name == "" {
+		result.present = false
+		result.valid = false
+		result.err = "Required field 'name' is missing"
+		return result
+	}
+
+	result.present = true
+
+	if !skillNamePattern.MatchString(name) {
+		result.valid = false
+		if len(name) > 64 {
+			result.err = "Name exceeds 64 characters (" + Itoa(len(name)) + " chars)"
+		} else {
+			result.err = "Name must match pattern ^[a-z0-9-]{1,64}$. Found: '" + name + "'"
+		}
+		return result
+	}
+
+	result.valid = true
+	return result
+}
+
+// validateDescriptionField validates the description field.
+func validateDescriptionField(description string) fieldValidationResult {
+	result := fieldValidationResult{}
+
+	if description == "" {
+		result.present = false
+		result.valid = false
+		result.err = "Required field 'description' is missing"
+		return result
+	}
+
+	result.present = true
+
+	if len(description) > maxDescriptionLength {
+		result.valid = false
+		result.err = "Description exceeds " + Itoa(maxDescriptionLength) + " characters (" + Itoa(len(description)) + " chars)"
+		return result
+	}
+
+	result.valid = true
 	return result
 }
 
@@ -270,63 +402,6 @@ func ValidateSkillFiles(filePaths []string) []SkillFormatValidationResult {
 	}
 
 	return results
-}
-
-// fieldValidationResult holds the result of validating a single field.
-type fieldValidationResult struct {
-	present bool
-	valid   bool
-	err     string
-}
-
-// validateNameField validates the name field.
-func validateNameField(name string) fieldValidationResult {
-	result := fieldValidationResult{}
-
-	if name == "" {
-		result.present = false
-		result.valid = false
-		result.err = "Required field 'name' is missing"
-		return result
-	}
-
-	result.present = true
-
-	if !skillNamePattern.MatchString(name) {
-		result.valid = false
-		if len(name) > 64 {
-			result.err = "Name exceeds 64 characters (" + Itoa(len(name)) + " chars)"
-		} else {
-			result.err = "Name must match pattern ^[a-z0-9-]{1,64}$. Found: '" + name + "'"
-		}
-		return result
-	}
-
-	result.valid = true
-	return result
-}
-
-// validateDescriptionField validates the description field.
-func validateDescriptionField(description string) fieldValidationResult {
-	result := fieldValidationResult{}
-
-	if description == "" {
-		result.present = false
-		result.valid = false
-		result.err = "Required field 'description' is missing"
-		return result
-	}
-
-	result.present = true
-
-	if len(description) > maxDescriptionLength {
-		result.valid = false
-		result.err = "Description exceeds " + Itoa(maxDescriptionLength) + " characters (" + Itoa(len(description)) + " chars)"
-		return result
-	}
-
-	result.valid = true
-	return result
 }
 
 // buildSkillRemediation builds remediation advice from failed checks.

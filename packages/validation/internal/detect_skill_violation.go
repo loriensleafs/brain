@@ -7,8 +7,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-	
-
 )
 
 // SkillViolation represents a detected violation of skill usage policy.

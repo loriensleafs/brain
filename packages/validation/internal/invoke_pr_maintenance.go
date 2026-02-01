@@ -197,8 +197,8 @@ type PRError struct {
 
 // PRMaintenanceOutput represents the JSON output for workflow consumption.
 type PRMaintenanceOutput struct {
-	PRs     []PRActionItem            `json:"prs"`
-	Summary PRMaintenanceSummary      `json:"summary"`
+	PRs     []PRActionItem       `json:"prs"`
+	Summary PRMaintenanceSummary `json:"summary"`
 }
 
 // PRMaintenanceSummary contains summary statistics.

@@ -262,6 +262,25 @@ export async function handler(args: ConfigUpdateProjectArgs): Promise<CallToolRe
 
     // Get current project config
     const oldProjectConfig = oldConfig.projects[project];
+    if (!oldProjectConfig) {
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: JSON.stringify(
+              {
+                error: `Project not found: ${project}`,
+                available_projects: Object.keys(oldConfig.projects),
+                hint: "Use create_project to create a new project",
+              },
+              null,
+              2
+            ),
+          },
+        ],
+        isError: true,
+      };
+    }
 
     // Build new project config
     const newProjectConfig: ProjectConfig = {

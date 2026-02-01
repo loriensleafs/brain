@@ -4,27 +4,42 @@
  * Defines the input schemas for config_get, config_set, config_reset,
  * config_rollback, config_update_project, and config_update_global tools.
  *
+ * Validation: config_get, config_set, config_reset use JSON Schema via AJV from @brain/validation
+ *             config_rollback, config_update_project, config_update_global still use Zod (pending migration)
+ *
  * @see ADR-020 for configuration architecture
+ * @see ADR-022 for schema-driven validation architecture
  * @see TASK-020-19 for implementation requirements
  */
 
 import { z } from "zod";
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
+import {
+  parseConfigGetArgs as _parseConfigGetArgs,
+  parseConfigSetArgs as _parseConfigSetArgs,
+  parseConfigResetArgs as _parseConfigResetArgs,
+  type ConfigGetArgs,
+  type ConfigSetArgs,
+  type ConfigResetArgs,
+} from "@brain/validation";
+import configGetSchema from "@brain/validation/schemas/tools/config/get.schema.json";
+import configSetSchema from "@brain/validation/schemas/tools/config/set.schema.json";
+import configResetSchema from "@brain/validation/schemas/tools/config/reset.schema.json";
 
 // ============================================================================
-// config_get
+// config_get (migrated to AJV)
 // ============================================================================
 
-export const ConfigGetArgsSchema = z.object({
-  key: z
-    .string()
-    .optional()
-    .describe(
-      "Specific config key to retrieve (e.g., 'logging.level', 'defaults.memories_location'). If not provided, returns entire config."
-    ),
-});
+// Re-export type for backward compatibility
+export type { ConfigGetArgs };
 
-export type ConfigGetArgs = z.infer<typeof ConfigGetArgsSchema>;
+/**
+ * ConfigGetArgsSchema provides Zod-compatible interface.
+ * Uses AJV validation under the hood for 5-18x better performance.
+ */
+export const ConfigGetArgsSchema = {
+  parse: _parseConfigGetArgs,
+};
 
 export const configGetToolDefinition: Tool = {
   name: "config_get",
@@ -47,35 +62,23 @@ Config structure:
 - logging.level: Log verbosity (trace, debug, info, warn, error)
 - watcher.enabled: Enable config file watching
 - watcher.debounce_ms: Debounce delay for file watching`,
-  inputSchema: {
-    type: "object" as const,
-    properties: {
-      key: {
-        type: "string",
-        description:
-          "Specific config key to retrieve. If not provided, returns entire config.",
-      },
-    },
-    required: [],
-  },
+  inputSchema: configGetSchema as Tool["inputSchema"],
 };
 
 // ============================================================================
-// config_set
+// config_set (migrated to AJV)
 // ============================================================================
 
-export const ConfigSetArgsSchema = z.object({
-  key: z
-    .string()
-    .describe(
-      "Config key to set (e.g., 'logging.level', 'sync.delay_ms'). Use dot notation for nested keys."
-    ),
-  value: z
-    .union([z.string(), z.number(), z.boolean()])
-    .describe("Value to set. Type must match the expected type for the key."),
-});
+// Re-export type for backward compatibility
+export type { ConfigSetArgs };
 
-export type ConfigSetArgs = z.infer<typeof ConfigSetArgsSchema>;
+/**
+ * ConfigSetArgsSchema provides Zod-compatible interface.
+ * Uses AJV validation under the hood for 5-18x better performance.
+ */
+export const ConfigSetArgsSchema = {
+  parse: _parseConfigSetArgs,
+};
 
 export const configSetToolDefinition: Tool = {
   name: "config_set",
@@ -98,42 +101,23 @@ Examples:
 - Set log level: config_set with key="logging.level", value="debug"
 - Set sync delay: config_set with key="sync.delay_ms", value=1000
 - Disable watcher: config_set with key="watcher.enabled", value=false`,
-  inputSchema: {
-    type: "object" as const,
-    properties: {
-      key: {
-        type: "string",
-        description: "Config key to set using dot notation.",
-      },
-      value: {
-        oneOf: [
-          { type: "string" },
-          { type: "number" },
-          { type: "boolean" },
-        ],
-        description: "Value to set. Type must match expected type for the key.",
-      },
-    },
-    required: ["key", "value"],
-  },
+  inputSchema: configSetSchema as Tool["inputSchema"],
 };
 
 // ============================================================================
-// config_reset
+// config_reset (migrated to AJV)
 // ============================================================================
 
-export const ConfigResetArgsSchema = z.object({
-  key: z
-    .string()
-    .optional()
-    .describe("Specific config key to reset to default. If not provided with all=true, resets entire config."),
-  all: z
-    .boolean()
-    .optional()
-    .describe("Reset entire configuration to defaults. Requires explicit confirmation."),
-});
+// Re-export type for backward compatibility
+export type { ConfigResetArgs };
 
-export type ConfigResetArgs = z.infer<typeof ConfigResetArgsSchema>;
+/**
+ * ConfigResetArgsSchema provides Zod-compatible interface.
+ * Uses AJV validation under the hood for 5-18x better performance.
+ */
+export const ConfigResetArgsSchema = {
+  parse: _parseConfigResetArgs,
+};
 
 export const configResetToolDefinition: Tool = {
   name: "config_reset",
@@ -153,24 +137,11 @@ Examples:
 - Reset log level: config_reset with key="logging.level"
 - Reset all sync settings: config_reset with key="sync"
 - Reset entire config: config_reset with all=true`,
-  inputSchema: {
-    type: "object" as const,
-    properties: {
-      key: {
-        type: "string",
-        description: "Specific config key to reset to default.",
-      },
-      all: {
-        type: "boolean",
-        description: "Reset entire configuration to defaults.",
-      },
-    },
-    required: [],
-  },
+  inputSchema: configResetSchema as Tool["inputSchema"],
 };
 
 // ============================================================================
-// config_rollback
+// config_rollback (still using Zod - pending migration)
 // ============================================================================
 
 export const ConfigRollbackArgsSchema = z.object({
@@ -215,7 +186,7 @@ Examples:
 };
 
 // ============================================================================
-// config_update_project
+// config_update_project (still using Zod - pending migration)
 // ============================================================================
 
 export const ConfigUpdateProjectArgsSchema = z.object({
@@ -298,7 +269,7 @@ Examples:
 };
 
 // ============================================================================
-// config_update_global
+// config_update_global (still using Zod - pending migration)
 // ============================================================================
 
 export const ConfigUpdateGlobalArgsSchema = z.object({

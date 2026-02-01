@@ -1,21 +1,29 @@
 /**
  * Schema for active_project tool
+ *
+ * Migrated from Zod to JSON Schema + AJV per ADR-022.
+ * JSON Schema source: packages/validation/schemas/tools/projects/active-project.schema.json
  */
-import { z } from "zod";
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
+import {
+  validateActiveProjectArgs,
+  parseActiveProjectArgs,
+  type ActiveProjectArgs,
+} from "@brain/validation";
 
-export const ActiveProjectArgsSchema = z.object({
-  operation: z
-    .enum(["get", "set", "clear"])
-    .default("get")
-    .describe("Operation to perform: get (default), set, or clear"),
-  project: z
-    .string()
-    .optional()
-    .describe("Project name (required for set operation)"),
-});
+export { validateActiveProjectArgs, parseActiveProjectArgs, type ActiveProjectArgs };
 
-export type ActiveProjectArgs = z.infer<typeof ActiveProjectArgsSchema>;
+// Re-export for backward compatibility
+export const ActiveProjectArgsSchema = {
+  parse: parseActiveProjectArgs,
+  safeParse: (data: unknown) => {
+    try {
+      return { success: true as const, data: parseActiveProjectArgs(data) };
+    } catch (error) {
+      return { success: false as const, error };
+    }
+  },
+};
 
 export const toolDefinition: Tool = {
   name: "active_project",

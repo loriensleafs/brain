@@ -5,8 +5,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-	
-
 )
 
 // SkillExistsResult represents the outcome of a skill existence check.

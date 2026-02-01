@@ -257,10 +257,10 @@ func TestFindFeatureArtifacts(t *testing.T) {
 
 	// Create artifacts
 	files := map[string]string{
-		filepath.Join(roadmapDir, "EPIC-001-auth.md"):        "# Epic",
-		filepath.Join(planningDir, "prd-auth.md"):           "# PRD",
-		filepath.Join(planningDir, "tasks-auth.md"):         "# Tasks",
-		filepath.Join(planningDir, "001-auth-plan.md"):      "# Plan",
+		filepath.Join(roadmapDir, "EPIC-001-auth.md"):  "# Epic",
+		filepath.Join(planningDir, "prd-auth.md"):      "# PRD",
+		filepath.Join(planningDir, "tasks-auth.md"):    "# Tasks",
+		filepath.Join(planningDir, "001-auth-plan.md"): "# Plan",
 	}
 	for path, content := range files {
 		if err := os.WriteFile(path, []byte(content), 0644); err != nil {
@@ -780,9 +780,9 @@ References: EPIC-001
 See [PRD](prd-auth.md) for requirements.
 `
 	files := map[string]string{
-		filepath.Join(roadmapDir, "EPIC-001-auth.md"): epicContent,
-		filepath.Join(planningDir, "prd-auth.md"):    prdContent,
-		filepath.Join(planningDir, "tasks-auth.md"):  tasksContent,
+		filepath.Join(roadmapDir, "EPIC-001-auth.md"):  epicContent,
+		filepath.Join(planningDir, "prd-auth.md"):      prdContent,
+		filepath.Join(planningDir, "tasks-auth.md"):    tasksContent,
 		filepath.Join(planningDir, "001-auth-plan.md"): planContent,
 	}
 	for path, content := range files {
@@ -860,9 +860,9 @@ func TestValidateConsistency_Checkpoint2(t *testing.T) {
 
 func TestValidateArtifactNaming(t *testing.T) {
 	tests := []struct {
-		path         string
-		expectValid  bool
-		expectType   string
+		path        string
+		expectValid bool
+		expectType  string
 	}{
 		{"EPIC-001-auth.md", true, "epic"},
 		{"ADR-001-database.md", true, "adr"},

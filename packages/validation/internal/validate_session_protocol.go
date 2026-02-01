@@ -1,17 +1,156 @@
 package internal
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
-	
+	"sync"
 
+	"github.com/santhosh-tekuri/jsonschema/v6"
 )
+
+// SessionProtocolConfig holds schema-driven configuration for session protocol validation.
+// This replaces hardcoded values with schema-defined patterns.
+type SessionProtocolConfig struct {
+	FilenamePattern             string   `json:"filenamePattern"`
+	RequiredSections            []string `json:"requiredSections"`
+	BrainInitializationPatterns []string `json:"brainInitializationPatterns"`
+	BrainUpdatePatterns         []string `json:"brainUpdatePatterns"`
+	BranchPatterns              []string `json:"branchPatterns"`
+	BranchPlaceholders          []string `json:"branchPlaceholders"`
+	CommitSHAPatterns           []string `json:"commitShaPatterns"`
+	LintEvidencePatterns        []string `json:"lintEvidencePatterns"`
+}
+
+// DefaultSessionProtocolConfig returns the default configuration values.
+// These match the schema defaults in session-protocol.schema.json.
+var DefaultSessionProtocolConfig = SessionProtocolConfig{
+	FilenamePattern: `^\d{4}-\d{2}-\d{2}-session-\d+\.md$`,
+	RequiredSections: []string{
+		"Session Info",
+		"Protocol Compliance",
+		"Session Start",
+		"Session End",
+	},
+	BrainInitializationPatterns: []string{
+		"mcp__plugin_brain_brain__build_context",
+		"mcp__plugin_brain_brain__bootstrap_context",
+		"brain__build_context",
+		"brain__bootstrap_context",
+		"Brain MCP initialized",
+		"Initialize Brain",
+	},
+	BrainUpdatePatterns: []string{
+		"mcp__plugin_brain_brain__write_note",
+		"mcp__plugin_brain_brain__edit_note",
+		"brain__write_note",
+		"brain__edit_note",
+		"Note write confirmed",
+		"note write confirmed",
+		"Brain note updated",
+		"Update Brain note",
+	},
+	BranchPatterns: []string{
+		"**Branch**:",
+		"Branch:",
+		"Current Branch:",
+		"- Branch:",
+	},
+	BranchPlaceholders: []string{
+		"[branch name]",
+		"[branch name - REQUIRED]",
+	},
+	CommitSHAPatterns: []string{
+		`Commit SHA:\s*[a-f0-9]{7,40}`,
+		"`[a-f0-9]{7,40}`\\s*-\\s*",
+		`SHA:\s*[a-f0-9]{7,40}`,
+	},
+	LintEvidencePatterns: []string{
+		"markdownlint",
+		"Lint output",
+		"lint output",
+		"Lint Output",
+		"npx markdownlint-cli2",
+	},
+}
+
+var (
+	sessionProtocolSchemaOnce     sync.Once
+	sessionProtocolSchemaCompiled *jsonschema.Schema
+	sessionProtocolSchemaErr      error
+	sessionProtocolSchemaData     []byte
+)
+
+// SetSessionProtocolSchemaData sets the schema data for session protocol validation.
+// This must be called before any schema-based validation functions are used.
+// The data is typically embedded by the parent package.
+func SetSessionProtocolSchemaData(data []byte) {
+	sessionProtocolSchemaData = data
+}
+
+// getSessionProtocolSchema returns the compiled session protocol schema, loading it once.
+func getSessionProtocolSchema() (*jsonschema.Schema, error) {
+	sessionProtocolSchemaOnce.Do(func() {
+		if sessionProtocolSchemaData == nil {
+			sessionProtocolSchemaErr = fmt.Errorf("session protocol schema data not set; call SetSessionProtocolSchemaData first")
+			return
+		}
+
+		var schemaDoc any
+		if err := json.Unmarshal(sessionProtocolSchemaData, &schemaDoc); err != nil {
+			sessionProtocolSchemaErr = fmt.Errorf("failed to parse session protocol schema: %w", err)
+			return
+		}
+
+		c := jsonschema.NewCompiler()
+		if err := c.AddResource("session-protocol.schema.json", schemaDoc); err != nil {
+			sessionProtocolSchemaErr = fmt.Errorf("failed to add session protocol schema resource: %w", err)
+			return
+		}
+
+		sessionProtocolSchemaCompiled, sessionProtocolSchemaErr = c.Compile("session-protocol.schema.json")
+	})
+	return sessionProtocolSchemaCompiled, sessionProtocolSchemaErr
+}
+
+// ValidateSessionProtocolConfig validates configuration data against the session protocol schema.
+// Returns true if valid, false otherwise.
+func ValidateSessionProtocolConfigInput(data any) bool {
+	schema, err := getSessionProtocolSchema()
+	if err != nil {
+		return false
+	}
+
+	err = schema.Validate(data)
+	return err == nil
+}
+
+// GetSessionProtocolConfigErrors returns structured validation errors for configuration data.
+// Returns empty slice if valid.
+func GetSessionProtocolConfigErrors(data any) []ValidationError {
+	schema, err := getSessionProtocolSchema()
+	if err != nil {
+		return []ValidationError{{
+			Field:      "",
+			Constraint: "schema",
+			Message:    err.Error(),
+		}}
+	}
+
+	err = schema.Validate(data)
+	if err == nil {
+		return []ValidationError{}
+	}
+
+	return ExtractValidationErrors(err)
+}
 
 // ValidateSessionProtocol performs comprehensive session protocol validation.
 // It validates both session log completeness and protocol compliance per SESSION-PROTOCOL.md.
+// Uses schema-driven configuration from DefaultSessionProtocolConfig.
 //
 // Checks performed:
 // - File exists and has correct naming pattern
@@ -22,6 +161,11 @@ import (
 // - Git branch documented
 // - All required sections present
 func ValidateSessionProtocol(sessionLogPath string) SessionProtocolValidationResult {
+	return ValidateSessionProtocolWithConfig(sessionLogPath, DefaultSessionProtocolConfig)
+}
+
+// ValidateSessionProtocolWithConfig performs session protocol validation using the provided configuration.
+func ValidateSessionProtocolWithConfig(sessionLogPath string, config SessionProtocolConfig) SessionProtocolValidationResult {
 	var checks []Check
 	allPassed := true
 
@@ -51,9 +195,9 @@ func ValidateSessionProtocol(sessionLogPath string) SessionProtocolValidationRes
 		Message: "Session log file exists",
 	})
 
-	// Check 2: Filename format
+	// Check 2: Filename format (using schema-defined pattern)
 	filename := filepath.Base(sessionLogPath)
-	filenamePattern := regexp.MustCompile(`^\d{4}-\d{2}-\d{2}-session-\d+\.md$`)
+	filenamePattern := regexp.MustCompile(config.FilenamePattern)
 	if filenamePattern.MatchString(filename) {
 		checks = append(checks, Check{
 			Name:    "filename_format",
@@ -88,15 +232,8 @@ func ValidateSessionProtocol(sessionLogPath string) SessionProtocolValidationRes
 
 	contentStr := string(content)
 
-	// Check 3: Required sections present
-	requiredSections := []string{
-		"Session Info",
-		"Protocol Compliance",
-		"Session Start",
-		"Session End",
-	}
-
-	for _, section := range requiredSections {
+	// Check 3: Required sections present (using schema-defined sections)
+	for _, section := range config.RequiredSections {
 		sectionKey := "section_" + strings.ToLower(strings.ReplaceAll(section, " ", "_"))
 		if containsSection(contentStr, section) {
 			checks = append(checks, Check{
@@ -127,8 +264,8 @@ func ValidateSessionProtocol(sessionLogPath string) SessionProtocolValidationRes
 			})
 		} else {
 			checks = append(checks, Check{
-				Name:    "start_must_items",
-				Passed:  false,
+				Name:   "start_must_items",
+				Passed: false,
 				Message: fmt.Sprintf("Session Start: %d/%d MUST items completed. Missing: %s",
 					startChecklist.CompletedMustItems, startChecklist.TotalMustItems,
 					strings.Join(startChecklist.MissingMustItems, ", ")),
@@ -150,8 +287,8 @@ func ValidateSessionProtocol(sessionLogPath string) SessionProtocolValidationRes
 			})
 		} else {
 			checks = append(checks, Check{
-				Name:    "end_must_items",
-				Passed:  false,
+				Name:   "end_must_items",
+				Passed: false,
 				Message: fmt.Sprintf("Session End: %d/%d MUST items completed. Missing: %s",
 					endChecklist.CompletedMustItems, endChecklist.TotalMustItems,
 					strings.Join(endChecklist.MissingMustItems, ", ")),
@@ -160,8 +297,8 @@ func ValidateSessionProtocol(sessionLogPath string) SessionProtocolValidationRes
 		}
 	}
 
-	// Check 6: Brain MCP initialization evidence
-	brainInitialized := CheckBrainInitialization(contentStr)
+	// Check 6: Brain MCP initialization evidence (using schema-defined patterns)
+	brainInitialized := CheckBrainInitializationWithConfig(contentStr, config)
 	result.BrainInitialized = brainInitialized
 
 	if brainInitialized {
@@ -179,8 +316,8 @@ func ValidateSessionProtocol(sessionLogPath string) SessionProtocolValidationRes
 		allPassed = false
 	}
 
-	// Check 7: Brain note update evidence
-	brainUpdated := CheckBrainUpdate(contentStr)
+	// Check 7: Brain note update evidence (using schema-defined patterns)
+	brainUpdated := CheckBrainUpdateWithConfig(contentStr, config)
 	result.BrainUpdated = brainUpdated
 
 	if brainUpdated {
@@ -199,8 +336,8 @@ func ValidateSessionProtocol(sessionLogPath string) SessionProtocolValidationRes
 		allPassed = false
 	}
 
-	// Check 8: Git branch documented
-	branchDocumented := CheckBranchDocumented(contentStr)
+	// Check 8: Git branch documented (using schema-defined patterns)
+	branchDocumented := CheckBranchDocumentedWithConfig(contentStr, config)
 	if branchDocumented {
 		checks = append(checks, Check{
 			Name:    "branch_documented",
@@ -216,8 +353,8 @@ func ValidateSessionProtocol(sessionLogPath string) SessionProtocolValidationRes
 		allPassed = false
 	}
 
-	// Check 9: Commit SHA evidence (for Session End)
-	commitEvidence := CheckCommitEvidence(contentStr)
+	// Check 9: Commit SHA evidence (using schema-defined patterns)
+	commitEvidence := CheckCommitEvidenceWithConfig(contentStr, config)
 	if commitEvidence {
 		checks = append(checks, Check{
 			Name:    "commit_evidence",
@@ -233,8 +370,8 @@ func ValidateSessionProtocol(sessionLogPath string) SessionProtocolValidationRes
 		allPassed = false
 	}
 
-	// Check 10: Markdown lint evidence
-	lintEvidence := CheckLintEvidence(contentStr)
+	// Check 10: Markdown lint evidence (using schema-defined patterns)
+	lintEvidence := CheckLintEvidenceWithConfig(contentStr, config)
 	if lintEvidence {
 		checks = append(checks, Check{
 			Name:    "lint_evidence",
@@ -376,18 +513,15 @@ func ExtractSection(content, sectionName string) string {
 }
 
 // CheckBrainInitialization checks for Brain MCP initialization evidence.
+// Uses schema-driven patterns from DefaultSessionProtocolConfig.
 func CheckBrainInitialization(content string) bool {
-	patterns := []string{
-		"mcp__plugin_brain_brain__build_context",
-		"mcp__plugin_brain_brain__bootstrap_context",
-		"brain__build_context",
-		"brain__bootstrap_context",
-		"Brain MCP initialized",
-		"Initialize Brain",
-	}
+	return CheckBrainInitializationWithConfig(content, DefaultSessionProtocolConfig)
+}
 
+// CheckBrainInitializationWithConfig checks for Brain MCP initialization evidence using the provided configuration.
+func CheckBrainInitializationWithConfig(content string, config SessionProtocolConfig) bool {
 	contentLower := strings.ToLower(content)
-	for _, pattern := range patterns {
+	for _, pattern := range config.BrainInitializationPatterns {
 		if strings.Contains(contentLower, strings.ToLower(pattern)) {
 			return true
 		}
@@ -396,20 +530,15 @@ func CheckBrainInitialization(content string) bool {
 }
 
 // CheckBrainUpdate checks for Brain note update evidence.
+// Uses schema-driven patterns from DefaultSessionProtocolConfig.
 func CheckBrainUpdate(content string) bool {
-	patterns := []string{
-		"mcp__plugin_brain_brain__write_note",
-		"mcp__plugin_brain_brain__edit_note",
-		"brain__write_note",
-		"brain__edit_note",
-		"Note write confirmed",
-		"note write confirmed",
-		"Brain note updated",
-		"Update Brain note",
-	}
+	return CheckBrainUpdateWithConfig(content, DefaultSessionProtocolConfig)
+}
 
+// CheckBrainUpdateWithConfig checks for Brain note update evidence using the provided configuration.
+func CheckBrainUpdateWithConfig(content string, config SessionProtocolConfig) bool {
 	contentLower := strings.ToLower(content)
-	for _, pattern := range patterns {
+	for _, pattern := range config.BrainUpdatePatterns {
 		if strings.Contains(contentLower, strings.ToLower(pattern)) {
 			return true
 		}
@@ -418,15 +547,14 @@ func CheckBrainUpdate(content string) bool {
 }
 
 // CheckBranchDocumented checks if git branch is documented.
+// Uses schema-driven patterns from DefaultSessionProtocolConfig.
 func CheckBranchDocumented(content string) bool {
-	patterns := []string{
-		"**Branch**:",
-		"Branch:",
-		"Current Branch:",
-		"- Branch:",
-	}
+	return CheckBranchDocumentedWithConfig(content, DefaultSessionProtocolConfig)
+}
 
-	for _, pattern := range patterns {
+// CheckBranchDocumentedWithConfig checks if git branch is documented using the provided configuration.
+func CheckBranchDocumentedWithConfig(content string, config SessionProtocolConfig) bool {
+	for _, pattern := range config.BranchPatterns {
 		if strings.Contains(content, pattern) {
 			// Verify there's actual content after the pattern (not just placeholder)
 			idx := strings.Index(content, pattern)
@@ -438,9 +566,18 @@ func CheckBranchDocumented(content string) bool {
 					endIdx = len(afterPattern)
 				}
 				value := strings.TrimSpace(afterPattern[:endIdx])
-				// Check it's not a placeholder
-				if value != "" && value != "[branch name]" && value != "[branch name - REQUIRED]" {
-					return true
+				// Check it's not a placeholder (using schema-defined placeholders)
+				if value != "" {
+					isPlaceholder := false
+					for _, placeholder := range config.BranchPlaceholders {
+						if value == placeholder {
+							isPlaceholder = true
+							break
+						}
+					}
+					if !isPlaceholder {
+						return true
+					}
 				}
 			}
 		}
@@ -449,15 +586,16 @@ func CheckBranchDocumented(content string) bool {
 }
 
 // CheckCommitEvidence checks for commit SHA evidence.
+// Uses schema-driven patterns from DefaultSessionProtocolConfig.
 func CheckCommitEvidence(content string) bool {
-	// Look for commit SHA patterns
-	patterns := []regexp.Regexp{
-		*regexp.MustCompile(`Commit SHA:\s*[a-f0-9]{7,40}`),
-		*regexp.MustCompile(`\x60[a-f0-9]{7,40}\x60\s*-\s*`), // `SHA` - message format
-		*regexp.MustCompile(`SHA:\s*[a-f0-9]{7,40}`),
-	}
+	return CheckCommitEvidenceWithConfig(content, DefaultSessionProtocolConfig)
+}
 
-	for _, pattern := range patterns {
+// CheckCommitEvidenceWithConfig checks for commit SHA evidence using the provided configuration.
+func CheckCommitEvidenceWithConfig(content string, config SessionProtocolConfig) bool {
+	// Look for commit SHA patterns (using schema-defined patterns)
+	for _, patternStr := range config.CommitSHAPatterns {
+		pattern := regexp.MustCompile(patternStr)
 		if pattern.MatchString(content) {
 			return true
 		}
@@ -466,17 +604,15 @@ func CheckCommitEvidence(content string) bool {
 }
 
 // CheckLintEvidence checks for markdown lint evidence.
+// Uses schema-driven patterns from DefaultSessionProtocolConfig.
 func CheckLintEvidence(content string) bool {
-	patterns := []string{
-		"markdownlint",
-		"Lint output",
-		"lint output",
-		"Lint Output",
-		"npx markdownlint-cli2",
-	}
+	return CheckLintEvidenceWithConfig(content, DefaultSessionProtocolConfig)
+}
 
+// CheckLintEvidenceWithConfig checks for markdown lint evidence using the provided configuration.
+func CheckLintEvidenceWithConfig(content string, config SessionProtocolConfig) bool {
 	contentLower := strings.ToLower(content)
-	for _, pattern := range patterns {
+	for _, pattern := range config.LintEvidencePatterns {
 		if strings.Contains(contentLower, strings.ToLower(pattern)) {
 			return true
 		}
@@ -511,7 +647,13 @@ func buildRemediation(checks []Check) string {
 
 // ValidateSessionProtocolFromContent validates session protocol from content string.
 // Useful for testing or when content is already loaded.
+// Uses schema-driven configuration from DefaultSessionProtocolConfig.
 func ValidateSessionProtocolFromContent(content string, sessionLogPath string) SessionProtocolValidationResult {
+	return ValidateSessionProtocolFromContentWithConfig(content, sessionLogPath, DefaultSessionProtocolConfig)
+}
+
+// ValidateSessionProtocolFromContentWithConfig validates session protocol from content using the provided configuration.
+func ValidateSessionProtocolFromContentWithConfig(content string, sessionLogPath string, config SessionProtocolConfig) SessionProtocolValidationResult {
 	var checks []Check
 	allPassed := true
 
@@ -519,10 +661,10 @@ func ValidateSessionProtocolFromContent(content string, sessionLogPath string) S
 		SessionLogPath: sessionLogPath,
 	}
 
-	// Check 1: Filename format (if path provided)
+	// Check 1: Filename format (if path provided) - using schema-defined pattern
 	if sessionLogPath != "" {
 		filename := filepath.Base(sessionLogPath)
-		filenamePattern := regexp.MustCompile(`^\d{4}-\d{2}-\d{2}-session-\d+\.md$`)
+		filenamePattern := regexp.MustCompile(config.FilenamePattern)
 		if filenamePattern.MatchString(filename) {
 			checks = append(checks, Check{
 				Name:    "filename_format",
@@ -539,15 +681,8 @@ func ValidateSessionProtocolFromContent(content string, sessionLogPath string) S
 		}
 	}
 
-	// Check 2: Required sections present
-	requiredSections := []string{
-		"Session Info",
-		"Protocol Compliance",
-		"Session Start",
-		"Session End",
-	}
-
-	for _, section := range requiredSections {
+	// Check 2: Required sections present (using schema-defined sections)
+	for _, section := range config.RequiredSections {
 		sectionKey := "section_" + strings.ToLower(strings.ReplaceAll(section, " ", "_"))
 		if containsSection(content, section) {
 			checks = append(checks, Check{
@@ -578,8 +713,8 @@ func ValidateSessionProtocolFromContent(content string, sessionLogPath string) S
 			})
 		} else {
 			checks = append(checks, Check{
-				Name:    "start_must_items",
-				Passed:  false,
+				Name:   "start_must_items",
+				Passed: false,
 				Message: fmt.Sprintf("Session Start: %d/%d MUST items completed",
 					startChecklist.CompletedMustItems, startChecklist.TotalMustItems),
 			})
@@ -600,8 +735,8 @@ func ValidateSessionProtocolFromContent(content string, sessionLogPath string) S
 			})
 		} else {
 			checks = append(checks, Check{
-				Name:    "end_must_items",
-				Passed:  false,
+				Name:   "end_must_items",
+				Passed: false,
 				Message: fmt.Sprintf("Session End: %d/%d MUST items completed",
 					endChecklist.CompletedMustItems, endChecklist.TotalMustItems),
 			})
@@ -609,8 +744,8 @@ func ValidateSessionProtocolFromContent(content string, sessionLogPath string) S
 		}
 	}
 
-	// Check 5: Brain MCP initialization evidence
-	brainInitialized := CheckBrainInitialization(content)
+	// Check 5: Brain MCP initialization evidence (using schema-defined patterns)
+	brainInitialized := CheckBrainInitializationWithConfig(content, config)
 	result.BrainInitialized = brainInitialized
 
 	if brainInitialized {
@@ -628,8 +763,8 @@ func ValidateSessionProtocolFromContent(content string, sessionLogPath string) S
 		allPassed = false
 	}
 
-	// Check 6: Brain note update evidence
-	brainUpdated := CheckBrainUpdate(content)
+	// Check 6: Brain note update evidence (using schema-defined patterns)
+	brainUpdated := CheckBrainUpdateWithConfig(content, config)
 	result.BrainUpdated = brainUpdated
 
 	if brainUpdated {
@@ -647,8 +782,8 @@ func ValidateSessionProtocolFromContent(content string, sessionLogPath string) S
 		allPassed = false
 	}
 
-	// Check 7: Git branch documented
-	branchDocumented := CheckBranchDocumented(content)
+	// Check 7: Git branch documented (using schema-defined patterns)
+	branchDocumented := CheckBranchDocumentedWithConfig(content, config)
 	if branchDocumented {
 		checks = append(checks, Check{
 			Name:    "branch_documented",
@@ -664,8 +799,8 @@ func ValidateSessionProtocolFromContent(content string, sessionLogPath string) S
 		allPassed = false
 	}
 
-	// Check 8: Commit SHA evidence
-	commitEvidence := CheckCommitEvidence(content)
+	// Check 8: Commit SHA evidence (using schema-defined patterns)
+	commitEvidence := CheckCommitEvidenceWithConfig(content, config)
 	if commitEvidence {
 		checks = append(checks, Check{
 			Name:    "commit_evidence",
@@ -681,8 +816,8 @@ func ValidateSessionProtocolFromContent(content string, sessionLogPath string) S
 		allPassed = false
 	}
 
-	// Check 9: Markdown lint evidence
-	lintEvidence := CheckLintEvidence(content)
+	// Check 9: Markdown lint evidence (using schema-defined patterns)
+	lintEvidence := CheckLintEvidenceWithConfig(content, config)
 	if lintEvidence {
 		checks = append(checks, Check{
 			Name:    "lint_evidence",

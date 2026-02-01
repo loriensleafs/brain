@@ -2,8 +2,6 @@ package internal
 
 import (
 	"strings"
-
-	
 )
 
 // ScenarioConfig holds configuration for a scenario

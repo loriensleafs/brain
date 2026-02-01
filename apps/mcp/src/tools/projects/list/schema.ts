@@ -1,12 +1,29 @@
 /**
  * Schema for list_projects tool
+ *
+ * Migrated from Zod to JSON Schema + AJV per ADR-022.
+ * JSON Schema source: packages/validation/schemas/tools/projects/list-projects.schema.json
  */
-import { z } from "zod";
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
+import {
+  validateListProjectsArgs,
+  parseListProjectsArgs,
+  type ListProjectsArgs,
+} from "@brain/validation";
 
-export const ListProjectsArgsSchema = z.object({});
+export { validateListProjectsArgs, parseListProjectsArgs, type ListProjectsArgs };
 
-export type ListProjectsArgs = z.infer<typeof ListProjectsArgsSchema>;
+// Re-export for backward compatibility
+export const ListProjectsArgsSchema = {
+  parse: parseListProjectsArgs,
+  safeParse: (data: unknown) => {
+    try {
+      return { success: true as const, data: parseListProjectsArgs(data) };
+    } catch (error) {
+      return { success: false as const, error };
+    }
+  },
+};
 
 export const toolDefinition: Tool = {
   name: "list_projects",

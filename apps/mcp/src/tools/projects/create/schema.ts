@@ -5,9 +5,18 @@
  * - 'DEFAULT': ${default_memories_location}/${project_name} (from brain config)
  * - 'CODE': ${code_path}/docs
  * - Custom absolute path
+ *
+ * Migrated from Zod to JSON Schema + AJV per ADR-022.
+ * JSON Schema source: packages/validation/schemas/tools/projects/create-project.schema.json
  */
-import { z } from "zod";
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
+import {
+  validateCreateProjectArgs,
+  parseCreateProjectArgs,
+  type CreateProjectArgs,
+} from "@brain/validation";
+
+export { validateCreateProjectArgs, parseCreateProjectArgs, type CreateProjectArgs };
 
 /**
  * Memories path options:
@@ -17,20 +26,17 @@ import type { Tool } from "@modelcontextprotocol/sdk/types.js";
  */
 export type MemoriesPathOption = "DEFAULT" | "CODE" | string;
 
-export const CreateProjectArgsSchema = z.object({
-  name: z.string().describe("Project name to create"),
-  code_path: z
-    .string()
-    .describe("Code directory path (use ~ for home). Required."),
-  memories_path: z
-    .string()
-    .optional()
-    .describe(
-      "Memories directory path. Options: 'DEFAULT' (${default_memories_location}/${name}), 'CODE' (${code_path}/docs), or absolute path. Defaults to 'DEFAULT'."
-    ),
-});
-
-export type CreateProjectArgs = z.infer<typeof CreateProjectArgsSchema>;
+// Re-export for backward compatibility
+export const CreateProjectArgsSchema = {
+  parse: parseCreateProjectArgs,
+  safeParse: (data: unknown) => {
+    try {
+      return { success: true as const, data: parseCreateProjectArgs(data) };
+    } catch (error) {
+      return { success: false as const, error };
+    }
+  },
+};
 
 export const toolDefinition: Tool = {
   name: "create_project",

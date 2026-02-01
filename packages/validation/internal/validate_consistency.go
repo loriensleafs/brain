@@ -5,8 +5,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-
-	
 )
 
 // NamingPatterns defines the regex patterns for artifact naming conventions.
@@ -28,15 +26,15 @@ var NamingPatterns = map[string]*regexp.Regexp{
 // ConsistencyValidationResult extends ValidationResult with consistency-specific fields.
 type ConsistencyValidationResult struct {
 	ValidationResult
-	BasePath             string                     `json:"basePath,omitempty"`
-	Feature              string                     `json:"feature,omitempty"`
-	Checkpoint           int                        `json:"checkpoint"`
-	Artifacts            FeatureArtifacts           `json:"artifacts"`
-	ScopeAlignment       ScopeAlignmentResult       `json:"scopeAlignment"`
-	RequirementCoverage  RequirementCoverageResult  `json:"requirementCoverage"`
-	NamingConventions    NamingConventionsResult    `json:"namingConventions"`
-	CrossReferences      CrossReferencesResult      `json:"crossReferences"`
-	TaskCompletion       TaskCompletionResult       `json:"taskCompletion"`
+	BasePath            string                    `json:"basePath,omitempty"`
+	Feature             string                    `json:"feature,omitempty"`
+	Checkpoint          int                       `json:"checkpoint"`
+	Artifacts           FeatureArtifacts          `json:"artifacts"`
+	ScopeAlignment      ScopeAlignmentResult      `json:"scopeAlignment"`
+	RequirementCoverage RequirementCoverageResult `json:"requirementCoverage"`
+	NamingConventions   NamingConventionsResult   `json:"namingConventions"`
+	CrossReferences     CrossReferencesResult     `json:"crossReferences"`
+	TaskCompletion      TaskCompletionResult      `json:"taskCompletion"`
 }
 
 // FeatureArtifacts represents artifacts found for a feature.
@@ -451,9 +449,9 @@ func ValidateNamingConventions(artifacts FeatureArtifacts) NamingConventionsResu
 	}
 
 	checks := []struct {
-		Path     string
-		Type     string
-		Name     string
+		Path string
+		Type string
+		Name string
 	}{
 		{artifacts.Epic, "epic", "Epic"},
 		{artifacts.PRD, "prd", "PRD"},
@@ -975,4 +973,3 @@ func buildConsistencyRemediation(checks []Check) string {
 
 	return "Fix the following checks: " + strings.Join(unique, ", ") + ". See naming-conventions.md for requirements."
 }
-

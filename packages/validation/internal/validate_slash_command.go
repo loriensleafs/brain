@@ -1,13 +1,16 @@
 package internal
 
 import (
+	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
-	
+	"sync"
 
+	"github.com/santhosh-tekuri/jsonschema/v6"
 )
 
 // SlashCommandValidationResult extends ValidationResult with slash command-specific fields.
@@ -64,6 +67,78 @@ var allowedToolsPattern = regexp.MustCompile(`allowed-tools:\s*\[([^\]]+)\]`)
 
 // Pattern to detect MCP-scoped wildcards (valid).
 var mcpWildcardPattern = regexp.MustCompile(`^mcp__`)
+
+var (
+	slashCommandSchemaOnce     sync.Once
+	slashCommandSchemaCompiled *jsonschema.Schema
+	slashCommandSchemaErr      error
+	slashCommandSchemaData     []byte
+)
+
+// SetSlashCommandFrontmatterSchemaData sets the schema data for slash command frontmatter validation.
+// This must be called before any validation functions are used.
+// The data is typically embedded by the parent package.
+func SetSlashCommandFrontmatterSchemaData(data []byte) {
+	slashCommandSchemaData = data
+}
+
+// getSlashCommandFrontmatterSchema returns the compiled slash command frontmatter schema, loading it once.
+func getSlashCommandFrontmatterSchema() (*jsonschema.Schema, error) {
+	slashCommandSchemaOnce.Do(func() {
+		if slashCommandSchemaData == nil {
+			slashCommandSchemaErr = fmt.Errorf("slash command frontmatter schema data not set; call SetSlashCommandFrontmatterSchemaData first")
+			return
+		}
+
+		// Parse JSON schema into interface{}
+		var schemaDoc any
+		if err := json.Unmarshal(slashCommandSchemaData, &schemaDoc); err != nil {
+			slashCommandSchemaErr = fmt.Errorf("failed to parse slash command frontmatter schema: %w", err)
+			return
+		}
+
+		c := jsonschema.NewCompiler()
+		if err := c.AddResource("slash-command-frontmatter.schema.json", schemaDoc); err != nil {
+			slashCommandSchemaErr = fmt.Errorf("failed to add slash command frontmatter schema resource: %w", err)
+			return
+		}
+
+		slashCommandSchemaCompiled, slashCommandSchemaErr = c.Compile("slash-command-frontmatter.schema.json")
+	})
+	return slashCommandSchemaCompiled, slashCommandSchemaErr
+}
+
+// ValidateSlashCommandFrontmatter validates frontmatter data against the SlashCommandFrontmatter JSON Schema.
+// Returns true if valid, false otherwise.
+func ValidateSlashCommandFrontmatter(data any) bool {
+	schema, err := getSlashCommandFrontmatterSchema()
+	if err != nil {
+		return false
+	}
+
+	err = schema.Validate(data)
+	return err == nil
+}
+
+// GetSlashCommandFrontmatterErrors returns structured validation errors for frontmatter data.
+// Returns empty slice if valid.
+func GetSlashCommandFrontmatterErrors(data any) []ValidationError {
+	schema, err := getSlashCommandFrontmatterSchema()
+	if err != nil {
+		return []ValidationError{{
+			Field:      "",
+			Constraint: "schema",
+			Message:    err.Error(),
+		}}
+	}
+
+	err = schema.Validate(data)
+	if err == nil {
+		return []ValidationError{}
+	}
+
+	return ExtractValidationErrors(err)
+}
 
 // ValidateSlashCommand validates a slash command file for format and quality compliance.
 // filePath is the path to the slash command .md file to validate.
@@ -145,8 +220,31 @@ func ValidateSlashCommandFromContent(content, fileName string) SlashCommandValid
 			})
 		}
 
+		// Convert frontmatter to map for JSON Schema validation
+		frontmatterMap := map[string]any{}
+		if frontmatter.Description != "" {
+			frontmatterMap["description"] = frontmatter.Description
+		}
+		if frontmatter.ArgumentHint != "" {
+			frontmatterMap["argument-hint"] = frontmatter.ArgumentHint
+		}
+		if len(frontmatter.AllowedTools) > 0 {
+			frontmatterMap["allowed-tools"] = frontmatter.AllowedTools
+		}
+
+		// Validate using JSON Schema for basic structure
+		schemaErrors := GetSlashCommandFrontmatterErrors(frontmatterMap)
+		hasSchemaDescError := false
+		for _, err := range schemaErrors {
+			field := strings.TrimPrefix(err.Field, "/")
+			if field == "description" || strings.HasPrefix(field, "description") {
+				hasSchemaDescError = true
+				break
+			}
+		}
+
 		// Validate description field (required)
-		if frontmatter.Description == "" {
+		if frontmatter.Description == "" || hasSchemaDescError {
 			result.FieldValidation.DescriptionPresent = false
 			result.FieldValidation.DescriptionValid = false
 			result.FieldValidation.DescriptionError = "Missing 'description' in frontmatter"

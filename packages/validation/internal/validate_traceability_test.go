@@ -8,8 +8,6 @@ import (
 	"testing"
 
 	"github.com/peterkloss/brain/packages/validation/internal"
-	
-
 )
 
 // Helper function to create spec file with frontmatter
@@ -406,8 +404,8 @@ func TestTestTraceabilityRules_Rule5_StatusConsistency(t *testing.T) {
 	// Rule 5: Status consistency check
 	requirements := map[string]*internal.SpecFrontmatter{}
 	designs := map[string]*internal.SpecFrontmatter{
-		"DESIGN-001": {ID: "DESIGN-001", Status: "draft"},     // Not complete
-		"DESIGN-002": {ID: "DESIGN-002", Status: "complete"},  // Complete
+		"DESIGN-001": {ID: "DESIGN-001", Status: "draft"},    // Not complete
+		"DESIGN-002": {ID: "DESIGN-002", Status: "complete"}, // Complete
 	}
 	tasks := map[string]*internal.SpecFrontmatter{
 		"TASK-001": {ID: "TASK-001", Status: "complete", Related: []string{"DESIGN-001"}}, // Task complete, design not

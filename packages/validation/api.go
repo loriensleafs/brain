@@ -34,6 +34,18 @@ var brainConfigSchemaData []byte
 //go:embed schemas/domain/workflow.schema.json
 var workflowSchemaData []byte
 
+//go:embed schemas/domain/skill-frontmatter.schema.json
+var skillFrontmatterSchemaData []byte
+
+//go:embed schemas/domain/slash-command-frontmatter.schema.json
+var slashCommandFrontmatterSchemaData []byte
+
+//go:embed schemas/session/session-validation.schema.json
+var sessionValidationSchemaData []byte
+
+//go:embed schemas/session/session-protocol.schema.json
+var sessionProtocolSchemaData []byte
+
 func init() {
 	// Initialize internal package with schema data
 	internal.SetBootstrapSchemaData(bootstrapSchemaData)
@@ -44,6 +56,10 @@ func init() {
 	internal.SetListFeaturesByPrioritySchemaData(listFeaturesByPrioritySchemaData)
 	internal.SetBrainConfigSchemaData(brainConfigSchemaData)
 	internal.SetWorkflowSchemaData(workflowSchemaData)
+	internal.SetSkillFrontmatterSchemaData(skillFrontmatterSchemaData)
+	internal.SetSlashCommandFrontmatterSchemaData(slashCommandFrontmatterSchemaData)
+	internal.SetSessionValidationSchemaData(sessionValidationSchemaData)
+	internal.SetSessionProtocolSchemaData(sessionProtocolSchemaData)
 }
 
 // Re-export core types
@@ -86,6 +102,8 @@ type (
 	SlashCommandValidationResult  = internal.SlashCommandValidationResult
 	PrePRConfig                   = internal.PrePRConfig
 	QASkipResult                  = internal.QASkipResult
+	SessionValidationConfig       = internal.SessionValidationConfig
+	SessionProtocolConfig         = internal.SessionProtocolConfig
 )
 
 // Re-export detector types
@@ -150,6 +168,8 @@ var (
 	ActiveProjectArgsDefaults          = internal.ActiveProjectArgsDefaults
 	ListFeaturesByPriorityArgsDefaults = internal.ListFeaturesByPriorityArgsDefaults
 	BrainConfigDefaults                = internal.BrainConfigDefaults
+	DefaultSessionValidationConfig     = internal.DefaultSessionValidationConfig
+	DefaultSessionProtocolConfig       = internal.DefaultSessionProtocolConfig
 )
 
 // Re-export MemoriesMode constants
@@ -246,9 +266,9 @@ var (
 
 // Bootstrap validation functions
 var (
-	ValidateBootstrapContextArgs   = internal.ValidateBootstrapContextArgs
-	ParseBootstrapContextArgs      = internal.ParseBootstrapContextArgs
-	GetBootstrapContextArgsErrors  = internal.GetBootstrapContextArgsErrors
+	ValidateBootstrapContextArgs  = internal.ValidateBootstrapContextArgs
+	ParseBootstrapContextArgs     = internal.ParseBootstrapContextArgs
+	GetBootstrapContextArgsErrors = internal.GetBootstrapContextArgsErrors
 )
 
 // Search validation functions
@@ -291,6 +311,40 @@ var (
 	ValidateWorkflowState  = internal.ValidateWorkflowState
 	ParseWorkflowState     = internal.ParseWorkflowState
 	GetWorkflowStateErrors = internal.GetWorkflowStateErrors
+)
+
+// Skill frontmatter validation functions (schema-based)
+var (
+	ValidateSkillFrontmatter  = internal.ValidateSkillFrontmatter
+	GetSkillFrontmatterErrors = internal.GetSkillFrontmatterErrors
+)
+
+// Slash command frontmatter validation functions (schema-based)
+var (
+	ValidateSlashCommandFrontmatter  = internal.ValidateSlashCommandFrontmatter
+	GetSlashCommandFrontmatterErrors = internal.GetSlashCommandFrontmatterErrors
+)
+
+// Session validation functions (schema-based)
+var (
+	ValidateSessionValidationInput                   = internal.ValidateSessionValidationInput
+	GetSessionValidationErrors                       = internal.GetSessionValidationErrors
+	ValidateSessionProtocolWithConfig                = internal.ValidateSessionProtocolWithConfig
+	ValidateSessionProtocolFromContentWithConfig     = internal.ValidateSessionProtocolFromContentWithConfig
+	ValidateSessionProtocolConfigInput               = internal.ValidateSessionProtocolConfigInput
+	GetSessionProtocolConfigErrors                   = internal.GetSessionProtocolConfigErrors
+	ValidateMemoryEvidenceWithConfig                 = internal.ValidateMemoryEvidenceWithConfig
+	IsDocsOnlyWithConfig                             = internal.IsDocsOnlyWithConfig
+	CheckInvestigationOnlyEligibilityWithConfig      = internal.CheckInvestigationOnlyEligibilityWithConfig
+	GetImplementationFilesWithConfig                 = internal.GetImplementationFilesWithConfig
+	ValidateSessionLogPathWithConfig                 = internal.ValidateSessionLogPathWithConfig
+	ExtractStartingCommitWithConfig                  = internal.ExtractStartingCommitWithConfig
+	ValidateCommitSHAEvidenceWithConfig              = internal.ValidateCommitSHAEvidenceWithConfig
+	CheckBrainInitializationWithConfig               = internal.CheckBrainInitializationWithConfig
+	CheckBrainUpdateWithConfig                       = internal.CheckBrainUpdateWithConfig
+	CheckBranchDocumentedWithConfig                  = internal.CheckBranchDocumentedWithConfig
+	CheckCommitEvidenceWithConfig                    = internal.CheckCommitEvidenceWithConfig
+	CheckLintEvidenceWithConfig                      = internal.CheckLintEvidenceWithConfig
 )
 
 // Project resolution function

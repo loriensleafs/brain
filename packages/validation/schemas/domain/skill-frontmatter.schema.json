@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://brain.dev/schemas/domain/skill-frontmatter.json",
+  "title": "SkillFrontmatter",
+  "description": "Schema for skill file frontmatter validation. Validates the YAML frontmatter in .md skill files.",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]{1,64}$",
+      "minLength": 1,
+      "maxLength": 64,
+      "description": "Skill name: lowercase letters, numbers, and hyphens, 1-64 characters"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024,
+      "description": "Skill description, max 1024 characters"
+    }
+  },
+  "required": ["name", "description"],
+  "additionalProperties": true
+}

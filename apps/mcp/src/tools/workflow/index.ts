@@ -9,10 +9,10 @@ import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { getInngestDevServerUrl, isInngestAvailable } from "../../inngest/client";
 import { inngest } from "../../inngest/client";
 import { logger } from "../../utils/internal/logger";
-import type {
-  ListWorkflowsArgs,
-  SendWorkflowEventArgs,
-  GetWorkflowArgs,
+import {
+  ListWorkflowsArgsSchema,
+  SendWorkflowEventArgsSchema,
+  GetWorkflowArgsSchema,
 } from "./schema";
 
 // Re-export tool definitions
@@ -296,8 +296,10 @@ async function getWorkflow(runId: string): Promise<{
  * MCP handler for list_workflows.
  */
 export async function listWorkflowsHandler(
-  _args: ListWorkflowsArgs
+  rawArgs: Record<string, unknown>
 ): Promise<CallToolResult> {
+  // Validate input (empty object expected)
+  ListWorkflowsArgsSchema.parse(rawArgs);
   const result = await listWorkflows();
   return toCallToolResult(result, !result.success);
 }
@@ -306,8 +308,9 @@ export async function listWorkflowsHandler(
  * MCP handler for send_workflow_event.
  */
 export async function sendWorkflowEventHandler(
-  args: SendWorkflowEventArgs
+  rawArgs: Record<string, unknown>
 ): Promise<CallToolResult> {
+  const args = SendWorkflowEventArgsSchema.parse(rawArgs);
   const result = await sendWorkflowEvent(args.event_name, args.data);
   return toCallToolResult(result, !result.success);
 }
@@ -315,7 +318,10 @@ export async function sendWorkflowEventHandler(
 /**
  * MCP handler for get_workflow.
  */
-export async function getWorkflowHandler(args: GetWorkflowArgs): Promise<CallToolResult> {
+export async function getWorkflowHandler(
+  rawArgs: Record<string, unknown>
+): Promise<CallToolResult> {
+  const args = GetWorkflowArgsSchema.parse(rawArgs);
   const result = await getWorkflow(args.run_id);
   return toCallToolResult(result, !result.success);
 }

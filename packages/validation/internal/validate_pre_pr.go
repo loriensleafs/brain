@@ -2,35 +2,167 @@ package internal
 
 import (
 	"bufio"
+	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
-	
+	"sync"
 
+	"github.com/santhosh-tekuri/jsonschema/v6"
 )
 
 // PrePRConfig contains configuration for pre-PR validation.
 type PrePRConfig struct {
-	BasePath        string
-	QuickMode       bool
-	SkipTests       bool
-	SourceDirs      []string
-	TestDirs        []string
-	ConfigFiles     []string
-	EnvFiles        []string
+	BasePath    string   `json:"basePath"`
+	QuickMode   bool     `json:"quickMode"`
+	SkipTests   bool     `json:"skipTests"`
+	SourceDirs  []string `json:"sourceDirs"`
+	TestDirs    []string `json:"testDirs"`
+	ConfigFiles []string `json:"configFiles"`
+	EnvFiles    []string `json:"envFiles"`
+}
+
+// PrePRConfigDefaults contains default values for PrePRConfig.
+var PrePRConfigDefaults = struct {
+	QuickMode   bool
+	SkipTests   bool
+	SourceDirs  []string
+	TestDirs    []string
+	ConfigFiles []string
+	EnvFiles    []string
+}{
+	QuickMode:   false,
+	SkipTests:   false,
+	SourceDirs:  []string{"src", "lib", "cmd", "pkg", "internal", "scripts"},
+	TestDirs:    []string{"tests", "test", "__tests__"},
+	ConfigFiles: []string{".env.example", "README.md", "CLAUDE.md", ".agents"},
+	EnvFiles:    []string{".env", ".env.example", ".env.local", ".env.development"},
+}
+
+var (
+	prePRSchemaOnce     sync.Once
+	prePRSchemaCompiled *jsonschema.Schema
+	prePRSchemaErr      error
+	prePRSchemaData     []byte
+)
+
+// SetPrePRSchemaData sets the schema data for pre-PR config validation.
+// This must be called before any validation functions are used.
+// The data is typically embedded by the parent package.
+func SetPrePRSchemaData(data []byte) {
+	prePRSchemaData = data
+}
+
+// getPrePRSchema returns the compiled pre-PR config schema, loading it once.
+func getPrePRSchema() (*jsonschema.Schema, error) {
+	prePRSchemaOnce.Do(func() {
+		if prePRSchemaData == nil {
+			prePRSchemaErr = fmt.Errorf("pre-PR schema data not set; call SetPrePRSchemaData first")
+			return
+		}
+
+		var schemaDoc any
+		if err := json.Unmarshal(prePRSchemaData, &schemaDoc); err != nil {
+			prePRSchemaErr = fmt.Errorf("failed to parse pre-PR schema: %w", err)
+			return
+		}
+
+		c := jsonschema.NewCompiler()
+		if err := c.AddResource("pre-pr-config.schema.json", schemaDoc); err != nil {
+			prePRSchemaErr = fmt.Errorf("failed to add pre-PR schema resource: %w", err)
+			return
+		}
+
+		prePRSchemaCompiled, prePRSchemaErr = c.Compile("pre-pr-config.schema.json")
+	})
+	return prePRSchemaCompiled, prePRSchemaErr
+}
+
+// ValidatePrePRConfig validates data against the PrePRConfig JSON Schema.
+// Returns true if valid, false otherwise.
+func ValidatePrePRConfig(data any) bool {
+	schema, err := getPrePRSchema()
+	if err != nil {
+		return false
+	}
+	err = schema.Validate(data)
+	return err == nil
+}
+
+// ParsePrePRConfig validates and parses data into PrePRConfig with defaults applied.
+// Returns validated PrePRConfig or error with structured message.
+func ParsePrePRConfig(data any) (*PrePRConfig, error) {
+	schema, err := getPrePRSchema()
+	if err != nil {
+		return nil, fmt.Errorf("schema error: %w", err)
+	}
+
+	if err := schema.Validate(data); err != nil {
+		return nil, FormatSchemaError(err)
+	}
+
+	jsonBytes, err := json.Marshal(data)
+	if err != nil {
+		return nil, fmt.Errorf("marshal error: %w", err)
+	}
+
+	var config PrePRConfig
+	if err := json.Unmarshal(jsonBytes, &config); err != nil {
+		return nil, fmt.Errorf("unmarshal error: %w", err)
+	}
+
+	applyPrePRConfigDefaults(&config)
+	return &config, nil
+}
+
+// applyPrePRConfigDefaults applies default values to optional fields.
+func applyPrePRConfigDefaults(config *PrePRConfig) {
+	if len(config.SourceDirs) == 0 {
+		config.SourceDirs = PrePRConfigDefaults.SourceDirs
+	}
+	if len(config.TestDirs) == 0 {
+		config.TestDirs = PrePRConfigDefaults.TestDirs
+	}
+	if len(config.ConfigFiles) == 0 {
+		config.ConfigFiles = PrePRConfigDefaults.ConfigFiles
+	}
+	if len(config.EnvFiles) == 0 {
+		config.EnvFiles = PrePRConfigDefaults.EnvFiles
+	}
+}
+
+// GetPrePRConfigErrors returns structured validation errors for data.
+// Returns empty slice if valid.
+func GetPrePRConfigErrors(data any) []ValidationError {
+	schema, err := getPrePRSchema()
+	if err != nil {
+		return []ValidationError{{
+			Field:      "",
+			Constraint: "schema",
+			Message:    err.Error(),
+		}}
+	}
+
+	err = schema.Validate(data)
+	if err == nil {
+		return []ValidationError{}
+	}
+
+	return ExtractValidationErrors(err)
 }
 
 // DefaultPrePRConfig returns a default configuration for pre-PR validation.
 func DefaultPrePRConfig(basePath string) PrePRConfig {
 	return PrePRConfig{
 		BasePath:    basePath,
-		QuickMode:   false,
-		SkipTests:   false,
-		SourceDirs:  []string{"src", "lib", "cmd", "pkg", "internal", "scripts"},
-		TestDirs:    []string{"tests", "test", "__tests__"},
-		ConfigFiles: []string{".env.example", "README.md", "CLAUDE.md", ".agents"},
-		EnvFiles:    []string{".env", ".env.example", ".env.local", ".env.development"},
+		QuickMode:   PrePRConfigDefaults.QuickMode,
+		SkipTests:   PrePRConfigDefaults.SkipTests,
+		SourceDirs:  PrePRConfigDefaults.SourceDirs,
+		TestDirs:    PrePRConfigDefaults.TestDirs,
+		ConfigFiles: PrePRConfigDefaults.ConfigFiles,
+		EnvFiles:    PrePRConfigDefaults.EnvFiles,
 	}
 }
 
@@ -279,11 +411,11 @@ func ValidateFailSafeDesign(config PrePRConfig) FailSafeDesignResult {
 
 	// Patterns that indicate silent failures
 	silentFailurePatterns := []*regexp.Regexp{
-		regexp.MustCompile(`(?i)catch\s*\{\s*\}`),                    // Empty catch blocks
-		regexp.MustCompile(`(?i)catch\s*\([^)]*\)\s*\{\s*\}`),        // Empty catch blocks
-		regexp.MustCompile(`(?i)2>\s*/dev/null`),                     // Suppressed errors
-		regexp.MustCompile(`(?i)-ErrorAction\s+SilentlyContinue`),    // PowerShell silent
-		regexp.MustCompile(`(?i)On\s+Error\s+Resume\s+Next`),         // VB-style
+		regexp.MustCompile(`(?i)catch\s*\{\s*\}`),                 // Empty catch blocks
+		regexp.MustCompile(`(?i)catch\s*\([^)]*\)\s*\{\s*\}`),     // Empty catch blocks
+		regexp.MustCompile(`(?i)2>\s*/dev/null`),                  // Suppressed errors
+		regexp.MustCompile(`(?i)-ErrorAction\s+SilentlyContinue`), // PowerShell silent
+		regexp.MustCompile(`(?i)On\s+Error\s+Resume\s+Next`),      // VB-style
 	}
 
 	// Insecure default patterns

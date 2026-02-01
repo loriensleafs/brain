@@ -10,7 +10,7 @@
 
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { loadBrainConfig } from "../../config/brain-config";
-import type { ConfigGetArgs } from "./schema";
+import { ConfigGetArgsSchema, type ConfigGetArgs } from "./schema";
 
 export { configGetToolDefinition as toolDefinition, ConfigGetArgsSchema, type ConfigGetArgs } from "./schema";
 
@@ -38,15 +38,18 @@ function getNestedValue(obj: Record<string, unknown>, path: string): unknown {
 /**
  * Handler for config_get tool.
  *
- * @param args - Tool arguments
+ * @param args - Tool arguments (raw from MCP, will be validated)
  * @returns CallToolResult with config data or error
  */
-export async function handler(args: ConfigGetArgs): Promise<CallToolResult> {
+export async function handler(args: Record<string, unknown>): Promise<CallToolResult> {
   try {
+    // Validate and parse input using AJV
+    const parsed: ConfigGetArgs = ConfigGetArgsSchema.parse(args);
+
     const config = await loadBrainConfig();
 
     // If no key specified, return entire config
-    if (!args.key) {
+    if (!parsed.key) {
       return {
         content: [
           {
@@ -58,7 +61,7 @@ export async function handler(args: ConfigGetArgs): Promise<CallToolResult> {
     }
 
     // Get specific key using dot notation
-    const value = getNestedValue(config as unknown as Record<string, unknown>, args.key);
+    const value = getNestedValue(config as unknown as Record<string, unknown>, parsed.key);
 
     if (value === undefined) {
       return {
@@ -67,7 +70,7 @@ export async function handler(args: ConfigGetArgs): Promise<CallToolResult> {
             type: "text" as const,
             text: JSON.stringify(
               {
-                error: `Key not found: ${args.key}`,
+                error: `Key not found: ${parsed.key}`,
                 available_keys: [
                   "defaults.memories_location",
                   "defaults.memories_mode",
@@ -94,7 +97,7 @@ export async function handler(args: ConfigGetArgs): Promise<CallToolResult> {
           type: "text" as const,
           text: JSON.stringify(
             {
-              key: args.key,
+              key: parsed.key,
               value,
             },
             null,

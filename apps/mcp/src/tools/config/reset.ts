@@ -13,7 +13,7 @@ import { loadBrainConfig, saveBrainConfig } from "../../config/brain-config";
 import { syncConfigToBasicMemory } from "../../config/translation-layer";
 import { rollbackManager } from "../../config/rollback";
 import { DEFAULT_BRAIN_CONFIG, type BrainConfig } from "../../config/schema";
-import type { ConfigResetArgs } from "./schema";
+import { ConfigResetArgsSchema, type ConfigResetArgs } from "./schema";
 
 export { configResetToolDefinition as toolDefinition, ConfigResetArgsSchema, type ConfigResetArgs } from "./schema";
 
@@ -26,11 +26,13 @@ type ResettableKey = (typeof RESETTABLE_KEYS)[number];
 /**
  * Handler for config_reset tool.
  *
- * @param args - Tool arguments
+ * @param args - Tool arguments (raw from MCP, will be validated)
  * @returns CallToolResult with reset confirmation or error
  */
-export async function handler(args: ConfigResetArgs): Promise<CallToolResult> {
-  const { key, all } = args;
+export async function handler(args: Record<string, unknown>): Promise<CallToolResult> {
+  // Validate and parse input using AJV
+  const parsed: ConfigResetArgs = ConfigResetArgsSchema.parse(args);
+  const { key, all } = parsed;
 
   // Validate arguments
   if (!key && !all) {

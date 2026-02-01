@@ -255,10 +255,10 @@ name: has-name-only
 
 func TestCheckSkillExists_QuotedValues(t *testing.T) {
 	tests := []struct {
-		name        string
-		content     string
-		wantName    string
-		wantDesc    string
+		name     string
+		content  string
+		wantName string
+		wantDesc string
 	}{
 		{
 			name: "double_quotes",

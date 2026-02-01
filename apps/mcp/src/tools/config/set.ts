@@ -13,8 +13,8 @@ import { loadBrainConfig, saveBrainConfig } from "../../config/brain-config";
 import { syncConfigToBasicMemory } from "../../config/translation-layer";
 import { rollbackManager } from "../../config/rollback";
 import { detectConfigDiff, summarizeConfigDiff } from "../../config/diff";
-import type { BrainConfig, MemoriesMode, LogLevel } from "../../config/schema";
-import type { ConfigSetArgs } from "./schema";
+import type { BrainConfig } from "../../config/schema";
+import { ConfigSetArgsSchema, type ConfigSetArgs } from "./schema";
 
 export { configSetToolDefinition as toolDefinition, ConfigSetArgsSchema, type ConfigSetArgs } from "./schema";
 
@@ -62,11 +62,13 @@ function setNestedValue(obj: Record<string, unknown>, path: string, value: unkno
 /**
  * Handler for config_set tool.
  *
- * @param args - Tool arguments
+ * @param args - Tool arguments (raw from MCP, will be validated)
  * @returns CallToolResult with update confirmation or error
  */
-export async function handler(args: ConfigSetArgs): Promise<CallToolResult> {
-  const { key, value } = args;
+export async function handler(args: Record<string, unknown>): Promise<CallToolResult> {
+  // Validate and parse input using AJV
+  const parsed: ConfigSetArgs = ConfigSetArgsSchema.parse(args);
+  const { key, value } = parsed;
 
   // Validate key is settable
   if (!(key in SETTABLE_KEYS)) {

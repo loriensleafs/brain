@@ -7,19 +7,17 @@ import (
 	"regexp"
 	"strings"
 	"time"
-	
-
 )
 
 // MemoryIndexValidationResult represents the outcome of memory index validation.
 type MemoryIndexValidationResult struct {
 	ValidationResult
-	MemoryPath        string                         `json:"memoryPath,omitempty"`
-	Timestamp         string                         `json:"timestamp,omitempty"`
-	DomainResults     map[string]DomainIndexResult   `json:"domainResults,omitempty"`
-	MemoryIndexResult MemoryIndexReferenceResult     `json:"memoryIndexResult,omitempty"`
-	Orphans           []OrphanedFile                 `json:"orphans,omitempty"`
-	Summary           MemoryIndexSummary             `json:"summary"`
+	MemoryPath        string                       `json:"memoryPath,omitempty"`
+	Timestamp         string                       `json:"timestamp,omitempty"`
+	DomainResults     map[string]DomainIndexResult `json:"domainResults,omitempty"`
+	MemoryIndexResult MemoryIndexReferenceResult   `json:"memoryIndexResult,omitempty"`
+	Orphans           []OrphanedFile               `json:"orphans,omitempty"`
+	Summary           MemoryIndexSummary           `json:"summary"`
 }
 
 // DomainIndexResult represents validation results for a single domain index.
@@ -81,10 +79,10 @@ type PrefixNamingResult struct {
 
 // MemoryIndexReferenceResult represents validation of memory-index.md references.
 type MemoryIndexReferenceResult struct {
-	Passed             bool     `json:"passed"`
-	Issues             []string `json:"issues,omitempty"`
+	Passed              bool     `json:"passed"`
+	Issues              []string `json:"issues,omitempty"`
 	UnreferencedIndices []string `json:"unreferencedIndices,omitempty"`
-	BrokenReferences   []string `json:"brokenReferences,omitempty"`
+	BrokenReferences    []string `json:"brokenReferences,omitempty"`
 }
 
 // OrphanedFile represents a file not referenced by any index.
@@ -96,12 +94,12 @@ type OrphanedFile struct {
 
 // MemoryIndexSummary provides aggregate statistics.
 type MemoryIndexSummary struct {
-	TotalDomains   int `json:"totalDomains"`
-	PassedDomains  int `json:"passedDomains"`
-	FailedDomains  int `json:"failedDomains"`
-	TotalFiles     int `json:"totalFiles"`
-	MissingFiles   int `json:"missingFiles"`
-	KeywordIssues  int `json:"keywordIssues"`
+	TotalDomains  int `json:"totalDomains"`
+	PassedDomains int `json:"passedDomains"`
+	FailedDomains int `json:"failedDomains"`
+	TotalFiles    int `json:"totalFiles"`
+	MissingFiles  int `json:"missingFiles"`
+	KeywordIssues int `json:"keywordIssues"`
 }
 
 // IndexEntry represents a parsed entry from a domain index.

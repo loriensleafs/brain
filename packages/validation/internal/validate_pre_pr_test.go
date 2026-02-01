@@ -3,10 +3,23 @@ package internal_test
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/peterkloss/brain/packages/validation/internal"
 )
+
+func init() {
+	// Load schema data for tests
+	_, currentFile, _, _ := runtime.Caller(0)
+	packageRoot := filepath.Dir(filepath.Dir(currentFile))
+	schemaPath := filepath.Join(packageRoot, "schemas", "pr", "pre-pr-config.schema.json")
+	data, err := os.ReadFile(schemaPath)
+	if err != nil {
+		panic("failed to load pre-PR schema for tests: " + err.Error())
+	}
+	internal.SetPrePRSchemaData(data)
+}
 
 // Tests for ValidatePrePR
 
@@ -836,5 +849,156 @@ func BenchmarkValidatePrePRFromContent(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		internal.ValidatePrePRFromContent(content, false)
+	}
+}
+
+// Tests for JSON Schema validation functions
+
+func TestValidatePrePRConfig_Valid(t *testing.T) {
+	tests := []struct {
+		name  string
+		data  map[string]any
+		valid bool
+	}{
+		{
+			name:  "minimal valid",
+			data:  map[string]any{"basePath": "/test/path"},
+			valid: true,
+		},
+		{
+			name: "full valid",
+			data: map[string]any{
+				"basePath":    "/test/path",
+				"quickMode":   true,
+				"skipTests":   true,
+				"sourceDirs":  []any{"src", "lib"},
+				"testDirs":    []any{"tests"},
+				"configFiles": []any{".env.example"},
+				"envFiles":    []any{".env"},
+			},
+			valid: true,
+		},
+		{
+			name:  "missing required basePath",
+			data:  map[string]any{},
+			valid: false,
+		},
+		{
+			name:  "empty basePath",
+			data:  map[string]any{"basePath": ""},
+			valid: false,
+		},
+		{
+			name:  "invalid additional property",
+			data:  map[string]any{"basePath": "/test", "unknownProp": "value"},
+			valid: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := internal.ValidatePrePRConfig(tt.data)
+			if result != tt.valid {
+				t.Errorf("ValidatePrePRConfig() = %v, want %v", result, tt.valid)
+			}
+		})
+	}
+}
+
+func TestParsePrePRConfig_AppliesDefaults(t *testing.T) {
+	config, err := internal.ParsePrePRConfig(map[string]any{
+		"basePath": "/test/path",
+	})
+	if err != nil {
+		t.Fatalf("ParsePrePRConfig() error = %v", err)
+	}
+
+	if config.BasePath != "/test/path" {
+		t.Errorf("BasePath = %v, want %v", config.BasePath, "/test/path")
+	}
+	if config.QuickMode != false {
+		t.Error("QuickMode should default to false")
+	}
+	if config.SkipTests != false {
+		t.Error("SkipTests should default to false")
+	}
+	if len(config.SourceDirs) == 0 {
+		t.Error("SourceDirs should have defaults applied")
+	}
+	if len(config.TestDirs) == 0 {
+		t.Error("TestDirs should have defaults applied")
+	}
+	if len(config.ConfigFiles) == 0 {
+		t.Error("ConfigFiles should have defaults applied")
+	}
+	if len(config.EnvFiles) == 0 {
+		t.Error("EnvFiles should have defaults applied")
+	}
+}
+
+func TestParsePrePRConfig_PreservesProvidedValues(t *testing.T) {
+	config, err := internal.ParsePrePRConfig(map[string]any{
+		"basePath":    "/my/path",
+		"quickMode":   true,
+		"skipTests":   true,
+		"sourceDirs":  []any{"custom-src"},
+		"testDirs":    []any{"custom-tests"},
+		"configFiles": []any{"custom.config"},
+		"envFiles":    []any{".custom.env"},
+	})
+	if err != nil {
+		t.Fatalf("ParsePrePRConfig() error = %v", err)
+	}
+
+	if config.BasePath != "/my/path" {
+		t.Errorf("BasePath = %v, want %v", config.BasePath, "/my/path")
+	}
+	if config.QuickMode != true {
+		t.Error("QuickMode should be true")
+	}
+	if config.SkipTests != true {
+		t.Error("SkipTests should be true")
+	}
+	if len(config.SourceDirs) != 1 || config.SourceDirs[0] != "custom-src" {
+		t.Errorf("SourceDirs = %v, want [custom-src]", config.SourceDirs)
+	}
+	if len(config.TestDirs) != 1 || config.TestDirs[0] != "custom-tests" {
+		t.Errorf("TestDirs = %v, want [custom-tests]", config.TestDirs)
+	}
+	if len(config.ConfigFiles) != 1 || config.ConfigFiles[0] != "custom.config" {
+		t.Errorf("ConfigFiles = %v, want [custom.config]", config.ConfigFiles)
+	}
+	if len(config.EnvFiles) != 1 || config.EnvFiles[0] != ".custom.env" {
+		t.Errorf("EnvFiles = %v, want [.custom.env]", config.EnvFiles)
+	}
+}
+
+func TestParsePrePRConfig_InvalidData(t *testing.T) {
+	_, err := internal.ParsePrePRConfig(map[string]any{})
+	if err == nil {
+		t.Error("ParsePrePRConfig() should return error for missing basePath")
+	}
+}
+
+func TestGetPrePRConfigErrors_ValidData(t *testing.T) {
+	errors := internal.GetPrePRConfigErrors(map[string]any{"basePath": "/test"})
+	if len(errors) != 0 {
+		t.Errorf("GetPrePRConfigErrors() returned %d errors, want 0", len(errors))
+	}
+}
+
+func TestGetPrePRConfigErrors_InvalidData(t *testing.T) {
+	errors := internal.GetPrePRConfigErrors(map[string]any{})
+	if len(errors) == 0 {
+		t.Error("GetPrePRConfigErrors() should return errors for missing basePath")
+	}
+	// Check error structure
+	for _, e := range errors {
+		if e.Constraint == "" {
+			t.Error("ValidationError.Constraint should not be empty")
+		}
+		if e.Message == "" {
+			t.Error("ValidationError.Message should not be empty")
+		}
 	}
 }

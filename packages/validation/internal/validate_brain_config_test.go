@@ -86,7 +86,7 @@ func init() {
 }
 
 func TestValidateBrainConfig_ValidMinimal(t *testing.T) {
-	
+
 	data := map[string]any{
 		"version": "2.0.0",
 		"defaults": map[string]any{
@@ -101,7 +101,7 @@ func TestValidateBrainConfig_ValidMinimal(t *testing.T) {
 }
 
 func TestValidateBrainConfig_ValidFull(t *testing.T) {
-	
+
 	data := map[string]any{
 		"$schema": "https://brain.dev/schemas/config-v2.json",
 		"version": "2.0.0",
@@ -136,7 +136,7 @@ func TestValidateBrainConfig_ValidFull(t *testing.T) {
 }
 
 func TestValidateBrainConfig_MissingVersion(t *testing.T) {
-	
+
 	data := map[string]any{
 		"defaults": map[string]any{
 			"memories_location": "~/memories",
@@ -154,7 +154,7 @@ func TestValidateBrainConfig_MissingVersion(t *testing.T) {
 }
 
 func TestValidateBrainConfig_WrongVersion(t *testing.T) {
-	
+
 	data := map[string]any{
 		"version": "1.0.0",
 		"defaults": map[string]any{
@@ -168,7 +168,7 @@ func TestValidateBrainConfig_WrongVersion(t *testing.T) {
 }
 
 func TestValidateBrainConfig_MissingDefaults(t *testing.T) {
-	
+
 	data := map[string]any{
 		"version": "2.0.0",
 	}
@@ -179,7 +179,7 @@ func TestValidateBrainConfig_MissingDefaults(t *testing.T) {
 }
 
 func TestValidateBrainConfig_InvalidMemoriesMode(t *testing.T) {
-	
+
 	data := map[string]any{
 		"version": "2.0.0",
 		"defaults": map[string]any{
@@ -194,7 +194,7 @@ func TestValidateBrainConfig_InvalidMemoriesMode(t *testing.T) {
 }
 
 func TestValidateBrainConfig_InvalidLogLevel(t *testing.T) {
-	
+
 	data := map[string]any{
 		"version": "2.0.0",
 		"defaults": map[string]any{
@@ -211,7 +211,7 @@ func TestValidateBrainConfig_InvalidLogLevel(t *testing.T) {
 }
 
 func TestValidateBrainConfig_ProjectMissingCodePath(t *testing.T) {
-	
+
 	data := map[string]any{
 		"version": "2.0.0",
 		"defaults": map[string]any{
@@ -230,7 +230,7 @@ func TestValidateBrainConfig_ProjectMissingCodePath(t *testing.T) {
 }
 
 func TestValidateBrainConfig_AdditionalProperties(t *testing.T) {
-	
+
 	data := map[string]any{
 		"version": "2.0.0",
 		"defaults": map[string]any{
@@ -245,7 +245,7 @@ func TestValidateBrainConfig_AdditionalProperties(t *testing.T) {
 }
 
 func TestParseBrainConfig_AppliesDefaults(t *testing.T) {
-	
+
 	data := map[string]any{
 		"version": "2.0.0",
 		"defaults": map[string]any{
@@ -288,7 +288,7 @@ func TestParseBrainConfig_AppliesDefaults(t *testing.T) {
 }
 
 func TestParseBrainConfig_PreservesExplicitValues(t *testing.T) {
-	
+
 	data := map[string]any{
 		"version": "2.0.0",
 		"defaults": map[string]any{

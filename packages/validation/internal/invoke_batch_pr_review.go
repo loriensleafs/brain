@@ -7,8 +7,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-	
-
 )
 
 // BatchPRReviewOperation defines the operation to perform

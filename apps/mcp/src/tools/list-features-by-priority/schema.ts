@@ -1,32 +1,25 @@
 /**
  * Schema for list_features_by_priority tool
+ *
+ * Migrated from Zod to JSON Schema + AJV per ADR-022.
+ * JSON Schema source: packages/validation/schemas/tools/list-features-by-priority.schema.json
  */
-import { z } from "zod";
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
+import {
+  type ListFeaturesByPriorityArgs,
+  validateListFeaturesByPriorityArgs,
+  parseListFeaturesByPriorityArgs,
+  getListFeaturesByPriorityArgsErrors,
+} from "@brain/validation";
+import listFeaturesByPrioritySchema from "@brain/validation/schemas/tools/list-features-by-priority.schema.json";
 
-export const ListFeaturesByPriorityArgsSchema = z.object({
-  project: z
-    .string()
-    .optional()
-    .describe("Project to list features for. Auto-resolved from CWD if not specified."),
-  entity_type: z
-    .enum(["feature", "task", "phase"])
-    .optional()
-    .default("feature")
-    .describe("Type of entity to list. Default: feature"),
-  include_completed: z
-    .boolean()
-    .optional()
-    .default(false)
-    .describe("Include completed items. Default: false"),
-  format: z
-    .enum(["list", "tree"])
-    .optional()
-    .default("list")
-    .describe("Output format. Default: list"),
-});
-
-export type ListFeaturesByPriorityArgs = z.infer<typeof ListFeaturesByPriorityArgsSchema>;
+// Re-export types and validation functions from @brain/validation
+export type { ListFeaturesByPriorityArgs };
+export {
+  validateListFeaturesByPriorityArgs,
+  parseListFeaturesByPriorityArgs,
+  getListFeaturesByPriorityArgsErrors,
+};
 
 export const toolDefinition: Tool = {
   name: "list_features_by_priority",
@@ -40,28 +33,5 @@ Includes validation warnings for:
 - Circular dependencies
 - Missing dependency targets
 - Features without priority set`,
-  inputSchema: {
-    type: "object" as const,
-    properties: {
-      project: {
-        type: "string",
-        description: "Project to list features for. Auto-resolved from CWD if not specified.",
-      },
-      entity_type: {
-        type: "string",
-        enum: ["feature", "task", "phase"],
-        description: "Type of entity to list. Default: feature",
-      },
-      include_completed: {
-        type: "boolean",
-        description: "Include completed items. Default: false",
-      },
-      format: {
-        type: "string",
-        enum: ["list", "tree"],
-        description: "Output format. Default: list",
-      },
-    },
-    required: [],
-  },
+  inputSchema: listFeaturesByPrioritySchema as Tool["inputSchema"],
 };

@@ -5,9 +5,18 @@
  * - 'DEFAULT': ${default_memories_location}/${project_name} (from brain config)
  * - 'CODE': ${code_path}/docs
  * - Custom absolute path
+ *
+ * Migrated from Zod to JSON Schema + AJV per ADR-022.
+ * JSON Schema source: packages/validation/schemas/tools/projects/edit-project.schema.json
  */
-import { z } from "zod";
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
+import {
+  validateEditProjectArgs,
+  parseEditProjectArgs,
+  type EditProjectArgs,
+} from "@brain/validation";
+
+export { validateEditProjectArgs, parseEditProjectArgs, type EditProjectArgs };
 
 /**
  * Memories path options:
@@ -17,20 +26,17 @@ import type { Tool } from "@modelcontextprotocol/sdk/types.js";
  */
 export type MemoriesPathOption = "DEFAULT" | "CODE" | string;
 
-export const EditProjectArgsSchema = z.object({
-  name: z.string().describe("Project name to edit"),
-  code_path: z
-    .string()
-    .describe("Code directory path (use ~ for home). Required for editing."),
-  memories_path: z
-    .string()
-    .optional()
-    .describe(
-      "Memories directory path. Options: 'DEFAULT' (${default_memories_location}/${name}), 'CODE' (${code_path}/docs), or absolute path. Defaults to 'DEFAULT' when not specified, except auto-updates to new code_path/docs if was ${old_code_path}/docs."
-    ),
-});
-
-export type EditProjectArgs = z.infer<typeof EditProjectArgsSchema>;
+// Re-export for backward compatibility
+export const EditProjectArgsSchema = {
+  parse: parseEditProjectArgs,
+  safeParse: (data: unknown) => {
+    try {
+      return { success: true as const, data: parseEditProjectArgs(data) };
+    } catch (error) {
+      return { success: false as const, error };
+    }
+  },
+};
 
 export const toolDefinition: Tool = {
   name: "edit_project",

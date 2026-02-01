@@ -298,11 +298,11 @@ func TestGetWorktreeStatus_ExistsDirty(t *testing.T) {
 	}
 
 	mock := NewMockCommandRunner()
-	mock.AddCommand("git", "status", " M file.go\n", nil)             // Has changes
+	mock.AddCommand("git", "status", " M file.go\n", nil) // Has changes
 	mock.AddCommand("git", "branch", "feature/test\n", nil)
-	mock.AddCommand("git", "--format=%h", "abc1234\n", nil)           // Commit hash
+	mock.AddCommand("git", "--format=%h", "abc1234\n", nil) // Commit hash
 	mock.AddCommand("git", "rev-parse", "origin/feature/test\n", nil)
-	mock.AddCommand("git", "@{u}..", "def5678 uncommitted\n", nil)    // Has unpushed
+	mock.AddCommand("git", "@{u}..", "def5678 uncommitted\n", nil) // Has unpushed
 
 	status := internal.GetWorktreeStatus(123, tmpDir, mock)
 
@@ -341,11 +341,11 @@ func TestPushWorktreeChanges_AlreadyClean(t *testing.T) {
 	}
 
 	mock := NewMockCommandRunner()
-	mock.AddCommand("git", "status", "", nil)                         // Clean
+	mock.AddCommand("git", "status", "", nil) // Clean
 	mock.AddCommand("git", "branch", "feature/test\n", nil)
-	mock.AddCommand("git", "--format=%h", "abc1234\n", nil)           // Commit hash
+	mock.AddCommand("git", "--format=%h", "abc1234\n", nil) // Commit hash
 	mock.AddCommand("git", "rev-parse", "origin/feature/test\n", nil)
-	mock.AddCommand("git", "@{u}..", "", nil)                         // No unpushed
+	mock.AddCommand("git", "@{u}..", "", nil) // No unpushed
 
 	result := internal.PushWorktreeChanges(123, tmpDir, mock)
 
@@ -365,7 +365,7 @@ func TestPushWorktreeChanges_CommitAndPush(t *testing.T) {
 	}
 
 	mock := NewMockCommandRunner()
-	mock.AddCommand("git", "status", " M file.go\n", nil)   // Has changes
+	mock.AddCommand("git", "status", " M file.go\n", nil) // Has changes
 	mock.AddCommand("git", "branch", "feature/test\n", nil)
 	mock.AddCommand("git", "--format=%h", "abc1234\n", nil) // Commit hash
 	mock.AddCommand("git", "rev-parse", "", fmt.Errorf("no upstream"))
@@ -431,12 +431,12 @@ func TestRemovePRWorktree_Success(t *testing.T) {
 	}
 
 	mock := NewMockCommandRunner()
-	mock.AddCommand("git", "status", "", nil)                         // Clean
+	mock.AddCommand("git", "status", "", nil) // Clean
 	mock.AddCommand("git", "branch", "feature/test\n", nil)
-	mock.AddCommand("git", "--format=%h", "abc1234\n", nil)           // Commit hash
+	mock.AddCommand("git", "--format=%h", "abc1234\n", nil) // Commit hash
 	mock.AddCommand("git", "rev-parse", "origin/feature/test\n", nil)
-	mock.AddCommand("git", "@{u}..", "", nil)                         // No unpushed
-	mock.AddCommand("git", "worktree", "", nil)                       // Remove
+	mock.AddCommand("git", "@{u}..", "", nil)   // No unpushed
+	mock.AddCommand("git", "worktree", "", nil) // Remove
 
 	result := internal.RemovePRWorktree(123, tmpDir, false, mock)
 
@@ -500,11 +500,11 @@ func TestRemovePRWorktree_UnpushedWithoutForce(t *testing.T) {
 	}
 
 	mock := NewMockCommandRunner()
-	mock.AddCommand("git", "status", "", nil)                         // Clean
+	mock.AddCommand("git", "status", "", nil) // Clean
 	mock.AddCommand("git", "branch", "feature/test\n", nil)
-	mock.AddCommand("git", "--format=%h", "abc1234\n", nil)           // Commit hash
+	mock.AddCommand("git", "--format=%h", "abc1234\n", nil) // Commit hash
 	mock.AddCommand("git", "rev-parse", "origin/feature/test\n", nil)
-	mock.AddCommand("git", "@{u}..", "def5678 uncommitted\n", nil)    // Has unpushed
+	mock.AddCommand("git", "@{u}..", "def5678 uncommitted\n", nil) // Has unpushed
 
 	result := internal.RemovePRWorktree(123, tmpDir, false, mock)
 

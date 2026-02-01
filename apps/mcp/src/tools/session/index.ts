@@ -10,9 +10,11 @@ import {
   MODE_DESCRIPTIONS,
   getRecentModeHistory,
 } from "../../services/session";
-import type { SessionArgs } from "./schema";
+import { SessionArgsSchema } from "./schema";
 
-export async function handler(args: SessionArgs): Promise<CallToolResult> {
+export async function handler(rawArgs: Record<string, unknown>): Promise<CallToolResult> {
+  // Validate and parse input
+  const args = SessionArgsSchema.parse(rawArgs);
   if (args.operation === "get") {
     const state = await getSession();
 

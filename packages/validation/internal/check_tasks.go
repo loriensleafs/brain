@@ -2,8 +2,6 @@ package internal
 
 import (
 	"fmt"
-
-	
 )
 
 // CheckTasks verifies that no IN_PROGRESS tasks are incomplete.
