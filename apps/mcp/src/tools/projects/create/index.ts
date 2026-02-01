@@ -10,6 +10,7 @@ import * as path from "path";
 import * as os from "os";
 import { setCodePath, getCodePath } from "../../../project/config";
 import { getDefaultMemoriesLocation } from "../../../config/brain-config";
+import { getProjectMemoriesPath, ProjectNotFoundError } from "@brain/utils";
 import type { CreateProjectArgs, MemoriesPathOption } from "./schema";
 
 export {
@@ -22,22 +23,18 @@ export {
 // getDefaultMemoriesLocation is imported from ../../../config/brain-config
 
 /**
- * Get memories path for a project from basic-memory config
+ * Check if a project exists in basic-memory config
+ * @returns memories path if project exists, null otherwise
  */
-function getMemoriesPath(project: string): string | null {
-  const configPath = path.join(os.homedir(), ".basic-memory", "config.json");
+async function getExistingMemoriesPath(project: string): Promise<string | null> {
   try {
-    if (fs.existsSync(configPath)) {
-      const content = fs.readFileSync(configPath, "utf-8");
-      const config = JSON.parse(content);
-      if (config.projects && typeof config.projects === "object") {
-        return config.projects[project] || null;
-      }
+    return await getProjectMemoriesPath(project);
+  } catch (error) {
+    if (error instanceof ProjectNotFoundError) {
+      return null;
     }
-  } catch {
-    // Ignore errors
+    throw error;
   }
-  return null;
 }
 
 /**
@@ -118,7 +115,7 @@ export async function handler(args: CreateProjectArgs): Promise<CallToolResult> 
   const { name, code_path, memories_path } = args;
 
   // Check if project already exists in basic-memory config
-  const existingMemoriesPath = getMemoriesPath(name);
+  const existingMemoriesPath = await getExistingMemoriesPath(name);
   if (existingMemoriesPath) {
     return {
       content: [

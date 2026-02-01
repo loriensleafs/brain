@@ -69,6 +69,33 @@ const mockFs = {
 
 mock.module("fs", () => mockFs);
 
+// Mock @brain/utils to use our mocked fs
+// The actual module uses Bun.file() which can't be mocked
+class MockProjectNotFoundError extends Error {
+  constructor(
+    public readonly project: string,
+    public readonly availableProjects: string[]
+  ) {
+    super(`Project "${project}" not found`);
+    this.name = "ProjectNotFoundError";
+  }
+}
+
+// Stores project configs for @brain/utils mock
+let mockProjects: Record<string, string> = {};
+
+mock.module("@brain/utils", () => ({
+  getProjectMemoriesPath: async (project: string) => {
+    const path = mockProjects[project];
+    if (!path) {
+      throw new MockProjectNotFoundError(project, Object.keys(mockProjects));
+    }
+    return path;
+  },
+  getAvailableProjects: async () => Object.keys(mockProjects),
+  ProjectNotFoundError: MockProjectNotFoundError,
+}));
+
 // Mock basic-memory client to prevent real network calls
 mock.module("../../../proxy/client", () => ({
   getBasicMemoryClient: () => Promise.resolve({
@@ -94,6 +121,9 @@ describe("edit_project tool", () => {
     mockFs.rmSync.mockReset();
     mockFs.realpathSync.mockReset();
 
+    // Reset @brain/utils mock state
+    mockProjects = {};
+
     // Default realpathSync behavior - return path as-is
     mockFs.realpathSync.mockImplementation((p: unknown) => String(p));
   });
@@ -110,6 +140,9 @@ describe("edit_project tool", () => {
     notesPath: string,
     codePath?: string
   ) {
+    // Set up @brain/utils mock
+    mockProjects[projectName] = notesPath;
+
     mockFs.existsSync.mockImplementation((p: unknown) => {
       const pStr = String(p);
       if (pStr.includes("config.json")) return true;
@@ -160,6 +193,9 @@ describe("edit_project tool", () => {
 
     test("uses ~/memories fallback when no brain-config.json exists", async () => {
       // Project exists but no brain-config.json
+      // Set up @brain/utils mock
+      mockProjects["fallback-project"] = "/some/old/path";
+
       mockFs.existsSync.mockImplementation((p: unknown) => {
         const pStr = String(p);
         if (pStr.includes("config.json")) return true;
@@ -274,6 +310,9 @@ describe("edit_project tool", () => {
       const oldCodePath = path.join(homeDir, "old", "code");
       const oldNotesPath = path.join(oldCodePath, "docs");
 
+      // Set up @brain/utils mock
+      mockProjects["override-project"] = oldNotesPath;
+
       mockFs.existsSync.mockImplementation((p: unknown) => {
         const pStr = String(p);
         if (pStr.includes("config.json")) return true;
@@ -313,6 +352,9 @@ describe("edit_project tool", () => {
     test("explicit DEFAULT overrides CODE auto-update", async () => {
       const oldCodePath = path.join(homeDir, "old", "code");
       const oldNotesPath = path.join(oldCodePath, "docs");
+
+      // Set up @brain/utils mock
+      mockProjects["force-default"] = oldNotesPath;
 
       mockFs.existsSync.mockImplementation((p: unknown) => {
         const pStr = String(p);
@@ -555,6 +597,9 @@ describe("edit_project tool", () => {
         sizeMismatch = false,
         countMismatch = false,
       } = options;
+
+      // Set up @brain/utils mock
+      mockProjects["migration-project"] = oldPath;
 
       // Track what paths "exist" after copy
       let copiedToNew = false;

@@ -15,8 +15,12 @@ import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
 import { setCodePath, getCodePath } from "../../../project/config";
-import { getBasicMemoryClient } from "../../../proxy/client";
 import { getDefaultMemoriesLocation } from "../../../config/brain-config";
+import {
+  getProjectMemoriesPath,
+  getAvailableProjects,
+  ProjectNotFoundError,
+} from "@brain/utils";
 import type { EditProjectArgs, MemoriesPathOption } from "./schema";
 
 // ============================================================================
@@ -337,22 +341,17 @@ export {
 // getDefaultMemoriesLocation is imported from ../../../config/brain-config
 
 /**
- * Get memories path for a project from basic-memory config
+ * Get existing memories path for a project, returning null if not found
  */
-function getMemoriesPath(project: string): string | null {
-  const configPath = path.join(os.homedir(), ".basic-memory", "config.json");
+async function getExistingMemoriesPath(project: string): Promise<string | null> {
   try {
-    if (fs.existsSync(configPath)) {
-      const content = fs.readFileSync(configPath, "utf-8");
-      const config = JSON.parse(content);
-      if (config.projects && typeof config.projects === "object") {
-        return config.projects[project] || null;
-      }
+    return await getProjectMemoriesPath(project);
+  } catch (error) {
+    if (error instanceof ProjectNotFoundError) {
+      return null;
     }
-  } catch {
-    // Ignore errors
+    throw error;
   }
-  return null;
 }
 
 /**
@@ -424,78 +423,33 @@ function resolveMemoriesPathOption(
   return resolvePath(option);
 }
 
-/**
- * Get list of available projects from basic-memory config
- */
-async function getAvailableProjects(): Promise<string[]> {
-  const configPath = path.join(os.homedir(), ".basic-memory", "config.json");
-  try {
-    if (fs.existsSync(configPath)) {
-      const content = fs.readFileSync(configPath, "utf-8");
-      const config = JSON.parse(content);
-      if (config.projects && typeof config.projects === "object") {
-        return Object.keys(config.projects);
-      }
-    }
-  } catch {
-    // Fall back to listing projects via basic-memory
-  }
-
-  // Fallback: use basic-memory client
-  try {
-    const client = await getBasicMemoryClient();
-    const result = await client.callTool({
-      name: "list_memory_projects",
-      arguments: {},
-    });
-
-    if (result.content && Array.isArray(result.content)) {
-      for (const item of result.content) {
-        if (item.type === "text" && item.text) {
-          try {
-            const parsed = JSON.parse(item.text);
-            if (Array.isArray(parsed)) {
-              return parsed;
-            } else if (parsed.projects && Array.isArray(parsed.projects)) {
-              return parsed.projects;
-            }
-          } catch {
-            return item.text.split("\n").filter((p: string) => p.trim());
-          }
-        }
-      }
-    }
-  } catch {
-    // Return empty if all else fails
-  }
-
-  return [];
-}
-
 export async function handler(args: EditProjectArgs): Promise<CallToolResult> {
   const { name, code_path, memories_path } = args;
 
   // Check if project exists in basic-memory
-  const currentMemoriesPath = getMemoriesPath(name);
-
-  if (!currentMemoriesPath) {
-    const availableProjects = await getAvailableProjects();
-    return {
-      content: [
-        {
-          type: "text" as const,
-          text: JSON.stringify(
-            {
-              error: `Project "${name}" does not exist. Use create_project to create it first.`,
-              available_projects: availableProjects,
-            },
-            null,
-            2
-          ),
-        },
-      ],
-      isError: true,
-    };
+  let currentMemoriesPath: string;
+  try {
+    currentMemoriesPath = await getProjectMemoriesPath(name);
+  } catch (error) {
+    if (error instanceof ProjectNotFoundError) {
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: JSON.stringify(
+              {
+                error: `Project "${name}" does not exist. Use create_project to create it first.`,
+                available_projects: error.availableProjects,
+              },
+              null,
+              2
+            ),
+          },
+        ],
+        isError: true,
+      };
+    }
+    throw error;
   }
 
   const updates: string[] = [];

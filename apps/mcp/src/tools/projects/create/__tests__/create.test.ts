@@ -45,6 +45,33 @@ const mockFs = {
 
 mock.module("fs", () => mockFs);
 
+// Mock @brain/utils to use our mocked fs
+// The actual module uses Bun.file() which can't be mocked
+class MockProjectNotFoundError extends Error {
+  constructor(
+    public readonly project: string,
+    public readonly availableProjects: string[]
+  ) {
+    super(`Project "${project}" not found`);
+    this.name = "ProjectNotFoundError";
+  }
+}
+
+// Stores project configs for @brain/utils mock
+let mockProjects: Record<string, string> = {};
+
+mock.module("@brain/utils", () => ({
+  getProjectMemoriesPath: async (project: string) => {
+    const path = mockProjects[project];
+    if (!path) {
+      throw new MockProjectNotFoundError(project, Object.keys(mockProjects));
+    }
+    return path;
+  },
+  getAvailableProjects: async () => Object.keys(mockProjects),
+  ProjectNotFoundError: MockProjectNotFoundError,
+}));
+
 // Mock config module
 const mockSetCodePath = mock(() => undefined) as ReturnType<typeof mock<(name: unknown, path: unknown) => void>>;
 const mockGetCodePath = mock(() => undefined as string | undefined) as ReturnType<typeof mock<(name: unknown) => string | undefined>>;
@@ -69,6 +96,9 @@ describe("create_project tool", () => {
     mockFs.mkdirSync.mockReset();
     mockSetCodePath.mockReset();
     mockGetCodePath.mockReset();
+
+    // Reset @brain/utils mock state
+    mockProjects = {};
 
     // Default: project doesn't exist, config files don't exist
     mockFs.existsSync.mockReturnValue(false);
@@ -283,6 +313,9 @@ describe("create_project tool", () => {
 
   describe("Error handling", () => {
     test("returns error if project exists in basic-memory config", async () => {
+      // Set up @brain/utils mock
+      mockProjects["existing-project"] = "/existing/notes/path";
+
       // Project exists in config.json (basic-memory)
       mockFs.existsSync.mockImplementation((p: unknown) => {
         const pStr = String(p);
@@ -322,6 +355,9 @@ describe("create_project tool", () => {
     });
 
     test("returns error with suggestion and includes edit_project guidance", async () => {
+      // Set up @brain/utils mock
+      mockProjects["duplicate-project"] = "/some/notes/path";
+
       // Project exists in config.json (basic-memory)
       mockFs.existsSync.mockImplementation((p: unknown) => {
         const pStr = String(p);
