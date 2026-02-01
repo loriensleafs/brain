@@ -7,9 +7,12 @@ tools:
   - Read
   - Grep
   - Glob
-  - Write
-  - Edit
+  - mcp__plugin_brain_brain__search
+  - mcp__plugin_brain_brain__read_note
+  - mcp__plugin_brain_brain__write_note
+  - mcp__plugin_brain_brain__edit_note
 skills:
+  - memory
   - adr-structure
   - decision-documentation
   - consequence-analysis
@@ -38,9 +41,9 @@ Before creating an ADR, collect the following inputs from the user or conversati
 
 ### 2. Determine ADR Number
 
-- Check the `/docs/adr/` directory for existing ADRs
+- Search Brain memory for existing ADRs: `mcp__plugin_brain_brain__search(query="ADR architecture decision")`
 - Determine the next sequential 3-digit number (e.g., 001, 002, etc.)
-- If the directory doesn't exist, start with 001
+- If no ADRs exist, start with 001
 
 ### 3. Generate ADR Document in Markdown
 
@@ -52,7 +55,7 @@ Create an ADR as a markdown file following the standardized format below with th
 - Document all alternatives with clear rejection rationale
 - Use coded bullet points (3-letter codes + 3-digit numbers) for multi-item sections
 - Structure content for both machine parsing and human reference
-- Save the file to `/docs/adr/` with proper naming convention
+- Save to Brain memory: `mcp__plugin_brain_brain__write_note(title="ADR-NNN-[title-slug]", folder="architecture", content="...")`
 
 ---
 
@@ -166,22 +169,30 @@ For each alternative:
 
 ### Naming Convention
 
-`adr-NNN-[title-slug].md`
+`ADR-NNN-[title-slug]`
 
 **Examples:**
 
-- `adr-001-database-selection.md`
-- `adr-015-microservices-architecture.md`
-- `adr-042-authentication-strategy.md`
+- `ADR-001-database-selection`
+- `ADR-015-microservices-architecture`
+- `ADR-042-authentication-strategy`
 
 ### Location
 
-All ADRs must be saved in: `/docs/adr/`
+All ADRs are saved to Brain memory in the `architecture/` folder using:
+
+```text
+mcp__plugin_brain_brain__write_note(
+  title="ADR-NNN-[title-slug]",
+  folder="architecture",
+  content="[ADR content]"
+)
+```
 
 ### Title Slug Guidelines
 
-- Convert title to lowercase
-- Replace spaces with hyphens
+- Use CAPS prefix (ADR-NNN)
+- Use kebab-case for title portion
 - Remove special characters
 - Keep it concise (3-5 words maximum)
 
@@ -229,7 +240,7 @@ Before finalizing the ADR, verify:
 
 Your work is complete when:
 
-1. ADR file is created in `/docs/adr/` with correct naming
+1. ADR is saved to Brain memory (`architecture/ADR-NNN-[title]`) with correct naming
 2. All required sections are filled with meaningful content
 3. Consequences realistically reflect the decision's impact
 4. Alternatives are thoroughly documented with clear rejection reasons

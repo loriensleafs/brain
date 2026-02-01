@@ -5,6 +5,7 @@
  * Each wrapper tool lives in its own folder with schema.ts and index.ts.
  */
 
+import { type PatternType, validateNamingPattern } from "@brain/validation";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import {
   CallToolRequestSchema,
@@ -441,6 +442,51 @@ async function callProxiedTool(
       ? await injectProject(args)
       : args;
 
+    // Naming pattern validation for write_note (ADR-023 Phase 3)
+    if (name === "write_note") {
+      const title = resolvedArgs.title as string | undefined;
+      const folder = resolvedArgs.folder as string | undefined;
+
+      if (title) {
+        const fileName = `${title}.md`;
+        const patternType = folderToPatternType(folder);
+
+        // Only validate if we have a known pattern type for this folder
+        if (patternType) {
+          const validation = validateNamingPattern({
+            fileName,
+            patternType,
+          });
+
+          if (!validation.valid) {
+            const expectedPattern = validation.isDeprecated
+              ? `Deprecated pattern detected. ${validation.error}`
+              : validation.error;
+
+            logger.warn(
+              { title, folder, patternType, error: validation.error },
+              "Naming pattern validation failed",
+            );
+
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: `Invalid filename format for ${patternType} in folder '${folder}':\n\n${expectedPattern}\n\nPlease use the correct naming convention for this artifact type.`,
+                },
+              ],
+              isError: true,
+            };
+          }
+
+          logger.debug(
+            { title, folder, patternType },
+            "Naming pattern validation passed",
+          );
+        }
+      }
+    }
+
     // Search guard: check for duplicates before write_note
     if (name === "write_note" && config.searchGuardEnabled) {
       const guardResult = await checkForDuplicates(client, resolvedArgs);
@@ -554,6 +600,65 @@ async function callProxiedTool(
       isError: true,
     };
   }
+}
+
+/**
+ * Map folder paths to pattern types for validation.
+ * Based on ADR-023 naming patterns and storage categories.
+ *
+ * @param folder - Folder path from write_note args
+ * @returns Pattern type for validation, or undefined if no validation applies
+ */
+function folderToPatternType(
+  folder: string | undefined,
+): PatternType | undefined {
+  if (!folder) {
+    return undefined;
+  }
+
+  // Normalize folder path (remove trailing slashes, lowercase for comparison)
+  const normalized = folder.replace(/\/+$/, "").toLowerCase();
+
+  const mapping: Record<string, PatternType> = {
+    // Architecture decisions
+    "architecture/decision": "decision",
+    "architecture/decisions": "decision",
+    decisions: "decision",
+    // Sessions
+    sessions: "session",
+    // Requirements
+    requirements: "requirement",
+    "specs/requirements": "requirement",
+    // Design
+    design: "design",
+    "specs/design": "design",
+    // Tasks
+    tasks: "task",
+    "specs/tasks": "task",
+    // Analysis
+    analysis: "analysis",
+    // Features/Planning
+    planning: "feature",
+    features: "feature",
+    // Epics
+    roadmap: "epic",
+    epics: "epic",
+    // Critique
+    critique: "critique",
+    reviews: "critique",
+    // QA/Test reports
+    qa: "test-report",
+    "test-reports": "test-report",
+    // Security
+    security: "security",
+    // Retrospectives
+    retrospective: "retrospective",
+    retrospectives: "retrospective",
+    // Skills
+    skills: "skill",
+  };
+
+  return mapping[normalized];
 }
 
 /**

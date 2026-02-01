@@ -13,7 +13,10 @@ tools:
   - Bash
   - mcp__plugin_brain_brain__search
   - mcp__plugin_brain_brain__read_note
+  - mcp__plugin_brain_brain__write_note
+  - mcp__plugin_brain_brain__edit_note
 skills:
+  - memory
   - root-cause-analysis
   - api-research
   - comparative-analysis

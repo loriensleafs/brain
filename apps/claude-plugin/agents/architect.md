@@ -8,12 +8,13 @@ tools:
   - Read
   - Grep
   - Glob
-  - Write
-  - Edit
   - WebSearch
   - mcp__plugin_brain_brain__search
   - mcp__plugin_brain_brain__read_note
+  - mcp__plugin_brain_brain__write_note
+  - mcp__plugin_brain_brain__edit_note
 skills:
+  - memory
   - adr-creation
   - design-review
   - impact-analysis

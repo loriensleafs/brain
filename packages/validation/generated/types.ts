@@ -7,7 +7,7 @@
  * To regenerate: bun run generate:types
  * Source schemas: packages/validation/schemas/*.schema.json
  *
- * Generated: 2026-02-01T15:52:21.345Z
+ * Generated: 2026-02-01T17:38:15.711Z
  */
 
 // Source: schemas/config/brain-config.schema.json
@@ -145,18 +145,19 @@ export interface NamingPatternValidation {
    * Expected pattern type for validation
    */
   patternType?:
-    | "epic"
-    | "adr"
-    | "prd"
-    | "tasks"
-    | "plan"
-    | "tm"
-    | "req"
+    | "decision"
+    | "session"
+    | "requirement"
     | "design"
     | "task"
-    | "skill"
-    | "retro"
-    | "session";
+    | "analysis"
+    | "feature"
+    | "epic"
+    | "critique"
+    | "test-report"
+    | "security"
+    | "retrospective"
+    | "skill";
 }
 
 // Source: schemas/domain/scenario-config.schema.json

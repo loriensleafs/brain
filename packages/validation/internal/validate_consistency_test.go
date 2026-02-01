@@ -33,129 +33,194 @@ func TestValidateNamingConvention_Epic(t *testing.T) {
 	}
 }
 
-func TestValidateNamingConvention_ADR(t *testing.T) {
+func TestValidateNamingConvention_Decision(t *testing.T) {
 	tests := []struct {
 		name     string
 		filename string
 		expected bool
 	}{
-		{"valid adr", "ADR-001-database-selection.md", true},
-		{"valid adr higher number", "ADR-999-something.md", true},
-		{"invalid adr lowercase", "adr-001-test.md", false},
-		{"invalid adr no number", "ADR-test.md", false},
+		{"valid decision", "ADR-001-database-selection.md", true},
+		{"valid decision higher number", "ADR-999-something.md", true},
+		{"invalid decision lowercase", "adr-001-test.md", false},
+		{"invalid decision no number", "ADR-test.md", false},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := internal.ValidateNamingConvention(tt.filename, "adr")
+			result := internal.ValidateNamingConvention(tt.filename, "decision")
 			if result != tt.expected {
-				t.Errorf("ValidateNamingConvention(%q, 'adr') = %v, expected %v", tt.filename, result, tt.expected)
+				t.Errorf("ValidateNamingConvention(%q, 'decision') = %v, expected %v", tt.filename, result, tt.expected)
 			}
 		})
 	}
 }
 
-func TestValidateNamingConvention_PRD(t *testing.T) {
+func TestValidateNamingConvention_Requirement(t *testing.T) {
 	tests := []struct {
 		name     string
 		filename string
 		expected bool
 	}{
-		{"valid prd", "prd-user-authentication.md", true},
-		{"valid prd simple", "prd-auth.md", true},
-		{"invalid prd uppercase", "PRD-auth.md", false},
-		{"invalid prd no prefix", "user-authentication-prd.md", false},
+		{"valid requirement", "REQ-001-user-login.md", true},
+		{"valid requirement higher", "REQ-999-feature.md", true},
+		{"invalid requirement lowercase", "req-001-test.md", false},
+		{"invalid requirement no number", "REQ-test.md", false},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := internal.ValidateNamingConvention(tt.filename, "prd")
+			result := internal.ValidateNamingConvention(tt.filename, "requirement")
 			if result != tt.expected {
-				t.Errorf("ValidateNamingConvention(%q, 'prd') = %v, expected %v", tt.filename, result, tt.expected)
+				t.Errorf("ValidateNamingConvention(%q, 'requirement') = %v, expected %v", tt.filename, result, tt.expected)
 			}
 		})
 	}
 }
 
-func TestValidateNamingConvention_Tasks(t *testing.T) {
+func TestValidateNamingConvention_Analysis(t *testing.T) {
 	tests := []struct {
 		name     string
 		filename string
 		expected bool
 	}{
-		{"valid tasks", "tasks-user-authentication.md", true},
-		{"valid tasks simple", "tasks-auth.md", true},
-		{"invalid tasks uppercase", "TASKS-auth.md", false},
+		{"valid analysis", "ANALYSIS-001-topic.md", true},
+		{"valid analysis with dashes", "ANALYSIS-042-some-topic.md", true},
+		{"invalid analysis lowercase", "analysis-001-topic.md", false},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := internal.ValidateNamingConvention(tt.filename, "tasks")
+			result := internal.ValidateNamingConvention(tt.filename, "analysis")
 			if result != tt.expected {
-				t.Errorf("ValidateNamingConvention(%q, 'tasks') = %v, expected %v", tt.filename, result, tt.expected)
+				t.Errorf("ValidateNamingConvention(%q, 'analysis') = %v, expected %v", tt.filename, result, tt.expected)
 			}
 		})
 	}
 }
 
-func TestValidateNamingConvention_Plan(t *testing.T) {
+func TestValidateNamingConvention_Feature(t *testing.T) {
 	tests := []struct {
 		name     string
 		filename string
 		expected bool
 	}{
-		{"valid numbered plan", "001-authentication-plan.md", true},
-		{"valid implementation plan", "implementation-plan-auth.md", true},
-		{"valid plan prefix", "plan-oauth.md", true},
-		{"invalid plan no number", "authentication-plan.md", false},
+		{"valid feature", "FEATURE-001-auth.md", true},
+		{"valid feature with dashes", "FEATURE-042-user-auth.md", true},
+		{"invalid feature lowercase", "feature-001-auth.md", false},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := internal.ValidateNamingConvention(tt.filename, "plan")
+			result := internal.ValidateNamingConvention(tt.filename, "feature")
 			if result != tt.expected {
-				t.Errorf("ValidateNamingConvention(%q, 'plan') = %v, expected %v", tt.filename, result, tt.expected)
+				t.Errorf("ValidateNamingConvention(%q, 'feature') = %v, expected %v", tt.filename, result, tt.expected)
 			}
 		})
 	}
 }
 
-func TestValidateNamingConvention_ThreatModel(t *testing.T) {
+func TestValidateNamingConvention_Critique(t *testing.T) {
 	tests := []struct {
 		name     string
 		filename string
 		expected bool
 	}{
-		{"valid tm", "TM-001-authentication-flow.md", true},
-		{"valid tm higher", "TM-042-oauth.md", true},
-		{"invalid tm lowercase", "tm-001-auth.md", false},
+		{"valid critique", "CRIT-001-auth-critique.md", true},
+		{"valid critique higher", "CRIT-042-plan-review.md", true},
+		{"invalid critique lowercase", "crit-001-auth.md", false},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := internal.ValidateNamingConvention(tt.filename, "tm")
+			result := internal.ValidateNamingConvention(tt.filename, "critique")
 			if result != tt.expected {
-				t.Errorf("ValidateNamingConvention(%q, 'tm') = %v, expected %v", tt.filename, result, tt.expected)
+				t.Errorf("ValidateNamingConvention(%q, 'critique') = %v, expected %v", tt.filename, result, tt.expected)
 			}
 		})
 	}
 }
 
-func TestValidateNamingConvention_REQ(t *testing.T) {
+func TestValidateNamingConvention_TestReport(t *testing.T) {
 	tests := []struct {
 		name     string
 		filename string
 		expected bool
 	}{
-		{"valid req", "REQ-001-user-login.md", true},
-		{"invalid req lowercase", "req-001-test.md", false},
+		{"valid test-report", "QA-001-auth-test-report.md", true},
+		{"valid test-report higher", "QA-042-integration.md", true},
+		{"invalid test-report lowercase", "qa-001-auth.md", false},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := internal.ValidateNamingConvention(tt.filename, "req")
+			result := internal.ValidateNamingConvention(tt.filename, "test-report")
 			if result != tt.expected {
-				t.Errorf("ValidateNamingConvention(%q, 'req') = %v, expected %v", tt.filename, result, tt.expected)
+				t.Errorf("ValidateNamingConvention(%q, 'test-report') = %v, expected %v", tt.filename, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestValidateNamingConvention_Security(t *testing.T) {
+	tests := []struct {
+		name     string
+		filename string
+		expected bool
+	}{
+		{"valid security", "SEC-001-auth-flow.md", true},
+		{"valid security higher", "SEC-042-data-encryption.md", true},
+		{"invalid security lowercase", "sec-001-auth.md", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := internal.ValidateNamingConvention(tt.filename, "security")
+			if result != tt.expected {
+				t.Errorf("ValidateNamingConvention(%q, 'security') = %v, expected %v", tt.filename, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestValidateNamingConvention_Retrospective(t *testing.T) {
+	tests := []struct {
+		name     string
+		filename string
+		expected bool
+	}{
+		{"valid retrospective", "RETRO-2024-01-01-sprint-review.md", true},
+		{"valid retrospective end of year", "RETRO-2024-12-31-year-end.md", true},
+		{"invalid retrospective lowercase", "retro-2024-01-01-review.md", false},
+		{"invalid retrospective no prefix", "2024-01-01-review.md", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := internal.ValidateNamingConvention(tt.filename, "retrospective")
+			if result != tt.expected {
+				t.Errorf("ValidateNamingConvention(%q, 'retrospective') = %v, expected %v", tt.filename, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestValidateNamingConvention_Skill(t *testing.T) {
+	tests := []struct {
+		name     string
+		filename string
+		expected bool
+	}{
+		{"valid skill", "SKILL-001-git-workflow.md", true},
+		{"valid skill higher", "SKILL-042-debugging.md", true},
+		{"invalid skill lowercase", "skill-001-workflow.md", false},
+		{"invalid skill old format", "Skill-Build-001.md", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := internal.ValidateNamingConvention(tt.filename, "skill")
+			if result != tt.expected {
+				t.Errorf("ValidateNamingConvention(%q, 'skill') = %v, expected %v", tt.filename, result, tt.expected)
 			}
 		})
 	}
@@ -167,9 +232,10 @@ func TestValidateNamingConvention_Session(t *testing.T) {
 		filename string
 		expected bool
 	}{
-		{"valid session", "2024-01-01-session-01.md", true},
-		{"valid session higher", "2024-12-31-session-99.md", true},
-		{"invalid session format", "session-2024-01-01.md", false},
+		{"valid session", "SESSION-2024-01-01-01-initial-setup.md", true},
+		{"valid session higher", "SESSION-2024-12-31-99-year-end.md", true},
+		{"invalid session old format", "2024-01-01-session-01.md", false},
+		{"invalid session no prefix", "session-2024-01-01.md", false},
 	}
 
 	for _, tt := range tests {
@@ -865,13 +931,18 @@ func TestValidateArtifactNaming(t *testing.T) {
 		expectType  string
 	}{
 		{"EPIC-001-auth.md", true, "epic"},
-		{"ADR-001-database.md", true, "adr"},
-		{"prd-auth.md", true, "prd"},
-		{"tasks-auth.md", true, "tasks"},
-		{"001-auth-plan.md", true, "plan"},
-		{"TM-001-auth-flow.md", true, "tm"},
-		{"REQ-001-user-login.md", true, "req"},
-		{"2024-01-01-session-01.md", true, "session"},
+		{"ADR-001-database.md", true, "decision"},
+		{"REQ-001-user-login.md", true, "requirement"},
+		{"DESIGN-001-architecture.md", true, "design"},
+		{"TASK-001-implement-auth.md", true, "task"},
+		{"ANALYSIS-001-topic.md", true, "analysis"},
+		{"FEATURE-001-auth.md", true, "feature"},
+		{"CRIT-001-plan-review.md", true, "critique"},
+		{"QA-001-test-report.md", true, "test-report"},
+		{"SEC-001-auth-flow.md", true, "security"},
+		{"SESSION-2024-01-01-01-initial-setup.md", true, "session"},
+		{"RETRO-2024-01-01-sprint-review.md", true, "retrospective"},
+		{"SKILL-001-git-workflow.md", true, "skill"},
 		{"random-file.md", false, ""},
 	}
 

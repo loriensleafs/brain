@@ -418,6 +418,18 @@ Need to write/edit a memory note?
 
 ---
 
+## Validation
+
+Entity naming is enforced by validators in both TypeScript and Go:
+
+- **TypeScript**: `@brain/validation` package (MCP runtime)
+- **Go**: `packages/validation/internal/validate_consistency.go` (CLI/hooks)
+- **Parity**: Cross-language tests ensure identical validation (`packages/validation/src/__tests__/parity/`)
+
+See ADR-023 for validation architecture details.
+
+---
+
 ## Tier 2: Episodic Memory
 
 Session replay via structured episode extraction. Reduces session logs from 10K-50K tokens to 500-2000 tokens.

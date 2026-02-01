@@ -13,19 +13,21 @@ import (
 )
 
 // NamingPatterns defines the regex patterns for artifact naming conventions.
+// Canonical patterns from memory.md - 13 total patterns.
 var NamingPatterns = map[string]*regexp.Regexp{
-	"epic":    regexp.MustCompile(`^EPIC-\d{3}-[\w-]+\.md$`),
-	"adr":     regexp.MustCompile(`^ADR-\d{3}-[\w-]+\.md$`),
-	"prd":     regexp.MustCompile(`^prd-[\w-]+\.md$`),
-	"tasks":   regexp.MustCompile(`^tasks-[\w-]+\.md$`),
-	"plan":    regexp.MustCompile(`^\d{3}-[\w-]+-plan\.md$|^(implementation-plan|plan)-[\w-]+\.md$`),
-	"tm":      regexp.MustCompile(`^TM-\d{3}-[\w-]+\.md$`),
-	"req":     regexp.MustCompile(`^REQ-\d{3}-[\w-]+\.md$`),
-	"design":  regexp.MustCompile(`^DESIGN-\d{3}-[\w-]+\.md$`),
-	"task":    regexp.MustCompile(`^TASK-\d{3}-[\w-]+\.md$`),
-	"skill":   regexp.MustCompile(`^Skill-[\w]+-\d{3}\.md$`),
-	"retro":   regexp.MustCompile(`^\d{4}-\d{2}-\d{2}-[\w-]+\.md$`),
-	"session": regexp.MustCompile(`^\d{4}-\d{2}-\d{2}-session-\d+\.md$`),
+	"decision":      regexp.MustCompile(`^ADR-\d{3}-[\w-]+\.md$`),
+	"session":       regexp.MustCompile(`^SESSION-\d{4}-\d{2}-\d{2}-\d{2}-[\w-]+\.md$`),
+	"requirement":   regexp.MustCompile(`^REQ-\d{3}-[\w-]+\.md$`),
+	"design":        regexp.MustCompile(`^DESIGN-\d{3}-[\w-]+\.md$`),
+	"task":          regexp.MustCompile(`^TASK-\d{3}-[\w-]+\.md$`),
+	"analysis":      regexp.MustCompile(`^ANALYSIS-\d{3}-[\w-]+\.md$`),
+	"feature":       regexp.MustCompile(`^FEATURE-\d{3}-[\w-]+\.md$`),
+	"epic":          regexp.MustCompile(`^EPIC-\d{3}-[\w-]+\.md$`),
+	"critique":      regexp.MustCompile(`^CRIT-\d{3}-[\w-]+\.md$`),
+	"test-report":   regexp.MustCompile(`^QA-\d{3}-[\w-]+\.md$`),
+	"security":      regexp.MustCompile(`^SEC-\d{3}-[\w-]+\.md$`),
+	"retrospective": regexp.MustCompile(`^RETRO-\d{4}-\d{2}-\d{2}-[\w-]+\.md$`),
+	"skill":         regexp.MustCompile(`^SKILL-\d{3}-[\w-]+\.md$`),
 }
 
 // NamingPatternInput represents input for naming pattern validation.
@@ -734,20 +736,21 @@ func ValidateArtifactNaming(filePath string) (bool, string) {
 	fileName := filepath.Base(filePath)
 
 	// Check patterns in priority order (more specific patterns first)
-	// Session pattern must be checked before retro since both start with YYYY-MM-DD
+	// Session pattern must be checked before retrospective since both use date format
 	patternOrder := []string{
-		"session", // YYYY-MM-DD-session-NN.md (most specific date pattern)
-		"retro",   // YYYY-MM-DD-*.md (less specific date pattern)
-		"epic",
-		"adr",
-		"prd",
-		"tasks",
-		"plan",
-		"tm",
-		"req",
-		"design",
-		"task",
-		"skill",
+		"session",       // SESSION-YYYY-MM-DD-NN-*.md (most specific date pattern)
+		"retrospective", // RETRO-YYYY-MM-DD-*.md (less specific date pattern)
+		"decision",      // ADR-NNN-*.md
+		"requirement",   // REQ-NNN-*.md
+		"design",        // DESIGN-NNN-*.md
+		"task",          // TASK-NNN-*.md
+		"analysis",      // ANALYSIS-NNN-*.md
+		"feature",       // FEATURE-NNN-*.md
+		"epic",          // EPIC-NNN-*.md
+		"critique",      // CRIT-NNN-*.md
+		"test-report",   // QA-NNN-*.md
+		"security",      // SEC-NNN-*.md
+		"skill",         // SKILL-NNN-*.md
 	}
 
 	for _, patternName := range patternOrder {
@@ -765,34 +768,32 @@ func ValidateArtifactNaming(filePath string) (bool, string) {
 			return true, "epic"
 		}
 	case "architecture":
-		if NamingPatterns["adr"].MatchString(fileName) {
-			return true, "adr"
+		if NamingPatterns["decision"].MatchString(fileName) {
+			return true, "decision"
 		}
 	case "security":
-		if NamingPatterns["tm"].MatchString(fileName) {
-			return true, "tm"
+		if NamingPatterns["security"].MatchString(fileName) {
+			return true, "security"
 		}
-	case "planning":
-		for _, pType := range []string{"prd", "tasks", "plan"} {
-			if NamingPatterns[pType].MatchString(fileName) {
-				return true, pType
-			}
+	case "analysis":
+		if NamingPatterns["analysis"].MatchString(fileName) {
+			return true, "analysis"
 		}
 	case "sessions":
 		if NamingPatterns["session"].MatchString(fileName) {
 			return true, "session"
 		}
 	case "retrospective":
-		if NamingPatterns["retro"].MatchString(fileName) {
-			return true, "retro"
+		if NamingPatterns["retrospective"].MatchString(fileName) {
+			return true, "retrospective"
 		}
 	case "skills":
 		if NamingPatterns["skill"].MatchString(fileName) {
 			return true, "skill"
 		}
 	case "requirements":
-		if NamingPatterns["req"].MatchString(fileName) {
-			return true, "req"
+		if NamingPatterns["requirement"].MatchString(fileName) {
+			return true, "requirement"
 		}
 	case "design":
 		if NamingPatterns["design"].MatchString(fileName) {
@@ -801,6 +802,18 @@ func ValidateArtifactNaming(filePath string) (bool, string) {
 	case "tasks":
 		if NamingPatterns["task"].MatchString(fileName) {
 			return true, "task"
+		}
+	case "critique":
+		if NamingPatterns["critique"].MatchString(fileName) {
+			return true, "critique"
+		}
+	case "qa":
+		if NamingPatterns["test-report"].MatchString(fileName) {
+			return true, "test-report"
+		}
+	case "features":
+		if NamingPatterns["feature"].MatchString(fileName) {
+			return true, "feature"
 		}
 	}
 

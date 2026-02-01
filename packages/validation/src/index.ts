@@ -117,3 +117,17 @@ export {
   type WorkflowMode,
   type WorkflowPhase,
 } from "./validate";
+
+// Naming pattern validators
+export {
+  DeprecatedPatterns,
+  getMatchingPatterns,
+  getPatternRegex,
+  getPatternTypes,
+  isValidNamingPattern,
+  NamingPatterns,
+  parseNamingPattern,
+  validateNamingPattern,
+  type NamingPatternResult,
+  type PatternType,
+} from "./naming-pattern";
