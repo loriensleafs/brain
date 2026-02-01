@@ -6,10 +6,10 @@
  * This service expects pre-chunked text within model token limits.
  */
 
-import { OllamaClient } from "../ollama/client";
-import { OllamaError } from "../ollama/types";
 import { ollamaConfig } from "../../config/ollama";
 import { logger } from "../../utils/internal/logger";
+import { OllamaClient } from "../ollama/client";
+import { OllamaError } from "../ollama/types";
 
 /** Maximum retry attempts for transient errors */
 const MAX_RETRIES = 3;
@@ -62,7 +62,7 @@ function isRetryableError(error: unknown): boolean {
  * @throws OllamaError on non-retryable errors or after max retries exceeded
  */
 export async function generateEmbedding(
-  text: string
+  text: string,
 ): Promise<number[] | null> {
   if (!text || text.trim().length === 0) {
     return null;
@@ -73,7 +73,11 @@ export async function generateEmbedding(
 
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     try {
-      return await client.generateEmbedding(text, "search_document", "nomic-embed-text");
+      return await client.generateEmbedding(
+        text,
+        "search_document",
+        "nomic-embed-text",
+      );
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
 
@@ -83,8 +87,9 @@ export async function generateEmbedding(
       }
 
       // Calculate exponential backoff delay
-      const delay = BASE_DELAY_MS * Math.pow(2, attempt);
-      const statusCode = error instanceof OllamaError ? error.statusCode : "unknown";
+      const delay = BASE_DELAY_MS * 2 ** attempt;
+      const statusCode =
+        error instanceof OllamaError ? error.statusCode : "unknown";
 
       logger.warn(
         {
@@ -93,7 +98,7 @@ export async function generateEmbedding(
           delay,
           statusCode,
         },
-        "Ollama server error, retrying with backoff"
+        "Ollama server error, retrying with backoff",
       );
 
       await sleep(delay);
@@ -103,7 +108,7 @@ export async function generateEmbedding(
   // All retries exhausted
   logger.error(
     { maxRetries: MAX_RETRIES, lastError: lastError?.message },
-    "Max retries exceeded for embedding generation"
+    "Max retries exceeded for embedding generation",
   );
   throw lastError ?? new OllamaError("Max retries exceeded", 500);
 }

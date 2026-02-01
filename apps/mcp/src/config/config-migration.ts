@@ -16,13 +16,23 @@
  */
 
 import * as fs from "fs";
-import * as path from "path";
 import * as os from "os";
-import { BrainConfig, DEFAULT_BRAIN_CONFIG, MemoriesMode, parseBrainConfig } from "./schema";
-import { saveBrainConfig, loadBrainConfig, getBrainConfigDir, getBrainConfigPath } from "./brain-config";
-import { ConfigRollbackManager } from "./rollback";
-import { syncConfigToBasicMemory } from "./translation-layer";
+import * as path from "path";
 import { logger } from "../utils/internal/logger";
+import {
+  getBrainConfigDir,
+  getBrainConfigPath,
+  loadBrainConfig,
+  saveBrainConfig,
+} from "./brain-config";
+import type { ConfigRollbackManager } from "./rollback";
+import {
+  type BrainConfig,
+  DEFAULT_BRAIN_CONFIG,
+  type MemoriesMode,
+  parseBrainConfig,
+} from "./schema";
+import { syncConfigToBasicMemory } from "./translation-layer";
 
 /**
  * Old config location (basic-memory style).
@@ -207,15 +217,24 @@ export function loadOldConfig(): OldBrainConfig | null {
  * @returns Configuration in new format
  */
 export function transformOldToNew(oldConfig: OldBrainConfig): BrainConfig {
-  const defaultSync = DEFAULT_BRAIN_CONFIG.sync ?? { enabled: true, delay_ms: 500 };
-  const defaultLogging = DEFAULT_BRAIN_CONFIG.logging ?? { level: "info" as const };
-  const defaultWatcher = DEFAULT_BRAIN_CONFIG.watcher ?? { enabled: true, debounce_ms: 2000 };
+  const defaultSync = DEFAULT_BRAIN_CONFIG.sync ?? {
+    enabled: true,
+    delay_ms: 500,
+  };
+  const defaultLogging = DEFAULT_BRAIN_CONFIG.logging ?? {
+    level: "info" as const,
+  };
+  const defaultWatcher = DEFAULT_BRAIN_CONFIG.watcher ?? {
+    enabled: true,
+    debounce_ms: 2000,
+  };
 
   const newConfig: BrainConfig = {
     $schema: DEFAULT_BRAIN_CONFIG.$schema,
     version: "2.0.0",
     defaults: {
-      memories_location: oldConfig.notes_path || DEFAULT_BRAIN_CONFIG.defaults.memories_location,
+      memories_location:
+        oldConfig.notes_path || DEFAULT_BRAIN_CONFIG.defaults.memories_location,
       memories_mode: DEFAULT_BRAIN_CONFIG.defaults.memories_mode,
     },
     projects: {},
@@ -224,8 +243,13 @@ export function transformOldToNew(oldConfig: OldBrainConfig): BrainConfig {
       delay_ms: oldConfig.sync?.delay ?? defaultSync.delay_ms,
     },
     logging: {
-      level: (oldConfig.log_level as "trace" | "debug" | "info" | "warn" | "error") ||
-        defaultLogging.level,
+      level:
+        (oldConfig.log_level as
+          | "trace"
+          | "debug"
+          | "info"
+          | "warn"
+          | "error") || defaultLogging.level,
     },
     watcher: { ...defaultWatcher },
   };
@@ -258,7 +282,8 @@ export function transformOldToNew(oldConfig: OldBrainConfig): BrainConfig {
           CODE: "CODE",
           CUSTOM: "CUSTOM",
         };
-        newConfig.projects![name]!.memories_mode = modeMap[oldProject.mode] || "DEFAULT";
+        newConfig.projects![name]!.memories_mode =
+          modeMap[oldProject.mode] || "DEFAULT";
       }
     }
   }
@@ -333,9 +358,13 @@ function removeOldConfig(): void {
  * ```
  */
 export async function migrateToNewConfigLocation(
-  options: MigrationOptions = {}
+  options: MigrationOptions = {},
 ): Promise<MigrationResult> {
-  const { removeOldConfig: shouldRemoveOld = true, force = false, dryRun = false } = options;
+  const {
+    removeOldConfig: shouldRemoveOld = true,
+    force = false,
+    dryRun = false,
+  } = options;
   const steps: MigrationStep[] = [];
 
   logger.info({ options }, "Starting config migration");
@@ -446,7 +475,11 @@ export async function migrateToNewConfigLocation(
       };
     }
   } else {
-    steps.push({ name: "save_new_config", status: "skipped", error: "Dry run" });
+    steps.push({
+      name: "save_new_config",
+      status: "skipped",
+      error: "Dry run",
+    });
   }
 
   // Step 6: Verify new config loads correctly
@@ -476,7 +509,11 @@ export async function migrateToNewConfigLocation(
       };
     }
   } else {
-    steps.push({ name: "verify_new_config", status: "skipped", error: "Dry run" });
+    steps.push({
+      name: "verify_new_config",
+      status: "skipped",
+      error: "Dry run",
+    });
   }
 
   // Step 7: Sync to basic-memory
@@ -494,7 +531,11 @@ export async function migrateToNewConfigLocation(
       logger.warn({ error }, "Failed to sync to basic-memory after migration");
     }
   } else {
-    steps.push({ name: "sync_basic_memory", status: "skipped", error: "Dry run" });
+    steps.push({
+      name: "sync_basic_memory",
+      status: "skipped",
+      error: "Dry run",
+    });
   }
 
   // Step 8: Remove old config
@@ -522,8 +563,12 @@ export async function migrateToNewConfigLocation(
   }
 
   logger.info(
-    { backupPath, oldRemoved, projectCount: Object.keys(newConfig.projects ?? {}).length },
-    "Config migration completed successfully"
+    {
+      backupPath,
+      oldRemoved,
+      projectCount: Object.keys(newConfig.projects ?? {}).length,
+    },
+    "Config migration completed successfully",
   );
 
   return {
@@ -579,7 +624,7 @@ export async function rollbackMigration(backupPath: string): Promise<boolean> {
  */
 export async function migrateWithRollback(
   rollbackManager: ConfigRollbackManager,
-  options: MigrationOptions = {}
+  options: MigrationOptions = {},
 ): Promise<MigrationResult> {
   // Create snapshot of current state (if new config exists)
   const newConfigExists = fs.existsSync(getBrainConfigPath());
@@ -596,11 +641,15 @@ export async function migrateWithRollback(
   const result = await migrateToNewConfigLocation(options);
 
   // On success, mark as good
-  if (result.success && result.migratedConfig && rollbackManager.isInitialized()) {
+  if (
+    result.success &&
+    result.migratedConfig &&
+    rollbackManager.isInitialized()
+  ) {
     try {
       await rollbackManager.markAsGood(
         result.migratedConfig,
-        "After successful migration"
+        "After successful migration",
       );
     } catch (error) {
       logger.debug({ error }, "Could not mark config as good after migration");

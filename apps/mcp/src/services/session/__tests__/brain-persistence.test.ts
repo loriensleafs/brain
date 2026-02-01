@@ -11,18 +11,22 @@
  * - Error handling for Brain MCP unavailable
  */
 
-import { describe, test, expect, vi } from "vitest";
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { describe, expect, test, vi } from "vitest";
 import type { AgentInvocation } from "../types";
 import { createDefaultSessionState } from "../types";
 
 // Mock client for Brain MCP
-function createMockClient(
-  noteStore: Map<string, string> = new Map()
-): Client {
+function createMockClient(noteStore: Map<string, string> = new Map()): Client {
   return {
     callTool: vi.fn(
-      async ({ name, arguments: args }: { name: string; arguments: Record<string, unknown> }) => {
+      async ({
+        name,
+        arguments: args,
+      }: {
+        name: string;
+        arguments: Record<string, unknown>;
+      }) => {
         if (name === "write_note") {
           const path = args.path as string;
           const content = args.content as string;
@@ -40,7 +44,7 @@ function createMockClient(
         }
 
         throw new Error(`Unknown tool: ${name}`);
-      }
+      },
     ),
   } as unknown as Client;
 }
@@ -300,7 +304,9 @@ describe("BrainSessionPersistence", () => {
       // We need to mock the getBasicMemoryClient to fail
       // For this test, use a client that throws
       const failingClient = createFailingClient();
-      const persistence = new BrainSessionPersistence({ client: failingClient });
+      const persistence = new BrainSessionPersistence({
+        client: failingClient,
+      });
 
       // The client will throw when we try to use it
       const session = createDefaultSessionState();
@@ -360,10 +366,11 @@ describe("BrainSessionPersistence", () => {
       expect(mockClient.callTool).toHaveBeenCalled();
 
       // Check the arguments passed to callTool
-      const calls = (mockClient.callTool as ReturnType<typeof vi.fn>).mock.calls;
+      const calls = (mockClient.callTool as ReturnType<typeof vi.fn>).mock
+        .calls;
       const writeCall = calls.find(
         (c: { name: string; arguments: Record<string, unknown> }[]) =>
-          c[0].name === "write_note"
+          c[0].name === "write_note",
       );
       expect(writeCall).toBeDefined();
       expect(writeCall![0].arguments.project).toBe(process.cwd());
@@ -384,10 +391,11 @@ describe("BrainSessionPersistence", () => {
       await persistence.saveSession(session);
 
       // Check the arguments passed to callTool
-      const calls = (mockClient.callTool as ReturnType<typeof vi.fn>).mock.calls;
+      const calls = (mockClient.callTool as ReturnType<typeof vi.fn>).mock
+        .calls;
       const writeCall = calls.find(
         (c: { name: string; arguments: Record<string, unknown> }[]) =>
-          c[0].name === "write_note"
+          c[0].name === "write_note",
       );
       expect(writeCall).toBeDefined();
       expect(writeCall![0].arguments.project).toBe(customPath);

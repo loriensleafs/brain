@@ -9,19 +9,19 @@
  * - formatAuditReport(): Generate human-readable output
  */
 
-import { describe, test, expect, beforeEach, afterEach } from "vitest";
 import * as fs from "fs";
-import * as path from "path";
 import * as os from "os";
+import * as path from "path";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import {
   AgentEntityCategory,
+  auditAgentsDirectory,
   ENTITY_PATTERNS,
+  formatAuditReport,
+  generateAuditReport,
+  generateSuggestedTitle,
   getCategoryFromPath,
   getEntityType,
-  generateSuggestedTitle,
-  auditAgentsDirectory,
-  generateAuditReport,
-  formatAuditReport,
   runAgentsAudit,
 } from "../agents-audit";
 
@@ -36,7 +36,11 @@ function createTestAgentsDir(): string {
 /**
  * Create a mock file in the test directory.
  */
-function createMockFile(baseDir: string, relativePath: string, content: string = "# Test"): void {
+function createMockFile(
+  baseDir: string,
+  relativePath: string,
+  content: string = "# Test",
+): void {
   const fullPath = path.join(baseDir, relativePath);
   const dir = path.dirname(fullPath);
   fs.mkdirSync(dir, { recursive: true });
@@ -54,40 +58,60 @@ function cleanupTestDir(dirPath: string): void {
 
 describe("getCategoryFromPath", () => {
   test("detects sessions category", () => {
-    expect(getCategoryFromPath("sessions/2026-01-31-session-01.md")).toBe(AgentEntityCategory.SESSIONS);
+    expect(getCategoryFromPath("sessions/2026-01-31-session-01.md")).toBe(
+      AgentEntityCategory.SESSIONS,
+    );
   });
 
   test("detects analysis category", () => {
-    expect(getCategoryFromPath("analysis/001-configuration-analysis.md")).toBe(AgentEntityCategory.ANALYSIS);
+    expect(getCategoryFromPath("analysis/001-configuration-analysis.md")).toBe(
+      AgentEntityCategory.ANALYSIS,
+    );
   });
 
   test("detects architecture category", () => {
-    expect(getCategoryFromPath("architecture/ADR-020-config.md")).toBe(AgentEntityCategory.ARCHITECTURE);
-    expect(getCategoryFromPath("architecture/decision/ADR-020-config.md")).toBe(AgentEntityCategory.ARCHITECTURE);
+    expect(getCategoryFromPath("architecture/ADR-020-config.md")).toBe(
+      AgentEntityCategory.ARCHITECTURE,
+    );
+    expect(getCategoryFromPath("architecture/decision/ADR-020-config.md")).toBe(
+      AgentEntityCategory.ARCHITECTURE,
+    );
   });
 
   test("detects planning category", () => {
-    expect(getCategoryFromPath("planning/001-feature-plan.md")).toBe(AgentEntityCategory.PLANNING);
+    expect(getCategoryFromPath("planning/001-feature-plan.md")).toBe(
+      AgentEntityCategory.PLANNING,
+    );
   });
 
   test("detects critique category", () => {
-    expect(getCategoryFromPath("critique/ADR-020-debate-log.md")).toBe(AgentEntityCategory.CRITIQUE);
+    expect(getCategoryFromPath("critique/ADR-020-debate-log.md")).toBe(
+      AgentEntityCategory.CRITIQUE,
+    );
   });
 
   test("detects qa category", () => {
-    expect(getCategoryFromPath("qa/001-validation.md")).toBe(AgentEntityCategory.QA);
+    expect(getCategoryFromPath("qa/001-validation.md")).toBe(
+      AgentEntityCategory.QA,
+    );
   });
 
   test("detects specs category", () => {
-    expect(getCategoryFromPath("specs/ADR-016/tasks/TASK-001.md")).toBe(AgentEntityCategory.SPECS);
+    expect(getCategoryFromPath("specs/ADR-016/tasks/TASK-001.md")).toBe(
+      AgentEntityCategory.SPECS,
+    );
   });
 
   test("detects security category", () => {
-    expect(getCategoryFromPath("security/TM-001-threat-model.md")).toBe(AgentEntityCategory.SECURITY);
+    expect(getCategoryFromPath("security/TM-001-threat-model.md")).toBe(
+      AgentEntityCategory.SECURITY,
+    );
   });
 
   test("returns unknown for unrecognized paths", () => {
-    expect(getCategoryFromPath("random/file.md")).toBe(AgentEntityCategory.UNKNOWN);
+    expect(getCategoryFromPath("random/file.md")).toBe(
+      AgentEntityCategory.UNKNOWN,
+    );
     expect(getCategoryFromPath("file.md")).toBe(AgentEntityCategory.UNKNOWN);
   });
 });
@@ -96,7 +120,9 @@ describe("getEntityType", () => {
   test("detects session log pattern", () => {
     expect(getEntityType("2026-01-31-session-01.md")).toBe("SESSION_LOG");
     expect(getEntityType("2026-01-31-session-44-topic.md")).toBe("SESSION_LOG");
-    expect(getEntityType("2026-01-18-session-01-phase2-integration-tests.md")).toBe("SESSION_LOG");
+    expect(
+      getEntityType("2026-01-18-session-01-phase2-integration-tests.md"),
+    ).toBe("SESSION_LOG");
   });
 
   test("detects ADR pattern", () => {
@@ -110,12 +136,16 @@ describe("getEntityType", () => {
   });
 
   test("detects requirement pattern", () => {
-    expect(getEntityType("REQ-001-session-state-schema.md")).toBe("REQUIREMENT");
+    expect(getEntityType("REQ-001-session-state-schema.md")).toBe(
+      "REQUIREMENT",
+    );
     expect(getEntityType("REQ-018-slash-command.md")).toBe("REQUIREMENT");
   });
 
   test("detects design doc pattern", () => {
-    expect(getEntityType("DESIGN-001-session-state-architecture.md")).toBe("DESIGN_DOC");
+    expect(getEntityType("DESIGN-001-session-state-architecture.md")).toBe(
+      "DESIGN_DOC",
+    );
     expect(getEntityType("DESIGN-unified-projects.md")).toBe("DESIGN_DOC");
   });
 
@@ -157,7 +187,9 @@ describe("getEntityType", () => {
   test("detects summary pattern", () => {
     expect(getEntityType("TASK-SUMMARY.md")).toBe("SUMMARY");
     // ADR summaries
-    expect(getEntityType("ADR-016-plan-revision-summary.md")).toBe("ADR_SUMMARY");
+    expect(getEntityType("ADR-016-plan-revision-summary.md")).toBe(
+      "ADR_SUMMARY",
+    );
     // Non-ADR summaries
     expect(getEntityType("project-summary.md")).toBe("SUMMARY");
   });
@@ -176,7 +208,9 @@ describe("getEntityType", () => {
 
   test("returns GENERIC_MD for unrecognized markdown files", () => {
     expect(getEntityType("random-file.md")).toBe("GENERIC_MD");
-    expect(getEntityType("memory-architecture-comparison.md")).toBe("GENERIC_MD");
+    expect(getEntityType("memory-architecture-comparison.md")).toBe(
+      "GENERIC_MD",
+    );
   });
 
   test("returns UNKNOWN for non-markdown files", () => {
@@ -187,83 +221,103 @@ describe("getEntityType", () => {
 
 describe("generateSuggestedTitle", () => {
   test("transforms session logs", () => {
-    expect(generateSuggestedTitle(
-      "sessions/2026-01-31-session-44-topic.md",
-      "2026-01-31-session-44-topic.md",
-      AgentEntityCategory.SESSIONS
-    )).toBe("session-2026-01-31-44-topic");
+    expect(
+      generateSuggestedTitle(
+        "sessions/2026-01-31-session-44-topic.md",
+        "2026-01-31-session-44-topic.md",
+        AgentEntityCategory.SESSIONS,
+      ),
+    ).toBe("session-2026-01-31-44-topic");
   });
 
   test("preserves ADR titles", () => {
-    expect(generateSuggestedTitle(
-      "architecture/ADR-020-config.md",
-      "ADR-020-config.md",
-      AgentEntityCategory.ARCHITECTURE
-    )).toBe("ADR-020-config");
+    expect(
+      generateSuggestedTitle(
+        "architecture/ADR-020-config.md",
+        "ADR-020-config.md",
+        AgentEntityCategory.ARCHITECTURE,
+      ),
+    ).toBe("ADR-020-config");
   });
 
   test("transforms plan titles", () => {
-    expect(generateSuggestedTitle(
-      "planning/001-feature-plan.md",
-      "001-feature-plan.md",
-      AgentEntityCategory.PLANNING
-    )).toBe("plan-001-feature");
+    expect(
+      generateSuggestedTitle(
+        "planning/001-feature-plan.md",
+        "001-feature-plan.md",
+        AgentEntityCategory.PLANNING,
+      ),
+    ).toBe("plan-001-feature");
   });
 
   test("preserves TASK titles", () => {
-    expect(generateSuggestedTitle(
-      "specs/ADR-016/tasks/TASK-001-session-state.md",
-      "TASK-001-session-state.md",
-      AgentEntityCategory.SPECS
-    )).toBe("TASK-001-session-state");
+    expect(
+      generateSuggestedTitle(
+        "specs/ADR-016/tasks/TASK-001-session-state.md",
+        "TASK-001-session-state.md",
+        AgentEntityCategory.SPECS,
+      ),
+    ).toBe("TASK-001-session-state");
   });
 
   test("preserves REQ titles", () => {
-    expect(generateSuggestedTitle(
-      "specs/ADR-016/requirements/REQ-001-schema.md",
-      "REQ-001-schema.md",
-      AgentEntityCategory.SPECS
-    )).toBe("REQ-001-schema");
+    expect(
+      generateSuggestedTitle(
+        "specs/ADR-016/requirements/REQ-001-schema.md",
+        "REQ-001-schema.md",
+        AgentEntityCategory.SPECS,
+      ),
+    ).toBe("REQ-001-schema");
   });
 
   test("preserves DESIGN titles", () => {
-    expect(generateSuggestedTitle(
-      "architecture/DESIGN-001-session-state.md",
-      "DESIGN-001-session-state.md",
-      AgentEntityCategory.ARCHITECTURE
-    )).toBe("DESIGN-001-session-state");
+    expect(
+      generateSuggestedTitle(
+        "architecture/DESIGN-001-session-state.md",
+        "DESIGN-001-session-state.md",
+        AgentEntityCategory.ARCHITECTURE,
+      ),
+    ).toBe("DESIGN-001-session-state");
   });
 
   test("includes parent context for nested specs", () => {
-    expect(generateSuggestedTitle(
-      "specs/ADR-016-session-protocol-enforcement/tasks/TASK-001.md",
-      "TASK-001.md",
-      AgentEntityCategory.SPECS
-    )).toBe("TASK-001");
+    expect(
+      generateSuggestedTitle(
+        "specs/ADR-016-session-protocol-enforcement/tasks/TASK-001.md",
+        "TASK-001.md",
+        AgentEntityCategory.SPECS,
+      ),
+    ).toBe("TASK-001");
   });
 
   test("prefixes generic numbered files with category", () => {
-    expect(generateSuggestedTitle(
-      "analysis/025-mcp-connection-error.md",
-      "025-mcp-connection-error.md",
-      AgentEntityCategory.ANALYSIS
-    )).toBe("analysis-025-mcp-connection-error");
+    expect(
+      generateSuggestedTitle(
+        "analysis/025-mcp-connection-error.md",
+        "025-mcp-connection-error.md",
+        AgentEntityCategory.ANALYSIS,
+      ),
+    ).toBe("analysis-025-mcp-connection-error");
   });
 
   test("keeps generic names without numbering", () => {
-    expect(generateSuggestedTitle(
-      "analysis/memory-architecture-comparison.md",
-      "memory-architecture-comparison.md",
-      AgentEntityCategory.ANALYSIS
-    )).toBe("memory-architecture-comparison");
+    expect(
+      generateSuggestedTitle(
+        "analysis/memory-architecture-comparison.md",
+        "memory-architecture-comparison.md",
+        AgentEntityCategory.ANALYSIS,
+      ),
+    ).toBe("memory-architecture-comparison");
   });
 
   test("handles backup files", () => {
-    expect(generateSuggestedTitle(
-      "sessions/2026-01-19-session-01.md.bak",
-      "2026-01-19-session-01.md.bak",
-      AgentEntityCategory.SESSIONS
-    )).toBe("session-2026-01-19-01");
+    expect(
+      generateSuggestedTitle(
+        "sessions/2026-01-19-session-01.md.bak",
+        "2026-01-19-session-01.md.bak",
+        AgentEntityCategory.SESSIONS,
+      ),
+    ).toBe("session-2026-01-19-01");
   });
 });
 
@@ -303,7 +357,7 @@ describe("auditAgentsDirectory", () => {
     const files = auditAgentsDirectory(testDir);
     expect(files.length).toBe(4);
 
-    const categories = files.map(f => f.category);
+    const categories = files.map((f) => f.category);
     expect(categories).toContain(AgentEntityCategory.SESSIONS);
     expect(categories).toContain(AgentEntityCategory.ANALYSIS);
     expect(categories).toContain(AgentEntityCategory.ARCHITECTURE);

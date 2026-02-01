@@ -12,12 +12,13 @@
  *
  * @see SearchService for the underlying implementation
  */
-import type { Tool } from "@modelcontextprotocol/sdk/types.js";
+
 import {
   parseSearchArgs as _parseSearchArgs,
   type SearchArgs,
 } from "@brain/validation";
 import searchSchema from "@brain/validation/schemas/tools/search.schema.json";
+import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 
 // Re-export type for backward compatibility
 export type { SearchArgs };

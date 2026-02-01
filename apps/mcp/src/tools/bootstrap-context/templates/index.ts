@@ -4,8 +4,8 @@
  * Templates use TypeScript template literals for type-safe interpolation.
  */
 
-export { renderContext, type ContextData } from "./context";
-export { renderFeaturesSection, type FeatureData } from "./features";
-export { renderDecisionsSection, type DecisionData } from "./decisions";
-export { renderBugsSection, type BugData } from "./bugs";
-export { renderActivitySection, type ActivityData } from "./activity";
+export { type ActivityData, renderActivitySection } from "./activity";
+export { type BugData, renderBugsSection } from "./bugs";
+export { type ContextData, renderContext } from "./context";
+export { type DecisionData, renderDecisionsSection } from "./decisions";
+export { type FeatureData, renderFeaturesSection } from "./features";

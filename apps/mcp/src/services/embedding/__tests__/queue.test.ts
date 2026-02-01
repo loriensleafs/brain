@@ -3,17 +3,17 @@
  * Tests queue CRUD operations and retry logic.
  */
 
-import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 import { Database } from "bun:sqlite";
 import * as sqliteVec from "sqlite-vec";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import * as connectionModule from "../../../db/connection";
 import {
   createEmbeddingQueueTable,
-  enqueueEmbedding,
   dequeueEmbedding,
-  markEmbeddingProcessed,
-  incrementAttempts,
+  enqueueEmbedding,
   getQueueLength,
+  incrementAttempts,
+  markEmbeddingProcessed,
 } from "../queue";
 
 describe("embedding queue", () => {
@@ -27,20 +27,19 @@ describe("embedding queue", () => {
 
     // Spy on createVectorConnection to return our test database
     // Return a wrapper that prevents actual close() to keep db available for assertions
-    createVectorConnectionSpy = vi.spyOn(
-      connectionModule,
-      "createVectorConnection"
-    ).mockImplementation(() => {
-      return {
-        run: (...args: Parameters<Database["run"]>) => db.run(...args),
-        query: (...args: Parameters<Database["query"]>) => db.query(...args),
-        prepare: (...args: Parameters<Database["prepare"]>) =>
-          db.prepare(...args),
-        close: () => {
-          /* no-op for tests */
-        },
-      } as unknown as Database;
-    });
+    createVectorConnectionSpy = vi
+      .spyOn(connectionModule, "createVectorConnection")
+      .mockImplementation(() => {
+        return {
+          run: (...args: Parameters<Database["run"]>) => db.run(...args),
+          query: (...args: Parameters<Database["query"]>) => db.query(...args),
+          prepare: (...args: Parameters<Database["prepare"]>) =>
+            db.prepare(...args),
+          close: () => {
+            /* no-op for tests */
+          },
+        } as unknown as Database;
+      });
   });
 
   afterEach(() => {
@@ -55,7 +54,7 @@ describe("embedding queue", () => {
       // Verify table exists by querying sqlite_master
       const result = db
         .query(
-          "SELECT name FROM sqlite_master WHERE type='table' AND name='embedding_queue'"
+          "SELECT name FROM sqlite_master WHERE type='table' AND name='embedding_queue'",
         )
         .get();
       expect(result).not.toBeNull();
@@ -120,7 +119,7 @@ describe("embedding queue", () => {
 
       const count = db
         .query(
-          "SELECT COUNT(*) as count FROM embedding_queue WHERE note_id = ?"
+          "SELECT COUNT(*) as count FROM embedding_queue WHERE note_id = ?",
         )
         .get("note-1") as { count: number };
       expect(count.count).toBe(1);
@@ -131,7 +130,7 @@ describe("embedding queue", () => {
 
       const result = db
         .query(
-          "SELECT attempts, last_error FROM embedding_queue WHERE note_id = ?"
+          "SELECT attempts, last_error FROM embedding_queue WHERE note_id = ?",
         )
         .get("note-1") as { attempts: number; last_error: string | null };
       expect(result.attempts).toBe(0);
@@ -148,15 +147,15 @@ describe("embedding queue", () => {
       // Add items with explicit timestamps to control order
       db.run(
         "INSERT INTO embedding_queue (note_id, created_at) VALUES (?, ?)",
-        ["note-2", "2024-01-02T00:00:00Z"]
+        ["note-2", "2024-01-02T00:00:00Z"],
       );
       db.run(
         "INSERT INTO embedding_queue (note_id, created_at) VALUES (?, ?)",
-        ["note-1", "2024-01-01T00:00:00Z"]
+        ["note-1", "2024-01-01T00:00:00Z"],
       );
       db.run(
         "INSERT INTO embedding_queue (note_id, created_at) VALUES (?, ?)",
-        ["note-3", "2024-01-03T00:00:00Z"]
+        ["note-3", "2024-01-03T00:00:00Z"],
       );
 
       const result = dequeueEmbedding();
@@ -177,7 +176,7 @@ describe("embedding queue", () => {
         .get("note-1") as { id: number };
       db.run(
         "UPDATE embedding_queue SET attempts = 1, last_error = ? WHERE id = ?",
-        ["some error", item.id]
+        ["some error", item.id],
       );
 
       const result = dequeueEmbedding();

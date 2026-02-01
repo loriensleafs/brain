@@ -13,9 +13,14 @@ import type { SourceSchema } from "../organizer/schemas/sourceSchema";
  * Supported note types in a Brain project
  */
 export type NoteType =
-  | 'feature' | 'phase' | 'task'
-  | 'research' | 'analysis'
-  | 'spec' | 'decision' | 'note';
+  | "feature"
+  | "phase"
+  | "task"
+  | "research"
+  | "analysis"
+  | "spec"
+  | "decision"
+  | "note";
 
 /**
  * Naming and location conventions for a specific note type
@@ -36,10 +41,14 @@ export interface TargetSchema {
 }
 
 export type ConformanceIssueType =
-  | 'wrong_folder' | 'bad_prefix'
-  | 'root_level_scoped' | 'redundant_child_prefix'
-  | 'not_overview' | 'missing_frontmatter'
-  | 'missing_observations' | 'missing_relations';
+  | "wrong_folder"
+  | "bad_prefix"
+  | "root_level_scoped"
+  | "redundant_child_prefix"
+  | "not_overview"
+  | "missing_frontmatter"
+  | "missing_observations"
+  | "missing_relations";
 
 export interface ConformanceIssue {
   type: ConformanceIssueType;
@@ -50,33 +59,37 @@ export interface ConformanceIssue {
 
 export const brainTargetSchema: TargetSchema = {
   naming: {
-    feature: { location: 'features/[slug]/', main_file: 'overview.md' },
-    phase: { location: 'features/[slug]/phase-[n]/', main_file: 'overview.md' },
-    task: { location: 'features/[slug]/', main_file: '[task-name].md' },
-    research: { location: 'research/[slug]/', main_file: 'overview.md' },
-    analysis: { location: 'analysis/[slug]/', main_file: 'overview.md' },
-    spec: { location: 'specs/', main_file: '[name].md', no_prefix: true },
-    decision: { location: 'decisions/', main_file: '[name].md', no_prefix: true },
-    note: { location: '[folder]/', main_file: '[name].md' }
+    feature: { location: "features/[slug]/", main_file: "overview.md" },
+    phase: { location: "features/[slug]/phase-[n]/", main_file: "overview.md" },
+    task: { location: "features/[slug]/", main_file: "[task-name].md" },
+    research: { location: "research/[slug]/", main_file: "overview.md" },
+    analysis: { location: "analysis/[slug]/", main_file: "overview.md" },
+    spec: { location: "specs/", main_file: "[name].md", no_prefix: true },
+    decision: {
+      location: "decisions/",
+      main_file: "[name].md",
+      no_prefix: true,
+    },
+    note: { location: "[folder]/", main_file: "[name].md" },
   },
-  required_sections: ['## Observations', '## Relations'],
+  required_sections: ["## Observations", "## Relations"],
   frontmatter_required: true,
   min_observations: 3,
-  min_relations: 2
+  min_relations: 2,
 };
 
 export interface AnalyzeProjectArgs {
   project?: string;
-  mode?: 'conform' | 'import';
+  mode?: "conform" | "import";
   preview?: boolean;
   source_schema?: SourceSchema;
-  source_path?: string;  // Direct filesystem path for import mode
+  source_path?: string; // Direct filesystem path for import mode
 }
 
 /**
  * Types of migration operations for dry-run preview
  */
-export type MigrationOperation = 'rename' | 'restructure' | 'move';
+export type MigrationOperation = "rename" | "restructure" | "move";
 
 /**
  * Single item in the migration preview showing source, target, and reason
@@ -112,7 +125,7 @@ export interface NonConformingFile {
 }
 
 export interface AnalyzeProjectOutput {
-  mode: 'conform';
+  mode: "conform";
   project: string;
   total_files: number;
   conforming: string[];
@@ -125,16 +138,39 @@ export interface AnalyzeProjectOutput {
 }
 
 export const toolDefinition: Tool = {
-  name: 'analyze_project',
-  description: 'Scan a Brain project and report conformance issues against naming conventions. Returns lists of conforming and non-conforming files with suggested fixes.',
+  name: "analyze_project",
+  description:
+    "Scan a Brain project and report conformance issues against naming conventions. Returns lists of conforming and non-conforming files with suggested fixes.",
   inputSchema: {
-    type: 'object' as const,
+    type: "object" as const,
     properties: {
-      project: { type: 'string', description: 'Project to analyze. Auto-resolved if not specified.' },
-      mode: { type: 'string', enum: ['conform', 'import'], default: 'conform', description: 'Analysis mode. conform=check existing notes, import=analyze external project' },
-      preview: { type: 'boolean', default: false, description: 'When true, return a grouped visual preview of planned migrations instead of raw conformance data' },
-      source_schema: { type: 'object', description: 'Required when mode=import. Describes the source project structure (folder_types, file_patterns, metadata_format).' },
-      source_path: { type: 'string', description: 'Required when mode=import. Direct filesystem path to the external project to import.' }
-    }
-  }
+      project: {
+        type: "string",
+        description: "Project to analyze. Auto-resolved if not specified.",
+      },
+      mode: {
+        type: "string",
+        enum: ["conform", "import"],
+        default: "conform",
+        description:
+          "Analysis mode. conform=check existing notes, import=analyze external project",
+      },
+      preview: {
+        type: "boolean",
+        default: false,
+        description:
+          "When true, return a grouped visual preview of planned migrations instead of raw conformance data",
+      },
+      source_schema: {
+        type: "object",
+        description:
+          "Required when mode=import. Describes the source project structure (folder_types, file_patterns, metadata_format).",
+      },
+      source_path: {
+        type: "string",
+        description:
+          "Required when mode=import. Direct filesystem path to the external project to import.",
+      },
+    },
+  },
 };

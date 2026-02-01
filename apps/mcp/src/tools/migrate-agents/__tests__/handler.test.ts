@@ -4,14 +4,13 @@
  * Verifies embedding trigger integration after successful writes.
  */
 
-import { describe, test, expect, vi, beforeEach, afterEach } from "vitest";
 import * as fs from "fs/promises";
 import * as path from "path";
-
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import * as resolveModule from "../../../project/resolve";
 // Import modules to spy on
 import * as clientModule from "../../../proxy/client";
 import * as embeddingModule from "../../../services/embedding/triggerEmbedding";
-import * as resolveModule from "../../../project/resolve";
 
 import { handler } from "../index";
 
@@ -50,19 +49,25 @@ Some detailed content here.
       Promise.resolve({
         content: [{ text: "Note written successfully" }],
         isError: false,
-      })
+      }),
     );
 
     // Spy on getBasicMemoryClient
-    getBasicMemoryClientSpy = vi.spyOn(clientModule, "getBasicMemoryClient").mockResolvedValue({
-      callTool: mockCallTool,
-    } as any);
+    getBasicMemoryClientSpy = vi
+      .spyOn(clientModule, "getBasicMemoryClient")
+      .mockResolvedValue({
+        callTool: mockCallTool,
+      } as any);
 
     // Spy on triggerEmbedding
-    triggerEmbeddingSpy = vi.spyOn(embeddingModule, "triggerEmbedding").mockImplementation(() => {});
+    triggerEmbeddingSpy = vi
+      .spyOn(embeddingModule, "triggerEmbedding")
+      .mockImplementation(() => {});
 
     // Spy on resolveProject
-    resolveProjectSpy = vi.spyOn(resolveModule, "resolveProject").mockReturnValue("test-project");
+    resolveProjectSpy = vi
+      .spyOn(resolveModule, "resolveProject")
+      .mockReturnValue("test-project");
   });
 
   afterEach(async () => {
@@ -117,7 +122,7 @@ Some detailed content here.
         Promise.resolve({
           content: [{ text: "Error: write failed" }],
           isError: true,
-        })
+        }),
       );
 
       const result = await handler({

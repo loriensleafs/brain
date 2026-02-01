@@ -9,19 +9,19 @@
  * Emits "session/mode.changed" events on mode transitions for downstream workflows.
  */
 
-import { inngest } from "../client";
-import { logger } from "../../utils/internal/logger";
+import { isWorkflowMode } from "@brain/validation";
 import {
-  type SessionState,
-  type WorkflowMode,
-  getSession,
-  setSession,
   createDefaultSessionState,
-  withModeChange,
+  getSession,
+  type SessionState,
+  setSession,
+  type WorkflowMode,
   withFeatureChange,
+  withModeChange,
   withTaskChange,
 } from "../../services/session";
-import { isWorkflowMode } from "@brain/validation";
+import { logger } from "../../utils/internal/logger";
+import { inngest } from "../client";
 
 /**
  * Validate workflow state (basic validation without WASM).
@@ -60,7 +60,9 @@ function validateWorkflow(state: { mode: string; task?: string }): {
     valid: allPassed,
     checks,
     message: allPassed ? "Valid" : "Validation failed",
-    remediation: allPassed ? undefined : "Ensure mode is valid and task is set for coding mode",
+    remediation: allPassed
+      ? undefined
+      : "Ensure mode is valid and task is set for coding mode",
   };
 }
 
@@ -105,7 +107,7 @@ export const sessionStateWorkflow = inngest.createFunction(
 
     logger.info(
       { updateType, mode, feature, task },
-      "Processing session state update"
+      "Processing session state update",
     );
 
     // Step 1: Get current state from session service
@@ -113,7 +115,7 @@ export const sessionStateWorkflow = inngest.createFunction(
       "get-current-state",
       async (): Promise<SessionState> => {
         return getOrCreateState();
-      }
+      },
     );
 
     // Track previous mode for event emission
@@ -128,28 +130,36 @@ export const sessionStateWorkflow = inngest.createFunction(
             // Initialize new session (return current/default state)
             return currentState;
 
-          case "mode":
+          case "mode": {
             if (!mode) {
               logger.warn("Mode update requested but no mode provided");
               return currentState;
             }
             // Validate the mode before accepting the change
-            const validationResult = validateWorkflow({ mode, task: task ?? currentState.activeTask });
+            const validationResult = validateWorkflow({
+              mode,
+              task: task ?? currentState.activeTask,
+            });
             if (!validationResult.valid) {
               const failedChecks = validationResult.checks
                 .filter((c) => !c.passed)
                 .map((c) => c.message)
                 .join("; ");
               logger.error(
-                { mode, checks: failedChecks, remediation: validationResult.remediation },
-                "Mode change rejected: validation failed"
+                {
+                  mode,
+                  checks: failedChecks,
+                  remediation: validationResult.remediation,
+                },
+                "Mode change rejected: validation failed",
               );
               throw new Error(
-                `Invalid mode change: ${failedChecks}. ${validationResult.remediation ?? ""}`
+                `Invalid mode change: ${failedChecks}. ${validationResult.remediation ?? ""}`,
               );
             }
             logger.debug({ mode }, "Mode validated successfully");
             return withModeChange(currentState, mode as WorkflowMode);
+          }
 
           case "feature":
             // Feature can be undefined to clear active feature
@@ -163,7 +173,7 @@ export const sessionStateWorkflow = inngest.createFunction(
             logger.warn({ updateType }, "Unknown update type");
             return currentState;
         }
-      }
+      },
     );
 
     // Step 3: Persist the updated state via session service
@@ -179,7 +189,7 @@ export const sessionStateWorkflow = inngest.createFunction(
           activeFeature: updatedState.activeFeature,
           activeTask: updatedState.activeTask,
         },
-        "Session state persisted via session service"
+        "Session state persisted via session service",
       );
     });
 
@@ -197,7 +207,7 @@ export const sessionStateWorkflow = inngest.createFunction(
       });
       logger.info(
         { previousMode, newMode: mode },
-        "Emitted session/mode.changed event"
+        "Emitted session/mode.changed event",
       );
     }
 
@@ -209,11 +219,11 @@ export const sessionStateWorkflow = inngest.createFunction(
         activeFeature: updatedState.activeFeature,
         activeTask: updatedState.activeTask,
       },
-      "Session state update complete"
+      "Session state update complete",
     );
 
     return updatedState;
-  }
+  },
 );
 
 /**
@@ -239,11 +249,11 @@ export const sessionStateQueryWorkflow = inngest.createFunction(
       "get-state",
       async (): Promise<SessionState> => {
         return getOrCreateState();
-      }
+      },
     );
 
     return state;
-  }
+  },
 );
 
 /**
@@ -271,9 +281,7 @@ export async function hasSessionState(): Promise<boolean> {
  * @deprecated No longer applicable - single session per project
  */
 export function getActiveSessionIds(): string[] {
-  logger.warn(
-    "getActiveSessionIds is deprecated - single session per project"
-  );
+  logger.warn("getActiveSessionIds is deprecated - single session per project");
   return [];
 }
 
@@ -282,8 +290,6 @@ export function getActiveSessionIds(): string[] {
  * @deprecated No longer applicable - single session per project
  */
 export function clearSessionState(): boolean {
-  logger.warn(
-    "clearSessionState is deprecated - single session per project"
-  );
+  logger.warn("clearSessionState is deprecated - single session per project");
   return true;
 }

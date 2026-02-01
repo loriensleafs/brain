@@ -9,16 +9,16 @@
  * wikilink references). LLM-based semantic similarity can be added later.
  */
 
+import { getBasicMemoryClient } from "../../../proxy/client";
 import type {
   ConsolidateConfig,
   ConsolidateResult,
   MergeCandidate,
   SplitCandidate,
-} from '../types';
-import { getBasicMemoryClient } from '../../../proxy/client';
-import { extractTitle } from '../utils/markdown';
-import { levenshteinDistance } from '../utils/similarity';
-import { extractWikilinks } from '../utils/wikilinks';
+} from "../types";
+import { extractTitle } from "../utils/markdown";
+import { levenshteinDistance } from "../utils/similarity";
+import { extractWikilinks } from "../utils/wikilinks";
 
 /**
  * Note metadata extracted from Brain notes
@@ -37,7 +37,7 @@ interface NoteInfo {
  * Find consolidation candidates in a project
  */
 export async function findConsolidationCandidates(
-  config: ConsolidateConfig
+  config: ConsolidateConfig,
 ): Promise<ConsolidateResult> {
   const {
     project,
@@ -50,8 +50,8 @@ export async function findConsolidationCandidates(
 
   // Get all notes in project
   const listResult = await client.callTool({
-    name: 'list_directory',
-    arguments: { project, depth: 10, file_name_glob: '*.md' },
+    name: "list_directory",
+    arguments: { project, depth: 10, file_name_glob: "*.md" },
   });
 
   const noteFiles = parseListDirectoryResult(listResult);
@@ -61,23 +61,20 @@ export async function findConsolidationCandidates(
   for (const permalink of noteFiles) {
     try {
       const readResult = await client.callTool({
-        name: 'read_note',
+        name: "read_note",
         arguments: { identifier: permalink, project },
       });
 
       const noteInfo = parseNoteContent(permalink, readResult);
       notes.push(noteInfo);
-    } catch (error) {
-      // Skip notes that fail to read
-      continue;
-    }
+    } catch (error) {}
   }
 
   // Find merge candidates (small similar notes)
   const mergeCandidates = findMergeCandidates(
     notes,
     similarityThreshold,
-    minNoteSize
+    minNoteSize,
   );
 
   // Find split candidates (large multi-topic notes)
@@ -95,7 +92,7 @@ export async function findConsolidationCandidates(
 function findMergeCandidates(
   notes: NoteInfo[],
   similarityThreshold: number,
-  minNoteSize: number
+  minNoteSize: number,
 ): MergeCandidate[] {
   const candidates: MergeCandidate[] = [];
 
@@ -136,18 +133,21 @@ function findMergeCandidates(
       for (let j = i + 1; j < groupNotes.length; j++) {
         const similarity = calculateTitleSimilarity(
           groupNotes[i],
-          groupNotes[j]
+          groupNotes[j],
         );
         if (similarity >= similarityThreshold) {
           // Check if already in a candidate
           const alreadyGrouped = candidates.some((c) =>
-            c.notes.includes(groupNotes[i].permalink)
+            c.notes.includes(groupNotes[i].permalink),
           );
           if (!alreadyGrouped) {
             candidates.push({
               notes: [groupNotes[i].permalink, groupNotes[j].permalink],
               similarity,
-              suggestedTitle: generateMergedTitle([groupNotes[i], groupNotes[j]]),
+              suggestedTitle: generateMergedTitle([
+                groupNotes[i],
+                groupNotes[j],
+              ]),
               rationale: `Similar titles in "${folder}" (similarity: ${similarity.toFixed(2)})`,
             });
           }
@@ -164,7 +164,7 @@ function findMergeCandidates(
  */
 function findSplitCandidates(
   notes: NoteInfo[],
-  maxNoteSize: number
+  maxNoteSize: number,
 ): SplitCandidate[] {
   const candidates: SplitCandidate[] = [];
 
@@ -255,7 +255,7 @@ function calculateTitleSimilarity(note1: NoteInfo, note2: NoteInfo): number {
  * Generate a merged title from multiple notes
  */
 function generateMergedTitle(notes: NoteInfo[]): string {
-  if (notes.length === 0) return 'Merged Note';
+  if (notes.length === 0) return "Merged Note";
   if (notes.length === 1) return notes[0].title;
 
   // Find common prefix or use first note's title
@@ -273,14 +273,14 @@ function generateMergedTitle(notes: NoteInfo[]): string {
  * Find common prefix across multiple strings
  */
 function findCommonPrefix(strings: string[]): string {
-  if (strings.length === 0) return '';
+  if (strings.length === 0) return "";
   if (strings.length === 1) return strings[0];
 
   let prefix = strings[0];
   for (let i = 1; i < strings.length; i++) {
     while (strings[i].indexOf(prefix) !== 0) {
       prefix = prefix.substring(0, prefix.length - 1);
-      if (prefix.length === 0) return '';
+      if (prefix.length === 0) return "";
     }
   }
 
@@ -291,12 +291,12 @@ function findCommonPrefix(strings: string[]): string {
  * Parse list_directory output to extract file paths
  */
 function parseListDirectoryResult(result: any): string[] {
-  const text = result.content?.[0]?.text || '';
+  const text = result.content?.[0]?.text || "";
   const files: string[] = [];
-  const lines = text.split('\n');
+  const lines = text.split("\n");
 
   for (const line of lines) {
-    if (line.includes('.md') && !line.includes('Directory:')) {
+    if (line.includes(".md") && !line.includes("Directory:")) {
       const match = line.match(/([^\s]+\.md)/);
       if (match) files.push(match[1]);
     }
@@ -309,16 +309,16 @@ function parseListDirectoryResult(result: any): string[] {
  * Parse note content to extract metadata
  */
 function parseNoteContent(permalink: string, result: any): NoteInfo {
-  const text = result.content?.[0]?.text || '';
-  const lines = text.split('\n');
+  const text = result.content?.[0]?.text || "";
+  const lines = text.split("\n");
 
   // Extract title from first heading or frontmatter
-  let title = extractTitle(text) || permalink;
+  const title = extractTitle(text) || permalink;
 
   // Extract folder from permalink
-  const folder = permalink.includes('/')
-    ? permalink.substring(0, permalink.lastIndexOf('/'))
-    : '';
+  const folder = permalink.includes("/")
+    ? permalink.substring(0, permalink.lastIndexOf("/"))
+    : "";
 
   // Extract wikilinks
   const wikilinks = extractWikilinks(text);
@@ -342,7 +342,7 @@ function parseNoteContent(permalink: string, result: any): NoteInfo {
  */
 function extractSections(content: string): string[] {
   const sections: string[] = [];
-  const lines = content.split('\n');
+  const lines = content.split("\n");
 
   for (const line of lines) {
     const match = line.match(/^##\s+(.+)$/);

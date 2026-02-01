@@ -10,20 +10,22 @@ import * as fs from "fs/promises";
 import * as path from "path";
 import { resolveProject } from "../../project/resolve";
 import { getBasicMemoryClient } from "../../proxy/client";
+import { triggerEmbedding } from "../../services/embedding/triggerEmbedding";
+import { logger } from "../../utils/internal/logger";
+import { parseAgentFile } from "./parser";
 import type {
   MigrateAgentsArgs,
   MigrateAgentsOutput,
-  MigrationResult
+  MigrationResult,
 } from "./schema";
-import { parseAgentFile } from "./parser";
 import { transformToBasicMemory, validateTransformation } from "./transformer";
-import { logger } from "../../utils/internal/logger";
-import { triggerEmbedding } from "../../services/embedding/triggerEmbedding";
 
 /**
  * Main handler for the migrate_agents tool
  */
-export async function handler(args: MigrateAgentsArgs): Promise<CallToolResult> {
+export async function handler(
+  args: MigrateAgentsArgs,
+): Promise<CallToolResult> {
   const project = args.project || resolveProject();
   const sourcePath = args.source_path;
   const subdirectory = args.subdirectory;
@@ -49,19 +51,23 @@ export async function handler(args: MigrateAgentsArgs): Promise<CallToolResult> 
     const stats = await fs.stat(sourcePath);
     if (!stats.isDirectory()) {
       return {
-        content: [{
-          type: "text" as const,
-          text: `Source path is not a directory: ${sourcePath}`
-        }],
+        content: [
+          {
+            type: "text" as const,
+            text: `Source path is not a directory: ${sourcePath}`,
+          },
+        ],
         isError: true,
       };
     }
   } catch {
     return {
-      content: [{
-        type: "text" as const,
-        text: `Source path does not exist: ${sourcePath}`
-      }],
+      content: [
+        {
+          type: "text" as const,
+          text: `Source path does not exist: ${sourcePath}`,
+        },
+      ],
       isError: true,
     };
   }
@@ -75,17 +81,19 @@ export async function handler(args: MigrateAgentsArgs): Promise<CallToolResult> 
 
   if (files.length === 0) {
     return {
-      content: [{
-        type: "text" as const,
-        text: `No markdown files found in: ${targetPath}`
-      }],
+      content: [
+        {
+          type: "text" as const,
+          text: `No markdown files found in: ${targetPath}`,
+        },
+      ],
       isError: true,
     };
   }
 
   logger.info(
     { project, sourcePath, fileCount: files.length, dryRun },
-    "Starting .agents migration"
+    "Starting .agents migration",
   );
 
   // Process files
@@ -105,7 +113,7 @@ export async function handler(args: MigrateAgentsArgs): Promise<CallToolResult> 
         sourcePath,
         project,
         client,
-        dryRun
+        dryRun,
       );
 
       results.push(result);
@@ -126,18 +134,18 @@ export async function handler(args: MigrateAgentsArgs): Promise<CallToolResult> 
       errors.push(`${filePath}: ${errorMsg}`);
       results.push({
         source: filePath,
-        target: '',
+        target: "",
         success: false,
         observationCount: 0,
         relationCount: 0,
-        error: errorMsg
+        error: errorMsg,
       });
     }
   }
 
   logger.info(
     { project, migrated, failed, totalObservations, totalRelations },
-    "Migration complete"
+    "Migration complete",
   );
 
   const output: MigrateAgentsOutput = {
@@ -148,7 +156,7 @@ export async function handler(args: MigrateAgentsArgs): Promise<CallToolResult> 
     total_observations: totalObservations,
     total_relations: totalRelations,
     results,
-    errors
+    errors,
   };
 
   // Build output text
@@ -156,7 +164,7 @@ export async function handler(args: MigrateAgentsArgs): Promise<CallToolResult> 
 
   return {
     structuredContent: output as unknown as { [x: string]: unknown },
-    content: [{ type: "text" as const, text }]
+    content: [{ type: "text" as const, text }],
   };
 }
 
@@ -165,7 +173,7 @@ export async function handler(args: MigrateAgentsArgs): Promise<CallToolResult> 
  */
 async function discoverMarkdownFiles(
   dirPath: string,
-  limit?: number
+  limit?: number,
 ): Promise<string[]> {
   const files: string[] = [];
 
@@ -182,10 +190,10 @@ async function discoverMarkdownFiles(
 
         if (entry.isDirectory()) {
           // Skip hidden directories and node_modules
-          if (!entry.name.startsWith('.') && entry.name !== 'node_modules') {
+          if (!entry.name.startsWith(".") && entry.name !== "node_modules") {
             await walk(fullPath);
           }
-        } else if (entry.isFile() && entry.name.endsWith('.md')) {
+        } else if (entry.isFile() && entry.name.endsWith(".md")) {
           files.push(fullPath);
         }
       }
@@ -206,10 +214,10 @@ async function processFile(
   agentsRoot: string,
   project: string,
   client: Awaited<ReturnType<typeof getBasicMemoryClient>> | null,
-  dryRun: boolean
+  dryRun: boolean,
 ): Promise<MigrationResult> {
   // Read file content
-  const content = await fs.readFile(filePath, 'utf-8');
+  const content = await fs.readFile(filePath, "utf-8");
 
   // Parse the file
   const parsed = parseAgentFile(content, filePath, agentsRoot);
@@ -222,7 +230,7 @@ async function processFile(
   if (!validation.valid) {
     logger.debug(
       { file: filePath, warnings: validation.warnings },
-      "Transformation has warnings"
+      "Transformation has warnings",
     );
   }
 
@@ -235,7 +243,7 @@ async function processFile(
       target,
       success: true,
       observationCount: transformed.observations.length,
-      relationCount: transformed.relations.length
+      relationCount: transformed.relations.length,
     };
   }
 
@@ -246,20 +254,22 @@ async function processFile(
 
   try {
     const result = await client.callTool({
-      name: 'write_note',
+      name: "write_note",
       arguments: {
         folder: transformed.folder,
         title: transformed.title,
         content: transformed.fullContent,
-        project
-      }
+        project,
+      },
     });
 
     // Check for errors in result
-    const resultContent = result.content as Array<{ text?: string }> | undefined;
-    const text = resultContent?.[0]?.text || '';
-    if (result.isError || text.toLowerCase().includes('error')) {
-      throw new Error(text || 'Unknown error from write_note');
+    const resultContent = result.content as
+      | Array<{ text?: string }>
+      | undefined;
+    const text = resultContent?.[0]?.text || "";
+    if (result.isError || text.toLowerCase().includes("error")) {
+      throw new Error(text || "Unknown error from write_note");
     }
 
     // Trigger embedding generation (fire-and-forget)
@@ -267,8 +277,12 @@ async function processFile(
     triggerEmbedding(target, transformed.fullContent);
 
     logger.debug(
-      { source: filePath, target, observations: transformed.observations.length },
-      "File migrated successfully"
+      {
+        source: filePath,
+        target,
+        observations: transformed.observations.length,
+      },
+      "File migrated successfully",
     );
 
     return {
@@ -276,7 +290,7 @@ async function processFile(
       target,
       success: true,
       observationCount: transformed.observations.length,
-      relationCount: transformed.relations.length
+      relationCount: transformed.relations.length,
     };
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
@@ -286,7 +300,7 @@ async function processFile(
       success: false,
       observationCount: 0,
       relationCount: 0,
-      error: errorMsg
+      error: errorMsg,
     };
   }
 }
@@ -297,8 +311,8 @@ async function processFile(
 function generateSlug(title: string): string {
   return title
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 }
 
 /**
@@ -307,66 +321,74 @@ function generateSlug(title: string): string {
 function buildOutputText(
   project: string,
   output: MigrateAgentsOutput,
-  dryRun: boolean
+  dryRun: boolean,
 ): string {
   const lines: string[] = [];
 
-  lines.push(`## ${dryRun ? 'Migration Preview' : 'Migration Results'}`);
-  lines.push('');
+  lines.push(`## ${dryRun ? "Migration Preview" : "Migration Results"}`);
+  lines.push("");
   lines.push(`**Project:** ${project}`);
-  lines.push(`**Status:** ${output.success ? 'SUCCESS' : 'PARTIAL FAILURE'}`);
+  lines.push(`**Status:** ${output.success ? "SUCCESS" : "PARTIAL FAILURE"}`);
   lines.push(`**Files Processed:** ${output.files_processed}`);
   lines.push(`**Files Migrated:** ${output.files_migrated}`);
   lines.push(`**Files Failed:** ${output.files_failed}`);
   lines.push(`**Total Observations:** ${output.total_observations}`);
   lines.push(`**Total Relations:** ${output.total_relations}`);
-  lines.push('');
+  lines.push("");
 
   // Quality metrics
-  const avgObs = output.files_migrated > 0
-    ? (output.total_observations / output.files_migrated).toFixed(1)
-    : '0';
-  const avgRel = output.files_migrated > 0
-    ? (output.total_relations / output.files_migrated).toFixed(1)
-    : '0';
+  const avgObs =
+    output.files_migrated > 0
+      ? (output.total_observations / output.files_migrated).toFixed(1)
+      : "0";
+  const avgRel =
+    output.files_migrated > 0
+      ? (output.total_relations / output.files_migrated).toFixed(1)
+      : "0";
 
-  lines.push('### Quality Metrics');
+  lines.push("### Quality Metrics");
   lines.push(`- Average observations per note: ${avgObs}`);
   lines.push(`- Average relations per note: ${avgRel}`);
-  lines.push('');
+  lines.push("");
 
   // Successful migrations
-  const successes = output.results.filter(r => r.success);
+  const successes = output.results.filter((r) => r.success);
   if (successes.length > 0) {
-    lines.push(`### ${dryRun ? 'Would Migrate' : 'Migrated'} (${successes.length})`);
+    lines.push(
+      `### ${dryRun ? "Would Migrate" : "Migrated"} (${successes.length})`,
+    );
     for (const result of successes.slice(0, 15)) {
       const sourceName = path.basename(result.source);
-      lines.push(`- ${sourceName} → ${result.target} (${result.observationCount} obs, ${result.relationCount} rel)`);
+      lines.push(
+        `- ${sourceName} → ${result.target} (${result.observationCount} obs, ${result.relationCount} rel)`,
+      );
     }
     if (successes.length > 15) {
       lines.push(`- ... and ${successes.length - 15} more`);
     }
-    lines.push('');
+    lines.push("");
   }
 
   // Failures
   if (output.errors.length > 0) {
-    lines.push('### Errors');
+    lines.push("### Errors");
     for (const error of output.errors.slice(0, 10)) {
       lines.push(`- ${error}`);
     }
     if (output.errors.length > 10) {
       lines.push(`- ... and ${output.errors.length - 10} more errors`);
     }
-    lines.push('');
+    lines.push("");
   }
 
   if (dryRun) {
-    lines.push('---');
-    lines.push('*This is a dry run. Run with dry_run=false to execute migration.*');
+    lines.push("---");
+    lines.push(
+      "*This is a dry run. Run with dry_run=false to execute migration.*",
+    );
   }
 
-  return lines.join('\n');
+  return lines.join("\n");
 }
 
 export { toolDefinition } from "./schema";

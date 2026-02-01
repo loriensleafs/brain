@@ -11,10 +11,13 @@
  * @see ADR-001: Search Service Abstraction
  */
 
-import { getSearchService, type SearchResult as ServiceSearchResult } from "../../services/search";
+import {
+  getSearchService,
+  type SearchResult as ServiceSearchResult,
+} from "../../services/search";
 import type { SessionState } from "../../services/session/types";
-import type { ContextNote } from "./sectionQueries";
 import { detectNoteType } from "./noteType";
+import type { ContextNote } from "./sectionQueries";
 import { parseStatus } from "./statusParser";
 
 /**
@@ -96,7 +99,7 @@ async function queryTaskNotes(
     limit,
     mode: "auto",
     fullContent: true,
-    depth: 2
+    depth: 2,
   });
 
   return convertSearchResultsToContextNotes(response.results);
@@ -108,7 +111,7 @@ async function queryTaskNotes(
 async function queryFeatureNotes(
   project: string,
   featureIdentifier: string,
-  limit: number = 10
+  limit: number = 10,
 ): Promise<ContextNote[]> {
   const search = getSearch();
 
@@ -119,7 +122,7 @@ async function queryFeatureNotes(
     mode: "auto",
     folders: ["features/"],
     fullContent: true,
-    depth: 2
+    depth: 2,
   });
 
   return convertSearchResultsToContextNotes(response.results);
@@ -130,7 +133,7 @@ async function queryFeatureNotes(
  */
 function extractAgentHistory(
   sessionState: SessionState,
-  limit: number = 5
+  limit: number = 5,
 ): AgentHistorySummary[] {
   const workflow = sessionState.orchestratorWorkflow;
   if (!workflow) {
@@ -199,7 +202,7 @@ export function extractTaskWikilinks(content: string | undefined): string[] {
  */
 async function queryTaskNote(
   project: string,
-  taskId: string
+  taskId: string,
 ): Promise<EnrichedTaskNote | null> {
   const search = getSearch();
 
@@ -250,7 +253,7 @@ async function queryTaskNote(
 async function enrichFeaturesWithTasks(
   featureNotes: ContextNote[],
   project: string,
-  maxTasksPerFeature: number = 10
+  maxTasksPerFeature: number = 10,
 ): Promise<FeatureWithTasks[]> {
   const results: FeatureWithTasks[] = [];
 
@@ -260,14 +263,14 @@ async function enrichFeaturesWithTasks(
 
     // Query all task notes in parallel
     const taskPromises = limitedTaskIds.map((taskId) =>
-      queryTaskNote(project, taskId)
+      queryTaskNote(project, taskId),
     );
 
     const taskResults = await Promise.all(taskPromises);
 
     // Filter out null results (missing tasks)
     const tasks = taskResults.filter(
-      (task): task is EnrichedTaskNote => task !== null
+      (task): task is EnrichedTaskNote => task !== null,
     );
 
     results.push({
@@ -283,7 +286,7 @@ async function enrichFeaturesWithTasks(
  * Build session enrichment from session state
  */
 export async function buildSessionEnrichment(
-  options: SessionEnrichmentOptions
+  options: SessionEnrichmentOptions,
 ): Promise<SessionEnrichment> {
   const {
     project,
@@ -301,13 +304,18 @@ export async function buildSessionEnrichment(
 
   // Query feature-related notes if activeFeature is set
   const featureNotes: ContextNote[] = sessionState.activeFeature
-    ? await queryFeatureNotes(project, sessionState.activeFeature, maxFeatureNotes)
+    ? await queryFeatureNotes(
+        project,
+        sessionState.activeFeature,
+        maxFeatureNotes,
+      )
     : [];
 
   // Enrich feature notes with their task notes (query tasks with fullContent)
-  const featuresWithTasks: FeatureWithTasks[] = featureNotes.length > 0
-    ? await enrichFeaturesWithTasks(featureNotes, project, maxFeatureTasks)
-    : [];
+  const featuresWithTasks: FeatureWithTasks[] =
+    featureNotes.length > 0
+      ? await enrichFeaturesWithTasks(featureNotes, project, maxFeatureTasks)
+      : [];
 
   // Extract agent history from orchestrator workflow
   const recentAgentHistory = extractAgentHistory(sessionState, maxAgentHistory);
@@ -325,7 +333,9 @@ export async function buildSessionEnrichment(
  * Convert SearchService results to ContextNote format with type/status enrichment.
  * Uses fullContent when available, falling back to snippet.
  */
-function convertSearchResultsToContextNotes(results: ServiceSearchResult[]): ContextNote[] {
+function convertSearchResultsToContextNotes(
+  results: ServiceSearchResult[],
+): ContextNote[] {
   return results
     .filter((result) => result.title && result.permalink)
     .map((result) => {

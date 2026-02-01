@@ -17,25 +17,28 @@ export interface FindDuplicatesArgs {
 }
 
 export const toolDefinition: Tool = {
-  name: 'find_duplicates',
-  description: 'Find semantically duplicate notes in a Brain project using embedding and fulltext similarity. Returns candidate pairs and confirmed duplicates with similarity scores.',
+  name: "find_duplicates",
+  description:
+    "Find semantically duplicate notes in a Brain project using embedding and fulltext similarity. Returns candidate pairs and confirmed duplicates with similarity scores.",
   inputSchema: {
-    type: 'object' as const,
+    type: "object" as const,
     properties: {
       project: {
-        type: 'string',
-        description: 'Project to analyze. Auto-resolved if not specified.'
+        type: "string",
+        description: "Project to analyze. Auto-resolved if not specified.",
       },
       embedding_threshold: {
-        type: 'number',
+        type: "number",
         default: 0.85,
-        description: 'Minimum embedding similarity score to consider notes as potential duplicates (0-1). Default: 0.85'
+        description:
+          "Minimum embedding similarity score to consider notes as potential duplicates (0-1). Default: 0.85",
       },
       fulltext_threshold: {
-        type: 'number',
+        type: "number",
         default: 0.7,
-        description: 'Minimum fulltext similarity score to confirm duplicates (0-1). Default: 0.7'
-      }
-    }
-  }
+        description:
+          "Minimum fulltext similarity score to confirm duplicates (0-1). Default: 0.7",
+      },
+    },
+  },
 };

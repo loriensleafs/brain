@@ -13,10 +13,10 @@ import {
   ReadResourceRequestSchema,
   type Resource,
 } from "@modelcontextprotocol/sdk/types.js";
-import { getBasicMemoryClient } from "./../../proxy/client";
-import { logger } from "./../../utils/internal/logger";
 import * as fs from "fs";
 import * as path from "path";
+import { getBasicMemoryClient } from "./../../proxy/client";
+import { logger } from "./../../utils/internal/logger";
 
 const GUIDES_DIR = path.join(import.meta.dir, "guides");
 
@@ -156,7 +156,7 @@ let discoveredResources: Resource[] = [];
  * Combines Brain guides (brain://guides/*) with basic-memory resources.
  */
 export async function discoverAndRegisterResources(
-  server: McpServer
+  server: McpServer,
 ): Promise<void> {
   const client = await getBasicMemoryClient();
 
@@ -165,7 +165,7 @@ export async function discoverAndRegisterResources(
   const basicMemoryResources = resourcesResult.resources;
   logger.info(
     { count: basicMemoryResources.length },
-    "Discovered basic-memory resources"
+    "Discovered basic-memory resources",
   );
 
   // Combine Brain guides with basic-memory resources
@@ -178,7 +178,7 @@ export async function discoverAndRegisterResources(
       basicMemory: basicMemoryResources.length,
       total: discoveredResources.length,
     },
-    "Registered combined resources"
+    "Registered combined resources",
   );
 
   // Register resources/list handler
@@ -215,7 +215,7 @@ export async function discoverAndRegisterResources(
       // Proxy all other resources to basic-memory
       const result = await client.readResource({ uri });
       return result;
-    }
+    },
   );
 
   logger.debug("Registered resource handlers");

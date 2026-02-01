@@ -1,8 +1,11 @@
-import { describe, test, expect, beforeEach, afterEach } from "vitest";
 import { Database } from "bun:sqlite";
 import * as sqliteVec from "sqlite-vec";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { createEmbeddingsTable } from "../../../db/schema";
-import { storeChunkedEmbeddings, type ChunkEmbeddingInput } from "../../../db/vectors";
+import {
+  type ChunkEmbeddingInput,
+  storeChunkedEmbeddings,
+} from "../../../db/vectors";
 
 // Note: Custom SQLite is configured in test preload (src/__tests__/setup.ts)
 
@@ -20,7 +23,9 @@ describe("search handler integration", () => {
   });
 
   test("checkEmbeddingsExist returns false when table is empty", () => {
-    const count = db.query("SELECT COUNT(*) as c FROM brain_embeddings").get() as { c: number };
+    const count = db
+      .query("SELECT COUNT(*) as c FROM brain_embeddings")
+      .get() as { c: number };
     expect(count.c).toBe(0);
   });
 
@@ -37,7 +42,9 @@ describe("search handler integration", () => {
     ];
     storeChunkedEmbeddings(db, "test-entity", chunks);
 
-    const count = db.query("SELECT COUNT(*) as c FROM brain_embeddings").get() as { c: number };
+    const count = db
+      .query("SELECT COUNT(*) as c FROM brain_embeddings")
+      .get() as { c: number };
     expect(count.c).toBe(1);
   });
 
@@ -57,12 +64,14 @@ describe("search handler integration", () => {
 
     // Query with same embedding should return high similarity
     const queryEmbedding = new Float32Array(768).fill(0.5);
-    const results = db.query(`
+    const results = db
+      .query(`
       SELECT entity_id, vec_distance_cosine(embedding, ?) as distance
       FROM brain_embeddings
       ORDER BY distance
       LIMIT 10
-    `).all(queryEmbedding) as Array<{ entity_id: string; distance: number }>;
+    `)
+      .all(queryEmbedding) as Array<{ entity_id: string; distance: number }>;
 
     expect(results.length).toBe(1);
     expect(results[0].entity_id).toBe("test-entity");
@@ -72,12 +81,14 @@ describe("search handler integration", () => {
   test("vector search returns empty when no embeddings", () => {
     const queryEmbedding = new Float32Array(768).fill(0.5);
 
-    const results = db.query(`
+    const results = db
+      .query(`
       SELECT entity_id, vec_distance_cosine(embedding, ?) as distance
       FROM brain_embeddings
       ORDER BY distance
       LIMIT 10
-    `).all(queryEmbedding) as Array<{ entity_id: string; distance: number }>;
+    `)
+      .all(queryEmbedding) as Array<{ entity_id: string; distance: number }>;
 
     expect(results.length).toBe(0);
   });
@@ -106,12 +117,18 @@ describe("search handler integration", () => {
 
     // Query returns both chunks
     const queryEmbedding = new Float32Array(768).fill(0.5);
-    const results = db.query(`
+    const results = db
+      .query(`
       SELECT entity_id, chunk_index, vec_distance_cosine(embedding, ?) as distance
       FROM brain_embeddings
       ORDER BY distance
       LIMIT 10
-    `).all(queryEmbedding) as Array<{ entity_id: string; chunk_index: number; distance: number }>;
+    `)
+      .all(queryEmbedding) as Array<{
+      entity_id: string;
+      chunk_index: number;
+      distance: number;
+    }>;
 
     // Both chunks should be returned
     expect(results.length).toBe(2);

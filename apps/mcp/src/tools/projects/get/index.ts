@@ -4,23 +4,26 @@
  * Gets detailed information about a specific project including
  * memories path, code path, and whether it's currently active.
  */
+
+import {
+  getAvailableProjects,
+  getProjectMemoriesPath,
+  ProjectNotFoundError,
+} from "@brain/utils";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { getCodePath } from "../../../project/config";
 import { resolveProject } from "../../../project/resolve";
-import {
-  getProjectMemoriesPath,
-  getAvailableProjects,
-  ProjectNotFoundError,
-} from "@brain/utils";
 import type { GetProjectDetailsArgs } from "./schema";
 
 export {
-  toolDefinition,
-  GetProjectDetailsArgsSchema,
   type GetProjectDetailsArgs,
+  GetProjectDetailsArgsSchema,
+  toolDefinition,
 } from "./schema";
 
-export async function handler(args: GetProjectDetailsArgs): Promise<CallToolResult> {
+export async function handler(
+  args: GetProjectDetailsArgs,
+): Promise<CallToolResult> {
   const { project } = args;
 
   // Get memories path from basic-memory config
@@ -40,7 +43,7 @@ export async function handler(args: GetProjectDetailsArgs): Promise<CallToolResu
                 available_projects: error.availableProjects,
               },
               null,
-              2
+              2,
             ),
           },
         ],

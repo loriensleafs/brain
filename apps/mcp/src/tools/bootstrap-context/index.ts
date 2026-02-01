@@ -8,29 +8,28 @@
 
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { resolveProject } from "../../project/resolve";
+import { createDefaultSessionState, getSession } from "../../services/session";
 import { logger } from "../../utils/internal/logger";
-import { getSession, createDefaultSessionState } from "../../services/session";
-
+import { triggerCatchupEmbedding } from "./catchupTrigger";
+import { buildFormattedOutputWithLimits } from "./formattedOutput";
+import { followRelations } from "./relationFollowing";
 import type { BootstrapContextArgs } from "./schema";
 import {
-  queryRecentActivity,
   queryActiveFeatures,
-  queryRecentDecisions,
   queryOpenBugs,
+  queryRecentActivity,
+  queryRecentDecisions,
 } from "./sectionQueries";
-import { followRelations } from "./relationFollowing";
-import { buildStructuredOutput } from "./structuredOutput";
-import { buildFormattedOutputWithLimits } from "./formattedOutput";
 import {
+  type CacheOptions,
   getCachedContext,
   setCachedContext,
-  type CacheOptions,
 } from "./sessionCache";
 import { buildSessionEnrichment } from "./sessionEnrichment";
-import { triggerCatchupEmbedding } from "./catchupTrigger";
+import { buildStructuredOutput } from "./structuredOutput";
 
 export async function handler(
-  args: BootstrapContextArgs
+  args: BootstrapContextArgs,
 ): Promise<CallToolResult> {
   const project = args.project || resolveProject();
 
@@ -71,7 +70,7 @@ export async function handler(
 
   logger.info(
     { project, timeframe, includeReferenced },
-    "Building bootstrap context"
+    "Building bootstrap context",
   );
 
   try {
@@ -132,7 +131,7 @@ export async function handler(
         sessionEnrichment,
       },
       {}, // default limits
-      true // Always include full content
+      true, // Always include full content
     );
 
     logger.info(
@@ -149,7 +148,7 @@ export async function handler(
         hasActiveFeature: !!sessionState.activeFeature,
         hasWorkflow: !!sessionState.orchestratorWorkflow,
       },
-      "Bootstrap context built successfully with session enrichment"
+      "Bootstrap context built successfully with session enrichment",
     );
 
     // Trigger catch-up embedding asynchronously (non-blocking)

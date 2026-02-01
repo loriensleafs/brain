@@ -4,14 +4,15 @@
  * Migrated from Zod to JSON Schema + AJV per ADR-022.
  * JSON Schema source: packages/validation/schemas/tools/list-features-by-priority.schema.json
  */
-import type { Tool } from "@modelcontextprotocol/sdk/types.js";
+
 import {
-  type ListFeaturesByPriorityArgs,
-  validateListFeaturesByPriorityArgs,
-  parseListFeaturesByPriorityArgs,
   getListFeaturesByPriorityArgsErrors,
+  type ListFeaturesByPriorityArgs,
+  parseListFeaturesByPriorityArgs,
+  validateListFeaturesByPriorityArgs,
 } from "@brain/validation";
 import listFeaturesByPrioritySchema from "@brain/validation/schemas/tools/list-features-by-priority.schema.json";
+import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 
 // Re-export types and validation functions from @brain/validation
 export type { ListFeaturesByPriorityArgs };

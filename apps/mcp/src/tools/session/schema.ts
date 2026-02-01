@@ -5,12 +5,13 @@
  *
  * Validation: Uses JSON Schema via AJV from @brain/validation
  */
-import type { Tool } from "@modelcontextprotocol/sdk/types.js";
+
 import {
   parseSessionArgs as _parseSessionArgs,
   type SessionArgs,
 } from "@brain/validation";
 import sessionSchema from "@brain/validation/schemas/tools/session.schema.json";
+import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 
 // Re-export type for backward compatibility
 export type { SessionArgs };
@@ -21,11 +22,18 @@ export type { SessionArgs };
  */
 export const SessionArgsSchema = {
   parse: _parseSessionArgs,
-  safeParse: (data: unknown): { success: true; data: SessionArgs } | { success: false; error: Error } => {
+  safeParse: (
+    data: unknown,
+  ):
+    | { success: true; data: SessionArgs }
+    | { success: false; error: Error } => {
     try {
       return { success: true, data: _parseSessionArgs(data) };
     } catch (e) {
-      return { success: false, error: e instanceof Error ? e : new Error(String(e)) };
+      return {
+        success: false,
+        error: e instanceof Error ? e : new Error(String(e)),
+      };
     }
   },
 };

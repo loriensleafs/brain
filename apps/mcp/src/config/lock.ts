@@ -19,8 +19,8 @@
  */
 
 import * as fs from "fs";
-import * as path from "path";
 import * as os from "os";
+import * as path from "path";
 import { logger } from "../utils/internal/logger";
 
 /**
@@ -149,7 +149,10 @@ export class LockManager {
   private getProjectLockPath(project: string): string {
     // Sanitize project name to prevent path traversal
     const sanitized = project.replace(/[^a-zA-Z0-9_-]/g, "_");
-    return path.join(LOCK_DIR, `${PROJECT_LOCK_PREFIX}${sanitized}${LOCK_SUFFIX}`);
+    return path.join(
+      LOCK_DIR,
+      `${PROJECT_LOCK_PREFIX}${sanitized}${LOCK_SUFFIX}`,
+    );
   }
 
   /**
@@ -176,13 +179,17 @@ export class LockManager {
    * @param project - Project name (for project locks only)
    * @returns true if lock was acquired
    */
-  private tryAcquireLock(lockPath: string, lockType: "global" | "project", project?: string): boolean {
+  private tryAcquireLock(
+    lockPath: string,
+    lockType: "global" | "project",
+    project?: string,
+  ): boolean {
     try {
       // O_CREAT | O_EXCL ensures atomic creation - fails if file exists
       const fd = fs.openSync(
         lockPath,
         fs.constants.O_CREAT | fs.constants.O_EXCL | fs.constants.O_WRONLY,
-        0o600
+        0o600,
       );
 
       // Write lock info for debugging stale locks
@@ -264,7 +271,7 @@ export class LockManager {
       if (elapsed >= timeoutMs) {
         logger.warn(
           { timeoutMs, elapsed },
-          "Global lock acquisition timed out"
+          "Global lock acquisition timed out",
         );
         return {
           acquired: false,
@@ -290,7 +297,9 @@ export class LockManager {
       }
 
       // Wait before retry
-      await new Promise((resolve) => setTimeout(resolve, LOCK_RETRY_INTERVAL_MS));
+      await new Promise((resolve) =>
+        setTimeout(resolve, LOCK_RETRY_INTERVAL_MS),
+      );
     }
   }
 
@@ -319,7 +328,10 @@ export class LockManager {
    * @param options - Lock options
    * @returns LockResult indicating success or failure
    */
-  async acquireProjectLock(project: string, options: LockOptions = {}): Promise<LockResult> {
+  async acquireProjectLock(
+    project: string,
+    options: LockOptions = {},
+  ): Promise<LockResult> {
     const { timeoutMs = DEFAULT_PROJECT_LOCK_TIMEOUT_MS } = options;
     const startTime = Date.now();
     const projectLockPath = this.getProjectLockPath(project);
@@ -333,7 +345,7 @@ export class LockManager {
       if (elapsed >= timeoutMs) {
         logger.warn(
           { project, timeoutMs, elapsed },
-          "Project lock acquisition timed out"
+          "Project lock acquisition timed out",
         );
         return {
           acquired: false,
@@ -348,7 +360,9 @@ export class LockManager {
           this.removeStaleIfPresent(globalLockPath);
         } else {
           // Wait for global lock to be released
-          await new Promise((resolve) => setTimeout(resolve, LOCK_RETRY_INTERVAL_MS));
+          await new Promise((resolve) =>
+            setTimeout(resolve, LOCK_RETRY_INTERVAL_MS),
+          );
           continue;
         }
       }
@@ -371,7 +385,9 @@ export class LockManager {
       }
 
       // Wait before retry
-      await new Promise((resolve) => setTimeout(resolve, LOCK_RETRY_INTERVAL_MS));
+      await new Promise((resolve) =>
+        setTimeout(resolve, LOCK_RETRY_INTERVAL_MS),
+      );
     }
   }
 
@@ -401,7 +417,10 @@ export class LockManager {
    * @param options - Lock options (timeout applies to each lock individually)
    * @returns LockResult indicating success or failure
    */
-  async acquireProjectLocks(projects: string[], options: LockOptions = {}): Promise<LockResult> {
+  async acquireProjectLocks(
+    projects: string[],
+    options: LockOptions = {},
+  ): Promise<LockResult> {
     // Sort alphabetically for deadlock prevention
     const sortedProjects = [...projects].sort();
     const acquiredProjects: string[] = [];
@@ -415,7 +434,8 @@ export class LockManager {
         }
         return {
           acquired: false,
-          error: result.error || `Failed to acquire lock for project '${project}'`,
+          error:
+            result.error || `Failed to acquire lock for project '${project}'`,
         };
       }
       acquiredProjects.push(project);
@@ -531,7 +551,9 @@ export function getLockManager(): LockManager {
  * @param options - Lock options
  * @returns LockResult indicating success or failure
  */
-export async function acquireGlobalLock(options: LockOptions = {}): Promise<LockResult> {
+export async function acquireGlobalLock(
+  options: LockOptions = {},
+): Promise<LockResult> {
   return getLockManager().acquireGlobalLock(options);
 }
 
@@ -549,7 +571,10 @@ export function releaseGlobalLock(): void {
  * @param options - Lock options
  * @returns LockResult indicating success or failure
  */
-export async function acquireProjectLock(project: string, options: LockOptions = {}): Promise<LockResult> {
+export async function acquireProjectLock(
+  project: string,
+  options: LockOptions = {},
+): Promise<LockResult> {
   return getLockManager().acquireProjectLock(project, options);
 }
 
@@ -573,7 +598,7 @@ export function releaseProjectLock(project: string): void {
  */
 export async function withGlobalLock<T>(
   operation: () => Promise<T>,
-  options: LockOptions = {}
+  options: LockOptions = {},
 ): Promise<T> {
   const manager = getLockManager();
   const lockResult = await manager.acquireGlobalLock(options);
@@ -602,13 +627,15 @@ export async function withGlobalLock<T>(
 export async function withProjectLock<T>(
   project: string,
   operation: () => Promise<T>,
-  options: LockOptions = {}
+  options: LockOptions = {},
 ): Promise<T> {
   const manager = getLockManager();
   const lockResult = await manager.acquireProjectLock(project, options);
 
   if (!lockResult.acquired) {
-    throw new Error(lockResult.error || `Failed to acquire project lock for '${project}'`);
+    throw new Error(
+      lockResult.error || `Failed to acquire project lock for '${project}'`,
+    );
   }
 
   try {
@@ -632,7 +659,7 @@ export async function withProjectLock<T>(
 export async function withProjectLocks<T>(
   projects: string[],
   operation: () => Promise<T>,
-  options: LockOptions = {}
+  options: LockOptions = {},
 ): Promise<T> {
   const manager = getLockManager();
   const lockResult = await manager.acquireProjectLocks(projects, options);

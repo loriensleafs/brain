@@ -70,7 +70,7 @@ export function chunkText(text: string): ChunkMetadata[] {
 
   // Filter out empty/null chunks and map to our format
   const validChunks = chunks.filter(
-    (chunk) => chunk.text !== null && chunk.text !== ""
+    (chunk) => chunk.text !== null && chunk.text !== "",
   );
 
   const totalChunks = validChunks.length;

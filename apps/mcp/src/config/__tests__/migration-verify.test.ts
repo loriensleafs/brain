@@ -8,7 +8,7 @@
  * - Return list of missing/mismatched memories
  */
 
-import { describe, test, expect, beforeEach, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import type { SearchResponse, SearchResult } from "../../services/search/types";
 
 // Mock SearchService
@@ -20,7 +20,7 @@ const mockSearch = vi.fn(
     mode: "auto",
     depth: 0,
     actualSource: "keyword",
-  })
+  }),
 ) as ReturnType<
   typeof mock<(query: string, opts: unknown) => Promise<SearchResponse>>
 >;
@@ -37,7 +37,9 @@ vi.mock("../../services/search", () => ({
 const mockCallTool = vi.fn(async () => ({
   content: [{ type: "text", text: "Test content for memory" }],
 })) as ReturnType<
-  typeof mock<(args: unknown) => Promise<{ content: { type: string; text: string }[] }>>
+  typeof mock<
+    (args: unknown) => Promise<{ content: { type: string; text: string }[] }>
+  >
 >;
 
 vi.mock("../../proxy/client", () => ({
@@ -57,11 +59,11 @@ vi.mock("../../utils/internal/logger", () => ({
 }));
 
 import {
-  verifyMemoryIndexing,
-  isMemoryIndexed,
   getProblematicMemories,
+  isMemoryIndexed,
   type MemoryToVerify,
   type VerificationSummary,
+  verifyMemoryIndexing,
 } from "../migration-verify";
 
 describe("verifyMemoryIndexing", () => {
@@ -182,7 +184,12 @@ describe("verifyMemoryIndexing", () => {
 
     // Mock content fetch to return different content
     mockCallTool.mockResolvedValue({
-      content: [{ type: "text", text: "Completely different content that does not match" }],
+      content: [
+        {
+          type: "text",
+          text: "Completely different content that does not match",
+        },
+      ],
     });
 
     const summary = await verifyMemoryIndexing(memories);
@@ -196,9 +203,21 @@ describe("verifyMemoryIndexing", () => {
 
   test("handles multiple memories with mixed results", async () => {
     const memories: MemoryToVerify[] = [
-      { title: "Found Memory", permalink: "found/memory", content: "Found content" },
-      { title: "Missing Memory", permalink: "missing/memory", content: "Missing content" },
-      { title: "Mismatched Memory", permalink: "mismatched/memory", content: "Expected" },
+      {
+        title: "Found Memory",
+        permalink: "found/memory",
+        content: "Found content",
+      },
+      {
+        title: "Missing Memory",
+        permalink: "missing/memory",
+        content: "Missing content",
+      },
+      {
+        title: "Mismatched Memory",
+        permalink: "mismatched/memory",
+        content: "Expected",
+      },
     ];
 
     // Mock search to return results based on query
@@ -257,7 +276,9 @@ describe("verifyMemoryIndexing", () => {
         return { content: [{ type: "text", text: "Found content" }] };
       }
       if (permalink === "mismatched/memory") {
-        return { content: [{ type: "text", text: "Completely different content" }] };
+        return {
+          content: [{ type: "text", text: "Completely different content" }],
+        };
       }
       return { content: [{ type: "text", text: "" }] };
     });
@@ -289,7 +310,11 @@ describe("verifyMemoryIndexing", () => {
 
   test("normalizes permalinks for comparison", async () => {
     const memories: MemoryToVerify[] = [
-      { title: "Normalized Test", permalink: "/patterns/test/", content: "Test content" },
+      {
+        title: "Normalized Test",
+        permalink: "/patterns/test/",
+        content: "Test content",
+      },
     ];
 
     // Mock search to return permalink without slashes
@@ -328,7 +353,9 @@ describe("verifyMemoryIndexing", () => {
     const summary = await verifyMemoryIndexing(memories);
 
     expect(summary.verifiedAt).toBeInstanceOf(Date);
-    expect(summary.verifiedAt.getTime()).toBeGreaterThanOrEqual(beforeTime.getTime());
+    expect(summary.verifiedAt.getTime()).toBeGreaterThanOrEqual(
+      beforeTime.getTime(),
+    );
   });
 
   test("detects memory at different permalink", async () => {
@@ -454,7 +481,12 @@ describe("getProblematicMemories", () => {
       results: [
         { title: "Found 1", permalink: "found/1", status: "found" },
         { title: "Found 2", permalink: "found/2", status: "found" },
-        { title: "Missing", permalink: "missing/1", status: "missing", error: "Not found" },
+        {
+          title: "Missing",
+          permalink: "missing/1",
+          status: "missing",
+          error: "Not found",
+        },
         {
           title: "Mismatched",
           permalink: "mismatched/1",

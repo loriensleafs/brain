@@ -2,8 +2,8 @@
  * Tests for Inngest client initialization and availability checking.
  */
 
-import { describe, test, expect, vi, beforeEach, afterEach } from "vitest";
 import { Inngest } from "inngest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 // Store original fetch and env
 const originalFetch = globalThis.fetch;
@@ -73,7 +73,7 @@ describe("Inngest Client", () => {
         Promise.resolve({
           ok: true,
           status: 200,
-        } as Response)
+        } as Response),
       );
       globalThis.fetch = mockFetch as unknown as typeof fetch;
 
@@ -90,7 +90,7 @@ describe("Inngest Client", () => {
         Promise.resolve({
           ok: false,
           status: 503,
-        } as Response)
+        } as Response),
       );
       globalThis.fetch = mockFetch as unknown as typeof fetch;
 
@@ -103,7 +103,7 @@ describe("Inngest Client", () => {
     test("returns false when fetch throws an error", async () => {
       // Mock fetch to throw error (connection refused)
       const mockFetch = vi.fn(() =>
-        Promise.reject(new Error("Connection refused"))
+        Promise.reject(new Error("Connection refused")),
       );
       globalThis.fetch = mockFetch as unknown as typeof fetch;
 
@@ -156,7 +156,7 @@ describe("Inngest Client", () => {
         Promise.resolve({
           ok: true,
           status: 200,
-        } as Response)
+        } as Response),
       );
       globalThis.fetch = mockFetch as unknown as typeof fetch;
 
@@ -175,7 +175,7 @@ describe("Inngest Client", () => {
     test("returns false after failed availability check", async () => {
       // Mock failed fetch
       const mockFetch = vi.fn(() =>
-        Promise.reject(new Error("Connection refused"))
+        Promise.reject(new Error("Connection refused")),
       );
       globalThis.fetch = mockFetch as unknown as typeof fetch;
 

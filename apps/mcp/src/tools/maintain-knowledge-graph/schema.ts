@@ -17,14 +17,26 @@ export interface MaintainKnowledgeGraphArgs {
 }
 
 export const toolDefinition: Tool = {
-  name: 'maintain_knowledge_graph',
-  description: 'Monitor knowledge graph health by identifying quality issues: orphan notes (no relations), stale notes (not updated recently), gap references (missing wikilinks), and weak notes (below quality threshold).',
+  name: "maintain_knowledge_graph",
+  description:
+    "Monitor knowledge graph health by identifying quality issues: orphan notes (no relations), stale notes (not updated recently), gap references (missing wikilinks), and weak notes (below quality threshold).",
   inputSchema: {
-    type: 'object' as const,
+    type: "object" as const,
     properties: {
-      project: { type: 'string', description: 'Project to analyze. Auto-resolved if not specified.' },
-      stale_threshold_days: { type: 'number', default: 90, description: 'Days since last update to consider a note stale.' },
-      quality_threshold: { type: 'number', default: 0.5, description: 'Minimum quality score (0-1) for notes.' }
-    }
-  }
+      project: {
+        type: "string",
+        description: "Project to analyze. Auto-resolved if not specified.",
+      },
+      stale_threshold_days: {
+        type: "number",
+        default: 90,
+        description: "Days since last update to consider a note stale.",
+      },
+      quality_threshold: {
+        type: "number",
+        default: 0.5,
+        description: "Minimum quality score (0-1) for notes.",
+      },
+    },
+  },
 };

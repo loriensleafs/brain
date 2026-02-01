@@ -9,11 +9,11 @@
  * is unavailable, the /api/inngest endpoint returns 503 with clear message.
  */
 
-import { Hono } from "hono";
-import type { Context } from "hono";
 import { StreamableHTTPTransport } from "@hono/mcp";
-import { serve as serveInngest } from "inngest/bun";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { Context } from "hono";
+import { Hono } from "hono";
+import { serve as serveInngest } from "inngest/bun";
 import { config } from "../config";
 import {
   getInngestClient,
@@ -98,7 +98,7 @@ export async function startHttpTransport(server: McpServer): Promise<void> {
             "Inngest dev server not running. Start with: npx inngest-cli@latest dev",
           available: false,
         },
-        503
+        503,
       );
     }
     return inngestHandler(c.req.raw);
@@ -183,7 +183,7 @@ export async function startHttpTransport(server: McpServer): Promise<void> {
       port: config.httpPort,
       url: `http://${config.httpHost}:${config.httpPort}`,
     },
-    "HTTP transport started (Bun + Hono)"
+    "HTTP transport started (Bun + Hono)",
   );
 
   // Cleanup on shutdown

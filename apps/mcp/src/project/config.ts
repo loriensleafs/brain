@@ -6,10 +6,10 @@
  */
 
 import * as fs from "fs";
-import * as path from "path";
 import * as os from "os";
-import { logger } from "../utils/internal/logger";
+import * as path from "path";
 import { getDefaultMemoriesLocation } from "../config/brain-config";
+import { logger } from "../utils/internal/logger";
 
 /**
  * Path to brain-specific config file
@@ -18,7 +18,7 @@ import { getDefaultMemoriesLocation } from "../config/brain-config";
 const CONFIG_PATH = path.join(
   os.homedir(),
   ".basic-memory",
-  "brain-config.json"
+  "brain-config.json",
 );
 
 /**
@@ -61,7 +61,10 @@ function loadConfig(): LegacyBrainConfig {
     logger.warn({ error, path: CONFIG_PATH }, "Failed to load brain config");
   }
 
-  return { code_paths: {}, default_memories_location: getDefaultMemoriesLocation() };
+  return {
+    code_paths: {},
+    default_memories_location: getDefaultMemoriesLocation(),
+  };
 }
 
 /**
@@ -78,10 +81,7 @@ function saveConfig(config: LegacyBrainConfig): void {
     fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2));
     logger.debug({ path: CONFIG_PATH }, "Saved brain config");
   } catch (error) {
-    logger.error(
-      { error, path: CONFIG_PATH },
-      "Failed to save brain config"
-    );
+    logger.error({ error, path: CONFIG_PATH }, "Failed to save brain config");
     throw error;
   }
 }

@@ -18,7 +18,7 @@ export interface ActivityData {
  */
 export function renderActivitySection(
   activity: ActivityData[],
-  limit: number = 10
+  limit: number = 10,
 ): string {
   if (activity.length === 0) {
     return "";

@@ -45,7 +45,12 @@
       "type": "array",
       "items": {
         "type": "string",
-        "enum": ["Session Info", "Protocol Compliance", "Session Start", "Session End"]
+        "enum": [
+          "Session Info",
+          "Protocol Compliance",
+          "Session Start",
+          "Session End"
+        ]
       },
       "uniqueItems": true,
       "description": "Required sections in a session log"
@@ -87,12 +92,7 @@
       "items": {
         "type": "string"
       },
-      "default": [
-        "**Branch**:",
-        "Branch:",
-        "Current Branch:",
-        "- Branch:"
-      ],
+      "default": ["**Branch**:", "Branch:", "Current Branch:", "- Branch:"],
       "description": "Patterns that indicate git branch documentation"
     },
     "BranchPlaceholders": {
@@ -100,10 +100,7 @@
       "items": {
         "type": "string"
       },
-      "default": [
-        "[branch name]",
-        "[branch name - REQUIRED]"
-      ],
+      "default": ["[branch name]", "[branch name - REQUIRED]"],
       "description": "Placeholder values that are NOT valid branch names"
     },
     "CommitSHAPattern": {
@@ -130,12 +127,7 @@
       "items": {
         "type": "string"
       },
-      "default": [
-        "^\\s*$",
-        "^List memories loaded$",
-        "^\\[.*\\]$",
-        "^-+$"
-      ],
+      "default": ["^\\s*$", "^List memories loaded$", "^\\[.*\\]$", "^-+$"],
       "description": "Regex patterns for invalid memory evidence placeholders"
     },
     "MemoryNamePattern": {
@@ -175,7 +167,12 @@
           }
         }
       },
-      "required": ["totalMustItems", "completedMustItems", "totalShouldItems", "completedShouldItems"]
+      "required": [
+        "totalMustItems",
+        "completedMustItems",
+        "totalShouldItems",
+        "completedShouldItems"
+      ]
     }
   },
   "type": "object",
@@ -190,7 +187,12 @@
     },
     "requiredSections": {
       "$ref": "#/definitions/RequiredSections",
-      "default": ["Session Info", "Protocol Compliance", "Session Start", "Session End"]
+      "default": [
+        "Session Info",
+        "Protocol Compliance",
+        "Session Start",
+        "Session End"
+      ]
     },
     "brainInitializationPatterns": {
       "$ref": "#/definitions/BrainInitializationPatterns"

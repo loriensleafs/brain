@@ -12,19 +12,19 @@
  * @see TASK-020-19 for implementation requirements
  */
 
-import { z } from "zod";
-import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import {
   parseConfigGetArgs as _parseConfigGetArgs,
-  parseConfigSetArgs as _parseConfigSetArgs,
   parseConfigResetArgs as _parseConfigResetArgs,
+  parseConfigSetArgs as _parseConfigSetArgs,
   type ConfigGetArgs,
-  type ConfigSetArgs,
   type ConfigResetArgs,
+  type ConfigSetArgs,
 } from "@brain/validation";
 import configGetSchema from "@brain/validation/schemas/tools/config/get.schema.json";
-import configSetSchema from "@brain/validation/schemas/tools/config/set.schema.json";
 import configResetSchema from "@brain/validation/schemas/tools/config/reset.schema.json";
+import configSetSchema from "@brain/validation/schemas/tools/config/set.schema.json";
+import type { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { z } from "zod";
 
 // ============================================================================
 // config_get (migrated to AJV)
@@ -148,7 +148,7 @@ export const ConfigRollbackArgsSchema = z.object({
   target: z
     .enum(["lastKnownGood", "previous"])
     .describe(
-      "Rollback target: 'lastKnownGood' (baseline from startup) or 'previous' (most recent snapshot)."
+      "Rollback target: 'lastKnownGood' (baseline from startup) or 'previous' (most recent snapshot).",
     ),
 });
 
@@ -207,10 +207,14 @@ export const ConfigUpdateProjectArgsSchema = z.object({
     .boolean()
     .optional()
     .default(true)
-    .describe("Whether to migrate memories to new location if path changes. Default: true."),
+    .describe(
+      "Whether to migrate memories to new location if path changes. Default: true.",
+    ),
 });
 
-export type ConfigUpdateProjectArgs = z.infer<typeof ConfigUpdateProjectArgsSchema>;
+export type ConfigUpdateProjectArgs = z.infer<
+  typeof ConfigUpdateProjectArgsSchema
+>;
 
 export const configUpdateProjectToolDefinition: Tool = {
   name: "config_update_project",
@@ -251,7 +255,8 @@ Examples:
       },
       memories_path: {
         type: "string",
-        description: "New memories path. Use 'DEFAULT', 'CODE', or absolute path.",
+        description:
+          "New memories path. Use 'DEFAULT', 'CODE', or absolute path.",
       },
       memories_mode: {
         type: "string",
@@ -286,11 +291,13 @@ export const ConfigUpdateGlobalArgsSchema = z.object({
     .optional()
     .default(true)
     .describe(
-      "Whether to migrate memories for all affected projects when default location changes. Default: true."
+      "Whether to migrate memories for all affected projects when default location changes. Default: true.",
     ),
 });
 
-export type ConfigUpdateGlobalArgs = z.infer<typeof ConfigUpdateGlobalArgsSchema>;
+export type ConfigUpdateGlobalArgs = z.infer<
+  typeof ConfigUpdateGlobalArgsSchema
+>;
 
 export const configUpdateGlobalToolDefinition: Tool = {
   name: "config_update_global",

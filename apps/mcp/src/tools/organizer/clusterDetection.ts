@@ -9,25 +9,32 @@
  * Uses union-find algorithm for connected component detection in reference graphs.
  */
 
-import { FileCluster, FileReference, ParsedSourceFile } from './schemas/clusterSchema';
-import type { SourceSchema } from './schemas/sourceSchema';
+import type {
+  FileCluster,
+  FileReference,
+  ParsedSourceFile,
+} from "./schemas/clusterSchema";
+import type { SourceSchema } from "./schemas/sourceSchema";
 
 /**
  * Detects clusters using multi-pass algorithm
  */
 export async function detectClusters(
   files: ParsedSourceFile[],
-  sourceSchema: SourceSchema
+  sourceSchema: SourceSchema,
 ): Promise<FileCluster[]> {
   const clusters: FileCluster[] = [];
 
   // Pass 1: Reference-based clusters
-  const refClusters = detectReferenceClusters(files, sourceSchema.relation_patterns);
+  const refClusters = detectReferenceClusters(
+    files,
+    sourceSchema.relation_patterns,
+  );
   clusters.push(...refClusters);
 
   // Pass 2: Folder-based clusters (for files not in reference clusters)
-  const clusteredFiles = new Set(refClusters.flatMap(c => c.files));
-  const unclusteredFiles = files.filter(f => !clusteredFiles.has(f.path));
+  const clusteredFiles = new Set(refClusters.flatMap((c) => c.files));
+  const unclusteredFiles = files.filter((f) => !clusteredFiles.has(f.path));
   const folderClusters = detectFolderClusters(unclusteredFiles);
   clusters.push(...folderClusters);
 
@@ -42,28 +49,32 @@ export async function detectClusters(
  */
 function detectReferenceClusters(
   files: ParsedSourceFile[],
-  relationPatterns: string[]
+  relationPatterns: string[],
 ): FileCluster[] {
   // Build reference graph
   const references: FileReference[] = [];
-  const filePathMap = new Map(files.map(f => [extractFilename(f.path), f.path]));
+  const filePathMap = new Map(
+    files.map((f) => [extractFilename(f.path), f.path]),
+  );
 
   for (const file of files) {
     for (const pattern of relationPatterns) {
       try {
-        const regex = new RegExp(pattern, 'g');
+        const regex = new RegExp(pattern, "g");
         const matches = [...file.content.matchAll(regex)];
 
         for (const match of matches) {
           const target = match[1] || match[0];
-          const targetClean = target.replace(/\[\[|\]\]/g, '').trim();
-          const targetPath = filePathMap.get(targetClean) || filePathMap.get(targetClean + '.md');
+          const targetClean = target.replace(/\[\[|\]\]/g, "").trim();
+          const targetPath =
+            filePathMap.get(targetClean) ||
+            filePathMap.get(targetClean + ".md");
 
           if (targetPath && targetPath !== file.path) {
             references.push({
               from: file.path,
               to: targetPath,
-              reference_type: inferReferenceType(pattern)
+              reference_type: inferReferenceType(pattern),
             });
           }
         }
@@ -99,10 +110,10 @@ function detectFolderClusters(files: ParsedSourceFile[]): FileCluster[] {
 
       clusters.push({
         id: `folder-${clusterId++}`,
-        files: groupFiles.map(f => f.path),
-        cluster_type: 'folder',
-        merge_recommendation: totalLines < 200 ? 'merge' : 'keep_separate',
-        rationale: `${groupFiles.length} files in folder "${folder}"${totalLines < 200 ? ' (small enough to merge)' : ''}`
+        files: groupFiles.map((f) => f.path),
+        cluster_type: "folder",
+        merge_recommendation: totalLines < 200 ? "merge" : "keep_separate",
+        rationale: `${groupFiles.length} files in folder "${folder}"${totalLines < 200 ? " (small enough to merge)" : ""}`,
       });
     }
   }
@@ -110,19 +121,19 @@ function detectFolderClusters(files: ParsedSourceFile[]): FileCluster[] {
   return clusters;
 }
 
-function inferReferenceType(pattern: string): FileReference['reference_type'] {
-  if (pattern.includes('[[')) return 'wikilink';
-  if (pattern.toLowerCase().includes('see')) return 'see_also';
-  return 'related_to';
+function inferReferenceType(pattern: string): FileReference["reference_type"] {
+  if (pattern.includes("[[")) return "wikilink";
+  if (pattern.toLowerCase().includes("see")) return "see_also";
+  return "related_to";
 }
 
 function extractFilename(path: string): string {
-  return path.split('/').pop()?.replace('.md', '') || path;
+  return path.split("/").pop()?.replace(".md", "") || path;
 }
 
 function buildClustersFromReferences(
   references: FileReference[],
-  files: ParsedSourceFile[]
+  files: ParsedSourceFile[],
 ): FileCluster[] {
   if (references.length === 0) return [];
 
@@ -150,7 +161,10 @@ function buildClustersFromReferences(
 
   // Group by root
   const groups = new Map<string, string[]>();
-  const filesInRefs = new Set([...references.map(r => r.from), ...references.map(r => r.to)]);
+  const filesInRefs = new Set([
+    ...references.map((r) => r.from),
+    ...references.map((r) => r.to),
+  ]);
 
   for (const filePath of filesInRefs) {
     const root = find(filePath);
@@ -163,18 +177,21 @@ function buildClustersFromReferences(
 
   for (const [, groupFiles] of groups) {
     if (groupFiles.length > 1) {
-      const groupParsedFiles = files.filter(f => groupFiles.includes(f.path));
-      const totalLines = groupParsedFiles.reduce((sum, f) => sum + f.lineCount, 0);
-      const refCount = references.filter(r =>
-        groupFiles.includes(r.from) && groupFiles.includes(r.to)
+      const groupParsedFiles = files.filter((f) => groupFiles.includes(f.path));
+      const totalLines = groupParsedFiles.reduce(
+        (sum, f) => sum + f.lineCount,
+        0,
+      );
+      const refCount = references.filter(
+        (r) => groupFiles.includes(r.from) && groupFiles.includes(r.to),
       ).length;
 
       clusters.push({
         id: `ref-${clusterId++}`,
         files: groupFiles,
-        cluster_type: 'reference',
-        merge_recommendation: totalLines < 200 ? 'merge' : 'keep_separate',
-        rationale: `${groupFiles.length} files with ${refCount} cross-references${totalLines < 200 ? ' (small enough to merge)' : ''}`
+        cluster_type: "reference",
+        merge_recommendation: totalLines < 200 ? "merge" : "keep_separate",
+        rationale: `${groupFiles.length} files with ${refCount} cross-references${totalLines < 200 ? " (small enough to merge)" : ""}`,
       });
     }
   }
@@ -193,10 +210,10 @@ function deduplicateClusters(clusters: FileCluster[]): FileCluster[] {
   });
 
   for (const cluster of sortedClusters) {
-    const uniqueFiles = cluster.files.filter(f => !seenFiles.has(f));
+    const uniqueFiles = cluster.files.filter((f) => !seenFiles.has(f));
     if (uniqueFiles.length > 1) {
       result.push({ ...cluster, files: uniqueFiles });
-      uniqueFiles.forEach(f => seenFiles.add(f));
+      uniqueFiles.forEach((f) => seenFiles.add(f));
     }
   }
 

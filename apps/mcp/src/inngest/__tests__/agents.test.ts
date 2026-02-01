@@ -2,11 +2,11 @@
  * Tests for agent step functions error handling.
  */
 
-import { describe, test, expect } from "vitest";
 import { NonRetriableError } from "inngest";
-import { runQaAgent } from "../agents/qa";
+import { describe, expect, test } from "vitest";
 import { runAnalystAgent } from "../agents/analyst";
 import { runArchitectAgent } from "../agents/architect";
+import { runQaAgent } from "../agents/qa";
 import { runRoadmapAgent } from "../agents/roadmap";
 
 describe("Agent Error Handling", () => {

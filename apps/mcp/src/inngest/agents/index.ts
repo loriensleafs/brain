@@ -5,11 +5,15 @@
  * feature completion to verify different aspects of the feature.
  */
 
-// Types
-export type { AgentVerdict, AgentContext, AgentFunction, Verdict } from "./types";
-
-// Agent functions
-export { runQaAgent } from "./qa";
 export { runAnalystAgent } from "./analyst";
 export { runArchitectAgent } from "./architect";
+// Agent functions
+export { runQaAgent } from "./qa";
 export { runRoadmapAgent } from "./roadmap";
+// Types
+export type {
+  AgentContext,
+  AgentFunction,
+  AgentVerdict,
+  Verdict,
+} from "./types";

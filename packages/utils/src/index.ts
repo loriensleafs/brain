@@ -1,16 +1,16 @@
 // Config utilities
 export {
-  readConfig,
-  getConfigPath,
-  getAvailableProjects,
-  getDefaultProject,
   type BasicMemoryConfig,
+  getAvailableProjects,
+  getConfigPath,
+  getDefaultProject,
+  readConfig,
 } from "./config";
 
 // Path resolution utilities
 export {
-  getProjectMemoriesPath,
-  resolveProjectMemoriesPath,
   detectProjectFromPath,
+  getProjectMemoriesPath,
   ProjectNotFoundError,
+  resolveProjectMemoriesPath,
 } from "./path-resolver";

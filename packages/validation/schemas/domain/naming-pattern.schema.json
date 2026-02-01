@@ -12,7 +12,20 @@
     },
     "patternType": {
       "type": "string",
-      "enum": ["epic", "adr", "prd", "tasks", "plan", "tm", "req", "design", "task", "skill", "retro", "session"],
+      "enum": [
+        "epic",
+        "adr",
+        "prd",
+        "tasks",
+        "plan",
+        "tm",
+        "req",
+        "design",
+        "task",
+        "skill",
+        "retro",
+        "session"
+      ],
       "description": "Expected pattern type for validation"
     }
   },

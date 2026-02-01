@@ -69,7 +69,7 @@ export function generateCacheKey(options: CacheOptions): string {
  * @returns Cached content or null if not found/expired
  */
 export function getCachedContext(
-  options: CacheOptions
+  options: CacheOptions,
 ): StructuredContent | null {
   const key = generateCacheKey(options);
   const entry = cache.get(key);
@@ -92,7 +92,7 @@ export function getCachedContext(
         age: now - entry.createdAt,
         ttl: DEFAULT_TTL_MS,
       },
-      "Cache miss: entry expired"
+      "Cache miss: entry expired",
     );
     return null;
   }
@@ -107,7 +107,7 @@ export function getCachedContext(
       age,
       remainingTtl,
     },
-    "Cache hit"
+    "Cache hit",
   );
 
   return entry.value;
@@ -123,7 +123,7 @@ export function getCachedContext(
 export function setCachedContext(
   options: CacheOptions,
   content: StructuredContent,
-  ttlMs: number = DEFAULT_TTL_MS
+  ttlMs: number = DEFAULT_TTL_MS,
 ): void {
   const key = generateCacheKey(options);
   const now = Date.now();
@@ -142,7 +142,7 @@ export function setCachedContext(
       ttlMs,
       noteCount: content.metadata.note_count,
     },
-    "Cache set"
+    "Cache set",
   );
 }
 
@@ -174,7 +174,10 @@ export function invalidateCache(project?: string): void {
   }
 
   stats.invalidations += count;
-  logger.debug({ project, count }, "Cache invalidated: project entries cleared");
+  logger.debug(
+    { project, count },
+    "Cache invalidated: project entries cleared",
+  );
 }
 
 /**

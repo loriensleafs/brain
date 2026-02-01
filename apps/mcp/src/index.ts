@@ -10,15 +10,13 @@
  */
 
 import { config } from "./config";
-import { logger, logStartup, flushLogs } from "./utils/internal/logger";
-import { closeBasicMemoryClient } from "./proxy/client";
-import {
-  getSession,
-} from "./services/session";
-import { initInngestService, isWorkflowAvailable } from "./services/inngest";
-import { ensureOllama } from "./services/ollama";
 import { createVectorConnection } from "./db/connection";
 import { createEmbeddingsTable } from "./db/schema";
+import { closeBasicMemoryClient } from "./proxy/client";
+import { initInngestService, isWorkflowAvailable } from "./services/inngest";
+import { ensureOllama } from "./services/ollama";
+import { getSession } from "./services/session";
+import { flushLogs, logger, logStartup } from "./utils/internal/logger";
 
 async function main(): Promise<void> {
   logStartup();
@@ -30,7 +28,10 @@ async function main(): Promise<void> {
     db.close();
     logger.info("Embeddings table initialized");
   } catch (error) {
-    logger.warn({ error }, "Failed to initialize embeddings table - semantic search disabled");
+    logger.warn(
+      { error },
+      "Failed to initialize embeddings table - semantic search disabled",
+    );
   }
 
   // Ensure Ollama is running for semantic search (auto-starts if needed)
@@ -39,7 +40,7 @@ async function main(): Promise<void> {
     { ollamaReady },
     ollamaReady
       ? "Ollama ready for semantic search"
-      : "Ollama unavailable - semantic search will use keyword fallback"
+      : "Ollama unavailable - semantic search will use keyword fallback",
   );
 
   // Initialize session state (creates default if not exists)
@@ -53,7 +54,7 @@ async function main(): Promise<void> {
     { inngestAvailable },
     inngestAvailable
       ? "Workflow features enabled"
-      : "Workflow features disabled - start Inngest dev server to enable"
+      : "Workflow features disabled - start Inngest dev server to enable",
   );
 
   try {

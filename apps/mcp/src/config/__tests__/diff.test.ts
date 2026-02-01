@@ -8,17 +8,17 @@
  * - Return structured diff with affected projects
  */
 
-import { describe, test, expect } from "vitest";
-import type { BrainConfig } from "../schema";
-import { DEFAULT_BRAIN_CONFIG } from "../schema";
+import { describe, expect, test } from "vitest";
 import {
   detectConfigDiff,
   detectDetailedConfigDiff,
   getAffectedProjects,
-  isProjectAffected,
   getDefaultModeAffectedProjects,
+  isProjectAffected,
   summarizeConfigDiff,
 } from "../diff";
+import type { BrainConfig } from "../schema";
+import { DEFAULT_BRAIN_CONFIG } from "../schema";
 
 /**
  * Create a test config with specified overrides.
@@ -183,7 +183,10 @@ describe("detectConfigDiff", () => {
         defaults: { memories_location: "~/memories", memories_mode: "DEFAULT" },
       });
       const newConfig = createTestConfig({
-        defaults: { memories_location: "~/memories-new", memories_mode: "DEFAULT" },
+        defaults: {
+          memories_location: "~/memories-new",
+          memories_mode: "DEFAULT",
+        },
       });
 
       const diff = detectConfigDiff(oldConfig, newConfig);
@@ -363,7 +366,10 @@ describe("detectConfigDiff", () => {
         defaults: { memories_location: "~/memories", memories_mode: "DEFAULT" },
       });
       const newConfig = createTestConfig({
-        defaults: { memories_location: "~/new-memories", memories_mode: "DEFAULT" },
+        defaults: {
+          memories_location: "~/new-memories",
+          memories_mode: "DEFAULT",
+        },
       });
 
       const diff = detectConfigDiff(oldConfig, newConfig);
@@ -381,8 +387,12 @@ describe("detectConfigDiff", () => {
     });
 
     test("false when only sync settings change", () => {
-      const oldConfig = createTestConfig({ sync: { enabled: true, delay_ms: 500 } });
-      const newConfig = createTestConfig({ sync: { enabled: false, delay_ms: 1000 } });
+      const oldConfig = createTestConfig({
+        sync: { enabled: true, delay_ms: 500 },
+      });
+      const newConfig = createTestConfig({
+        sync: { enabled: false, delay_ms: 1000 },
+      });
 
       const diff = detectConfigDiff(oldConfig, newConfig);
 
@@ -526,7 +536,10 @@ describe("getDefaultModeAffectedProjects", () => {
       },
     });
     const newConfig = createTestConfig({
-      defaults: { memories_location: "~/memories-new", memories_mode: "DEFAULT" },
+      defaults: {
+        memories_location: "~/memories-new",
+        memories_mode: "DEFAULT",
+      },
       projects: {
         "project-a": { code_path: "/dev/a" },
         "project-b": { code_path: "/dev/b", memories_mode: "DEFAULT" },

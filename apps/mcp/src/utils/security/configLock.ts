@@ -11,8 +11,8 @@
  */
 
 import * as fs from "fs";
-import * as path from "path";
 import * as os from "os";
+import * as path from "path";
 import { logger } from "../internal/logger";
 
 /**
@@ -21,7 +21,7 @@ import { logger } from "../internal/logger";
 const CONFIG_LOCK_PATH = path.join(
   os.homedir(),
   ".basic-memory",
-  ".brain-config.lock"
+  ".brain-config.lock",
 );
 
 /**
@@ -75,7 +75,10 @@ function isLockStale(lockPath: string): boolean {
 function tryAcquireLock(lockPath: string): boolean {
   try {
     // O_CREAT | O_EXCL ensures atomic creation - fails if file exists
-    const fd = fs.openSync(lockPath, fs.constants.O_CREAT | fs.constants.O_EXCL | fs.constants.O_WRONLY);
+    const fd = fs.openSync(
+      lockPath,
+      fs.constants.O_CREAT | fs.constants.O_EXCL | fs.constants.O_WRONLY,
+    );
 
     // Write process info for debugging stale locks
     const lockInfo = JSON.stringify({
@@ -105,7 +108,7 @@ function tryAcquireLock(lockPath: string): boolean {
  * @returns LockResult indicating success or failure
  */
 export async function acquireConfigLock(
-  options: ConfigLockOptions = {}
+  options: ConfigLockOptions = {},
 ): Promise<LockResult> {
   const { timeoutMs = DEFAULT_LOCK_TIMEOUT_MS } = options;
   const startTime = Date.now();
@@ -120,10 +123,7 @@ export async function acquireConfigLock(
     // Check timeout
     const elapsed = Date.now() - startTime;
     if (elapsed >= timeoutMs) {
-      logger.warn(
-        { timeoutMs, elapsed },
-        "Config lock acquisition timed out"
-      );
+      logger.warn({ timeoutMs, elapsed }, "Config lock acquisition timed out");
       return {
         acquired: false,
         error: `Lock acquisition timed out after ${timeoutMs}ms`,
@@ -132,10 +132,7 @@ export async function acquireConfigLock(
 
     // Check for stale lock
     if (fs.existsSync(CONFIG_LOCK_PATH) && isLockStale(CONFIG_LOCK_PATH)) {
-      logger.info(
-        { lockPath: CONFIG_LOCK_PATH },
-        "Removing stale config lock"
-      );
+      logger.info({ lockPath: CONFIG_LOCK_PATH }, "Removing stale config lock");
       try {
         fs.unlinkSync(CONFIG_LOCK_PATH);
       } catch {
@@ -176,10 +173,7 @@ export function releaseConfigLock(): boolean {
     }
     return false;
   } catch (error) {
-    logger.warn(
-      { error },
-      "Failed to release config lock"
-    );
+    logger.warn({ error }, "Failed to release config lock");
     return false;
   }
 }
@@ -195,7 +189,7 @@ export function releaseConfigLock(): boolean {
  */
 export async function withConfigLock<T>(
   operation: () => Promise<T>,
-  options: ConfigLockOptions = {}
+  options: ConfigLockOptions = {},
 ): Promise<T> {
   const lockResult = await acquireConfigLock(options);
 
@@ -221,7 +215,7 @@ export async function withConfigLock<T>(
  */
 export function withConfigLockSync<T>(
   operation: () => T,
-  options: ConfigLockOptions = {}
+  options: ConfigLockOptions = {},
 ): T {
   const { timeoutMs = DEFAULT_LOCK_TIMEOUT_MS } = options;
   const startTime = Date.now();

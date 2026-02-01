@@ -4,7 +4,16 @@
   "title": "Episode Schema",
   "description": "Schema for reflexion memory episodes extracted from session logs (ADR-038)",
   "type": "object",
-  "required": ["id", "session", "timestamp", "outcome", "task", "decisions", "events", "metrics"],
+  "required": [
+    "id",
+    "session",
+    "timestamp",
+    "outcome",
+    "task",
+    "decisions",
+    "events",
+    "metrics"
+  ],
   "properties": {
     "id": {
       "type": "string",
@@ -88,7 +97,14 @@
           },
           "type": {
             "type": "string",
-            "enum": ["tool_call", "error", "milestone", "handoff", "commit", "test"]
+            "enum": [
+              "tool_call",
+              "error",
+              "milestone",
+              "handoff",
+              "commit",
+              "test"
+            ]
           },
           "content": {
             "type": "string"

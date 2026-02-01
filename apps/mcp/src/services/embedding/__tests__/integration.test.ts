@@ -6,16 +6,16 @@
  * Tests simulating failures use 4xx errors (non-retryable) for immediate failure.
  */
 
-import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 import { Database } from "bun:sqlite";
 import * as sqliteVec from "sqlite-vec";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import * as connectionModule from "../../../db/connection";
-import { generateEmbedding, resetOllamaClient } from "../generateEmbedding";
 import { batchGenerate } from "../batchGenerate";
+import { generateEmbedding, resetOllamaClient } from "../generateEmbedding";
 import {
   createEmbeddingQueueTable,
-  enqueueEmbedding,
   dequeueEmbedding,
+  enqueueEmbedding,
   getQueueLength,
   markEmbeddingProcessed,
 } from "../queue";
@@ -41,20 +41,19 @@ describe("Embedding Integration Tests", () => {
     sqliteVec.load(db);
 
     // Spy on createVectorConnection to return our test database
-    createVectorConnectionSpy = vi.spyOn(
-      connectionModule,
-      "createVectorConnection"
-    ).mockImplementation(() => {
-      return {
-        run: (...args: Parameters<Database["run"]>) => db.run(...args),
-        query: (...args: Parameters<Database["query"]>) => db.query(...args),
-        prepare: (...args: Parameters<Database["prepare"]>) =>
-          db.prepare(...args),
-        close: () => {
-          /* no-op for tests */
-        },
-      } as unknown as Database;
-    });
+    createVectorConnectionSpy = vi
+      .spyOn(connectionModule, "createVectorConnection")
+      .mockImplementation(() => {
+        return {
+          run: (...args: Parameters<Database["run"]>) => db.run(...args),
+          query: (...args: Parameters<Database["query"]>) => db.query(...args),
+          prepare: (...args: Parameters<Database["prepare"]>) =>
+            db.prepare(...args),
+          close: () => {
+            /* no-op for tests */
+          },
+        } as unknown as Database;
+      });
 
     // Default: Ollama available with mock embedding
     globalThis.fetch = createFetchMock(() =>
@@ -62,7 +61,7 @@ describe("Embedding Integration Tests", () => {
         ok: true,
         status: 200,
         json: () => Promise.resolve({ embedding: MOCK_EMBEDDING }),
-      } as Response)
+      } as Response),
     );
   });
 
@@ -98,7 +97,7 @@ describe("Embedding Integration Tests", () => {
           ok: true,
           status: 200,
           json: () => Promise.resolve({ embedding: MOCK_EMBEDDING }),
-        } as Response)
+        } as Response),
       );
       globalThis.fetch = mockFetch as unknown as typeof fetch;
 
@@ -108,7 +107,7 @@ describe("Embedding Integration Tests", () => {
       // Verify truncation occurred by checking the request body
       const callArgs = mockFetch.mock.calls[0] as unknown as [
         string,
-        RequestInit
+        RequestInit,
       ];
       const body = JSON.parse(callArgs[1].body as string);
       expect(body.prompt.length).toBe(32000);
@@ -154,7 +153,7 @@ describe("Embedding Integration Tests", () => {
     test("handles all failures gracefully", async () => {
       // Use 400 (client error) which is non-retryable for immediate failure
       globalThis.fetch = createFetchMock(() =>
-        Promise.resolve({ ok: false, status: 400 } as Response)
+        Promise.resolve({ ok: false, status: 400 } as Response),
       );
 
       const texts = ["text1", "text2"];
@@ -201,11 +200,11 @@ describe("Embedding Integration Tests", () => {
       // Add items with explicit timestamps to control order
       db.run(
         "INSERT INTO embedding_queue (note_id, created_at) VALUES (?, ?)",
-        ["note-2", "2024-01-02T00:00:00Z"]
+        ["note-2", "2024-01-02T00:00:00Z"],
       );
       db.run(
         "INSERT INTO embedding_queue (note_id, created_at) VALUES (?, ?)",
-        ["note-1", "2024-01-01T00:00:00Z"]
+        ["note-1", "2024-01-01T00:00:00Z"],
       );
 
       const item = dequeueEmbedding();
@@ -294,7 +293,7 @@ describe("Embedding Integration Tests", () => {
 
       // Simulate failure scenario with 400 (non-retryable)
       globalThis.fetch = createFetchMock(() =>
-        Promise.resolve({ ok: false, status: 400 } as Response)
+        Promise.resolve({ ok: false, status: 400 } as Response),
       );
 
       // Queue notes that would fail
@@ -314,7 +313,11 @@ describe("Embedding Integration Tests", () => {
 
     test("embedding dimensions are consistent", async () => {
       // Generate multiple embeddings and verify dimensions
-      const texts = ["short", "a longer text with more words", "x".repeat(1000)];
+      const texts = [
+        "short",
+        "a longer text with more words",
+        "x".repeat(1000),
+      ];
       const result = await batchGenerate(texts, 10);
 
       result.embeddings.forEach((emb) => {
@@ -428,7 +431,10 @@ describe("Embedding Integration Tests", () => {
 
       // Measure concurrent batch processing
       const concurrentStart = Date.now();
-      await batchGenerate(Array.from({ length: ITEM_COUNT }, (_, i) => `text-${i}`), 4);
+      await batchGenerate(
+        Array.from({ length: ITEM_COUNT }, (_, i) => `text-${i}`),
+        4,
+      );
       const concurrentTime = Date.now() - concurrentStart;
 
       // With 50ms latency and batch size 4:
@@ -461,7 +467,9 @@ describe("Embedding Integration Tests", () => {
       // With batching: should be significantly faster
       // Log performance for monitoring
       if (elapsed > 2000) {
-        console.warn(`Performance warning: 100 items took ${elapsed}ms (expected <2000ms)`);
+        console.warn(
+          `Performance warning: 100 items took ${elapsed}ms (expected <2000ms)`,
+        );
       }
 
       // Reasonable upper bound

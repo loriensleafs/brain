@@ -14,42 +14,39 @@
 
 // Re-export all types and validators from @brain/validation
 export {
-  // Types
-  type AgentType,
-  type WorkflowMode,
-  type WorkflowPhase,
-  type InvocationStatus,
-  type DecisionType,
-  type VerdictDecision,
-  type ModeHistoryEntry,
+  type AgentInvocation,
   type AgentInvocationInput,
   type AgentInvocationOutput,
-  type AgentInvocation,
-  type Decision,
-  type Verdict,
-  type Handoff,
+  // Types
+  type AgentType,
   type CompactionEntry,
-  type OrchestratorWorkflow,
-  type SessionState,
-  // Validators
-  validateSessionState,
-  parseSessionState,
-  safeParseSessionState,
+  type Decision,
+  type DecisionType,
   getSessionStateErrors,
+  type Handoff,
+  type InvocationStatus,
   // Type guards
   isAgentType,
-  isWorkflowMode,
   isSessionState,
+  isWorkflowMode,
+  type ModeHistoryEntry,
+  type OrchestratorWorkflow,
+  parseSessionState,
+  type SessionState,
+  safeParseSessionState,
+  type Verdict,
+  type VerdictDecision,
+  // Validators
+  validateSessionState,
+  type WorkflowMode,
+  type WorkflowPhase,
 } from "@brain/validation";
 
 // ============================================================================
 // Factory Functions
 // ============================================================================
 
-import type {
-  OrchestratorWorkflow,
-  SessionState,
-} from "@brain/validation";
+import type { OrchestratorWorkflow, SessionState } from "@brain/validation";
 
 /**
  * Create a new empty orchestrator workflow.

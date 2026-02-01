@@ -7,8 +7,8 @@
  * Timeout: 7 days - returns TIMEOUT status if no response received.
  */
 
-import { inngest } from "../client";
 import { logger } from "../../utils/internal/logger";
+import { inngest } from "../client";
 
 /**
  * Approval status values.
@@ -53,7 +53,7 @@ export const hitlApprovalWorkflow = inngest.createFunction(
 
     logger.info(
       { approvalId, approvalType, description },
-      "HITL approval workflow started - waiting for human response"
+      "HITL approval workflow started - waiting for human response",
     );
 
     // Wait for approval/granted event with matching approvalId
@@ -68,7 +68,7 @@ export const hitlApprovalWorkflow = inngest.createFunction(
     if (approval) {
       logger.info(
         { approvalId, approvedBy: approval.data.approvedBy },
-        "HITL approval granted"
+        "HITL approval granted",
       );
 
       return {
@@ -86,5 +86,5 @@ export const hitlApprovalWorkflow = inngest.createFunction(
       status: "TIMEOUT",
       approvalId,
     };
-  }
+  },
 );

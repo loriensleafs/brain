@@ -16,16 +16,16 @@
  * @see TASK-020-22 for acceptance criteria
  */
 
-import { watch, type FSWatcher } from "chokidar";
-import type { BrainConfig } from "./schema";
-import { validateBrainConfig, DEFAULT_BRAIN_CONFIG } from "./schema";
+import { type FSWatcher, watch } from "chokidar";
 import {
   getBrainConfigPath,
   loadBrainConfig,
   loadBrainConfigSync,
 } from "./brain-config";
-import { detectConfigDiff, summarizeConfigDiff, type ConfigDiff } from "./diff";
-import { rollbackManager, type RollbackResult } from "./rollback";
+import { type ConfigDiff, detectConfigDiff, summarizeConfigDiff } from "./diff";
+import { type RollbackResult, rollbackManager } from "./rollback";
+import type { BrainConfig } from "./schema";
+import { DEFAULT_BRAIN_CONFIG, validateBrainConfig } from "./schema";
 import { syncConfigToBasicMemory } from "./translation-layer";
 
 /**
@@ -318,7 +318,7 @@ export class ConfigFileWatcher {
       newConfig = loadBrainConfigSync();
     } catch (error) {
       await this.handleInvalidConfig(
-        error instanceof Error ? error : new Error(String(error))
+        error instanceof Error ? error : new Error(String(error)),
       );
       return;
     }
@@ -326,9 +326,11 @@ export class ConfigFileWatcher {
     // Validate the config
     const validation = validateBrainConfig(newConfig);
     if (!validation.success) {
-      const errorMsg = validation.errors?.map(e => e.message).join("; ") || "Validation failed";
+      const errorMsg =
+        validation.errors?.map((e) => e.message).join("; ") ||
+        "Validation failed";
       await this.handleInvalidConfig(
-        new Error(`Validation failed: ${errorMsg}`)
+        new Error(`Validation failed: ${errorMsg}`),
       );
       return;
     }
@@ -371,7 +373,10 @@ export class ConfigFileWatcher {
     this.lastConfig = newConfig;
 
     // Mark as good after successful processing
-    await rollbackManager.markAsGood(newConfig, "After successful config change");
+    await rollbackManager.markAsGood(
+      newConfig,
+      "After successful config change",
+    );
 
     this.emitEvent({
       type: "reconfigure",
@@ -456,7 +461,7 @@ export class ConfigFileWatcher {
  * ```
  */
 export async function createConfigWatcher(
-  options: WatcherOptions = {}
+  options: WatcherOptions = {},
 ): Promise<ConfigFileWatcher> {
   const watcher = new ConfigFileWatcher(options);
   await watcher.start();

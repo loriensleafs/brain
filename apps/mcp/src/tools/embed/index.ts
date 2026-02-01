@@ -5,20 +5,23 @@
  * Uses text chunking for long documents to stay within model token limits.
  */
 import type { CallToolResult, Tool } from "@modelcontextprotocol/sdk/types.js";
-import { getBasicMemoryClient } from "../../proxy/client";
+import pLimit from "p-limit";
+import { ollamaConfig } from "../../config/ollama";
 import { createVectorConnection } from "../../db/connection";
 import { ensureEmbeddingTables } from "../../db/schema";
+import {
+  type ChunkEmbeddingInput,
+  storeChunkedEmbeddings,
+} from "../../db/vectors";
+import { resolveProject } from "../../project/resolve";
+import { getBasicMemoryClient } from "../../proxy/client";
+import {
+  type ChunkMetadata,
+  chunkText,
+} from "../../services/embedding/chunking";
 import { generateEmbedding } from "../../services/embedding/generateEmbedding";
 import { OllamaClient } from "../../services/ollama/client";
-import { ollamaConfig } from "../../config/ollama";
-import {
-  storeChunkedEmbeddings,
-  type ChunkEmbeddingInput,
-} from "../../db/vectors";
-import { chunkText, type ChunkMetadata } from "../../services/embedding/chunking";
 import { logger } from "../../utils/internal/logger";
-import { resolveProject } from "../../project/resolve";
-import pLimit from "p-limit";
 
 /** Maximum concurrent note operations (matches Ollama OLLAMA_NUM_PARALLEL default) */
 const CONCURRENCY_LIMIT = 4;
@@ -52,7 +55,8 @@ Returns progress and counts of processed/failed notes.`,
       },
       force: {
         type: "boolean",
-        description: "Regenerate all embeddings, not just missing (default: false)",
+        description:
+          "Regenerate all embeddings, not just missing (default: false)",
       },
       limit: {
         type: "number",
@@ -73,7 +77,7 @@ Returns progress and counts of processed/failed notes.`,
  */
 async function generateChunkEmbeddings(
   chunks: ChunkMetadata[],
-  ollamaClient: OllamaClient
+  ollamaClient: OllamaClient,
 ): Promise<ChunkEmbeddingInput[] | null> {
   if (chunks.length === 0) {
     return [];
@@ -85,12 +89,12 @@ async function generateChunkEmbeddings(
     // Split large notes into multiple batch requests
     for (let i = 0; i < chunks.length; i += MAX_CHUNKS_PER_BATCH) {
       const chunkBatch = chunks.slice(i, i + MAX_CHUNKS_PER_BATCH);
-      const texts = chunkBatch.map(c => c.text);
+      const texts = chunkBatch.map((c) => c.text);
 
       // Call batch API
       const embeddings = await ollamaClient.generateBatchEmbeddings(
         texts,
-        "search_document"
+        "search_document",
       );
 
       // Map embeddings back to chunk metadata
@@ -110,14 +114,14 @@ async function generateChunkEmbeddings(
   } catch (error) {
     logger.warn(
       { error: error instanceof Error ? error.message : String(error) },
-      "Batch embedding generation failed"
+      "Batch embedding generation failed",
     );
     return null;
   }
 }
 
 export async function handler(
-  args: Record<string, unknown>
+  args: Record<string, unknown>,
 ): Promise<CallToolResult> {
   const force = (args.force as boolean) ?? false;
   const limit = (args.limit as number) ?? 100;
@@ -137,7 +141,7 @@ export async function handler(
                 "No project specified and none could be auto-resolved. Use --project flag or set BM_PROJECT env var.",
             },
             null,
-            2
+            2,
           ),
         },
       ],
@@ -163,7 +167,7 @@ export async function handler(
                   "Ollama is not available. Ensure Ollama is running (ollama serve) and the model is loaded.",
               },
               null,
-              2
+              2,
             ),
           },
         ],
@@ -178,14 +182,19 @@ export async function handler(
       logger.debug("Ollama warmup successful");
     } catch (warmupError) {
       logger.warn(
-        { error: warmupError instanceof Error ? warmupError.message : String(warmupError) },
-        "Ollama warmup failed, continuing anyway"
+        {
+          error:
+            warmupError instanceof Error
+              ? warmupError.message
+              : String(warmupError),
+        },
+        "Ollama warmup failed, continuing anyway",
       );
     }
 
     logger.info(
       { project, force, limit, projectType: typeof project },
-      "Project resolved, starting"
+      "Project resolved, starting",
     );
 
     const client = await getBasicMemoryClient();
@@ -207,7 +216,10 @@ export async function handler(
           .query("SELECT DISTINCT entity_id FROM brain_embeddings")
           .all() as Array<{ entity_id: string }>;
         existing.forEach((e) => existingIds.add(e.entity_id));
-        logger.info({ count: existingIds.size }, "Found existing embeddings in v2 table");
+        logger.info(
+          { count: existingIds.size },
+          "Found existing embeddings in v2 table",
+        );
       } catch {
         // Table might be empty or have issues, continue
         logger.debug("No existing v2 embeddings found");
@@ -215,18 +227,24 @@ export async function handler(
     }
 
     // List all notes from project
-    logger.info({ project, callName: "list_directory" }, "Calling list_directory");
+    logger.info(
+      { project, callName: "list_directory" },
+      "Calling list_directory",
+    );
     const listResult = await client.callTool({
       name: "list_directory",
       arguments: { project, depth: 10 },
     });
-    logger.info({ hasContent: !!listResult.content }, "list_directory returned");
+    logger.info(
+      { hasContent: !!listResult.content },
+      "list_directory returned",
+    );
 
     // Parse the response to get note permalinks
     let notes: string[] = [];
     if (listResult.content && Array.isArray(listResult.content)) {
       const textContent = listResult.content.find(
-        (c: { type: string }) => c.type === "text"
+        (c: { type: string }) => c.type === "text",
       );
       if (textContent && "text" in textContent) {
         const text = textContent.text as string;
@@ -265,21 +283,21 @@ export async function handler(
 
     logger.info(
       { toProcess: batch.length, skipped: notes.length - batch.length },
-      "Processing notes"
+      "Processing notes",
     );
 
     // Warn about large batch operations
     if (limit === 0 || batch.length > LARGE_BATCH_WARNING_THRESHOLD) {
       logger.warn(
         { batchSize: batch.length, threshold: LARGE_BATCH_WARNING_THRESHOLD },
-        "Large batch operation: may take a long time. Consider using smaller batches (limit <= 500)"
+        "Large batch operation: may take a long time. Consider using smaller batches (limit <= 500)",
       );
     }
 
     // Process notes concurrently with p-limit
     logger.info(
       { concurrency: CONCURRENCY_LIMIT, totalNotes: batch.length },
-      "Starting concurrent note processing"
+      "Starting concurrent note processing",
     );
 
     const concurrencyLimit = pLimit(CONCURRENCY_LIMIT);
@@ -287,7 +305,7 @@ export async function handler(
 
     // Process each note concurrently
     const results = await Promise.allSettled(
-      batch.map(notePath =>
+      batch.map((notePath) =>
         concurrencyLimit(async () => {
           try {
             // Read the note content
@@ -300,7 +318,7 @@ export async function handler(
             let content = "";
             if (readResult.content && Array.isArray(readResult.content)) {
               const textContent = readResult.content.find(
-                (c: { type: string }) => c.type === "text"
+                (c: { type: string }) => c.type === "text",
               );
               if (textContent && "text" in textContent) {
                 content = textContent.text as string;
@@ -320,14 +338,20 @@ export async function handler(
                 contentLength: content.length,
                 chunkCount: chunks.length,
               },
-              "Content chunked"
+              "Content chunked",
             );
 
             // Generate embeddings for all chunks using batch API
-            const chunkEmbeddings = await generateChunkEmbeddings(chunks, ollamaClient);
+            const chunkEmbeddings = await generateChunkEmbeddings(
+              chunks,
+              ollamaClient,
+            );
 
             if (!chunkEmbeddings) {
-              logger.warn({ notePath }, "Failed to generate embeddings for one or more chunks");
+              logger.warn(
+                { notePath },
+                "Failed to generate embeddings for one or more chunks",
+              );
               errors.push(`${notePath}: embedding generation failed`);
               return { success: false, chunks: 0 };
             }
@@ -335,12 +359,16 @@ export async function handler(
             // Store all chunk embeddings
             logger.debug(
               { permalink: notePath, chunkCount: chunkEmbeddings.length },
-              "Storing chunk embeddings"
+              "Storing chunk embeddings",
             );
-            const stored = storeChunkedEmbeddings(db, notePath, chunkEmbeddings);
+            const stored = storeChunkedEmbeddings(
+              db,
+              notePath,
+              chunkEmbeddings,
+            );
             logger.debug(
               { permalink: notePath, storedCount: stored },
-              "Chunk embeddings stored"
+              "Chunk embeddings stored",
             );
 
             return { success: true, chunks: stored };
@@ -350,8 +378,8 @@ export async function handler(
             logger.warn({ notePath, error: msg }, "Failed to process note");
             return { success: false, chunks: 0 };
           }
-        })
-      )
+        }),
+      ),
     );
 
     // Aggregate results
@@ -370,7 +398,7 @@ export async function handler(
 
     logger.info(
       { processed, failed, totalChunks: totalChunksGenerated },
-      "Concurrent processing complete"
+      "Concurrent processing complete",
     );
 
     db.close();

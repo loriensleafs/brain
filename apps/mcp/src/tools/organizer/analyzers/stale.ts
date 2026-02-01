@@ -5,16 +5,16 @@
  * Stale notes may contain outdated information or forgotten knowledge.
  */
 
-import type { QualityIssue } from '../types';
-import { getBasicMemoryClient } from '../../../proxy/client';
-import { extractFrontmatter } from '../utils/markdown';
+import { getBasicMemoryClient } from "../../../proxy/client";
+import type { QualityIssue } from "../types";
+import { extractFrontmatter } from "../utils/markdown";
 
 /**
  * Find notes that haven't been updated within the threshold period
  */
 export async function findStaleNotes(
   project: string,
-  thresholdDays: number
+  thresholdDays: number,
 ): Promise<QualityIssue[]> {
   const client = await getBasicMemoryClient();
   const issues: QualityIssue[] = [];
@@ -25,8 +25,8 @@ export async function findStaleNotes(
 
   // Get all notes in project
   const listResult = await client.callTool({
-    name: 'list_directory',
-    arguments: { project, depth: 10, file_name_glob: '*.md' },
+    name: "list_directory",
+    arguments: { project, depth: 10, file_name_glob: "*.md" },
   });
 
   const noteFiles = parseListDirectoryResult(listResult);
@@ -35,7 +35,7 @@ export async function findStaleNotes(
   for (const permalink of noteFiles) {
     try {
       const readResult = await client.callTool({
-        name: 'read_note',
+        name: "read_note",
         arguments: { identifier: permalink, project },
       });
 
@@ -43,20 +43,17 @@ export async function findStaleNotes(
 
       if (lastModified && lastModified < thresholdDate) {
         const daysSinceModified = Math.floor(
-          (Date.now() - lastModified.getTime()) / (1000 * 60 * 60 * 24)
+          (Date.now() - lastModified.getTime()) / (1000 * 60 * 60 * 24),
         );
 
         issues.push({
-          type: 'STALE',
+          type: "STALE",
           note: permalink,
           lastModified,
           recommendation: `"${permalink}" hasn't been updated in ${daysSinceModified} days. Review for relevance and update if needed`,
         });
       }
-    } catch (error) {
-      // Skip notes that fail to read
-      continue;
-    }
+    } catch (error) {}
   }
 
   return issues;
@@ -66,12 +63,12 @@ export async function findStaleNotes(
  * Parse list_directory output to extract file paths
  */
 function parseListDirectoryResult(result: any): string[] {
-  const text = result.content?.[0]?.text || '';
+  const text = result.content?.[0]?.text || "";
   const files: string[] = [];
-  const lines = text.split('\n');
+  const lines = text.split("\n");
 
   for (const line of lines) {
-    if (line.includes('.md') && !line.includes('Directory:')) {
+    if (line.includes(".md") && !line.includes("Directory:")) {
       const match = line.match(/([^\s]+\.md)/);
       if (match) files.push(match[1]);
     }
@@ -84,13 +81,14 @@ function parseListDirectoryResult(result: any): string[] {
  * Extract modification date from note frontmatter or metadata
  */
 function extractModifiedDate(result: any): Date | null {
-  const text = result.content?.[0]?.text || '';
+  const text = result.content?.[0]?.text || "";
 
   // Extract frontmatter using shared utility
   const frontmatter = extractFrontmatter(text);
 
   // Try date fields in order of preference
-  const dateStr = frontmatter.updated || frontmatter.modified || frontmatter.date;
+  const dateStr =
+    frontmatter.updated || frontmatter.modified || frontmatter.date;
 
   if (dateStr) {
     const date = new Date(String(dateStr));

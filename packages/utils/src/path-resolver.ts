@@ -1,14 +1,14 @@
 import { basename, dirname } from "path";
-import { readConfig, getDefaultProject } from "./config";
+import { getDefaultProject, readConfig } from "./config";
 
 export class ProjectNotFoundError extends Error {
   constructor(
     public readonly project: string,
-    public readonly availableProjects: string[]
+    public readonly availableProjects: string[],
   ) {
     super(
       `Project "${project}" not found in basic-memory config. ` +
-        `Available projects: ${availableProjects.join(", ")}`
+        `Available projects: ${availableProjects.join(", ")}`,
     );
     this.name = "ProjectNotFoundError";
   }
@@ -45,7 +45,7 @@ export async function getProjectMemoriesPath(project: string): Promise<string> {
  * @returns Project name if found, undefined otherwise
  */
 export async function detectProjectFromPath(
-  cwd: string
+  cwd: string,
 ): Promise<string | undefined> {
   const config = await readConfig();
   const dirName = basename(cwd);
@@ -100,7 +100,7 @@ export async function detectProjectFromPath(
  */
 export async function resolveProjectMemoriesPath(
   project?: string,
-  cwd?: string
+  cwd?: string,
 ): Promise<string> {
   // 1. Explicit project parameter
   if (project) {

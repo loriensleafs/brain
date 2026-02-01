@@ -45,7 +45,7 @@ export interface ConsolidateResult {
 /**
  * Operation type for note consolidation
  */
-export type OperationType = 'MERGE' | 'SPLIT' | 'NOOP';
+export type OperationType = "MERGE" | "SPLIT" | "NOOP";
 
 /**
  * Result from executing a merge operation
@@ -80,7 +80,7 @@ export interface MaintainConfig {
  * Quality issue found in knowledge graph
  */
 export interface QualityIssue {
-  type: 'ORPHAN' | 'STALE' | 'GAP' | 'WEAK';
+  type: "ORPHAN" | "STALE" | "GAP" | "WEAK";
   note?: string;
   reference?: string;
   score?: number;
@@ -142,7 +142,11 @@ export interface DedupeResult {
  */
 export interface BacklogConfig {
   project: string;
-  operation: 'QUERY_ORDER' | 'SET_PRIORITY' | 'ADD_DEPENDENCY' | 'REMOVE_DEPENDENCY';
+  operation:
+    | "QUERY_ORDER"
+    | "SET_PRIORITY"
+    | "ADD_DEPENDENCY"
+    | "REMOVE_DEPENDENCY";
   feature_id?: string;
   priority?: number;
   dependency_target?: string;

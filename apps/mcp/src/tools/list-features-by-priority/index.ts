@@ -4,14 +4,14 @@
  */
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { resolveProject } from "../../project/resolve";
-import type { ListFeaturesByPriorityArgs } from "./schema";
 import { buildDependencyGraph } from "./dependencyGraph";
+import type { ListFeaturesByPriorityArgs } from "./schema";
 import { topologicalSort } from "./topologicalSort";
 
 const COMPLETED_STATUSES = ["COMPLETE", "COMPLETED", "DONE", "ARCHIVED"];
 
 export async function handler(
-  args: ListFeaturesByPriorityArgs
+  args: ListFeaturesByPriorityArgs,
 ): Promise<CallToolResult> {
   const project = args.project || resolveProject();
   const entityType = args.entity_type || "feature";
@@ -80,8 +80,12 @@ export async function handler(
       project,
       entity_type: entityType,
       total_items: graph.nodes.size,
-      actionable_items: filteredSorted.filter(
-        (n) => n.dependencies.every((d) => !graph.nodes.has(d) || COMPLETED_STATUSES.includes(graph.nodes.get(d)!.status))
+      actionable_items: filteredSorted.filter((n) =>
+        n.dependencies.every(
+          (d) =>
+            !graph.nodes.has(d) ||
+            COMPLETED_STATUSES.includes(graph.nodes.get(d)!.status),
+        ),
       ).length,
       generated_at: new Date().toISOString(),
     },
@@ -121,21 +125,23 @@ export async function handler(
   lines.push(``);
   for (let i = 0; i < filteredSorted.length; i++) {
     const item = filteredSorted[i];
-    const priorityStr = item.priority !== undefined ? `P${item.priority}` : "P?";
+    const priorityStr =
+      item.priority !== undefined ? `P${item.priority}` : "P?";
     lines.push(`${i + 1}. **${item.title}** [${priorityStr}] - ${item.status}`);
   }
 
   // Add unsorted items (in cycles)
   const sortedPermalinks = new Set(sorted.map((f) => f.permalink));
   const unsorted = Array.from(graph.nodes.values()).filter(
-    (n) => !sortedPermalinks.has(n.permalink)
+    (n) => !sortedPermalinks.has(n.permalink),
   );
 
   if (unsorted.length > 0) {
     lines.push(``);
     lines.push(`### Items in Cycles (unsorted)`);
     for (const item of unsorted) {
-      const priorityStr = item.priority !== undefined ? `P${item.priority}` : "P?";
+      const priorityStr =
+        item.priority !== undefined ? `P${item.priority}` : "P?";
       lines.push(`- **${item.title}** [${priorityStr}] - ${item.status}`);
     }
   }

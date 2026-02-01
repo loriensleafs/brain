@@ -97,20 +97,24 @@
           ]
         },
         "handoffFrom": {
-          "oneOf": [
-            { "$ref": "#/definitions/AgentType" },
-            { "type": "null" }
-          ]
+          "oneOf": [{ "$ref": "#/definitions/AgentType" }, { "type": "null" }]
         },
         "handoffTo": {
-          "oneOf": [
-            { "$ref": "#/definitions/AgentType" },
-            { "type": "null" }
-          ]
+          "oneOf": [{ "$ref": "#/definitions/AgentType" }, { "type": "null" }]
         },
         "handoffReason": { "type": "string" }
       },
-      "required": ["agent", "startedAt", "completedAt", "status", "input", "output", "handoffFrom", "handoffTo", "handoffReason"],
+      "required": [
+        "agent",
+        "startedAt",
+        "completedAt",
+        "status",
+        "input",
+        "output",
+        "handoffFrom",
+        "handoffTo",
+        "handoffReason"
+      ],
       "additionalProperties": false
     },
     "Decision": {
@@ -121,11 +125,26 @@
         "description": { "type": "string" },
         "rationale": { "type": "string" },
         "decidedBy": { "$ref": "#/definitions/AgentType" },
-        "approvedBy": { "type": "array", "items": { "$ref": "#/definitions/AgentType" } },
-        "rejectedBy": { "type": "array", "items": { "$ref": "#/definitions/AgentType" } },
+        "approvedBy": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/AgentType" }
+        },
+        "rejectedBy": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/AgentType" }
+        },
         "timestamp": { "type": "string", "format": "date-time" }
       },
-      "required": ["id", "type", "description", "rationale", "decidedBy", "approvedBy", "rejectedBy", "timestamp"],
+      "required": [
+        "id",
+        "type",
+        "description",
+        "rationale",
+        "decidedBy",
+        "approvedBy",
+        "rejectedBy",
+        "timestamp"
+      ],
       "additionalProperties": false
     },
     "Verdict": {
@@ -153,7 +172,14 @@
         "preservedContext": { "type": "object", "additionalProperties": true },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["fromAgent", "toAgent", "reason", "context", "artifacts", "createdAt"],
+      "required": [
+        "fromAgent",
+        "toAgent",
+        "reason",
+        "context",
+        "artifacts",
+        "createdAt"
+      ],
       "additionalProperties": false
     },
     "CompactionEntry": {
@@ -170,32 +196,63 @@
       "type": "object",
       "properties": {
         "activeAgent": {
-          "oneOf": [
-            { "$ref": "#/definitions/AgentType" },
-            { "type": "null" }
-          ]
+          "oneOf": [{ "$ref": "#/definitions/AgentType" }, { "type": "null" }]
         },
         "workflowPhase": { "$ref": "#/definitions/WorkflowPhase" },
-        "agentHistory": { "type": "array", "items": { "$ref": "#/definitions/AgentInvocation" } },
-        "decisions": { "type": "array", "items": { "$ref": "#/definitions/Decision" } },
-        "verdicts": { "type": "array", "items": { "$ref": "#/definitions/Verdict" } },
-        "pendingHandoffs": { "type": "array", "items": { "$ref": "#/definitions/Handoff" } },
-        "compactionHistory": { "type": "array", "items": { "$ref": "#/definitions/CompactionEntry" } },
+        "agentHistory": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/AgentInvocation" }
+        },
+        "decisions": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/Decision" }
+        },
+        "verdicts": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/Verdict" }
+        },
+        "pendingHandoffs": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/Handoff" }
+        },
+        "compactionHistory": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/CompactionEntry" }
+        },
         "startedAt": { "type": "string", "format": "date-time" },
         "lastAgentChange": { "type": "string", "format": "date-time" }
       },
-      "required": ["activeAgent", "workflowPhase", "agentHistory", "decisions", "verdicts", "pendingHandoffs", "compactionHistory", "startedAt", "lastAgentChange"],
+      "required": [
+        "activeAgent",
+        "workflowPhase",
+        "agentHistory",
+        "decisions",
+        "verdicts",
+        "pendingHandoffs",
+        "compactionHistory",
+        "startedAt",
+        "lastAgentChange"
+      ],
       "additionalProperties": false
     }
   },
   "type": "object",
   "properties": {
     "currentMode": { "$ref": "#/definitions/WorkflowMode" },
-    "modeHistory": { "type": "array", "items": { "$ref": "#/definitions/ModeHistoryEntry" } },
+    "modeHistory": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/ModeHistoryEntry" }
+    },
     "protocolStartComplete": { "type": "boolean" },
     "protocolEndComplete": { "type": "boolean" },
-    "protocolStartEvidence": { "type": "object", "additionalProperties": { "type": "string" } },
-    "protocolEndEvidence": { "type": "object", "additionalProperties": { "type": "string" } },
+    "protocolStartEvidence": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "protocolEndEvidence": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
     "orchestratorWorkflow": {
       "oneOf": [
         { "$ref": "#/definitions/OrchestratorWorkflow" },
@@ -208,6 +265,17 @@
     "createdAt": { "type": "string", "format": "date-time" },
     "updatedAt": { "type": "string", "format": "date-time" }
   },
-  "required": ["currentMode", "modeHistory", "protocolStartComplete", "protocolEndComplete", "protocolStartEvidence", "protocolEndEvidence", "orchestratorWorkflow", "version", "createdAt", "updatedAt"],
+  "required": [
+    "currentMode",
+    "modeHistory",
+    "protocolStartComplete",
+    "protocolEndComplete",
+    "protocolStartEvidence",
+    "protocolEndEvidence",
+    "orchestratorWorkflow",
+    "version",
+    "createdAt",
+    "updatedAt"
+  ],
   "additionalProperties": false
 }

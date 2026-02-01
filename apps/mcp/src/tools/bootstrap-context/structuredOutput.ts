@@ -5,11 +5,14 @@
  * Returns JSON-serializable data for programmatic consumption.
  */
 
-import type { ContextNote } from "./sectionQueries";
-import type { NoteType } from "./noteType";
-import type { NoteStatus } from "./statusParser";
-import type { SessionEnrichment, AgentHistorySummary } from "./sessionEnrichment";
 import type { WorkflowMode } from "../../services/session/types";
+import type { NoteType } from "./noteType";
+import type { ContextNote } from "./sectionQueries";
+import type {
+  AgentHistorySummary,
+  SessionEnrichment,
+} from "./sessionEnrichment";
+import type { NoteStatus } from "./statusParser";
 
 /**
  * Structured note for output
@@ -113,7 +116,7 @@ export interface StructuredOutputInput {
  * Build structured content output from context data
  */
 export function buildStructuredOutput(
-  input: StructuredOutputInput
+  input: StructuredOutputInput,
 ): StructuredContent {
   const {
     project,
@@ -159,7 +162,7 @@ export function buildStructuredOutput(
  * Build structured session context from enrichment data
  */
 function buildSessionContext(
-  enrichment: SessionEnrichment
+  enrichment: SessionEnrichment,
 ): StructuredSessionContext {
   const { sessionState, taskNotes, featureNotes, recentAgentHistory } =
     enrichment;

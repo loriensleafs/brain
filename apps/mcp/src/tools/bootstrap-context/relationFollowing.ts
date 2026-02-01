@@ -7,8 +7,8 @@
 
 import { getBasicMemoryClient } from "../../proxy/client";
 import { detectNoteType } from "./noteType";
-import { parseStatus } from "./statusParser";
 import type { ContextNote } from "./sectionQueries";
+import { parseStatus } from "./statusParser";
 
 /**
  * WikiLink pattern: [[Title]] or [[Title|Display Text]]
@@ -47,7 +47,7 @@ export function extractWikiLinks(content: string): string[] {
  */
 export async function followRelations(
   notes: ContextNote[],
-  options: { project: string }
+  options: { project: string },
 ): Promise<ContextNote[]> {
   const { project } = options;
 
@@ -65,7 +65,7 @@ export async function followRelations(
   const existingTitles = new Set(notes.map((n) => n.title));
 
   const linksToResolve = Array.from(allLinks).filter(
-    (link) => !existingPermalinks.has(link) && !existingTitles.has(link)
+    (link) => !existingPermalinks.has(link) && !existingTitles.has(link),
   );
 
   if (linksToResolve.length === 0) {
@@ -95,7 +95,7 @@ export async function followRelations(
  */
 async function resolveLinks(
   links: string[],
-  project: string
+  project: string,
 ): Promise<ContextNote[]> {
   const client = await getBasicMemoryClient();
   const resolved: ContextNote[] = [];
@@ -131,7 +131,7 @@ async function resolveLinks(
  */
 function parseReadNoteResult(
   result: unknown,
-  originalLink: string
+  originalLink: string,
 ): ContextNote | null {
   // Handle various response formats
   const typedResult = result as {
@@ -191,7 +191,7 @@ function parseReadNoteResult(
 export function extractRelationsSection(content: string): string[] {
   // Match ## Relations section
   const sectionMatch = content.match(
-    /^##\s+Relations\s*\n+([\s\S]*?)(?=\n##\s|\n---|\n\n\n|$)/im
+    /^##\s+Relations\s*\n+([\s\S]*?)(?=\n##\s|\n---|\n\n\n|$)/im,
   );
 
   if (!sectionMatch) {

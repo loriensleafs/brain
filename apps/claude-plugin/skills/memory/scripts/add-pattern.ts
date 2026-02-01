@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+
 /**
  * Add-Pattern.ts
  *
@@ -27,10 +28,16 @@
  *     --project brain
  */
 
-import { readFileSync, existsSync, writeFileSync, mkdirSync, readdirSync } from "fs";
+import { getProjectMemoriesPath } from "@brain/utils";
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  writeFileSync,
+} from "fs";
 import { join } from "path";
 import { parseArgs } from "util";
-import { getProjectMemoriesPath } from "@brain/utils";
 
 // Types
 interface Pattern {
@@ -86,7 +93,7 @@ function writeNote(
   title: string,
   folder: string,
   content: string,
-  projectPath: string
+  projectPath: string,
 ): void {
   const folderPath = join(projectPath, folder);
 
@@ -121,7 +128,7 @@ function searchPatterns(query: string, projectPath: string): string[] {
       (f) =>
         /^pattern-p/i.test(f) &&
         f.endsWith(".md") &&
-        f.toLowerCase().includes(queryLower)
+        f.toLowerCase().includes(queryLower),
     )
     .map((f) => `patterns/${f.replace(".md", "")}`);
 }
@@ -141,7 +148,7 @@ function getNextPatternId(projectPath: string): string {
 
   const files = readdirSync(patternsDir);
   const patternFiles = files.filter(
-    (f) => /^pattern-p/i.test(f) && f.endsWith(".md")
+    (f) => /^pattern-p/i.test(f) && f.endsWith(".md"),
   );
 
   if (patternFiles.length === 0) {
@@ -209,7 +216,7 @@ function parsePatternFromContent(content: string): Pattern | null {
 
     // Parse frontmatter
     let inFrontmatter = false;
-    let frontmatterLines: string[] = [];
+    const frontmatterLines: string[] = [];
     let contentStartIndex = 0;
 
     for (let i = 0; i < lines.length; i++) {
@@ -258,7 +265,7 @@ function parsePatternFromContent(content: string): Pattern | null {
       category: getFrontmatterValue("tags").includes("causal")
         ? categorizePattern(
             getFrontmatterValue("trigger"),
-            getFrontmatterValue("action")
+            getFrontmatterValue("action"),
           )
         : "general",
       trigger: getFrontmatterValue("trigger"),
@@ -282,7 +289,7 @@ function parsePatternFromContent(content: string): Pattern | null {
  */
 function findExistingPattern(
   name: string,
-  projectPath: string
+  projectPath: string,
 ): { identifier: string; pattern: Pattern } | null {
   const slug = slugify(name);
 
@@ -308,7 +315,7 @@ function loadTemplate(): string {
     import.meta.dir,
     "..",
     "templates",
-    "pattern-template.md"
+    "pattern-template.md",
   );
   try {
     return readFileSync(templatePath, "utf-8");
@@ -391,7 +398,7 @@ function generateObservations(pattern: Pattern): string {
 
   if (pattern.occurrences > 1) {
     observations.push(
-      `- [insight] Pattern validated ${pattern.occurrences} times #recurring`
+      `- [insight] Pattern validated ${pattern.occurrences} times #recurring`,
     );
   }
 
@@ -431,7 +438,7 @@ function generateRelations(pattern: Pattern): string {
 function calculateRunningAverage(
   currentRate: number,
   currentCount: number,
-  newRate: number
+  newRate: number,
 ): number {
   // Weighted running average
   const totalWeight = currentCount + 1;
@@ -514,7 +521,9 @@ pattern files directly to the filesystem.
   const project = args.values.project ?? "brain";
 
   if (!name || !trigger || !action || !evidence) {
-    console.error("Error: --name, --trigger, --action, and --evidence are required");
+    console.error(
+      "Error: --name, --trigger, --action, and --evidence are required",
+    );
     console.error("Use --help for usage information");
     process.exit(1);
   }
@@ -534,7 +543,9 @@ pattern files directly to the filesystem.
     projectPath = await getProjectMemoriesPath(project);
     console.log(`Project '${project}' resolved to: ${projectPath}`);
   } catch (error) {
-    console.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
+    console.error(
+      `Error: ${error instanceof Error ? error.message : String(error)}`,
+    );
     process.exit(1);
   }
 
@@ -552,7 +563,7 @@ pattern files directly to the filesystem.
     const newSuccessRate = calculateRunningAverage(
       existing.pattern.success_rate,
       existing.pattern.occurrences,
-      successRate
+      successRate,
     );
 
     pattern = {
@@ -564,7 +575,9 @@ pattern files directly to the filesystem.
     };
 
     // Extract title from identifier (patterns/PATTERN-p001-name -> PATTERN-p001-name)
-    noteTitle = existing.identifier.split("/").pop() || `PATTERN-${pattern.id}-${slugify(name)}`;
+    noteTitle =
+      existing.identifier.split("/").pop() ||
+      `PATTERN-${pattern.id}-${slugify(name)}`;
   } else {
     // Create new pattern
     const id = getNextPatternId(projectPath);

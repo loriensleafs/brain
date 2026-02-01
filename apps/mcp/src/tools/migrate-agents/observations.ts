@@ -5,14 +5,14 @@
  * and formats them as categorized observations with tags.
  */
 
+import { parseListItems, parseMarkdownTable } from "./parser";
 import type {
-  ParsedAgentFile,
+  AgentEntityType,
   Observation,
   ObservationCategory,
-  AgentEntityType
-} from './schema';
-import { QUALITY_THRESHOLDS } from './schema';
-import { parseListItems, parseMarkdownTable } from './parser';
+  ParsedAgentFile,
+} from "./schema";
+import { QUALITY_THRESHOLDS } from "./schema";
 
 /**
  * Generate observations from parsed agent file
@@ -24,22 +24,22 @@ export function generateObservations(parsed: ParsedAgentFile): Observation[] {
 
   // Apply entity-specific extraction
   switch (parsed.entityType) {
-    case 'session':
+    case "session":
       observations.push(...extractSessionObservations(parsed));
       break;
-    case 'decision':
+    case "decision":
       observations.push(...extractDecisionObservations(parsed));
       break;
-    case 'requirement':
+    case "requirement":
       observations.push(...extractRequirementObservations(parsed));
       break;
-    case 'design':
+    case "design":
       observations.push(...extractDesignObservations(parsed));
       break;
-    case 'task':
+    case "task":
       observations.push(...extractTaskObservations(parsed));
       break;
-    case 'security':
+    case "security":
       observations.push(...extractSecurityObservations(parsed));
       break;
     default:
@@ -66,57 +66,58 @@ function extractSessionObservations(parsed: ParsedAgentFile): Observation[] {
   // Extract session metadata
   if (fm.Branch || fm.branch) {
     observations.push({
-      category: 'fact',
+      category: "fact",
       content: `Session work on branch ${fm.Branch || fm.branch}`,
-      tags: ['session', 'git']
+      tags: ["session", "git"],
     });
   }
 
   // Extract from Objective section
-  const objective = sections.get('Objective') || sections.get('Session Info');
+  const objective = sections.get("Objective") || sections.get("Session Info");
   if (objective) {
     observations.push({
-      category: 'fact',
+      category: "fact",
       content: extractFirstSentence(objective),
-      tags: ['objective', 'session']
+      tags: ["objective", "session"],
     });
   }
 
   // Extract decisions from Work Log or Decisions Made
-  const workLog = sections.get('Work Log') || sections.get('Decisions Made');
+  const workLog = sections.get("Work Log") || sections.get("Decisions Made");
   if (workLog) {
     const decisions = extractDecisionStatements(workLog);
     for (const decision of decisions.slice(0, 3)) {
       observations.push({
-        category: 'decision',
+        category: "decision",
         content: decision,
-        tags: ['session-decision']
+        tags: ["session-decision"],
       });
     }
   }
 
   // Extract from Key Findings
-  const findings = sections.get('Key Findings') || sections.get('Findings');
+  const findings = sections.get("Key Findings") || sections.get("Findings");
   if (findings) {
     const items = parseListItems(findings);
     for (const item of items.slice(0, 3)) {
       observations.push({
-        category: 'insight',
+        category: "insight",
         content: item,
-        tags: ['finding']
+        tags: ["finding"],
       });
     }
   }
 
   // Extract from Lessons Learned
-  const lessons = sections.get('Lessons Learned') || sections.get('Notes for Next Session');
+  const lessons =
+    sections.get("Lessons Learned") || sections.get("Notes for Next Session");
   if (lessons) {
     const items = parseListItems(lessons);
     for (const item of items.slice(0, 2)) {
       observations.push({
-        category: 'insight',
+        category: "insight",
         content: item,
-        tags: ['lesson']
+        tags: ["lesson"],
       });
     }
   }
@@ -125,9 +126,9 @@ function extractSessionObservations(parsed: ParsedAgentFile): Observation[] {
   const outcome = extractOutcome(parsed.content);
   if (outcome) {
     observations.push({
-      category: 'outcome',
+      category: "outcome",
       content: outcome,
-      tags: ['session-outcome']
+      tags: ["session-outcome"],
     });
   }
 
@@ -145,52 +146,54 @@ function extractDecisionObservations(parsed: ParsedAgentFile): Observation[] {
   // Extract status
   if (fm.status) {
     observations.push({
-      category: 'fact',
+      category: "fact",
       content: `Decision status: ${fm.status}`,
-      tags: ['adr', 'status']
+      tags: ["adr", "status"],
     });
   }
 
   // Extract context
-  const context = sections.get('Context') || sections.get('Problem');
+  const context = sections.get("Context") || sections.get("Problem");
   if (context) {
     observations.push({
-      category: 'problem',
+      category: "problem",
       content: extractFirstSentence(context),
-      tags: ['adr', 'context']
+      tags: ["adr", "context"],
     });
   }
 
   // Extract decision
-  const decision = sections.get('Decision') || sections.get('Solution');
+  const decision = sections.get("Decision") || sections.get("Solution");
   if (decision) {
     observations.push({
-      category: 'decision',
+      category: "decision",
       content: extractFirstSentence(decision),
-      tags: ['adr', 'decision']
+      tags: ["adr", "decision"],
     });
   }
 
   // Extract consequences/rationale
-  const consequences = sections.get('Consequences') || sections.get('Rationale');
+  const consequences =
+    sections.get("Consequences") || sections.get("Rationale");
   if (consequences) {
     const items = parseListItems(consequences);
     for (const item of items.slice(0, 2)) {
       observations.push({
-        category: 'insight',
+        category: "insight",
         content: item,
-        tags: ['adr', 'consequence']
+        tags: ["adr", "consequence"],
       });
     }
   }
 
   // Extract alternatives considered
-  const alternatives = sections.get('Alternatives Considered') || sections.get('Options');
+  const alternatives =
+    sections.get("Alternatives Considered") || sections.get("Options");
   if (alternatives) {
     observations.push({
-      category: 'fact',
+      category: "fact",
       content: `Alternatives evaluated: ${summarizeAlternatives(alternatives)}`,
-      tags: ['adr', 'alternatives']
+      tags: ["adr", "alternatives"],
     });
   }
 
@@ -200,52 +203,55 @@ function extractDecisionObservations(parsed: ParsedAgentFile): Observation[] {
 /**
  * Extract observations from requirements
  */
-function extractRequirementObservations(parsed: ParsedAgentFile): Observation[] {
+function extractRequirementObservations(
+  parsed: ParsedAgentFile,
+): Observation[] {
   const observations: Observation[] = [];
   const sections = parsed.sections;
   const fm = parsed.originalFrontmatter;
 
   // Extract requirement statement
-  const reqStatement = sections.get('Requirement Statement') || sections.get('Description');
+  const reqStatement =
+    sections.get("Requirement Statement") || sections.get("Description");
   if (reqStatement) {
     observations.push({
-      category: 'requirement',
+      category: "requirement",
       content: extractFirstSentence(reqStatement),
-      tags: ['requirement', 'statement']
+      tags: ["requirement", "statement"],
     });
   }
 
   // Extract priority
   if (fm.priority) {
     observations.push({
-      category: 'fact',
+      category: "fact",
       content: `Priority: ${fm.priority}`,
-      tags: ['requirement', 'priority']
+      tags: ["requirement", "priority"],
     });
   }
 
   // Extract acceptance criteria
-  const criteria = sections.get('Acceptance Criteria');
+  const criteria = sections.get("Acceptance Criteria");
   if (criteria) {
     const items = parseListItems(criteria);
     for (const item of items.slice(0, 3)) {
       observations.push({
-        category: 'requirement',
-        content: item.replace(/^\[[ x]\]\s*/, ''),
-        tags: ['acceptance-criteria']
+        category: "requirement",
+        content: item.replace(/^\[[ x]\]\s*/, ""),
+        tags: ["acceptance-criteria"],
       });
     }
   }
 
   // Extract dependencies
-  const deps = sections.get('Dependencies');
+  const deps = sections.get("Dependencies");
   if (deps) {
     const items = parseListItems(deps);
     for (const item of items.slice(0, 2)) {
       observations.push({
-        category: 'fact',
+        category: "fact",
         content: `Depends on: ${item}`,
-        tags: ['dependency']
+        tags: ["dependency"],
       });
     }
   }
@@ -261,48 +267,48 @@ function extractDesignObservations(parsed: ParsedAgentFile): Observation[] {
   const sections = parsed.sections;
 
   // Extract design overview
-  const overview = sections.get('Design Overview') || sections.get('Overview');
+  const overview = sections.get("Design Overview") || sections.get("Overview");
   if (overview) {
     observations.push({
-      category: 'fact',
+      category: "fact",
       content: extractFirstSentence(overview),
-      tags: ['design', 'overview']
+      tags: ["design", "overview"],
     });
   }
 
   // Extract component descriptions
   for (const [name, content] of sections) {
-    if (name.startsWith('Component')) {
+    if (name.startsWith("Component")) {
       observations.push({
-        category: 'fact',
+        category: "fact",
         content: extractFirstSentence(content),
-        tags: ['design', 'component']
+        tags: ["design", "component"],
       });
     }
   }
 
   // Extract technology decisions
-  const techDecisions = sections.get('Technology Decisions');
+  const techDecisions = sections.get("Technology Decisions");
   if (techDecisions) {
     const tableData = parseMarkdownTable(techDecisions);
     for (const [key, value] of tableData) {
-      if (key && value && !key.includes('-')) {
+      if (key && value && !key.includes("-")) {
         observations.push({
-          category: 'decision',
+          category: "decision",
           content: `${key}: ${value}`,
-          tags: ['design', 'technology']
+          tags: ["design", "technology"],
         });
       }
     }
   }
 
   // Extract security considerations
-  const security = sections.get('Security Considerations');
+  const security = sections.get("Security Considerations");
   if (security) {
     observations.push({
-      category: 'requirement',
+      category: "requirement",
       content: extractFirstSentence(security),
-      tags: ['design', 'security']
+      tags: ["design", "security"],
     });
   }
 
@@ -318,33 +324,34 @@ function extractTaskObservations(parsed: ParsedAgentFile): Observation[] {
   const fm = parsed.originalFrontmatter;
 
   // Extract task description
-  const desc = sections.get('Description') || sections.get('Task');
+  const desc = sections.get("Description") || sections.get("Task");
   if (desc) {
     observations.push({
-      category: 'fact',
+      category: "fact",
       content: extractFirstSentence(desc),
-      tags: ['task', 'description']
+      tags: ["task", "description"],
     });
   }
 
   // Extract status
   if (fm.status) {
     observations.push({
-      category: 'fact',
+      category: "fact",
       content: `Task status: ${fm.status}`,
-      tags: ['task', 'status']
+      tags: ["task", "status"],
     });
   }
 
   // Extract implementation notes
-  const impl = sections.get('Implementation') || sections.get('Implementation Notes');
+  const impl =
+    sections.get("Implementation") || sections.get("Implementation Notes");
   if (impl) {
     const items = parseListItems(impl);
     for (const item of items.slice(0, 2)) {
       observations.push({
-        category: 'technique',
+        category: "technique",
         content: item,
-        tags: ['task', 'implementation']
+        tags: ["task", "implementation"],
       });
     }
   }
@@ -360,35 +367,37 @@ function extractSecurityObservations(parsed: ParsedAgentFile): Observation[] {
   const sections = parsed.sections;
 
   // Extract findings
-  const findings = sections.get('Findings') || sections.get('Security Findings');
+  const findings =
+    sections.get("Findings") || sections.get("Security Findings");
   if (findings) {
     const items = parseListItems(findings);
     for (const item of items.slice(0, 3)) {
       observations.push({
-        category: 'problem',
+        category: "problem",
         content: item,
-        tags: ['security', 'finding']
+        tags: ["security", "finding"],
       });
     }
   }
 
   // Extract remediation
-  const remediation = sections.get('Remediation') || sections.get('Remediation Approach');
+  const remediation =
+    sections.get("Remediation") || sections.get("Remediation Approach");
   if (remediation) {
     observations.push({
-      category: 'solution',
+      category: "solution",
       content: extractFirstSentence(remediation),
-      tags: ['security', 'remediation']
+      tags: ["security", "remediation"],
     });
   }
 
   // Extract risk assessment
-  const risk = sections.get('Risk Assessment') || sections.get('Risk');
+  const risk = sections.get("Risk Assessment") || sections.get("Risk");
   if (risk) {
     observations.push({
-      category: 'insight',
+      category: "insight",
       content: extractFirstSentence(risk),
-      tags: ['security', 'risk']
+      tags: ["security", "risk"],
     });
   }
 
@@ -408,20 +417,21 @@ function extractGenericObservations(parsed: ParsedAgentFile): Observation[] {
     observations.push({
       category,
       content: item,
-      tags: [parsed.entityType]
+      tags: [parsed.entityType],
     });
   }
 
   // Extract from any section that looks like a summary
-  const summarySection = parsed.sections.get('Summary') ||
-    parsed.sections.get('Overview') ||
-    parsed.sections.get('Description');
+  const summarySection =
+    parsed.sections.get("Summary") ||
+    parsed.sections.get("Overview") ||
+    parsed.sections.get("Description");
 
   if (summarySection) {
     observations.push({
-      category: 'fact',
+      category: "fact",
       content: extractFirstSentence(summarySection),
-      tags: [parsed.entityType, 'summary']
+      tags: [parsed.entityType, "summary"],
     });
   }
 
@@ -433,7 +443,7 @@ function extractGenericObservations(parsed: ParsedAgentFile): Observation[] {
  */
 function fillMinimumObservations(
   parsed: ParsedAgentFile,
-  currentCount: number
+  currentCount: number,
 ): Observation[] {
   const needed = QUALITY_THRESHOLDS.minObservations - currentCount;
   if (needed <= 0) return [];
@@ -442,17 +452,17 @@ function fillMinimumObservations(
 
   // Add title as a fact
   observations.push({
-    category: 'fact',
+    category: "fact",
     content: `Document: ${parsed.title}`,
-    tags: [parsed.entityType]
+    tags: [parsed.entityType],
   });
 
   // Add entity type observation
   if (observations.length < needed) {
     observations.push({
-      category: 'fact',
+      category: "fact",
       content: `Type: ${parsed.entityType} document`,
-      tags: ['metadata']
+      tags: ["metadata"],
     });
   }
 
@@ -461,16 +471,16 @@ function fillMinimumObservations(
     const firstPara = extractFirstParagraph(parsed.content);
     if (firstPara) {
       observations.push({
-        category: 'fact',
+        category: "fact",
         content: firstPara,
-        tags: [parsed.entityType, 'context']
+        tags: [parsed.entityType, "context"],
       });
     } else {
       // Fallback: add source path as observation
       observations.push({
-        category: 'fact',
+        category: "fact",
         content: `Source: ${parsed.relativePath}`,
-        tags: ['metadata', 'source']
+        tags: ["metadata", "source"],
       });
     }
   }
@@ -484,10 +494,10 @@ function fillMinimumObservations(
 function extractFirstSentence(text: string): string {
   // Remove markdown formatting
   const cleaned = text
-    .replace(/^#+\s*/gm, '')
-    .replace(/\*\*([^*]+)\*\*/g, '$1')
-    .replace(/\*([^*]+)\*/g, '$1')
-    .replace(/`([^`]+)`/g, '$1')
+    .replace(/^#+\s*/gm, "")
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/\*([^*]+)\*/g, "$1")
+    .replace(/`([^`]+)`/g, "$1")
     .trim();
 
   // Find first sentence
@@ -508,12 +518,17 @@ function extractFirstParagraph(text: string): string {
   for (const para of paragraphs) {
     const cleaned = para.trim();
     // Skip headings, code blocks, lists
-    if (cleaned && !cleaned.startsWith('#') && !cleaned.startsWith('```') &&
-        !cleaned.startsWith('-') && !cleaned.startsWith('*')) {
+    if (
+      cleaned &&
+      !cleaned.startsWith("#") &&
+      !cleaned.startsWith("```") &&
+      !cleaned.startsWith("-") &&
+      !cleaned.startsWith("*")
+    ) {
       return cleaned.slice(0, 200);
     }
   }
-  return '';
+  return "";
 }
 
 /**
@@ -525,7 +540,7 @@ function extractOutcome(content: string): string | null {
     /\*\*Outcome\*\*:\s*(.+)/i,
     /\*\*Result\*\*:\s*(.+)/i,
     /\*\*Status\*\*:\s*(Success|Complete|Done|PASS).*/i,
-    /Session.*completed.*successfully/i
+    /Session.*completed.*successfully/i,
   ];
 
   for (const pattern of patterns) {
@@ -548,7 +563,7 @@ function extractDecisionStatements(text: string): string[] {
   const patterns = [
     /(?:Decided|Decision|Chose|Selected|Went with)[:\s]+(.+)/gi,
     /\*\*Decision\*\*[:\s]+(.+)/gi,
-    /- \[decision\][:\s]+(.+)/gi
+    /- \[decision\][:\s]+(.+)/gi,
   ];
 
   for (const pattern of patterns) {
@@ -566,9 +581,9 @@ function extractDecisionStatements(text: string): string[] {
  */
 function summarizeAlternatives(text: string): string {
   const items = parseListItems(text);
-  if (items.length === 0) return 'multiple options';
-  if (items.length <= 3) return items.join(', ');
-  return `${items.slice(0, 3).join(', ')}, and ${items.length - 3} more`;
+  if (items.length === 0) return "multiple options";
+  if (items.length <= 3) return items.join(", ");
+  return `${items.slice(0, 3).join(", ")}, and ${items.length - 3} more`;
 }
 
 /**
@@ -577,24 +592,48 @@ function summarizeAlternatives(text: string): string {
 function categorizeStatement(statement: string): ObservationCategory {
   const lower = statement.toLowerCase();
 
-  if (lower.includes('decided') || lower.includes('chose') || lower.includes('selected')) {
-    return 'decision';
+  if (
+    lower.includes("decided") ||
+    lower.includes("chose") ||
+    lower.includes("selected")
+  ) {
+    return "decision";
   }
-  if (lower.includes('must') || lower.includes('shall') || lower.includes('required')) {
-    return 'requirement';
+  if (
+    lower.includes("must") ||
+    lower.includes("shall") ||
+    lower.includes("required")
+  ) {
+    return "requirement";
   }
-  if (lower.includes('issue') || lower.includes('problem') || lower.includes('bug')) {
-    return 'problem';
+  if (
+    lower.includes("issue") ||
+    lower.includes("problem") ||
+    lower.includes("bug")
+  ) {
+    return "problem";
   }
-  if (lower.includes('fixed') || lower.includes('resolved') || lower.includes('solution')) {
-    return 'solution';
+  if (
+    lower.includes("fixed") ||
+    lower.includes("resolved") ||
+    lower.includes("solution")
+  ) {
+    return "solution";
   }
-  if (lower.includes('learned') || lower.includes('insight') || lower.includes('realized')) {
-    return 'insight';
+  if (
+    lower.includes("learned") ||
+    lower.includes("insight") ||
+    lower.includes("realized")
+  ) {
+    return "insight";
   }
-  if (lower.includes('use') || lower.includes('approach') || lower.includes('method')) {
-    return 'technique';
+  if (
+    lower.includes("use") ||
+    lower.includes("approach") ||
+    lower.includes("method")
+  ) {
+    return "technique";
   }
 
-  return 'fact';
+  return "fact";
 }

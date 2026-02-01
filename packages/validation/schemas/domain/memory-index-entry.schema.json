@@ -39,7 +39,7 @@
           "description": "P2: Minimum keywords per entry"
         },
         "uniquenessThreshold": {
-          "const": 0.40,
+          "const": 0.4,
           "description": "P0: Minimum 40% unique keywords per entry"
         },
         "fileNamePattern": {
@@ -67,7 +67,12 @@
         "prohibitedContent": {
           "type": "array",
           "items": {
-            "enum": ["titles", "metadata_blocks", "navigation_sections", "non_table_content"]
+            "enum": [
+              "titles",
+              "metadata_blocks",
+              "navigation_sections",
+              "non_table_content"
+            ]
           },
           "description": "Content types prohibited in index files"
         }

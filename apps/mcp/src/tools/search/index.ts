@@ -7,21 +7,19 @@
  * @see SearchService for implementation details
  */
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
-import { logger } from "../../utils/internal/logger";
-import { SearchArgsSchema } from "./schema";
 import {
   getSearchService,
   type SearchMode,
   type SearchResult as ServiceSearchResult,
 } from "../../services/search";
+import { logger } from "../../utils/internal/logger";
+import { SearchArgsSchema } from "./schema";
 
 /**
  * Convert service SearchResult to tool SearchResult format.
  * Maps the 'hybrid' source to 'semantic' for tool output compatibility.
  */
-function mapServiceResultToToolResult(
-  result: ServiceSearchResult
-): {
+function mapServiceResultToToolResult(result: ServiceSearchResult): {
   permalink: string;
   title: string;
   similarity_score: number;
@@ -31,8 +29,7 @@ function mapServiceResultToToolResult(
   fullContent?: string;
 } {
   // Map hybrid source to semantic for backward compatibility
-  const source =
-    result.source === "hybrid" ? "semantic" : result.source;
+  const source = result.source === "hybrid" ? "semantic" : result.source;
 
   const mapped: {
     permalink: string;
@@ -64,16 +61,17 @@ function mapServiceResultToToolResult(
  * Delegates to SearchService for all search operations.
  */
 export async function handler(
-  args: Record<string, unknown>
+  args: Record<string, unknown>,
 ): Promise<CallToolResult> {
   try {
     // Validate and parse input
     const parsed = SearchArgsSchema.parse(args);
-    const { query, limit, threshold, mode, depth, project, full_context } = parsed;
+    const { query, limit, threshold, mode, depth, project, full_context } =
+      parsed;
 
     logger.debug(
       { query, limit, threshold, mode, depth, project, full_context },
-      "Executing unified search via SearchService"
+      "Executing unified search via SearchService",
     );
 
     // Get the shared SearchService instance
@@ -106,7 +104,7 @@ export async function handler(
               depth: response.depth,
             },
             null,
-            2
+            2,
           ),
         },
       ],
@@ -127,5 +125,5 @@ export async function handler(
   }
 }
 
-export { toolDefinition } from "./schema";
 export type { SearchArgs, SearchResult } from "./schema";
+export { toolDefinition } from "./schema";

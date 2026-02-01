@@ -18,15 +18,15 @@
  * @see TASK-013: Orchestrator Agent Routing Workflow
  */
 
-import { inngest } from "../client";
-import { logger } from "../../utils/internal/logger";
-import {
-  type SessionState,
-  type AgentInvocation,
-  type OrchestratorWorkflow,
-  createEmptyWorkflow,
-} from "../../services/session/types";
 import { BrainSessionPersistence } from "../../services/session";
+import {
+  type AgentInvocation,
+  createEmptyWorkflow,
+  type OrchestratorWorkflow,
+  type SessionState,
+} from "../../services/session/types";
+import { logger } from "../../utils/internal/logger";
+import { inngest } from "../client";
 import { createNonRetriableError, WorkflowErrorType } from "../errors";
 
 // ============================================================================
@@ -52,15 +52,12 @@ export interface AgentInvokedResult {
  * @param data - Event data to validate
  * @throws NonRetriableError if data is invalid
  */
-function validateEventData(data: {
-  agent?: string;
-  prompt?: string;
-}): void {
+function validateEventData(data: { agent?: string; prompt?: string }): void {
   if (!data.agent || typeof data.agent !== "string") {
     throw createNonRetriableError(
       WorkflowErrorType.VALIDATION_ERROR,
       "Event data must include a valid agent string",
-      { context: { providedData: data } }
+      { context: { providedData: data } },
     );
   }
 
@@ -68,7 +65,7 @@ function validateEventData(data: {
     throw createNonRetriableError(
       WorkflowErrorType.VALIDATION_ERROR,
       "Event data must include a prompt string",
-      { context: { providedData: data } }
+      { context: { providedData: data } },
     );
   }
 }
@@ -88,7 +85,7 @@ function createAgentInvocation(
   prompt: string,
   context: Record<string, unknown>,
   handoffFrom: string | null,
-  timestamp: string
+  timestamp: string,
 ): AgentInvocation {
   return {
     agent: agent as AgentInvocation["agent"],
@@ -133,7 +130,7 @@ function ensureOrchestratorWorkflow(state: SessionState): SessionState {
  */
 function addInvocationToHistory(
   workflow: OrchestratorWorkflow,
-  invocation: AgentInvocation
+  invocation: AgentInvocation,
 ): OrchestratorWorkflow {
   return {
     ...workflow,
@@ -169,15 +166,14 @@ export const orchestratorAgentInvokedWorkflow = inngest.createFunction(
   },
   { event: "orchestrator/agent.invoked" },
   async ({ event, step }): Promise<AgentInvokedResult> => {
-    const { agent, prompt, context, handoffFrom, timestamp } =
-      event.data;
+    const { agent, prompt, context, handoffFrom, timestamp } = event.data;
 
     // Step 0: Validate input data
     await step.run("validate-input", async (): Promise<void> => {
       validateEventData(event.data);
       logger.info(
         { agent, handoffFrom },
-        "Orchestrator agent invocation workflow initiated"
+        "Orchestrator agent invocation workflow initiated",
       );
     });
 
@@ -192,18 +188,21 @@ export const orchestratorAgentInvokedWorkflow = inngest.createFunction(
           throw createNonRetriableError(
             WorkflowErrorType.VALIDATION_ERROR,
             "Session not found",
-            { context: {} }
+            { context: {} },
           );
         }
 
         return state;
-      }
+      },
     );
 
     // Step 2: Record invocation in agent history
     const { updatedState, invocationIndex } = await step.run(
       "record-invocation",
-      async (): Promise<{ updatedState: SessionState; invocationIndex: number }> => {
+      async (): Promise<{
+        updatedState: SessionState;
+        invocationIndex: number;
+      }> => {
         // Ensure orchestrator workflow exists
         const stateWithWorkflow = ensureOrchestratorWorkflow(currentState);
 
@@ -213,13 +212,13 @@ export const orchestratorAgentInvokedWorkflow = inngest.createFunction(
           prompt,
           context,
           handoffFrom,
-          timestamp
+          timestamp,
         );
 
         // Add to history
         const updatedWorkflow = addInvocationToHistory(
           stateWithWorkflow.orchestratorWorkflow!,
-          invocation
+          invocation,
         );
 
         const newState: SessionState = {
@@ -237,11 +236,11 @@ export const orchestratorAgentInvokedWorkflow = inngest.createFunction(
             invocationIndex: index,
             historyLength: updatedWorkflow.agentHistory.length,
           },
-          "Agent invocation recorded"
+          "Agent invocation recorded",
         );
 
         return { updatedState: newState, invocationIndex: index };
-      }
+      },
     );
 
     // Step 3: Persist updated session state
@@ -251,7 +250,7 @@ export const orchestratorAgentInvokedWorkflow = inngest.createFunction(
 
       logger.info(
         { version: updatedState.version },
-        "Session state saved with agent invocation"
+        "Session state saved with agent invocation",
       );
     });
 
@@ -270,7 +269,7 @@ export const orchestratorAgentInvokedWorkflow = inngest.createFunction(
         invocationIndex,
         historyLength: updatedState.orchestratorWorkflow?.agentHistory.length,
       },
-      "Orchestrator agent invocation workflow completed"
+      "Orchestrator agent invocation workflow completed",
     );
 
     return {
@@ -278,5 +277,5 @@ export const orchestratorAgentInvokedWorkflow = inngest.createFunction(
       agent,
       invocationIndex,
     };
-  }
+  },
 );

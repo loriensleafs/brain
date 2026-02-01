@@ -13,8 +13,11 @@
  */
 
 import { logger } from "../../utils/internal/logger";
-import { BrainSessionPersistence, getDefaultPersistence } from "./brain-persistence";
-import type { SessionState, ModeHistoryEntry, WorkflowMode } from "./types";
+import {
+  type BrainSessionPersistence,
+  getDefaultPersistence,
+} from "./brain-persistence";
+import type { ModeHistoryEntry, SessionState, WorkflowMode } from "./types";
 import { createDefaultSessionState } from "./types";
 
 // Re-export types from types.ts
@@ -101,7 +104,7 @@ export async function getSession(): Promise<SessionState | null> {
  * @returns Updated session state or null on error
  */
 export async function setSession(
-  updates: SessionUpdates
+  updates: SessionUpdates,
 ): Promise<SessionState | null> {
   // Get or create current state from Brain notes
   let state = await getPersistence().loadSession();
@@ -116,7 +119,10 @@ export async function setSession(
     state = {
       ...state,
       currentMode: updates.mode,
-      modeHistory: [...state.modeHistory, { mode: updates.mode, timestamp: now }],
+      modeHistory: [
+        ...state.modeHistory,
+        { mode: updates.mode, timestamp: now },
+      ],
       updatedAt: now,
     };
     logger.info({ mode: updates.mode }, "Session mode updated");
@@ -162,7 +168,7 @@ export async function setSession(
  */
 export function withModeChange(
   state: SessionState,
-  newMode: WorkflowMode
+  newMode: WorkflowMode,
 ): SessionState {
   const now = new Date().toISOString();
   return {
@@ -183,7 +189,7 @@ export function withModeChange(
  */
 export function withFeatureChange(
   state: SessionState,
-  feature: string | undefined
+  feature: string | undefined,
 ): SessionState {
   return {
     ...state,
@@ -203,7 +209,7 @@ export function withFeatureChange(
  */
 export function withTaskChange(
   state: SessionState,
-  task: string | undefined
+  task: string | undefined,
 ): SessionState {
   return {
     ...state,
@@ -260,7 +266,7 @@ export function deserializeSessionState(json: string): SessionState | null {
  */
 export function getRecentModeHistory(
   state: SessionState,
-  count: number = 5
+  count: number = 5,
 ): ModeHistoryEntry[] {
   return state.modeHistory.slice(-count);
 }
@@ -271,39 +277,39 @@ export function getRecentModeHistory(
 
 // Re-export brain persistence layer
 export {
+  type BrainPersistenceOptions,
   BrainSessionPersistence,
   BrainUnavailableError,
-  SessionNotFoundError,
   getDefaultPersistence,
   resetDefaultPersistence,
-  type BrainPersistenceOptions,
+  SessionNotFoundError,
 } from "./brain-persistence";
 
 // Re-export types from types.ts
 export type {
-  SessionState,
-  OrchestratorWorkflow,
   AgentInvocation,
-  AgentType,
-  WorkflowPhase,
-  InvocationStatus,
-  Decision,
-  DecisionType,
-  Verdict,
-  VerdictDecision,
-  Handoff,
-  CompactionEntry,
   AgentInvocationInput,
   AgentInvocationOutput,
+  AgentType,
+  CompactionEntry,
+  Decision,
+  DecisionType,
+  Handoff,
+  InvocationStatus,
+  OrchestratorWorkflow,
+  SessionState,
+  Verdict,
+  VerdictDecision,
+  WorkflowPhase,
 } from "./types";
 
 export {
   createEmptyWorkflow,
+  getSessionStateErrors,
   isAgentType,
-  isWorkflowMode,
   isSessionState,
+  isWorkflowMode,
   parseSessionState,
   safeParseSessionState,
   validateSessionState,
-  getSessionStateErrors,
 } from "./types";

@@ -7,8 +7,8 @@
  * - Scoped types in correct directories
  */
 
-import type { NoteType, TargetSchema, ConformanceIssue } from './schema';
-import * as path from 'path';
+import * as path from "path";
+import type { ConformanceIssue, NoteType, TargetSchema } from "./schema";
 
 /**
  * Parsed note structure for conformance checking
@@ -25,12 +25,12 @@ interface ParsedNote {
  * Infers note type from file path based on directory structure
  */
 export function inferTypeFromPath(relativePath: string): NoteType | null {
-  if (relativePath.startsWith('features/')) return 'feature';
-  if (relativePath.startsWith('research/')) return 'research';
-  if (relativePath.startsWith('analysis/')) return 'analysis';
-  if (relativePath.startsWith('specs/')) return 'spec';
-  if (relativePath.startsWith('decisions/')) return 'decision';
-  return 'note';
+  if (relativePath.startsWith("features/")) return "feature";
+  if (relativePath.startsWith("research/")) return "research";
+  if (relativePath.startsWith("analysis/")) return "analysis";
+  if (relativePath.startsWith("specs/")) return "spec";
+  if (relativePath.startsWith("decisions/")) return "decision";
+  return "note";
 }
 
 /**
@@ -38,7 +38,7 @@ export function inferTypeFromPath(relativePath: string): NoteType | null {
  */
 export function checkConformance(
   note: ParsedNote,
-  schema: TargetSchema
+  schema: TargetSchema,
 ): ConformanceIssue[] {
   const issues: ConformanceIssue[] = [];
   const fileName = path.basename(note.relativePath);
@@ -47,29 +47,29 @@ export function checkConformance(
   // 1. Check frontmatter
   if (!note.frontmatter && schema.frontmatter_required) {
     issues.push({
-      type: 'missing_frontmatter',
-      description: 'Note is missing frontmatter',
+      type: "missing_frontmatter",
+      description: "Note is missing frontmatter",
       auto_fixable: true,
-      suggested_fix: 'Add frontmatter with title and type'
+      suggested_fix: "Add frontmatter with title and type",
     });
   }
 
   // 2. Determine type
   const declaredType = note.frontmatter?.type as NoteType | undefined;
   const inferredType = inferTypeFromPath(note.relativePath);
-  const noteType = declaredType || inferredType || 'note';
+  const noteType = declaredType || inferredType || "note";
   const rule = schema.naming[noteType];
 
   // 3. Check for bad prefixes (spec-, decision-, etc.)
   if (rule?.no_prefix) {
-    const prefixes = ['spec-', 'decision-', 'analysis-', 'research-'];
+    const prefixes = ["spec-", "decision-", "analysis-", "research-"];
     for (const prefix of prefixes) {
       if (fileName.startsWith(prefix)) {
         issues.push({
-          type: 'bad_prefix',
+          type: "bad_prefix",
           description: `File has "${prefix}" prefix which should be removed`,
           auto_fixable: true,
-          suggested_fix: `Rename to ${fileName.replace(prefix, '')}`
+          suggested_fix: `Rename to ${fileName.replace(prefix, "")}`,
         });
         break;
       }
@@ -77,51 +77,51 @@ export function checkConformance(
   }
 
   // 4. Check root-level scoped types (should be in slug/overview.md)
-  const scopedTypes: NoteType[] = ['feature', 'research', 'analysis'];
+  const scopedTypes: NoteType[] = ["feature", "research", "analysis"];
   if (scopedTypes.includes(noteType)) {
-    const parts = note.relativePath.split('/');
+    const parts = note.relativePath.split("/");
     // Should be: type/slug/overview.md or type/slug/something.md
     if (parts.length === 2) {
       // Root level like features/foo.md - should be features/foo/overview.md
       issues.push({
-        type: 'root_level_scoped',
+        type: "root_level_scoped",
         description: `${noteType} should be in a subdirectory with overview.md`,
         auto_fixable: true,
-        suggested_fix: `Move to ${parts[0]}/${fileName.replace('.md', '')}/overview.md`
+        suggested_fix: `Move to ${parts[0]}/${fileName.replace(".md", "")}/overview.md`,
       });
     }
   }
 
   // 5. Check for redundant child prefix (foo/foo-task.md -> foo/task.md)
-  if (dirPath !== '.') {
+  if (dirPath !== ".") {
     const parentSlug = path.basename(dirPath);
-    if (fileName.startsWith(parentSlug + '-')) {
+    if (fileName.startsWith(parentSlug + "-")) {
       issues.push({
-        type: 'redundant_child_prefix',
+        type: "redundant_child_prefix",
         description: `File has redundant parent prefix "${parentSlug}-"`,
         auto_fixable: true,
-        suggested_fix: `Rename to ${fileName.replace(parentSlug + '-', '')}`
+        suggested_fix: `Rename to ${fileName.replace(parentSlug + "-", "")}`,
       });
     }
   }
 
   // 6. Check main file is overview.md for scoped types
   if (scopedTypes.includes(noteType)) {
-    const parts = note.relativePath.split('/');
+    const parts = note.relativePath.split("/");
     if (parts.length >= 3) {
       // In a subdirectory - check if it's the main file
-      const isPhaseDir = parts[parts.length - 2].startsWith('phase-');
-      if (!isPhaseDir && fileName !== 'overview.md') {
+      const isPhaseDir = parts[parts.length - 2].startsWith("phase-");
+      if (!isPhaseDir && fileName !== "overview.md") {
         // Could be a child task, which is fine
         // Only flag if it looks like it should be overview.md
-        const typeNames = ['feature-', 'research-', 'analysis-'];
+        const typeNames = ["feature-", "research-", "analysis-"];
         for (const typeName of typeNames) {
           if (fileName.startsWith(typeName)) {
             issues.push({
-              type: 'not_overview',
+              type: "not_overview",
               description: `Main file should be named overview.md, not ${fileName}`,
               auto_fixable: true,
-              suggested_fix: `Rename to overview.md`
+              suggested_fix: `Rename to overview.md`,
             });
             break;
           }
@@ -138,31 +138,31 @@ export function checkConformance(
  */
 export function getSuggestedTarget(
   note: ParsedNote,
-  issues: ConformanceIssue[]
+  issues: ConformanceIssue[],
 ): string {
   let target = note.relativePath;
 
   for (const issue of issues) {
-    if (issue.type === 'root_level_scoped') {
-      const parts = target.split('/');
-      const slug = path.basename(parts[1], '.md');
+    if (issue.type === "root_level_scoped") {
+      const parts = target.split("/");
+      const slug = path.basename(parts[1], ".md");
       target = `${parts[0]}/${slug}/overview.md`;
     }
-    if (issue.type === 'bad_prefix') {
+    if (issue.type === "bad_prefix") {
       const fileName = path.basename(target);
-      const prefixes = ['spec-', 'decision-', 'analysis-', 'research-'];
+      const prefixes = ["spec-", "decision-", "analysis-", "research-"];
       for (const prefix of prefixes) {
         if (fileName.startsWith(prefix)) {
-          target = target.replace(fileName, fileName.replace(prefix, ''));
+          target = target.replace(fileName, fileName.replace(prefix, ""));
           break;
         }
       }
     }
-    if (issue.type === 'redundant_child_prefix') {
+    if (issue.type === "redundant_child_prefix") {
       const dirPath = path.dirname(target);
       const fileName = path.basename(target);
       const parentSlug = path.basename(dirPath);
-      target = `${dirPath}/${fileName.replace(parentSlug + '-', '')}`;
+      target = `${dirPath}/${fileName.replace(parentSlug + "-", "")}`;
     }
   }
 

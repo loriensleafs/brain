@@ -3,7 +3,12 @@
  * Provides embedding generation and health check functionality.
  */
 
-import { OllamaConfig, BatchEmbedResponse, OllamaError, TaskType } from "./types";
+import {
+  type BatchEmbedResponse,
+  type OllamaConfig,
+  OllamaError,
+  type TaskType,
+} from "./types";
 
 /**
  * Client for interacting with Ollama API.
@@ -31,9 +36,13 @@ export class OllamaClient {
   async generateEmbedding(
     text: string,
     taskType: TaskType = "search_document",
-    model: string = "nomic-embed-text"
+    model: string = "nomic-embed-text",
   ): Promise<number[]> {
-    const [embedding] = await this.generateBatchEmbeddings([text], taskType, model);
+    const [embedding] = await this.generateBatchEmbeddings(
+      [text],
+      taskType,
+      model,
+    );
     return embedding;
   }
 
@@ -51,7 +60,7 @@ export class OllamaClient {
   async generateBatchEmbeddings(
     texts: string[],
     taskType: TaskType = "search_document",
-    model: string = "nomic-embed-text"
+    model: string = "nomic-embed-text",
   ): Promise<number[][]> {
     // Optimize empty input - no API call needed
     if (texts.length === 0) {
@@ -59,7 +68,7 @@ export class OllamaClient {
     }
 
     // Prefix texts with task type for ADR-003 compatibility
-    const prefixedTexts = texts.map(t => `${taskType}: ${t}`);
+    const prefixedTexts = texts.map((t) => `${taskType}: ${t}`);
 
     const response = await fetch(`${this.baseUrl}/api/embed`, {
       method: "POST",
@@ -67,7 +76,7 @@ export class OllamaClient {
       body: JSON.stringify({
         model,
         input: prefixedTexts,
-        truncate: true
+        truncate: true,
       }),
       signal: AbortSignal.timeout(this.timeout),
     });
@@ -75,7 +84,7 @@ export class OllamaClient {
     if (!response.ok) {
       throw new OllamaError(
         `Ollama API error: ${response.status}`,
-        response.status
+        response.status,
       );
     }
 
@@ -85,7 +94,7 @@ export class OllamaClient {
     if (data.embeddings.length !== texts.length) {
       throw new OllamaError(
         `Embedding count mismatch: expected ${texts.length}, got ${data.embeddings.length}`,
-        500
+        500,
       );
     }
 

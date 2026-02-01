@@ -5,12 +5,15 @@
  * Uses chunked embeddings for content that exceeds model token limits.
  */
 
-import { generateEmbedding } from "./generateEmbedding";
-import { chunkText } from "./chunking";
-import { storeChunkedEmbeddings, type ChunkEmbeddingInput } from "../../db/vectors";
 import { createVectorConnection } from "../../db/connection";
 import { ensureEmbeddingTables } from "../../db/schema";
+import {
+  type ChunkEmbeddingInput,
+  storeChunkedEmbeddings,
+} from "../../db/vectors";
 import { logger } from "../../utils/internal/logger";
+import { chunkText } from "./chunking";
+import { generateEmbedding } from "./generateEmbedding";
 
 // Import will be added when queue is implemented (TASK-2-6)
 // For now, just log failed embeddings
@@ -21,7 +24,7 @@ import { logger } from "../../utils/internal/logger";
  * @returns Array of chunk embeddings or null if any chunk fails
  */
 async function generateChunkedEmbeddings(
-  content: string
+  content: string,
 ): Promise<ChunkEmbeddingInput[] | null> {
   const chunks = chunkText(content);
   const results: ChunkEmbeddingInput[] = [];
@@ -62,7 +65,9 @@ export function triggerEmbedding(noteId: string, content: string): void {
         try {
           ensureEmbeddingTables(db);
           storeChunkedEmbeddings(db, noteId, chunkEmbeddings);
-          logger.debug(`Embedding stored for note: ${noteId} (${chunkEmbeddings.length} chunks)`);
+          logger.debug(
+            `Embedding stored for note: ${noteId} (${chunkEmbeddings.length} chunks)`,
+          );
         } finally {
           db.close();
         }

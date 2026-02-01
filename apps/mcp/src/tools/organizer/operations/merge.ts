@@ -5,9 +5,9 @@
  * with "## Merged From" section. Archives originals instead of deleting.
  */
 
-import type { MergeCandidate, MergeResult } from '../types';
-import { getBasicMemoryClient } from '../../../proxy/client';
-import { extractTitle } from '../utils/markdown';
+import { getBasicMemoryClient } from "../../../proxy/client";
+import type { MergeCandidate, MergeResult } from "../types";
+import { extractTitle } from "../utils/markdown";
 
 /**
  * Execute a merge operation
@@ -15,7 +15,7 @@ import { extractTitle } from '../utils/markdown';
 export async function executeMerge(
   candidate: MergeCandidate,
   project: string,
-  targetPath?: string
+  targetPath?: string,
 ): Promise<MergeResult> {
   try {
     const client = await getBasicMemoryClient();
@@ -24,27 +24,28 @@ export async function executeMerge(
     const noteContents: Array<{ permalink: string; content: string }> = [];
     for (const permalink of candidate.notes) {
       const readResult = await client.callTool({
-        name: 'read_note',
+        name: "read_note",
         arguments: { identifier: permalink, project },
       });
 
-      const content = (readResult.content as any)?.[0]?.text || '';
+      const content = (readResult.content as any)?.[0]?.text || "";
       noteContents.push({ permalink, content });
     }
 
     // Generate merged content
     const mergedContent = generateMergedContent(
       candidate.suggestedTitle,
-      noteContents
+      noteContents,
     );
 
     // Determine target path
     const target =
-      targetPath || generateTargetPath(candidate.notes[0], candidate.suggestedTitle);
+      targetPath ||
+      generateTargetPath(candidate.notes[0], candidate.suggestedTitle);
 
     // Create merged note
     await client.callTool({
-      name: 'write_note',
+      name: "write_note",
       arguments: {
         path: target,
         project,
@@ -72,7 +73,7 @@ export async function executeMerge(
   } catch (error) {
     return {
       success: false,
-      targetNote: '',
+      targetNote: "",
       archivedNotes: [],
       error: error instanceof Error ? error.message : String(error),
     };
@@ -84,61 +85,65 @@ export async function executeMerge(
  */
 function generateMergedContent(
   title: string,
-  notes: Array<{ permalink: string; content: string }>
+  notes: Array<{ permalink: string; content: string }>,
 ): string {
   const sections: string[] = [];
 
   // Add title
   sections.push(`# ${title}`);
-  sections.push('');
+  sections.push("");
 
   // Add merged from section
-  sections.push('## Merged From');
-  sections.push('');
+  sections.push("## Merged From");
+  sections.push("");
   for (const note of notes) {
     const noteTitle = extractTitle(note.content) || note.permalink;
     sections.push(`- [[${note.permalink}]] - ${noteTitle}`);
   }
-  sections.push('');
+  sections.push("");
 
   // Combine content from all notes
-  sections.push('## Content');
-  sections.push('');
+  sections.push("## Content");
+  sections.push("");
 
   for (const note of notes) {
     const noteTitle = extractTitle(note.content) || note.permalink;
     sections.push(`### From: ${noteTitle}`);
-    sections.push('');
+    sections.push("");
 
     // Extract main content (skip title and frontmatter)
     const content = stripFrontmatterAndTitle(note.content);
     sections.push(content);
-    sections.push('');
+    sections.push("");
   }
 
   // Extract and combine observations
-  const allObservations = notes.flatMap((n) => extractSection(n.content, 'Observations'));
+  const allObservations = notes.flatMap((n) =>
+    extractSection(n.content, "Observations"),
+  );
   if (allObservations.length > 0) {
-    sections.push('## Observations');
-    sections.push('');
+    sections.push("## Observations");
+    sections.push("");
     for (const obs of allObservations) {
       sections.push(obs);
     }
-    sections.push('');
+    sections.push("");
   }
 
   // Extract and combine relations
-  const allRelations = notes.flatMap((n) => extractSection(n.content, 'Relations'));
+  const allRelations = notes.flatMap((n) =>
+    extractSection(n.content, "Relations"),
+  );
   if (allRelations.length > 0) {
-    sections.push('## Relations');
-    sections.push('');
+    sections.push("## Relations");
+    sections.push("");
     for (const rel of allRelations) {
       sections.push(rel);
     }
-    sections.push('');
+    sections.push("");
   }
 
-  return sections.join('\n');
+  return sections.join("\n");
 }
 
 /**
@@ -146,15 +151,15 @@ function generateMergedContent(
  */
 function generateTargetPath(firstNotePath: string, title: string): string {
   // Extract folder from first note
-  const folder = firstNotePath.includes('/')
-    ? firstNotePath.substring(0, firstNotePath.lastIndexOf('/'))
-    : '';
+  const folder = firstNotePath.includes("/")
+    ? firstNotePath.substring(0, firstNotePath.lastIndexOf("/"))
+    : "";
 
   // Generate slug from title
   const slug = title
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 
   return folder ? `${folder}/${slug}.md` : `${slug}.md`;
 }
@@ -166,10 +171,10 @@ function stripFrontmatterAndTitle(content: string): string {
   let result = content;
 
   // Remove frontmatter
-  result = result.replace(/^---\n[\s\S]*?\n---\n?/, '');
+  result = result.replace(/^---\n[\s\S]*?\n---\n?/, "");
 
   // Remove first H1
-  result = result.replace(/^#\s+.+\n?/, '');
+  result = result.replace(/^#\s+.+\n?/, "");
 
   return result.trim();
 }
@@ -179,12 +184,12 @@ function stripFrontmatterAndTitle(content: string): string {
  */
 function extractSection(content: string, sectionName: string): string[] {
   const lines: string[] = [];
-  const contentLines = content.split('\n');
+  const contentLines = content.split("\n");
   let inSection = false;
 
   for (const line of contentLines) {
     // Check if we're entering the target section
-    if (line.match(new RegExp(`^##\\s+${sectionName}`, 'i'))) {
+    if (line.match(new RegExp(`^##\\s+${sectionName}`, "i"))) {
       inSection = true;
       continue;
     }

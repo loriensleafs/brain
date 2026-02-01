@@ -63,12 +63,12 @@ export class VersionConflictError extends Error {
   constructor(
     expectedVersion: number,
     actualVersion: number,
-    retryCount: number
+    retryCount: number,
   ) {
     super(
       `Version conflict for session: ` +
         `expected version ${expectedVersion}, found ${actualVersion}. ` +
-        `Failed after ${retryCount} retries.`
+        `Failed after ${retryCount} retries.`,
     );
     this.name = "VersionConflictError";
     this.expectedVersion = expectedVersion;
@@ -145,7 +145,7 @@ export interface UpdateOptions {
  * @returns Delay in milliseconds
  */
 export function calculateBackoff(attempt: number): number {
-  const exponentialDelay = BASE_BACKOFF_MS * Math.pow(2, attempt);
+  const exponentialDelay = BASE_BACKOFF_MS * 2 ** attempt;
   const cappedDelay = Math.min(MAX_BACKOFF_MS, exponentialDelay);
   // Add jitter (0-20% of delay) to prevent thundering herd
   const jitter = Math.random() * 0.2 * cappedDelay;
@@ -186,7 +186,7 @@ export function incrementVersion(state: SessionState): SessionState {
  */
 export function applyPartialUpdates(
   current: SessionState,
-  updates: SessionPartialUpdate
+  updates: SessionPartialUpdate,
 ): SessionState {
   const now = new Date().toISOString();
 
@@ -239,7 +239,7 @@ export function applyPartialUpdates(
  */
 export async function updateSessionWithLocking(
   updateFn: SessionUpdateFn,
-  options: UpdateOptions
+  options: UpdateOptions,
 ): Promise<void> {
   const maxRetries = options.maxRetries ?? DEFAULT_MAX_RETRIES;
   const { storage } = options;
@@ -257,7 +257,7 @@ export async function updateSessionWithLocking(
           maxRetries,
           backoffMs: backoff,
         },
-        "Retrying session update after version conflict"
+        "Retrying session update after version conflict",
       );
       await sleep(backoff);
     }
@@ -266,9 +266,7 @@ export async function updateSessionWithLocking(
     const current = await storage.read();
 
     if (!current) {
-      throw new Error(
-        "Session not found. Cannot update non-existent session."
-      );
+      throw new Error("Session not found. Cannot update non-existent session.");
     }
 
     const expectedVersion = current.version + 1;
@@ -279,10 +277,7 @@ export async function updateSessionWithLocking(
     try {
       updated = updateFn(current);
     } catch (error) {
-      logger.error(
-        { error },
-        "Update function threw error"
-      );
+      logger.error({ error }, "Update function threw error");
       throw error;
     }
 
@@ -297,7 +292,7 @@ export async function updateSessionWithLocking(
 
     if (!verification) {
       throw new Error(
-        "Session disappeared after write. Storage inconsistency."
+        "Session disappeared after write. Storage inconsistency.",
       );
     }
 
@@ -310,7 +305,7 @@ export async function updateSessionWithLocking(
           version: expectedVersion,
           attempts: attempt + 1,
         },
-        "Session updated successfully with optimistic locking"
+        "Session updated successfully with optimistic locking",
       );
       return;
     }
@@ -323,7 +318,7 @@ export async function updateSessionWithLocking(
         attempt: attempt + 1,
         maxRetries,
       },
-      "Version conflict detected"
+      "Version conflict detected",
     );
   }
 
@@ -331,7 +326,7 @@ export async function updateSessionWithLocking(
   throw new VersionConflictError(
     lastAttemptedVersion,
     lastActualVersion,
-    maxRetries
+    maxRetries,
   );
 }
 
@@ -352,11 +347,11 @@ export async function updateSessionWithLocking(
  */
 export async function updateSession(
   updates: SessionPartialUpdate,
-  options: UpdateOptions
+  options: UpdateOptions,
 ): Promise<void> {
   return updateSessionWithLocking(
     (current) => applyPartialUpdates(current, updates),
-    options
+    options,
   );
 }
 
@@ -460,7 +455,7 @@ export class SimulatedConcurrentStorage implements SessionStorage {
           ourVersion: state.version,
           concurrentVersion: modified.version,
         },
-        "Simulated concurrent modification after write"
+        "Simulated concurrent modification after write",
       );
     }
   }

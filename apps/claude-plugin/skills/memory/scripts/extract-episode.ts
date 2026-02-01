@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+
 /**
  * Extract-SessionEpisode.ts
  *
@@ -22,10 +23,10 @@
  *   bun run extract-episode.ts .agents/sessions/2026-01-20-session-06.md --project brain
  */
 
-import { readFileSync, existsSync, writeFileSync, mkdirSync } from "fs";
+import { getProjectMemoriesPath } from "@brain/utils";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import { basename, join } from "path";
 import { parseArgs } from "util";
-import { getProjectMemoriesPath } from "@brain/utils";
 
 // Types
 interface Decision {
@@ -163,7 +164,7 @@ function parseMetadata(lines: string[]): Metadata {
 }
 
 function getDecisionType(
-  text: string
+  text: string,
 ): "design" | "implementation" | "test" | "recovery" | "routing" {
   const textLower = text.toLowerCase();
 
@@ -328,7 +329,10 @@ function parseEvents(lines: string[]): Event[] {
     }
 
     // Test events
-    if (/test[s]?\s+(pass|fail|run)/i.test(line) || /Pester|pytest/i.test(line)) {
+    if (
+      /test[s]?\s+(pass|fail|run)/i.test(line) ||
+      /Pester|pytest/i.test(line)
+    ) {
       const content = line.trim();
       if (!seenContent.has(content)) {
         eventIndex++;
@@ -426,7 +430,9 @@ function parseMetrics(lines: string[]): Metrics {
     }
 
     // Count files
-    const filesMatch = line.match(/(\d+)\s+files?\s+(changed|modified|created)/i);
+    const filesMatch = line.match(
+      /(\d+)\s+files?\s+(changed|modified|created)/i,
+    );
     if (filesMatch) {
       metrics.files_changed += parseInt(filesMatch[1], 10);
     }
@@ -437,7 +443,7 @@ function parseMetrics(lines: string[]): Metrics {
 
 function getSessionOutcome(
   metadata: Metadata,
-  events: Event[]
+  events: Event[],
 ): "success" | "partial" | "failure" {
   const status = metadata.status?.toLowerCase() || "";
 
@@ -470,7 +476,7 @@ function loadTemplate(): string {
     import.meta.dir,
     "..",
     "templates",
-    "episode-template.md"
+    "episode-template.md",
   );
   try {
     return readFileSync(templatePath, "utf-8");
@@ -540,7 +546,7 @@ function formatDecisions(decisions: Decision[]): string {
   return decisions
     .map(
       (d) =>
-        `- **${d.id}** [${d.type}]: ${d.chosen}${d.context ? ` (context: ${d.context})` : ""}`
+        `- **${d.id}** [${d.type}]: ${d.chosen}${d.context ? ` (context: ${d.context})` : ""}`,
     )
     .join("\n");
 }
@@ -550,7 +556,9 @@ function formatEvents(events: Event[]): string {
     return "- No events recorded";
   }
 
-  return events.map((e) => `- **${e.id}** [${e.type}]: ${e.content}`).join("\n");
+  return events
+    .map((e) => `- **${e.id}** [${e.type}]: ${e.content}`)
+    .join("\n");
 }
 
 function formatLessons(lessons: string[]): string {
@@ -564,7 +572,7 @@ function formatLessons(lessons: string[]): string {
 function formatObservations(
   decisions: Decision[],
   events: Event[],
-  lessons: string[]
+  lessons: string[],
 ): string {
   const observations: string[] = [];
 
@@ -603,7 +611,7 @@ function renderTemplate(episode: Episode, template: string): string {
     "{{observations}}": formatObservations(
       episode.decisions,
       episode.events,
-      episode.lessons
+      episode.lessons,
     ),
     "{{decisions}}": formatDecisions(episode.decisions),
     "{{events}}": formatEvents(episode.events),
@@ -704,7 +712,7 @@ files directly to the project's episodes folder as EPISODE-{session-id}.md.
       timestamp = new Date(metadata.date).toISOString();
     } catch {
       console.warn(
-        `Warning: Could not parse date '${metadata.date}', using current time`
+        `Warning: Could not parse date '${metadata.date}', using current time`,
       );
       timestamp = new Date().toISOString();
     }
@@ -735,7 +743,9 @@ files directly to the project's episodes folder as EPISODE-{session-id}.md.
   try {
     memoriesPath = await getProjectMemoriesPath(project);
   } catch (error) {
-    console.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
+    console.error(
+      `Error: ${error instanceof Error ? error.message : String(error)}`,
+    );
     process.exit(1);
   }
 

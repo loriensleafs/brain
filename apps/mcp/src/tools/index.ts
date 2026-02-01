@@ -7,40 +7,39 @@
 
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import {
-  ListToolsRequestSchema,
   CallToolRequestSchema,
-  type Tool,
   type CallToolResult,
+  ListToolsRequestSchema,
+  type Tool,
 } from "@modelcontextprotocol/sdk/types.js";
-import { getBasicMemoryClient } from "../proxy/client";
-import { resolveProject } from "../project/resolve";
-import { logger } from "../utils/internal/logger";
 import { config } from "../config";
+import { resolveProject } from "../project/resolve";
+import { getBasicMemoryClient } from "../proxy/client";
+import { triggerEmbedding } from "../services/embedding/triggerEmbedding";
+import { logger } from "../utils/internal/logger";
 import {
   checkForDuplicates,
   formatGuardError,
 } from "../utils/security/searchGuard";
-import { invalidateCache as invalidateBootstrapCache } from "./bootstrap-context/sessionCache";
-import { triggerEmbedding } from "../services/embedding/triggerEmbedding";
-
-// Import wrapper tool modules
-import * as session from "./session";
+import * as analyzeProject from "./analyze-project";
 import * as bootstrapContext from "./bootstrap-context";
+import { invalidateCache as invalidateBootstrapCache } from "./bootstrap-context/sessionCache";
+import * as configTools from "./config";
+import * as consolidateNotes from "./consolidate-notes";
+import * as embed from "./embed";
+import * as findDuplicates from "./find-duplicates";
+import * as listFeaturesByPriority from "./list-features-by-priority";
+import * as maintainKnowledgeGraph from "./maintain-knowledge-graph";
+import * as manageBacklog from "./manage-backlog";
+import * as migrateAgents from "./migrate-agents";
+import * as migrateCluster from "./migrate-cluster";
 // Unified projects tools (each tool in its own subdirectory)
 import * as projects from "./projects";
-import * as listFeaturesByPriority from "./list-features-by-priority";
-import * as analyzeProject from "./analyze-project";
-import * as migrateCluster from "./migrate-cluster";
-import * as validateImport from "./validate-import";
-import * as consolidateNotes from "./consolidate-notes";
-import * as maintainKnowledgeGraph from "./maintain-knowledge-graph";
-import * as findDuplicates from "./find-duplicates";
-import * as manageBacklog from "./manage-backlog";
 import * as search from "./search";
-import * as embed from "./embed";
+// Import wrapper tool modules
+import * as session from "./session";
+import * as validateImport from "./validate-import";
 import * as workflow from "./workflow";
-import * as migrateAgents from "./migrate-agents";
-import * as configTools from "./config";
 
 /**
  * Wrapper tool registry - maps tool name to handler and definition
@@ -56,7 +55,7 @@ const WRAPPER_TOOLS: Map<string, WrapperTool> = new Map([
     {
       definition: session.toolDefinition,
       handler: session.handler as (
-        args: Record<string, unknown>
+        args: Record<string, unknown>,
       ) => Promise<CallToolResult>,
     },
   ],
@@ -65,7 +64,7 @@ const WRAPPER_TOOLS: Map<string, WrapperTool> = new Map([
     {
       definition: bootstrapContext.toolDefinition,
       handler: bootstrapContext.handler as (
-        args: Record<string, unknown>
+        args: Record<string, unknown>,
       ) => Promise<CallToolResult>,
     },
   ],
@@ -74,7 +73,7 @@ const WRAPPER_TOOLS: Map<string, WrapperTool> = new Map([
     {
       definition: listFeaturesByPriority.toolDefinition,
       handler: listFeaturesByPriority.handler as (
-        args: Record<string, unknown>
+        args: Record<string, unknown>,
       ) => Promise<CallToolResult>,
     },
   ],
@@ -83,7 +82,7 @@ const WRAPPER_TOOLS: Map<string, WrapperTool> = new Map([
     {
       definition: analyzeProject.toolDefinition,
       handler: analyzeProject.handler as (
-        args: Record<string, unknown>
+        args: Record<string, unknown>,
       ) => Promise<CallToolResult>,
     },
   ],
@@ -92,7 +91,7 @@ const WRAPPER_TOOLS: Map<string, WrapperTool> = new Map([
     {
       definition: migrateCluster.toolDefinition,
       handler: migrateCluster.handler as (
-        args: Record<string, unknown>
+        args: Record<string, unknown>,
       ) => Promise<CallToolResult>,
     },
   ],
@@ -101,7 +100,7 @@ const WRAPPER_TOOLS: Map<string, WrapperTool> = new Map([
     {
       definition: validateImport.toolDefinition,
       handler: validateImport.handler as (
-        args: Record<string, unknown>
+        args: Record<string, unknown>,
       ) => Promise<CallToolResult>,
     },
   ],
@@ -110,7 +109,7 @@ const WRAPPER_TOOLS: Map<string, WrapperTool> = new Map([
     {
       definition: consolidateNotes.toolDefinition,
       handler: consolidateNotes.handler as (
-        args: Record<string, unknown>
+        args: Record<string, unknown>,
       ) => Promise<CallToolResult>,
     },
   ],
@@ -119,7 +118,7 @@ const WRAPPER_TOOLS: Map<string, WrapperTool> = new Map([
     {
       definition: maintainKnowledgeGraph.toolDefinition,
       handler: maintainKnowledgeGraph.handler as (
-        args: Record<string, unknown>
+        args: Record<string, unknown>,
       ) => Promise<CallToolResult>,
     },
   ],
@@ -128,7 +127,7 @@ const WRAPPER_TOOLS: Map<string, WrapperTool> = new Map([
     {
       definition: findDuplicates.toolDefinition,
       handler: findDuplicates.handler as (
-        args: Record<string, unknown>
+        args: Record<string, unknown>,
       ) => Promise<CallToolResult>,
     },
   ],
@@ -137,7 +136,7 @@ const WRAPPER_TOOLS: Map<string, WrapperTool> = new Map([
     {
       definition: manageBacklog.toolDefinition,
       handler: manageBacklog.handler as (
-        args: Record<string, unknown>
+        args: Record<string, unknown>,
       ) => Promise<CallToolResult>,
     },
   ],
@@ -146,7 +145,7 @@ const WRAPPER_TOOLS: Map<string, WrapperTool> = new Map([
     {
       definition: search.toolDefinition,
       handler: search.handler as (
-        args: Record<string, unknown>
+        args: Record<string, unknown>,
       ) => Promise<CallToolResult>,
     },
   ],
@@ -155,7 +154,7 @@ const WRAPPER_TOOLS: Map<string, WrapperTool> = new Map([
     {
       definition: embed.toolDefinition,
       handler: embed.handler as (
-        args: Record<string, unknown>
+        args: Record<string, unknown>,
       ) => Promise<CallToolResult>,
     },
   ],
@@ -165,7 +164,7 @@ const WRAPPER_TOOLS: Map<string, WrapperTool> = new Map([
     {
       definition: workflow.listWorkflowsToolDefinition,
       handler: workflow.listWorkflowsHandler as (
-        args: Record<string, unknown>
+        args: Record<string, unknown>,
       ) => Promise<CallToolResult>,
     },
   ],
@@ -174,7 +173,7 @@ const WRAPPER_TOOLS: Map<string, WrapperTool> = new Map([
     {
       definition: workflow.sendWorkflowEventToolDefinition,
       handler: workflow.sendWorkflowEventHandler as (
-        args: Record<string, unknown>
+        args: Record<string, unknown>,
       ) => Promise<CallToolResult>,
     },
   ],
@@ -183,7 +182,7 @@ const WRAPPER_TOOLS: Map<string, WrapperTool> = new Map([
     {
       definition: workflow.getWorkflowToolDefinition,
       handler: workflow.getWorkflowHandler as (
-        args: Record<string, unknown>
+        args: Record<string, unknown>,
       ) => Promise<CallToolResult>,
     },
   ],
@@ -193,7 +192,7 @@ const WRAPPER_TOOLS: Map<string, WrapperTool> = new Map([
     {
       definition: projects.activeProject.toolDefinition,
       handler: projects.activeProject.handler as (
-        args: Record<string, unknown>
+        args: Record<string, unknown>,
       ) => Promise<CallToolResult>,
     },
   ],
@@ -202,7 +201,7 @@ const WRAPPER_TOOLS: Map<string, WrapperTool> = new Map([
     {
       definition: projects.listProjects.toolDefinition,
       handler: projects.listProjects.handler as (
-        args: Record<string, unknown>
+        args: Record<string, unknown>,
       ) => Promise<CallToolResult>,
     },
   ],
@@ -211,7 +210,7 @@ const WRAPPER_TOOLS: Map<string, WrapperTool> = new Map([
     {
       definition: projects.getProjectDetails.toolDefinition,
       handler: projects.getProjectDetails.handler as unknown as (
-        args: Record<string, unknown>
+        args: Record<string, unknown>,
       ) => Promise<CallToolResult>,
     },
   ],
@@ -220,7 +219,7 @@ const WRAPPER_TOOLS: Map<string, WrapperTool> = new Map([
     {
       definition: projects.editProject.toolDefinition,
       handler: projects.editProject.handler as unknown as (
-        args: Record<string, unknown>
+        args: Record<string, unknown>,
       ) => Promise<CallToolResult>,
     },
   ],
@@ -229,7 +228,7 @@ const WRAPPER_TOOLS: Map<string, WrapperTool> = new Map([
     {
       definition: projects.createProject.toolDefinition,
       handler: projects.createProject.handler as unknown as (
-        args: Record<string, unknown>
+        args: Record<string, unknown>,
       ) => Promise<CallToolResult>,
     },
   ],
@@ -238,7 +237,7 @@ const WRAPPER_TOOLS: Map<string, WrapperTool> = new Map([
     {
       definition: projects.deleteProject.toolDefinition,
       handler: projects.deleteProject.handler as unknown as (
-        args: Record<string, unknown>
+        args: Record<string, unknown>,
       ) => Promise<CallToolResult>,
     },
   ],
@@ -247,7 +246,7 @@ const WRAPPER_TOOLS: Map<string, WrapperTool> = new Map([
     {
       definition: migrateAgents.toolDefinition,
       handler: migrateAgents.handler as unknown as (
-        args: Record<string, unknown>
+        args: Record<string, unknown>,
       ) => Promise<CallToolResult>,
     },
   ],
@@ -257,7 +256,7 @@ const WRAPPER_TOOLS: Map<string, WrapperTool> = new Map([
     {
       definition: configTools.configGet.toolDefinition,
       handler: configTools.configGet.handler as (
-        args: Record<string, unknown>
+        args: Record<string, unknown>,
       ) => Promise<CallToolResult>,
     },
   ],
@@ -266,7 +265,7 @@ const WRAPPER_TOOLS: Map<string, WrapperTool> = new Map([
     {
       definition: configTools.configSet.toolDefinition,
       handler: configTools.configSet.handler as (
-        args: Record<string, unknown>
+        args: Record<string, unknown>,
       ) => Promise<CallToolResult>,
     },
   ],
@@ -275,7 +274,7 @@ const WRAPPER_TOOLS: Map<string, WrapperTool> = new Map([
     {
       definition: configTools.configReset.toolDefinition,
       handler: configTools.configReset.handler as (
-        args: Record<string, unknown>
+        args: Record<string, unknown>,
       ) => Promise<CallToolResult>,
     },
   ],
@@ -284,7 +283,7 @@ const WRAPPER_TOOLS: Map<string, WrapperTool> = new Map([
     {
       definition: configTools.configRollback.toolDefinition,
       handler: configTools.configRollback.handler as (
-        args: Record<string, unknown>
+        args: Record<string, unknown>,
       ) => Promise<CallToolResult>,
     },
   ],
@@ -293,7 +292,7 @@ const WRAPPER_TOOLS: Map<string, WrapperTool> = new Map([
     {
       definition: configTools.configUpdateProject.toolDefinition,
       handler: configTools.configUpdateProject.handler as (
-        args: Record<string, unknown>
+        args: Record<string, unknown>,
       ) => Promise<CallToolResult>,
     },
   ],
@@ -302,7 +301,7 @@ const WRAPPER_TOOLS: Map<string, WrapperTool> = new Map([
     {
       definition: configTools.configUpdateGlobal.toolDefinition,
       handler: configTools.configUpdateGlobal.handler as (
-        args: Record<string, unknown>
+        args: Record<string, unknown>,
       ) => Promise<CallToolResult>,
     },
   ],
@@ -380,7 +379,7 @@ let discoveredTools: Tool[] = [];
  * Uses low-level handlers for ALL tools (wrapper + proxied).
  */
 export async function discoverAndRegisterTools(
-  server: McpServer
+  server: McpServer,
 ): Promise<void> {
   const client = await getBasicMemoryClient();
   const { tools } = await client.listTools();
@@ -390,7 +389,7 @@ export async function discoverAndRegisterTools(
   // Filter out tools we handle ourselves and hidden tools, store for listing
   const wrapperNames = new Set(WRAPPER_TOOLS.keys());
   discoveredTools = tools.filter(
-    (tool) => !wrapperNames.has(tool.name) && !HIDDEN_TOOLS.has(tool.name)
+    (tool) => !wrapperNames.has(tool.name) && !HIDDEN_TOOLS.has(tool.name),
   );
 
   // Register tools/list handler with enhanced descriptions
@@ -410,7 +409,7 @@ export async function discoverAndRegisterTools(
 
     // Get wrapper tool definitions
     const wrapperDefinitions = Array.from(WRAPPER_TOOLS.values()).map(
-      (t) => t.definition
+      (t) => t.definition,
     );
 
     return {
@@ -434,7 +433,7 @@ export async function discoverAndRegisterTools(
 
   logger.debug(
     { wrapper: WRAPPER_TOOLS.size, proxied: discoveredTools.length },
-    "Registered tool handlers"
+    "Registered tool handlers",
   );
 }
 
@@ -443,7 +442,7 @@ export async function discoverAndRegisterTools(
  */
 async function callProxiedTool(
   name: string,
-  args: Record<string, unknown>
+  args: Record<string, unknown>,
 ): Promise<CallToolResult> {
   const client = await getBasicMemoryClient();
 
@@ -489,7 +488,7 @@ async function callProxiedTool(
       invalidateBootstrapCache(project);
       logger.debug(
         { tool: name, project },
-        "Invalidated bootstrap_context cache after write operation"
+        "Invalidated bootstrap_context cache after write operation",
       );
 
       // Trigger embedding generation (fire-and-forget)
@@ -509,21 +508,32 @@ async function callProxiedTool(
         const identifier = resolvedArgs.identifier as string | undefined;
         if (identifier) {
           // Async fetch and trigger - does not block edit response
-          client.callTool({
-            name: "read_note",
-            arguments: { identifier, project: resolvedArgs.project }
-          }).then((readResult) => {
-            // Extract content from read_note response
-            // Cast to expected structure (MCP SDK returns union type)
-            const result = readResult as { content?: Array<{ type: string; text?: string }> };
-            const firstContent = result.content?.[0];
-            if (firstContent?.type === "text" && firstContent.text) {
-              triggerEmbedding(identifier, firstContent.text);
-              logger.debug({ identifier }, "Triggered embedding for edited note");
-            }
-          }).catch((error: Error) => {
-            logger.warn({ identifier, error }, "Failed to fetch content for embedding");
-          });
+          client
+            .callTool({
+              name: "read_note",
+              arguments: { identifier, project: resolvedArgs.project },
+            })
+            .then((readResult) => {
+              // Extract content from read_note response
+              // Cast to expected structure (MCP SDK returns union type)
+              const result = readResult as {
+                content?: Array<{ type: string; text?: string }>;
+              };
+              const firstContent = result.content?.[0];
+              if (firstContent?.type === "text" && firstContent.text) {
+                triggerEmbedding(identifier, firstContent.text);
+                logger.debug(
+                  { identifier },
+                  "Triggered embedding for edited note",
+                );
+              }
+            })
+            .catch((error: Error) => {
+              logger.warn(
+                { identifier, error },
+                "Failed to fetch content for embedding",
+              );
+            });
         }
       }
     }
@@ -561,7 +571,7 @@ async function callProxiedTool(
  * Inject resolved project into tool arguments if not already specified
  */
 async function injectProject(
-  args: Record<string, unknown>
+  args: Record<string, unknown>,
 ): Promise<Record<string, unknown>> {
   if (args.project) {
     return args;

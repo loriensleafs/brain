@@ -14,21 +14,19 @@
  */
 
 import { NonRetriableError } from "inngest";
-import { inngest } from "../client";
 import { logger } from "../../utils/internal/logger";
 import {
-  runQaAgent,
+  type AgentVerdict,
   runAnalystAgent,
   runArchitectAgent,
+  runQaAgent,
   runRoadmapAgent,
-  type AgentVerdict,
   type Verdict,
 } from "../agents";
-import { mergeVerdicts, type FinalVerdict } from "./verdicts";
-import {
-  createNonRetriableError,
-  WorkflowErrorType,
-} from "../errors";
+import { inngest } from "../client";
+import { createNonRetriableError, WorkflowErrorType } from "../errors";
+import { type FinalVerdict, mergeVerdicts } from "./verdicts";
+
 /**
  * Task status for validation.
  */
@@ -68,8 +66,13 @@ function checkTasks(tasks: Task[]): {
   const allPassed = checks.length === 0 || checks.every((c) => c.passed);
   return {
     valid: allPassed,
-    checks: checks.length > 0 ? checks : [{ name: "tasks-check", passed: true, message: "All tasks valid" }],
-    remediation: allPassed ? undefined : "Complete all IN_PROGRESS tasks before proceeding",
+    checks:
+      checks.length > 0
+        ? checks
+        : [{ name: "tasks-check", passed: true, message: "All tasks valid" }],
+    remediation: allPassed
+      ? undefined
+      : "Complete all IN_PROGRESS tasks before proceeding",
   };
 }
 
@@ -109,12 +112,15 @@ export interface FeatureCompletionError {
  * @param data - Event data to validate
  * @throws NonRetriableError if data is invalid
  */
-function validateEventData(data: { featureId?: string; context?: unknown }): void {
+function validateEventData(data: {
+  featureId?: string;
+  context?: unknown;
+}): void {
   if (!data.featureId || typeof data.featureId !== "string") {
     throw createNonRetriableError(
       WorkflowErrorType.VALIDATION_ERROR,
       "Event data must include a valid featureId string",
-      { context: { providedData: data } }
+      { context: { providedData: data } },
     );
   }
 
@@ -122,7 +128,7 @@ function validateEventData(data: { featureId?: string; context?: unknown }): voi
     throw createNonRetriableError(
       WorkflowErrorType.VALIDATION_ERROR,
       "featureId cannot be empty or whitespace",
-      { context: { providedData: data } }
+      { context: { providedData: data } },
     );
   }
 
@@ -130,7 +136,7 @@ function validateEventData(data: { featureId?: string; context?: unknown }): voi
     throw createNonRetriableError(
       WorkflowErrorType.VALIDATION_ERROR,
       "context must be an object if provided",
-      { context: { providedData: data, contextType: typeof data.context } }
+      { context: { providedData: data, contextType: typeof data.context } },
     );
   }
 }
@@ -168,7 +174,7 @@ export const featureCompletionWorkflow = inngest.createFunction(
       validateEventData(event.data);
       logger.info(
         { featureId, hasContext: Object.keys(context).length > 0 },
-        "Validated workflow input"
+        "Validated workflow input",
       );
     });
 
@@ -189,15 +195,18 @@ export const featureCompletionWorkflow = inngest.createFunction(
               checks: incompleteTaskMessages,
               remediation: taskResult.remediation,
             },
-            "Phase transition blocked: incomplete tasks"
+            "Phase transition blocked: incomplete tasks",
           );
           throw createNonRetriableError(
             WorkflowErrorType.VALIDATION_ERROR,
             `Cannot proceed with feature completion: ${incompleteTaskMessages}`,
-            { context: { remediation: taskResult.remediation } }
+            { context: { remediation: taskResult.remediation } },
           );
         }
-        logger.info({ featureId, taskCount: tasks.length }, "All tasks validated successfully");
+        logger.info(
+          { featureId, taskCount: tasks.length },
+          "All tasks validated successfully",
+        );
       } else {
         logger.debug({ featureId }, "No tasks provided for validation");
       }
@@ -243,7 +252,7 @@ export const featureCompletionWorkflow = inngest.createFunction(
           isBlocking: finalVerdict.isBlocking,
           reason: finalVerdict.reason,
         },
-        "Feature completion workflow finished"
+        "Feature completion workflow finished",
       );
 
       return result;
@@ -260,7 +269,7 @@ export const featureCompletionWorkflow = inngest.createFunction(
           isNonRetriable,
           errorName: error instanceof Error ? error.name : "Unknown",
         },
-        "Feature completion workflow failed"
+        "Feature completion workflow failed",
       );
 
       // Re-throw to let Inngest handle retry logic
@@ -268,5 +277,5 @@ export const featureCompletionWorkflow = inngest.createFunction(
       // Other errors will be retried based on retry config
       throw error;
     }
-  }
+  },
 );

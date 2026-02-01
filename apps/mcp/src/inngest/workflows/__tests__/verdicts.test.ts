@@ -3,8 +3,8 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { mergeVerdicts, canProceed, type FinalVerdict } from "../verdicts";
 import type { AgentVerdict, Verdict } from "../../agents";
+import { canProceed, type FinalVerdict, mergeVerdicts } from "../verdicts";
 
 /**
  * Helper to create an AgentVerdict.
@@ -12,7 +12,7 @@ import type { AgentVerdict, Verdict } from "../../agents";
 function makeVerdict(
   agent: string,
   verdict: Verdict,
-  details?: string
+  details?: string,
 ): AgentVerdict {
   return { agent, verdict, details };
 }
@@ -22,7 +22,11 @@ describe("mergeVerdicts", () => {
     it("returns CRITICAL_FAIL when any agent returns CRITICAL_FAIL", () => {
       const verdicts: AgentVerdict[] = [
         makeVerdict("qa", "PASS"),
-        makeVerdict("analyst", "CRITICAL_FAIL", "Test coverage below threshold"),
+        makeVerdict(
+          "analyst",
+          "CRITICAL_FAIL",
+          "Test coverage below threshold",
+        ),
         makeVerdict("architect", "PASS"),
         makeVerdict("roadmap", "PASS"),
       ];
@@ -71,7 +75,11 @@ describe("mergeVerdicts", () => {
       const verdicts: AgentVerdict[] = [
         makeVerdict("qa", "PASS"),
         makeVerdict("analyst", "PASS"),
-        makeVerdict("architect", "NEEDS_REVIEW", "Complex changes require review"),
+        makeVerdict(
+          "architect",
+          "NEEDS_REVIEW",
+          "Complex changes require review",
+        ),
         makeVerdict("roadmap", "PASS"),
       ];
 
@@ -174,7 +182,12 @@ describe("mergeVerdicts", () => {
 
       expect(result.verdict).toBe("PASS");
       expect(result.isBlocking).toBe(false);
-      expect(result.passingAgents).toEqual(["qa", "analyst", "architect", "roadmap"]);
+      expect(result.passingAgents).toEqual([
+        "qa",
+        "analyst",
+        "architect",
+        "roadmap",
+      ]);
       expect(result.reason).toContain("4 agents passed");
     });
 

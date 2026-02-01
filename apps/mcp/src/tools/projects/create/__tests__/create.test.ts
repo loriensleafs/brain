@@ -9,19 +9,21 @@
  * - Path expansion works for ~ in all modes
  */
 
-import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 import * as os from "os";
 import * as path from "path";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 // Type for MCP tool result content
-type ToolResultContent = {
-  type: "text";
-  text: string;
-} | {
-  type: "image";
-  data: string;
-  mimeType: string;
-};
+type ToolResultContent =
+  | {
+      type: "text";
+      text: string;
+    }
+  | {
+      type: "image";
+      data: string;
+      mimeType: string;
+    };
 
 /**
  * Helper to safely extract text from tool result content.
@@ -37,10 +39,18 @@ function getResponseText(content: ToolResultContent[]): string {
 
 // Mock filesystem operations
 const mockFs = {
-  existsSync: vi.fn(() => false) as ReturnType<typeof mock<(p: unknown) => boolean>>,
-  readFileSync: vi.fn(() => "{}") as ReturnType<typeof mock<(p: unknown) => string>>,
-  writeFileSync: vi.fn(() => undefined) as ReturnType<typeof mock<(p: unknown, data: unknown) => void>>,
-  mkdirSync: vi.fn(() => undefined) as ReturnType<typeof mock<(p: unknown, opts: unknown) => void>>,
+  existsSync: vi.fn(() => false) as ReturnType<
+    typeof mock<(p: unknown) => boolean>
+  >,
+  readFileSync: vi.fn(() => "{}") as ReturnType<
+    typeof mock<(p: unknown) => string>
+  >,
+  writeFileSync: vi.fn(() => undefined) as ReturnType<
+    typeof mock<(p: unknown, data: unknown) => void>
+  >,
+  mkdirSync: vi.fn(() => undefined) as ReturnType<
+    typeof mock<(p: unknown, opts: unknown) => void>
+  >,
 };
 
 vi.mock("fs", () => mockFs);
@@ -50,7 +60,7 @@ vi.mock("fs", () => mockFs);
 class MockProjectNotFoundError extends Error {
   constructor(
     public readonly project: string,
-    public readonly availableProjects: string[]
+    public readonly availableProjects: string[],
   ) {
     super(`Project "${project}" not found`);
     this.name = "ProjectNotFoundError";
@@ -73,8 +83,12 @@ vi.mock("@brain/utils", () => ({
 }));
 
 // Mock config module
-const mockSetCodePath = vi.fn(() => undefined) as ReturnType<typeof mock<(name: unknown, path: unknown) => void>>;
-const mockGetCodePath = vi.fn(() => undefined as string | undefined) as ReturnType<typeof mock<(name: unknown) => string | undefined>>;
+const mockSetCodePath = vi.fn(() => undefined) as ReturnType<
+  typeof mock<(name: unknown, path: unknown) => void>
+>;
+const mockGetCodePath = vi.fn(
+  () => undefined as string | undefined,
+) as ReturnType<typeof mock<(name: unknown) => string | undefined>>;
 
 vi.mock("../../../project/config", () => ({
   setCodePath: mockSetCodePath,
@@ -120,7 +134,9 @@ describe("create_project tool", () => {
       const result = await handler(args);
 
       expect(result.isError).toBeUndefined();
-      const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
+      const response = JSON.parse(
+        getResponseText(result.content as ToolResultContent[]),
+      );
 
       expect(response.memories_path_mode).toBe("DEFAULT");
       expect(response.created).toBe(true);
@@ -158,10 +174,14 @@ describe("create_project tool", () => {
       };
 
       const result = await handler(args);
-      const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
+      const response = JSON.parse(
+        getResponseText(result.content as ToolResultContent[]),
+      );
 
       // Memories path should be ~/memories/my-project expanded
-      expect(response.memories_path).toBe(path.join(homeDir, "memories", "my-project"));
+      expect(response.memories_path).toBe(
+        path.join(homeDir, "memories", "my-project"),
+      );
       expect(response.memories_path_mode).toBe("DEFAULT");
     });
 
@@ -175,9 +195,13 @@ describe("create_project tool", () => {
       };
 
       const result = await handler(args);
-      const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
+      const response = JSON.parse(
+        getResponseText(result.content as ToolResultContent[]),
+      );
 
-      expect(response.memories_path).toBe(path.join(homeDir, "memories", "fallback-project"));
+      expect(response.memories_path).toBe(
+        path.join(homeDir, "memories", "fallback-project"),
+      );
       expect(response.memories_path_mode).toBe("DEFAULT");
     });
   });
@@ -217,9 +241,13 @@ describe("create_project tool", () => {
       };
 
       const result = await handler(args);
-      const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
+      const response = JSON.parse(
+        getResponseText(result.content as ToolResultContent[]),
+      );
 
-      expect(response.memories_path).toBe(path.join(homeDir, "custom-memories", "explicit-default"));
+      expect(response.memories_path).toBe(
+        path.join(homeDir, "custom-memories", "explicit-default"),
+      );
       expect(response.memories_path_mode).toBe("DEFAULT");
     });
   });
@@ -233,9 +261,13 @@ describe("create_project tool", () => {
       };
 
       const result = await handler(args);
-      const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
+      const response = JSON.parse(
+        getResponseText(result.content as ToolResultContent[]),
+      );
 
-      expect(response.memories_path).toBe(path.join(homeDir, "Dev", "code-mode-project", "docs"));
+      expect(response.memories_path).toBe(
+        path.join(homeDir, "Dev", "code-mode-project", "docs"),
+      );
       expect(response.memories_path_mode).toBe("CODE");
     });
 
@@ -247,7 +279,9 @@ describe("create_project tool", () => {
       };
 
       const result = await handler(args);
-      const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
+      const response = JSON.parse(
+        getResponseText(result.content as ToolResultContent[]),
+      );
 
       expect(response.memories_path).toBe("/var/projects/absolute-code/docs");
       expect(response.memories_path_mode).toBe("CODE");
@@ -263,7 +297,9 @@ describe("create_project tool", () => {
       };
 
       const result = await handler(args);
-      const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
+      const response = JSON.parse(
+        getResponseText(result.content as ToolResultContent[]),
+      );
 
       expect(response.memories_path).toBe("/var/custom/notes");
       expect(response.memories_path_mode).toBe("/var/custom/notes");
@@ -277,9 +313,13 @@ describe("create_project tool", () => {
       };
 
       const result = await handler(args);
-      const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
+      const response = JSON.parse(
+        getResponseText(result.content as ToolResultContent[]),
+      );
 
-      expect(response.memories_path).toBe(path.join(homeDir, "my-notes", "special"));
+      expect(response.memories_path).toBe(
+        path.join(homeDir, "my-notes", "special"),
+      );
       expect(response.memories_path_mode).toBe("~/my-notes/special");
     });
   });
@@ -292,9 +332,13 @@ describe("create_project tool", () => {
       };
 
       const result = await handler(args);
-      const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
+      const response = JSON.parse(
+        getResponseText(result.content as ToolResultContent[]),
+      );
 
-      expect(response.code_path).toBe(path.join(homeDir, "Projects", "tilde-code"));
+      expect(response.code_path).toBe(
+        path.join(homeDir, "Projects", "tilde-code"),
+      );
     });
 
     test("resolves relative paths to absolute", async () => {
@@ -304,7 +348,9 @@ describe("create_project tool", () => {
       };
 
       const result = await handler(args);
-      const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
+      const response = JSON.parse(
+        getResponseText(result.content as ToolResultContent[]),
+      );
 
       // Should be resolved to absolute path
       expect(path.isAbsolute(response.code_path)).toBe(true);
@@ -319,7 +365,8 @@ describe("create_project tool", () => {
       // Project exists in config.json (basic-memory)
       mockFs.existsSync.mockImplementation((p: unknown) => {
         const pStr = String(p);
-        if (pStr.includes("config.json") && !pStr.includes("brain-config")) return true;
+        if (pStr.includes("config.json") && !pStr.includes("brain-config"))
+          return true;
         return false;
       });
       mockFs.readFileSync.mockImplementation((p: unknown) => {
@@ -344,11 +391,15 @@ describe("create_project tool", () => {
       const result = await handler(args);
 
       expect(result.isError).toBe(true);
-      const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
+      const response = JSON.parse(
+        getResponseText(result.content as ToolResultContent[]),
+      );
       expect(response.error).toContain("already exists");
       expect(response.error).toContain("edit_project");
       expect(response.error).toContain("delete_project");
-      expect(response.suggestion).toBe("Use edit_project to update configuration");
+      expect(response.suggestion).toBe(
+        "Use edit_project to update configuration",
+      );
       expect(response.existing_memories_path).toBe("/existing/notes/path");
       // Note: getCodePath mock may not work due to module caching, verify behavior
       // The important assertion is that the error message and suggestion are correct
@@ -361,7 +412,8 @@ describe("create_project tool", () => {
       // Project exists in config.json (basic-memory)
       mockFs.existsSync.mockImplementation((p: unknown) => {
         const pStr = String(p);
-        if (pStr.includes("config.json") && !pStr.includes("brain-config")) return true;
+        if (pStr.includes("config.json") && !pStr.includes("brain-config"))
+          return true;
         return false;
       });
       mockFs.readFileSync.mockImplementation((p: unknown) => {
@@ -384,13 +436,17 @@ describe("create_project tool", () => {
       const result = await handler(args);
 
       expect(result.isError).toBe(true);
-      const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
+      const response = JSON.parse(
+        getResponseText(result.content as ToolResultContent[]),
+      );
 
       // Verify actionable error message format per M4 acceptance criteria
       expect(response.error).toBe(
-        'Project "duplicate-project" already exists. Use edit_project to modify it, or delete_project to remove it first.'
+        'Project "duplicate-project" already exists. Use edit_project to modify it, or delete_project to remove it first.',
       );
-      expect(response.suggestion).toBe("Use edit_project to update configuration");
+      expect(response.suggestion).toBe(
+        "Use edit_project to update configuration",
+      );
       expect(response.existing_memories_path).toBe("/some/notes/path");
     });
   });
@@ -403,7 +459,9 @@ describe("create_project tool", () => {
       };
 
       const result = await handler(args);
-      const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
+      const response = JSON.parse(
+        getResponseText(result.content as ToolResultContent[]),
+      );
 
       // Verify the response contains expected values
       expect(response.project).toBe("config-test");
@@ -422,7 +480,7 @@ describe("create_project tool", () => {
       // Verify writeFileSync was called for config.json
       const writeCalls = mockFs.writeFileSync.mock.calls;
       const configWrite = writeCalls.find((call) =>
-        String(call[0]).includes("config.json")
+        String(call[0]).includes("config.json"),
       );
       expect(configWrite).toBeDefined();
 

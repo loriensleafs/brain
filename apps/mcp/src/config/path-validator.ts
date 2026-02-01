@@ -7,8 +7,8 @@
  * @see ADR-020 Security Requirements section for the full specification
  */
 
-import * as path from "path";
 import * as os from "os";
+import * as path from "path";
 
 /**
  * Result of path validation.
@@ -117,11 +117,7 @@ export function normalizePath(inputPath: string): string {
  */
 function containsTraversal(inputPath: string): boolean {
   // Check for .. in various forms
-  const traversalPatterns = [
-    "..",
-    "..\\",
-    "../",
-  ];
+  const traversalPatterns = ["..", "..\\", "../"];
 
   for (const pattern of traversalPatterns) {
     if (inputPath.includes(pattern)) {
@@ -164,7 +160,10 @@ function isBlockedSystemPath(normalizedPath: string): boolean {
     const lowerBlocked = blockedPath.toLowerCase();
 
     // Check exact match or if path is under blocked directory
-    if (lowerPath === lowerBlocked || lowerPath.startsWith(lowerBlocked + path.sep)) {
+    if (
+      lowerPath === lowerBlocked ||
+      lowerPath.startsWith(lowerBlocked + path.sep)
+    ) {
       return true;
     }
   }
@@ -206,7 +205,10 @@ export function validatePath(inputPath: string): PathValidationResult {
 
   // Check for null bytes BEFORE any processing
   if (containsNullBytes(inputPath)) {
-    return { valid: false, error: "Invalid path characters: null byte detected" };
+    return {
+      valid: false,
+      error: "Invalid path characters: null byte detected",
+    };
   }
 
   // Check for directory traversal BEFORE normalization
@@ -231,8 +233,14 @@ export function validatePath(inputPath: string): PathValidationResult {
 
     for (const blockedPath of blockedPaths) {
       const lowerBlocked = blockedPath.toLowerCase();
-      if (lowerPath === lowerBlocked || lowerPath.startsWith(lowerBlocked + path.sep)) {
-        return { valid: false, error: `System path not allowed: ${blockedPath}` };
+      if (
+        lowerPath === lowerBlocked ||
+        lowerPath.startsWith(lowerBlocked + path.sep)
+      ) {
+        return {
+          valid: false,
+          error: `System path not allowed: ${blockedPath}`,
+        };
       }
     }
 
@@ -293,7 +301,10 @@ export function isPathWithin(inputPath: string, basePath: string): boolean {
     ? normalizedBase
     : normalizedBase + path.sep;
 
-  return normalizedInput === normalizedBase || normalizedInput.startsWith(baseWithSep);
+  return (
+    normalizedInput === normalizedBase ||
+    normalizedInput.startsWith(baseWithSep)
+  );
 }
 
 /**

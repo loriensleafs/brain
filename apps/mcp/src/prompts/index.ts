@@ -7,8 +7,8 @@
 
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import {
-  ListPromptsRequestSchema,
   GetPromptRequestSchema,
+  ListPromptsRequestSchema,
   type Prompt,
 } from "@modelcontextprotocol/sdk/types.js";
 import { getBasicMemoryClient } from "../proxy/client";
@@ -22,7 +22,7 @@ let discoveredPrompts: Prompt[] = [];
  * Prompts are proxied from basic-memory.
  */
 export async function discoverAndRegisterPrompts(
-  server: McpServer
+  server: McpServer,
 ): Promise<void> {
   const client = await getBasicMemoryClient();
 
@@ -31,7 +31,7 @@ export async function discoverAndRegisterPrompts(
   discoveredPrompts = promptsResult.prompts;
   logger.info(
     { count: discoveredPrompts.length },
-    "Discovered basic-memory prompts"
+    "Discovered basic-memory prompts",
   );
 
   // Register prompts/list handler

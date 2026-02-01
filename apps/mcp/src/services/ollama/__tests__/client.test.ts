@@ -3,7 +3,7 @@
  * Tests configuration, error handling, and API interactions.
  */
 
-import { describe, test, expect, vi, afterEach } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
 import { OllamaClient } from "../client";
 import { OllamaError } from "../types";
 
@@ -19,7 +19,7 @@ describe("OllamaClient", () => {
       const client = new OllamaClient();
       // Access private fields via type assertion for testing
       expect((client as unknown as { baseUrl: string }).baseUrl).toBe(
-        "http://localhost:11434"
+        "http://localhost:11434",
       );
       expect((client as unknown as { timeout: number }).timeout).toBe(60000);
     });
@@ -30,7 +30,7 @@ describe("OllamaClient", () => {
         timeout: 5000,
       });
       expect((client as unknown as { baseUrl: string }).baseUrl).toBe(
-        "http://custom:9999"
+        "http://custom:9999",
       );
       expect((client as unknown as { timeout: number }).timeout).toBe(5000);
     });
@@ -38,7 +38,7 @@ describe("OllamaClient", () => {
     test("applies partial config with defaults for missing values", () => {
       const client = new OllamaClient({ baseUrl: "http://partial:8080" });
       expect((client as unknown as { baseUrl: string }).baseUrl).toBe(
-        "http://partial:8080"
+        "http://partial:8080",
       );
       expect((client as unknown as { timeout: number }).timeout).toBe(60000);
     });
@@ -63,7 +63,7 @@ describe("OllamaClient", () => {
 
     test("returns false on non-OK response", async () => {
       globalThis.fetch = createFetchMock(() =>
-        Promise.resolve({ ok: false, status: 500 } as Response)
+        Promise.resolve({ ok: false, status: 500 } as Response),
       );
 
       const client = new OllamaClient();
@@ -73,7 +73,7 @@ describe("OllamaClient", () => {
 
     test("returns true on OK response", async () => {
       globalThis.fetch = createFetchMock(() =>
-        Promise.resolve({ ok: true, status: 200 } as Response)
+        Promise.resolve({ ok: true, status: 200 } as Response),
       );
 
       const client = new OllamaClient();
@@ -83,7 +83,7 @@ describe("OllamaClient", () => {
 
     test("calls correct endpoint", async () => {
       const mockFetch = vi.fn(() =>
-        Promise.resolve({ ok: true, status: 200 } as Response)
+        Promise.resolve({ ok: true, status: 200 } as Response),
       );
       globalThis.fetch = mockFetch as unknown as typeof fetch;
 
@@ -93,7 +93,7 @@ describe("OllamaClient", () => {
       expect(mockFetch).toHaveBeenCalledTimes(1);
       const callArgs = mockFetch.mock.calls[0] as unknown as [
         string,
-        RequestInit
+        RequestInit,
       ];
       expect(callArgs[0]).toBe("http://test:1234/api/tags");
     });
@@ -113,7 +113,7 @@ describe("OllamaClient", () => {
           ok: true,
           status: 200,
           json: () => Promise.resolve({ embeddings: [mockEmbedding] }),
-        } as Response)
+        } as Response),
       );
 
       const client = new OllamaClient();
@@ -126,12 +126,12 @@ describe("OllamaClient", () => {
         Promise.resolve({
           ok: false,
           status: 503,
-        } as Response)
+        } as Response),
       );
 
       const client = new OllamaClient();
       await expect(client.generateEmbedding("test")).rejects.toThrow(
-        OllamaError
+        OllamaError,
       );
     });
 
@@ -140,7 +140,7 @@ describe("OllamaClient", () => {
         Promise.resolve({
           ok: false,
           status: 404,
-        } as Response)
+        } as Response),
       );
 
       const client = new OllamaClient();
@@ -160,7 +160,7 @@ describe("OllamaClient", () => {
           ok: true,
           status: 200,
           json: () => Promise.resolve({ embeddings: [[0.1]] }),
-        } as Response)
+        } as Response),
       );
       globalThis.fetch = mockFetch as unknown as typeof fetch;
 
@@ -170,7 +170,7 @@ describe("OllamaClient", () => {
       expect(mockFetch).toHaveBeenCalledTimes(1);
       const callArgs = mockFetch.mock.calls[0] as unknown as [
         string,
-        RequestInit
+        RequestInit,
       ];
       expect(callArgs[0]).toBe("http://localhost:11434/api/embed");
       expect(callArgs[1].method).toBe("POST");
@@ -180,7 +180,7 @@ describe("OllamaClient", () => {
       expect(JSON.parse(callArgs[1].body as string)).toEqual({
         model: "nomic-embed-text",
         input: ["search_document: my text"],
-        truncate: true
+        truncate: true,
       });
     });
 
@@ -190,21 +190,25 @@ describe("OllamaClient", () => {
           ok: true,
           status: 200,
           json: () => Promise.resolve({ embeddings: [[0.1]] }),
-        } as Response)
+        } as Response),
       );
       globalThis.fetch = mockFetch as unknown as typeof fetch;
 
       const client = new OllamaClient();
-      await client.generateEmbedding("my text", "search_document", "mxbai-embed-large");
+      await client.generateEmbedding(
+        "my text",
+        "search_document",
+        "mxbai-embed-large",
+      );
 
       const callArgs = mockFetch.mock.calls[0] as unknown as [
         string,
-        RequestInit
+        RequestInit,
       ];
       expect(JSON.parse(callArgs[1].body as string)).toEqual({
         model: "mxbai-embed-large",
         input: ["search_document: my text"],
-        truncate: true
+        truncate: true,
       });
     });
 
@@ -214,11 +218,12 @@ describe("OllamaClient", () => {
         Promise.resolve({
           ok: true,
           status: 200,
-          json: () => Promise.resolve({
-            model: "nomic-embed-text",
-            embeddings: [mockEmbedding]
-          }),
-        } as Response)
+          json: () =>
+            Promise.resolve({
+              model: "nomic-embed-text",
+              embeddings: [mockEmbedding],
+            }),
+        } as Response),
       );
       globalThis.fetch = mockFetch as unknown as typeof fetch;
 
@@ -227,7 +232,10 @@ describe("OllamaClient", () => {
 
       expect(result).toEqual(mockEmbedding);
       // Verify batch API was called with single-item array
-      const callArgs = mockFetch.mock.calls[0] as unknown as [string, RequestInit];
+      const callArgs = mockFetch.mock.calls[0] as unknown as [
+        string,
+        RequestInit,
+      ];
       const body = JSON.parse(callArgs[1].body as string);
       expect(body.input).toEqual(["search_document: test"]);
     });
@@ -237,18 +245,22 @@ describe("OllamaClient", () => {
         Promise.resolve({
           ok: true,
           status: 200,
-          json: () => Promise.resolve({
-            model: "nomic-embed-text",
-            embeddings: [[0.1, 0.2, 0.3]]
-          }),
-        } as Response)
+          json: () =>
+            Promise.resolve({
+              model: "nomic-embed-text",
+              embeddings: [[0.1, 0.2, 0.3]],
+            }),
+        } as Response),
       );
       globalThis.fetch = mockFetch as unknown as typeof fetch;
 
       const client = new OllamaClient();
       await client.generateEmbedding("document text", "search_document");
 
-      const callArgs = mockFetch.mock.calls[0] as unknown as [string, RequestInit];
+      const callArgs = mockFetch.mock.calls[0] as unknown as [
+        string,
+        RequestInit,
+      ];
       const body = JSON.parse(callArgs[1].body as string);
       expect(body.input).toEqual(["search_document: document text"]);
     });
@@ -258,18 +270,22 @@ describe("OllamaClient", () => {
         Promise.resolve({
           ok: true,
           status: 200,
-          json: () => Promise.resolve({
-            model: "nomic-embed-text",
-            embeddings: [[0.1, 0.2, 0.3]]
-          }),
-        } as Response)
+          json: () =>
+            Promise.resolve({
+              model: "nomic-embed-text",
+              embeddings: [[0.1, 0.2, 0.3]],
+            }),
+        } as Response),
       );
       globalThis.fetch = mockFetch as unknown as typeof fetch;
 
       const client = new OllamaClient();
       await client.generateEmbedding("query text", "search_query");
 
-      const callArgs = mockFetch.mock.calls[0] as unknown as [string, RequestInit];
+      const callArgs = mockFetch.mock.calls[0] as unknown as [
+        string,
+        RequestInit,
+      ];
       const body = JSON.parse(callArgs[1].body as string);
       expect(body.input).toEqual(["search_query: query text"]);
     });
@@ -279,18 +295,22 @@ describe("OllamaClient", () => {
         Promise.resolve({
           ok: true,
           status: 200,
-          json: () => Promise.resolve({
-            model: "nomic-embed-text",
-            embeddings: [[0.1, 0.2, 0.3]]
-          }),
-        } as Response)
+          json: () =>
+            Promise.resolve({
+              model: "nomic-embed-text",
+              embeddings: [[0.1, 0.2, 0.3]],
+            }),
+        } as Response),
       );
       globalThis.fetch = mockFetch as unknown as typeof fetch;
 
       const client = new OllamaClient();
       await client.generateEmbedding("default text");
 
-      const callArgs = mockFetch.mock.calls[0] as unknown as [string, RequestInit];
+      const callArgs = mockFetch.mock.calls[0] as unknown as [
+        string,
+        RequestInit,
+      ];
       const body = JSON.parse(callArgs[1].body as string);
       expect(body.input).toEqual(["search_document: default text"]);
     });
@@ -315,11 +335,12 @@ describe("OllamaClient", () => {
         Promise.resolve({
           ok: true,
           status: 200,
-          json: () => Promise.resolve({
-            model: "nomic-embed-text",
-            embeddings: [mockEmbedding],
-          }),
-        } as Response)
+          json: () =>
+            Promise.resolve({
+              model: "nomic-embed-text",
+              embeddings: [mockEmbedding],
+            }),
+        } as Response),
       );
 
       const client = new OllamaClient();
@@ -333,15 +354,20 @@ describe("OllamaClient", () => {
         Promise.resolve({
           ok: true,
           status: 200,
-          json: () => Promise.resolve({
-            model: "nomic-embed-text",
-            embeddings: mockEmbeddings,
-          }),
-        } as Response)
+          json: () =>
+            Promise.resolve({
+              model: "nomic-embed-text",
+              embeddings: mockEmbeddings,
+            }),
+        } as Response),
       );
 
       const client = new OllamaClient();
-      const result = await client.generateBatchEmbeddings(["text1", "text2", "text3"]);
+      const result = await client.generateBatchEmbeddings([
+        "text1",
+        "text2",
+        "text3",
+      ]);
       expect(result).toEqual(mockEmbeddings);
     });
 
@@ -350,11 +376,15 @@ describe("OllamaClient", () => {
         Promise.resolve({
           ok: true,
           status: 200,
-          json: () => Promise.resolve({
-            model: "nomic-embed-text",
-            embeddings: [[1, 2], [3, 4]],
-          }),
-        } as Response)
+          json: () =>
+            Promise.resolve({
+              model: "nomic-embed-text",
+              embeddings: [
+                [1, 2],
+                [3, 4],
+              ],
+            }),
+        } as Response),
       );
       globalThis.fetch = mockFetch as unknown as typeof fetch;
 
@@ -362,7 +392,10 @@ describe("OllamaClient", () => {
       await client.generateBatchEmbeddings(["text1", "text2"]);
 
       expect(mockFetch).toHaveBeenCalledTimes(1);
-      const callArgs = mockFetch.mock.calls[0] as unknown as [string, RequestInit];
+      const callArgs = mockFetch.mock.calls[0] as unknown as [
+        string,
+        RequestInit,
+      ];
       expect(callArgs[0]).toBe("http://localhost:11434/api/embed");
       expect(callArgs[1].method).toBe("POST");
     });
@@ -372,18 +405,22 @@ describe("OllamaClient", () => {
         Promise.resolve({
           ok: true,
           status: 200,
-          json: () => Promise.resolve({
-            model: "nomic-embed-text",
-            embeddings: [[1], [2]],
-          }),
-        } as Response)
+          json: () =>
+            Promise.resolve({
+              model: "nomic-embed-text",
+              embeddings: [[1], [2]],
+            }),
+        } as Response),
       );
       globalThis.fetch = mockFetch as unknown as typeof fetch;
 
       const client = new OllamaClient();
       await client.generateBatchEmbeddings(["hello", "world"], "search_query");
 
-      const callArgs = mockFetch.mock.calls[0] as unknown as [string, RequestInit];
+      const callArgs = mockFetch.mock.calls[0] as unknown as [
+        string,
+        RequestInit,
+      ];
       const body = JSON.parse(callArgs[1].body as string);
       expect(body.input).toEqual([
         "search_query: hello",
@@ -396,18 +433,26 @@ describe("OllamaClient", () => {
         Promise.resolve({
           ok: true,
           status: 200,
-          json: () => Promise.resolve({
-            model: "custom-model",
-            embeddings: [[1]],
-          }),
-        } as Response)
+          json: () =>
+            Promise.resolve({
+              model: "custom-model",
+              embeddings: [[1]],
+            }),
+        } as Response),
       );
       globalThis.fetch = mockFetch as unknown as typeof fetch;
 
       const client = new OllamaClient();
-      await client.generateBatchEmbeddings(["text"], "search_document", "custom-model");
+      await client.generateBatchEmbeddings(
+        ["text"],
+        "search_document",
+        "custom-model",
+      );
 
-      const callArgs = mockFetch.mock.calls[0] as unknown as [string, RequestInit];
+      const callArgs = mockFetch.mock.calls[0] as unknown as [
+        string,
+        RequestInit,
+      ];
       const body = JSON.parse(callArgs[1].body as string);
       expect(body.model).toBe("custom-model");
     });
@@ -417,13 +462,13 @@ describe("OllamaClient", () => {
         Promise.resolve({
           ok: false,
           status: 500,
-        } as Response)
+        } as Response),
       );
 
       const client = new OllamaClient();
-      await expect(
-        client.generateBatchEmbeddings(["text"])
-      ).rejects.toThrow(OllamaError);
+      await expect(client.generateBatchEmbeddings(["text"])).rejects.toThrow(
+        OllamaError,
+      );
     });
 
     test("throws OllamaError on embedding count mismatch", async () => {
@@ -431,16 +476,17 @@ describe("OllamaClient", () => {
         Promise.resolve({
           ok: true,
           status: 200,
-          json: () => Promise.resolve({
-            model: "nomic-embed-text",
-            embeddings: [[1, 2, 3]], // Only 1 embedding
-          }),
-        } as Response)
+          json: () =>
+            Promise.resolve({
+              model: "nomic-embed-text",
+              embeddings: [[1, 2, 3]], // Only 1 embedding
+            }),
+        } as Response),
       );
 
       const client = new OllamaClient();
       await expect(
-        client.generateBatchEmbeddings(["text1", "text2"]) // 2 texts
+        client.generateBatchEmbeddings(["text1", "text2"]), // 2 texts
       ).rejects.toThrow("Embedding count mismatch");
     });
 
@@ -449,18 +495,22 @@ describe("OllamaClient", () => {
         Promise.resolve({
           ok: true,
           status: 200,
-          json: () => Promise.resolve({
-            model: "nomic-embed-text",
-            embeddings: [[1]],
-          }),
-        } as Response)
+          json: () =>
+            Promise.resolve({
+              model: "nomic-embed-text",
+              embeddings: [[1]],
+            }),
+        } as Response),
       );
       globalThis.fetch = mockFetch as unknown as typeof fetch;
 
       const client = new OllamaClient({ timeout: 5000 });
       await client.generateBatchEmbeddings(["text"]);
 
-      const callArgs = mockFetch.mock.calls[0] as unknown as [string, RequestInit];
+      const callArgs = mockFetch.mock.calls[0] as unknown as [
+        string,
+        RequestInit,
+      ];
       expect(callArgs[1].signal).toBeDefined();
     });
 
@@ -469,18 +519,22 @@ describe("OllamaClient", () => {
         Promise.resolve({
           ok: true,
           status: 200,
-          json: () => Promise.resolve({
-            model: "nomic-embed-text",
-            embeddings: [[1]],
-          }),
-        } as Response)
+          json: () =>
+            Promise.resolve({
+              model: "nomic-embed-text",
+              embeddings: [[1]],
+            }),
+        } as Response),
       );
       globalThis.fetch = mockFetch as unknown as typeof fetch;
 
       const client = new OllamaClient();
       await client.generateBatchEmbeddings(["text"]);
 
-      const callArgs = mockFetch.mock.calls[0] as unknown as [string, RequestInit];
+      const callArgs = mockFetch.mock.calls[0] as unknown as [
+        string,
+        RequestInit,
+      ];
       const body = JSON.parse(callArgs[1].body as string);
       expect(body.truncate).toBe(true);
     });

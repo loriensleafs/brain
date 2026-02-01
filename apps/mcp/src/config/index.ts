@@ -3,9 +3,9 @@
  * Uses Zod for validation and type-safe environment parsing.
  */
 
-import { z } from "zod";
-import * as path from "path";
 import * as os from "os";
+import * as path from "path";
+import { z } from "zod";
 
 export const configSchema = z.object({
   /** Transport mode: stdio for Claude/Cursor, http for TUI */

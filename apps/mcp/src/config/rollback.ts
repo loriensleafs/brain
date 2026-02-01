@@ -15,12 +15,16 @@
  * @see TASK-020-24 for acceptance criteria
  */
 
+import * as crypto from "crypto";
 import * as fs from "fs";
 import * as path from "path";
-import * as crypto from "crypto";
+import {
+  getBrainConfigDir,
+  loadBrainConfig,
+  saveBrainConfig,
+} from "./brain-config";
 import type { BrainConfig } from "./schema";
 import { validateBrainConfig } from "./schema";
-import { getBrainConfigDir, saveBrainConfig, loadBrainConfig } from "./brain-config";
 import { syncConfigToBasicMemory } from "./translation-layer";
 
 /**
@@ -223,7 +227,9 @@ export class ConfigRollbackManager {
     // Validate config before marking as good
     const validation = validateBrainConfig(config);
     if (!validation.success) {
-      const errorMsg = validation.errors?.map(e => e.message).join("; ") || "Validation failed";
+      const errorMsg =
+        validation.errors?.map((e) => e.message).join("; ") ||
+        "Validation failed";
       throw new Error(`Cannot mark invalid config as good: ${errorMsg}`);
     }
 
@@ -240,7 +246,9 @@ export class ConfigRollbackManager {
    *   - "previous": The most recent snapshot in rollback history
    * @returns RollbackResult indicating success/failure
    */
-  async rollback(target: "lastKnownGood" | "previous"): Promise<RollbackResult> {
+  async rollback(
+    target: "lastKnownGood" | "previous",
+  ): Promise<RollbackResult> {
     let snapshot: RollbackSnapshot | null = null;
 
     if (target === "lastKnownGood") {
@@ -372,7 +380,10 @@ export class ConfigRollbackManager {
   /**
    * Create a snapshot object with metadata.
    */
-  private createSnapshot(config: BrainConfig, reason: string): RollbackSnapshot {
+  private createSnapshot(
+    config: BrainConfig,
+    reason: string,
+  ): RollbackSnapshot {
     return {
       id: this.generateSnapshotId(),
       createdAt: new Date(),
@@ -444,7 +455,9 @@ export class ConfigRollbackManager {
       // Validate the loaded config
       const validation = validateBrainConfig(data.config);
       if (!validation.success) {
-        console.warn("[RollbackManager] lastKnownGood config is invalid, discarding");
+        console.warn(
+          "[RollbackManager] lastKnownGood config is invalid, discarding",
+        );
         this.lastKnownGood = null;
         return;
       }
@@ -461,7 +474,9 @@ export class ConfigRollbackManager {
       // Verify checksum
       const actualChecksum = this.computeChecksum(this.lastKnownGood.config);
       if (actualChecksum !== this.lastKnownGood.checksum) {
-        console.warn("[RollbackManager] lastKnownGood checksum mismatch, discarding");
+        console.warn(
+          "[RollbackManager] lastKnownGood checksum mismatch, discarding",
+        );
         this.lastKnownGood = null;
       }
     } catch (error) {
@@ -488,7 +503,7 @@ export class ConfigRollbackManager {
         config: this.lastKnownGood.config,
       },
       null,
-      2
+      2,
     );
 
     fs.writeFileSync(filePath, content, { encoding: "utf-8", mode: FILE_MODE });
@@ -577,7 +592,9 @@ export class ConfigRollbackManager {
       // Verify checksum
       const actualChecksum = this.computeChecksum(snapshot.config);
       if (actualChecksum !== snapshot.checksum) {
-        console.warn(`[RollbackManager] Snapshot ${id} checksum mismatch, skipping`);
+        console.warn(
+          `[RollbackManager] Snapshot ${id} checksum mismatch, skipping`,
+        );
         return null;
       }
 
@@ -601,7 +618,7 @@ export class ConfigRollbackManager {
         config: snapshot.config,
       },
       null,
-      2
+      2,
     );
 
     fs.writeFileSync(filePath, content, { encoding: "utf-8", mode: FILE_MODE });

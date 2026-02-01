@@ -9,19 +9,21 @@
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { resolveProject } from "../../project/resolve";
 import { getBasicMemoryClient } from "../../proxy/client";
+import { logger } from "../../utils/internal/logger";
+import { executeMigration, validateChange } from "./executor";
 import type {
   MigrateClusterArgs,
   MigrateClusterOutput,
   MigrationChange,
-  MigrationResult
+  MigrationResult,
 } from "./schema";
-import { executeMigration, validateChange } from "./executor";
-import { logger } from "../../utils/internal/logger";
 
 /**
  * Main handler for the migrate_cluster tool
  */
-export async function handler(args: MigrateClusterArgs): Promise<CallToolResult> {
+export async function handler(
+  args: MigrateClusterArgs,
+): Promise<CallToolResult> {
   const project = args.project || resolveProject();
   const dryRun = args.dry_run ?? false;
   const changes = args.changes || [];
@@ -35,7 +37,12 @@ export async function handler(args: MigrateClusterArgs): Promise<CallToolResult>
 
   if (!Array.isArray(changes) || changes.length === 0) {
     return {
-      content: [{ type: "text" as const, text: "No changes provided. Use analyze_project with preview=true to generate a migration plan first." }],
+      content: [
+        {
+          type: "text" as const,
+          text: "No changes provided. Use analyze_project with preview=true to generate a migration plan first.",
+        },
+      ],
       isError: true,
     };
   }
@@ -48,16 +55,20 @@ export async function handler(args: MigrateClusterArgs): Promise<CallToolResult>
     if (validateChange(changes[i])) {
       validChanges.push(changes[i] as MigrationChange);
     } else {
-      validationErrors.push(`Change at index ${i} is invalid: ${JSON.stringify(changes[i])}`);
+      validationErrors.push(
+        `Change at index ${i} is invalid: ${JSON.stringify(changes[i])}`,
+      );
     }
   }
 
   if (validationErrors.length > 0) {
     return {
-      content: [{
-        type: "text" as const,
-        text: `Invalid changes detected:\n${validationErrors.join('\n')}`
-      }],
+      content: [
+        {
+          type: "text" as const,
+          text: `Invalid changes detected:\n${validationErrors.join("\n")}`,
+        },
+      ],
       isError: true,
     };
   }
@@ -76,7 +87,7 @@ export async function handler(args: MigrateClusterArgs): Promise<CallToolResult>
 
   logger.info(
     { project, changeCount: validChanges.length },
-    "Starting cluster migration"
+    "Starting cluster migration",
   );
 
   for (const change of validChanges) {
@@ -95,7 +106,7 @@ export async function handler(args: MigrateClusterArgs): Promise<CallToolResult>
 
   logger.info(
     { project, applied: changesApplied, failed: changesFailed },
-    "Cluster migration complete"
+    "Cluster migration complete",
   );
 
   const output: MigrateClusterOutput = {
@@ -103,7 +114,7 @@ export async function handler(args: MigrateClusterArgs): Promise<CallToolResult>
     changes_applied: changesApplied,
     changes_failed: changesFailed,
     results,
-    errors
+    errors,
   };
 
   // Build text output
@@ -111,14 +122,17 @@ export async function handler(args: MigrateClusterArgs): Promise<CallToolResult>
 
   return {
     structuredContent: output as unknown as { [x: string]: unknown },
-    content: [{ type: "text" as const, text: lines.join("\n") }]
+    content: [{ type: "text" as const, text: lines.join("\n") }],
   };
 }
 
 /**
  * Builds the dry-run response showing what would happen
  */
-function buildDryRunResponse(project: string, changes: MigrationChange[]): CallToolResult {
+function buildDryRunResponse(
+  project: string,
+  changes: MigrationChange[],
+): CallToolResult {
   const lines: string[] = [
     `## Migration Dry Run`,
     ``,
@@ -126,14 +140,14 @@ function buildDryRunResponse(project: string, changes: MigrationChange[]): CallT
     `**Changes:** ${changes.length}`,
     ``,
     `### Planned Operations`,
-    ``
+    ``,
   ];
 
   // Group by operation type
   const byOperation: Record<string, MigrationChange[]> = {
     move: [],
     rename: [],
-    restructure: []
+    restructure: [],
   };
 
   for (const change of changes) {
@@ -160,37 +174,40 @@ function buildDryRunResponse(project: string, changes: MigrationChange[]): CallT
     success: true,
     changes_applied: 0,
     changes_failed: 0,
-    results: changes.map(c => ({
+    results: changes.map((c) => ({
       source: c.source,
       target: c.target,
       operation: c.operation,
-      success: true
+      success: true,
     })),
-    errors: []
+    errors: [],
   };
 
   return {
     structuredContent: output as unknown as { [x: string]: unknown },
-    content: [{ type: "text" as const, text: lines.join("\n") }]
+    content: [{ type: "text" as const, text: lines.join("\n") }],
   };
 }
 
 /**
  * Builds the result text after executing migrations
  */
-function buildResultText(project: string, output: MigrateClusterOutput): string[] {
+function buildResultText(
+  project: string,
+  output: MigrateClusterOutput,
+): string[] {
   const lines: string[] = [
     `## Migration Results`,
     ``,
     `**Project:** ${project}`,
-    `**Status:** ${output.success ? 'SUCCESS' : 'PARTIAL FAILURE'}`,
+    `**Status:** ${output.success ? "SUCCESS" : "PARTIAL FAILURE"}`,
     `**Applied:** ${output.changes_applied}`,
     `**Failed:** ${output.changes_failed}`,
-    ``
+    ``,
   ];
 
   // Show successful migrations
-  const successes = output.results.filter(r => r.success);
+  const successes = output.results.filter((r) => r.success);
   if (successes.length > 0) {
     lines.push(`### Completed (${successes.length})`);
     for (const result of successes.slice(0, 20)) {
@@ -203,7 +220,7 @@ function buildResultText(project: string, output: MigrateClusterOutput): string[
   }
 
   // Show failures with errors
-  const failures = output.results.filter(r => !r.success);
+  const failures = output.results.filter((r) => !r.success);
   if (failures.length > 0) {
     lines.push(`### Failed (${failures.length})`);
     for (const result of failures) {

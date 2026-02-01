@@ -4,7 +4,7 @@
  * Provides functions for extracting titles and frontmatter from markdown files.
  */
 
-import matter from 'gray-matter';
+import matter from "gray-matter";
 
 /**
  * Extract title from markdown content

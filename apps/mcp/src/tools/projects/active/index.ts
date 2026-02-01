@@ -5,19 +5,25 @@
  * Replaces separate set_project, get_project, clear_project tools.
  */
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
-import {
-  getActiveProject,
-  setActiveProject,
-  clearActiveProject,
-  resolveProject,
-  getResolutionHierarchy,
-} from "../../../project/resolve";
 import { getCodePaths } from "../../../project/config";
+import {
+  clearActiveProject,
+  getActiveProject,
+  getResolutionHierarchy,
+  resolveProject,
+  setActiveProject,
+} from "../../../project/resolve";
 import type { ActiveProjectArgs } from "./schema";
 
-export { toolDefinition, ActiveProjectArgsSchema, type ActiveProjectArgs } from "./schema";
+export {
+  type ActiveProjectArgs,
+  ActiveProjectArgsSchema,
+  toolDefinition,
+} from "./schema";
 
-export async function handler(args: ActiveProjectArgs): Promise<CallToolResult> {
+export async function handler(
+  args: ActiveProjectArgs,
+): Promise<CallToolResult> {
   const operation = args.operation || "get";
 
   switch (operation) {

@@ -10,26 +10,26 @@
  * Embeddings can be added in future for improved accuracy.
  */
 
-import type { DedupeConfig, DedupeResult, DuplicatePair } from '../types';
-import { getBasicMemoryClient } from '../../../proxy/client';
+import { getBasicMemoryClient } from "../../../proxy/client";
+import {
+  calculateContentSimilarity,
+  extractKeywords,
+  extractObservations,
+  extractWikilinks,
+  type NoteContent,
+} from "../similarity/contentSimilarity";
 import {
   findSimilarPairs,
   type NoteMetadata,
-} from '../similarity/titleSimilarity';
-import {
-  calculateContentSimilarity,
-  extractObservations,
-  extractWikilinks,
-  extractKeywords,
-  type NoteContent,
-} from '../similarity/contentSimilarity';
-import { extractTitle } from '../utils/markdown';
+} from "../similarity/titleSimilarity";
+import type { DedupeConfig, DedupeResult, DuplicatePair } from "../types";
+import { extractTitle } from "../utils/markdown";
 
 /**
  * Find duplicate notes in a project
  */
 export async function findDuplicates(
-  config: DedupeConfig
+  config: DedupeConfig,
 ): Promise<DedupeResult> {
   const {
     project,
@@ -41,8 +41,8 @@ export async function findDuplicates(
 
   // Get all notes in project
   const listResult = await client.callTool({
-    name: 'list_directory',
-    arguments: { project, depth: 10, file_name_glob: '*.md' },
+    name: "list_directory",
+    arguments: { project, depth: 10, file_name_glob: "*.md" },
   });
 
   const noteFiles = parseListDirectoryResult(listResult);
@@ -54,20 +54,17 @@ export async function findDuplicates(
   for (const permalink of noteFiles) {
     try {
       const readResult = await client.callTool({
-        name: 'read_note',
+        name: "read_note",
         arguments: { identifier: permalink, project },
       });
 
-      const content = (readResult.content as any)?.[0]?.text || '';
+      const content = (readResult.content as any)?.[0]?.text || "";
       const metadata = extractNoteMetadata(permalink, content);
       const noteContent = extractNoteContent(permalink, content);
 
       noteMetadata.push(metadata);
       noteContentMap.set(permalink, noteContent);
-    } catch (error) {
-      // Skip notes that fail to read
-      continue;
-    }
+    } catch (error) {}
   }
 
   // Step 1: Find candidates using title and metadata similarity
@@ -76,12 +73,12 @@ export async function findDuplicates(
   // Step 2: Refine with content similarity
   const withContentSim = await calculateContentSimilarity(
     candidates,
-    noteContentMap
+    noteContentMap,
   );
 
   // Step 3: Filter to confirmed duplicates
   const confirmed = withContentSim.filter(
-    (pair) => pair.fulltextSimilarity >= fulltextThreshold
+    (pair) => pair.fulltextSimilarity >= fulltextThreshold,
   );
 
   return {
@@ -133,21 +130,21 @@ function extractNoteContent(permalink: string, content: string): NoteContent {
  * Extract folder from permalink
  */
 function extractFolder(permalink: string): string {
-  return permalink.includes('/')
-    ? permalink.substring(0, permalink.lastIndexOf('/'))
-    : '';
+  return permalink.includes("/")
+    ? permalink.substring(0, permalink.lastIndexOf("/"))
+    : "";
 }
 
 /**
  * Parse list_directory output to extract file paths
  */
 function parseListDirectoryResult(result: any): string[] {
-  const text = result.content?.[0]?.text || '';
+  const text = result.content?.[0]?.text || "";
   const files: string[] = [];
-  const lines = text.split('\n');
+  const lines = text.split("\n");
 
   for (const line of lines) {
-    if (line.includes('.md') && !line.includes('Directory:')) {
+    if (line.includes(".md") && !line.includes("Directory:")) {
       const match = line.match(/([^\s]+\.md)/);
       if (match) files.push(match[1]);
     }

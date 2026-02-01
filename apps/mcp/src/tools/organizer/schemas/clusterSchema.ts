@@ -11,11 +11,11 @@
  */
 export interface FileCluster {
   id: string;
-  files: string[];                  // Source file paths in cluster
-  cluster_type: 'reference' | 'folder' | 'topic';
-  merge_recommendation: 'merge' | 'keep_separate';
-  target_note?: string;             // Suggested Brain note path if merging
-  rationale: string;                // Why these files are clustered
+  files: string[]; // Source file paths in cluster
+  cluster_type: "reference" | "folder" | "topic";
+  merge_recommendation: "merge" | "keep_separate";
+  target_note?: string; // Suggested Brain note path if merging
+  rationale: string; // Why these files are clustered
 }
 
 /**
@@ -24,7 +24,7 @@ export interface FileCluster {
 export interface FileReference {
   from: string;
   to: string;
-  reference_type: 'wikilink' | 'see_also' | 'related_to';
+  reference_type: "wikilink" | "see_also" | "related_to";
 }
 
 /**

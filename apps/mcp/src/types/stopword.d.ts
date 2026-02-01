@@ -5,7 +5,7 @@
  * so we provide minimal type coverage for the functions we use.
  */
 
-declare module 'stopword' {
+declare module "stopword" {
   /**
    * Remove stopwords from an array of strings
    */

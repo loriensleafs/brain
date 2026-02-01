@@ -18,19 +18,21 @@
  * The tests validate behavior through response values.
  */
 
-import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 import * as os from "os";
 import * as path from "path";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 // Type for MCP tool result content
-type ToolResultContent = {
-  type: "text";
-  text: string;
-} | {
-  type: "image";
-  data: string;
-  mimeType: string;
-};
+type ToolResultContent =
+  | {
+      type: "text";
+      text: string;
+    }
+  | {
+      type: "image";
+      data: string;
+      mimeType: string;
+    };
 
 /**
  * Helper to safely extract text from tool result content.
@@ -53,18 +55,32 @@ interface MockDirEntry {
 
 // Mock filesystem operations before any imports
 const mockFs = {
-  existsSync: vi.fn(() => false) as ReturnType<typeof mock<(p: unknown) => boolean>>,
-  readFileSync: vi.fn(() => "{}") as ReturnType<typeof mock<(p: unknown) => string>>,
-  writeFileSync: vi.fn(() => undefined) as ReturnType<typeof mock<(p: unknown, data: unknown) => void>>,
-  readdirSync: vi.fn(() => [] as MockDirEntry[]) as ReturnType<typeof mock<(p: unknown, opts?: unknown) => MockDirEntry[]>>,
-  statSync: vi.fn(() => ({ size: 0 })) as ReturnType<typeof mock<(p: unknown) => { size: number }>>,
+  existsSync: vi.fn(() => false) as ReturnType<
+    typeof mock<(p: unknown) => boolean>
+  >,
+  readFileSync: vi.fn(() => "{}") as ReturnType<
+    typeof mock<(p: unknown) => string>
+  >,
+  writeFileSync: vi.fn(() => undefined) as ReturnType<
+    typeof mock<(p: unknown, data: unknown) => void>
+  >,
+  readdirSync: vi.fn(() => [] as MockDirEntry[]) as ReturnType<
+    typeof mock<(p: unknown, opts?: unknown) => MockDirEntry[]>
+  >,
+  statSync: vi.fn(() => ({ size: 0 })) as ReturnType<
+    typeof mock<(p: unknown) => { size: number }>
+  >,
   cpSync: vi.fn(() => {
     // Track copy operation
-  }) as ReturnType<typeof mock<(src: unknown, dest: unknown, opts?: unknown) => void>>,
+  }) as ReturnType<
+    typeof mock<(src: unknown, dest: unknown, opts?: unknown) => void>
+  >,
   rmSync: vi.fn(() => {
     // Track delete operation
   }) as ReturnType<typeof mock<(p: unknown, opts?: unknown) => void>>,
-  realpathSync: vi.fn((p: unknown) => String(p)) as ReturnType<typeof mock<(p: unknown) => string>>,
+  realpathSync: vi.fn((p: unknown) => String(p)) as ReturnType<
+    typeof mock<(p: unknown) => string>
+  >,
 };
 
 vi.mock("fs", () => mockFs);
@@ -74,7 +90,7 @@ vi.mock("fs", () => mockFs);
 class MockProjectNotFoundError extends Error {
   constructor(
     public readonly project: string,
-    public readonly availableProjects: string[]
+    public readonly availableProjects: string[],
   ) {
     super(`Project "${project}" not found`);
     this.name = "ProjectNotFoundError";
@@ -98,9 +114,11 @@ vi.mock("@brain/utils", () => ({
 
 // Mock basic-memory client to prevent real network calls
 vi.mock("../../../proxy/client", () => ({
-  getBasicMemoryClient: () => Promise.resolve({
-    callTool: () => Promise.resolve({ content: [{ type: "text", text: "[]" }] }),
-  }),
+  getBasicMemoryClient: () =>
+    Promise.resolve({
+      callTool: () =>
+        Promise.resolve({ content: [{ type: "text", text: "[]" }] }),
+    }),
 }));
 
 // Import handler after mocks
@@ -138,7 +156,7 @@ describe("edit_project tool", () => {
   function setupExistingProject(
     projectName: string,
     notesPath: string,
-    codePath?: string
+    codePath?: string,
   ) {
     // Set up @brain/utils mock
     mockProjects[projectName] = notesPath;
@@ -169,10 +187,7 @@ describe("edit_project tool", () => {
   describe("DEFAULT mode (memories_path omitted)", () => {
     test("defaults to DEFAULT mode when memories_path is not provided", async () => {
       // Project exists with notes in a custom location (not code_path/docs)
-      setupExistingProject(
-        "test-project",
-        "/custom/notes/location"
-      );
+      setupExistingProject("test-project", "/custom/notes/location");
 
       const args: EditProjectArgs = {
         name: "test-project",
@@ -182,7 +197,9 @@ describe("edit_project tool", () => {
       const result = await handler(args);
 
       expect(result.isError).toBeUndefined();
-      const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
+      const response = JSON.parse(
+        getResponseText(result.content as ToolResultContent[]),
+      );
 
       // Verify DEFAULT mode is applied
       expect(response.memories_path_mode).toBe("DEFAULT");
@@ -217,19 +234,20 @@ describe("edit_project tool", () => {
       };
 
       const result = await handler(args);
-      const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
+      const response = JSON.parse(
+        getResponseText(result.content as ToolResultContent[]),
+      );
 
-      expect(response.memories_path).toBe(path.join(homeDir, "memories", "fallback-project"));
+      expect(response.memories_path).toBe(
+        path.join(homeDir, "memories", "fallback-project"),
+      );
       expect(response.memories_path_mode).toBe("DEFAULT");
     });
   });
 
   describe("Explicit DEFAULT mode", () => {
     test("uses DEFAULT mode when explicitly specified", async () => {
-      setupExistingProject(
-        "explicit-default",
-        "/old/notes"
-      );
+      setupExistingProject("explicit-default", "/old/notes");
 
       const args: EditProjectArgs = {
         name: "explicit-default",
@@ -238,9 +256,13 @@ describe("edit_project tool", () => {
       };
 
       const result = await handler(args);
-      const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
+      const response = JSON.parse(
+        getResponseText(result.content as ToolResultContent[]),
+      );
 
-      expect(response.memories_path).toBe(path.join(homeDir, "memories", "explicit-default"));
+      expect(response.memories_path).toBe(
+        path.join(homeDir, "memories", "explicit-default"),
+      );
       expect(response.memories_path_mode).toBe("DEFAULT");
     });
   });
@@ -287,7 +309,7 @@ describe("edit_project tool", () => {
       // and the handler falls back to DEFAULT mode
       setupExistingProject(
         "no-code-path-project",
-        "/some/old/notes/path"
+        "/some/old/notes/path",
         // Note: no codePath provided
       );
 
@@ -297,11 +319,15 @@ describe("edit_project tool", () => {
       };
 
       const result = await handler(args);
-      const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
+      const response = JSON.parse(
+        getResponseText(result.content as ToolResultContent[]),
+      );
 
       // Should fall back to DEFAULT mode since no old code_path
       expect(response.memories_path_mode).toBe("DEFAULT");
-      expect(response.memories_path).toBe(path.join(homeDir, "memories", "no-code-path-project"));
+      expect(response.memories_path).toBe(
+        path.join(homeDir, "memories", "no-code-path-project"),
+      );
     });
   });
 
@@ -342,7 +368,9 @@ describe("edit_project tool", () => {
       };
 
       const result = await handler(args);
-      const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
+      const response = JSON.parse(
+        getResponseText(result.content as ToolResultContent[]),
+      );
 
       // Should use explicit path, not auto-update
       expect(response.memories_path).toBe("/custom/notes/path");
@@ -385,20 +413,21 @@ describe("edit_project tool", () => {
       };
 
       const result = await handler(args);
-      const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
+      const response = JSON.parse(
+        getResponseText(result.content as ToolResultContent[]),
+      );
 
       // Should use DEFAULT, not auto-update to code/docs
-      expect(response.memories_path).toBe(path.join(homeDir, "memories", "force-default"));
+      expect(response.memories_path).toBe(
+        path.join(homeDir, "memories", "force-default"),
+      );
       expect(response.memories_path_mode).toBe("DEFAULT");
     });
   });
 
   describe("Explicit CODE mode", () => {
     test("uses code_path/docs when memories_path is CODE", async () => {
-      setupExistingProject(
-        "code-mode-project",
-        "/old/notes"
-      );
+      setupExistingProject("code-mode-project", "/old/notes");
 
       const args: EditProjectArgs = {
         name: "code-mode-project",
@@ -407,19 +436,20 @@ describe("edit_project tool", () => {
       };
 
       const result = await handler(args);
-      const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
+      const response = JSON.parse(
+        getResponseText(result.content as ToolResultContent[]),
+      );
 
-      expect(response.memories_path).toBe(path.join(homeDir, "Dev", "code-mode-project", "docs"));
+      expect(response.memories_path).toBe(
+        path.join(homeDir, "Dev", "code-mode-project", "docs"),
+      );
       expect(response.memories_path_mode).toBe("CODE");
     });
   });
 
   describe("Custom absolute path mode", () => {
     test("uses custom absolute path when provided", async () => {
-      setupExistingProject(
-        "custom-path-project",
-        "/old/notes"
-      );
+      setupExistingProject("custom-path-project", "/old/notes");
 
       const args: EditProjectArgs = {
         name: "custom-path-project",
@@ -428,17 +458,16 @@ describe("edit_project tool", () => {
       };
 
       const result = await handler(args);
-      const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
+      const response = JSON.parse(
+        getResponseText(result.content as ToolResultContent[]),
+      );
 
       expect(response.memories_path).toBe("/var/custom/notes");
       expect(response.memories_path_mode).toBe("CUSTOM");
     });
 
     test("expands ~ in custom path", async () => {
-      setupExistingProject(
-        "tilde-custom",
-        "/old/notes"
-      );
+      setupExistingProject("tilde-custom", "/old/notes");
 
       const args: EditProjectArgs = {
         name: "tilde-custom",
@@ -447,9 +476,13 @@ describe("edit_project tool", () => {
       };
 
       const result = await handler(args);
-      const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
+      const response = JSON.parse(
+        getResponseText(result.content as ToolResultContent[]),
+      );
 
-      expect(response.memories_path).toBe(path.join(homeDir, "my-notes", "special"));
+      expect(response.memories_path).toBe(
+        path.join(homeDir, "my-notes", "special"),
+      );
       expect(response.memories_path_mode).toBe("CUSTOM");
     });
   });
@@ -467,7 +500,9 @@ describe("edit_project tool", () => {
       const result = await handler(args);
 
       expect(result.isError).toBe(true);
-      const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
+      const response = JSON.parse(
+        getResponseText(result.content as ToolResultContent[]),
+      );
       expect(response.error).toContain("does not exist");
       expect(response).toHaveProperty("available_projects");
     });
@@ -475,10 +510,7 @@ describe("edit_project tool", () => {
 
   describe("Response structure", () => {
     test("returns complete response with all fields", async () => {
-      setupExistingProject(
-        "response-test",
-        "/old/notes"
-      );
+      setupExistingProject("response-test", "/old/notes");
 
       const args: EditProjectArgs = {
         name: "response-test",
@@ -487,7 +519,9 @@ describe("edit_project tool", () => {
       };
 
       const result = await handler(args);
-      const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
+      const response = JSON.parse(
+        getResponseText(result.content as ToolResultContent[]),
+      );
 
       expect(response).toHaveProperty("project", "response-test");
       expect(response).toHaveProperty("updates");
@@ -498,10 +532,7 @@ describe("edit_project tool", () => {
     });
 
     test("updates array contains descriptive entries", async () => {
-      setupExistingProject(
-        "updates-test",
-        "/old/notes"
-      );
+      setupExistingProject("updates-test", "/old/notes");
 
       const args: EditProjectArgs = {
         name: "updates-test",
@@ -510,22 +541,25 @@ describe("edit_project tool", () => {
       };
 
       const result = await handler(args);
-      const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
+      const response = JSON.parse(
+        getResponseText(result.content as ToolResultContent[]),
+      );
 
       expect(response.updates.length).toBeGreaterThan(0);
       // Should include code path update
-      expect(response.updates.some((u: string) => u.includes("code path"))).toBe(true);
+      expect(
+        response.updates.some((u: string) => u.includes("code path")),
+      ).toBe(true);
       // Should include memories path update
-      expect(response.updates.some((u: string) => u.includes("memories path"))).toBe(true);
+      expect(
+        response.updates.some((u: string) => u.includes("memories path")),
+      ).toBe(true);
     });
   });
 
   describe("Path resolution", () => {
     test("expands ~ in code_path (verified via updates array)", async () => {
-      setupExistingProject(
-        "tilde-code",
-        "/old/notes"
-      );
+      setupExistingProject("tilde-code", "/old/notes");
 
       const args: EditProjectArgs = {
         name: "tilde-code",
@@ -533,20 +567,23 @@ describe("edit_project tool", () => {
       };
 
       const result = await handler(args);
-      const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
+      const response = JSON.parse(
+        getResponseText(result.content as ToolResultContent[]),
+      );
 
       // Note: response.code_path comes from getCodePath() which uses the
       // config module that has its own fs import. We verify path expansion
       // through the updates array which uses the local resolvePath function.
-      const codePathUpdate = response.updates.find((u: string) => u.includes("code path"));
-      expect(codePathUpdate).toContain(path.join(homeDir, "Projects", "tilde-code"));
+      const codePathUpdate = response.updates.find((u: string) =>
+        u.includes("code path"),
+      );
+      expect(codePathUpdate).toContain(
+        path.join(homeDir, "Projects", "tilde-code"),
+      );
     });
 
     test("resolves absolute code_path correctly (verified via updates array)", async () => {
-      setupExistingProject(
-        "absolute-code",
-        "/old/notes"
-      );
+      setupExistingProject("absolute-code", "/old/notes");
 
       const args: EditProjectArgs = {
         name: "absolute-code",
@@ -554,10 +591,14 @@ describe("edit_project tool", () => {
       };
 
       const result = await handler(args);
-      const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
+      const response = JSON.parse(
+        getResponseText(result.content as ToolResultContent[]),
+      );
 
       // Verify through updates array since code_path field comes from getCodePath
-      const codePathUpdate = response.updates.find((u: string) => u.includes("code path"));
+      const codePathUpdate = response.updates.find((u: string) =>
+        u.includes("code path"),
+      );
       expect(codePathUpdate).toContain("/var/projects/absolute-code");
     });
   });
@@ -631,11 +672,14 @@ describe("edit_project tool", () => {
       });
 
       // Mock directory listing to simulate file count
-      const mockFiles: MockDirEntry[] = Array.from({ length: fileCount }, (_, i) => ({
-        name: `file${i}.md`,
-        isDirectory: () => false,
-        isFile: () => true,
-      }));
+      const mockFiles: MockDirEntry[] = Array.from(
+        { length: fileCount },
+        (_, i) => ({
+          name: `file${i}.md`,
+          isDirectory: () => false,
+          isFile: () => true,
+        }),
+      );
 
       mockFs.readdirSync.mockImplementation((p: unknown) => {
         const pStr = String(p);
@@ -718,7 +762,9 @@ describe("edit_project tool", () => {
         const result = await handler(args);
 
         expect(result.isError).toBeUndefined();
-        const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
+        const response = JSON.parse(
+          getResponseText(result.content as ToolResultContent[]),
+        );
 
         // Verify migration occurred
         expect(response.migration).toBeDefined();
@@ -728,7 +774,9 @@ describe("edit_project tool", () => {
         expect(response.migration.new_path).toBe(newNotesPath);
 
         // Verify updates array includes migration info
-        expect(response.updates.some((u: string) => u.includes("Migrated memories"))).toBe(true);
+        expect(
+          response.updates.some((u: string) => u.includes("Migrated memories")),
+        ).toBe(true);
       });
 
       test("includes file count in migration response", async () => {
@@ -747,7 +795,9 @@ describe("edit_project tool", () => {
         };
 
         const result = await handler(args);
-        const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
+        const response = JSON.parse(
+          getResponseText(result.content as ToolResultContent[]),
+        );
 
         expect(response.migration.files_moved).toBe(10);
       });
@@ -781,7 +831,9 @@ describe("edit_project tool", () => {
         };
 
         const result = await handler(args);
-        const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
+        const response = JSON.parse(
+          getResponseText(result.content as ToolResultContent[]),
+        );
 
         // No migration should occur
         expect(response.migration).toBeUndefined();
@@ -820,7 +872,9 @@ describe("edit_project tool", () => {
         };
 
         const result = await handler(args);
-        const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
+        const response = JSON.parse(
+          getResponseText(result.content as ToolResultContent[]),
+        );
 
         // No migration should occur (old path doesn't exist)
         expect(response.migration).toBeUndefined();
@@ -850,7 +904,9 @@ describe("edit_project tool", () => {
         const result = await handler(args);
 
         expect(result.isError).toBe(true);
-        const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
+        const response = JSON.parse(
+          getResponseText(result.content as ToolResultContent[]),
+        );
 
         expect(response.error).toContain("migration failed");
         expect(response.error).toContain("Copy failed");
@@ -878,7 +934,9 @@ describe("edit_project tool", () => {
         const result = await handler(args);
 
         expect(result.isError).toBe(true);
-        const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
+        const response = JSON.parse(
+          getResponseText(result.content as ToolResultContent[]),
+        );
 
         expect(response.error).toContain("migration failed");
         expect(response.error).toContain("file count mismatch");
@@ -903,7 +961,9 @@ describe("edit_project tool", () => {
         const result = await handler(args);
 
         expect(result.isError).toBe(true);
-        const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
+        const response = JSON.parse(
+          getResponseText(result.content as ToolResultContent[]),
+        );
 
         expect(response.error).toContain("migration failed");
         expect(response.error).toContain("size mismatch");
@@ -931,13 +991,17 @@ describe("edit_project tool", () => {
 
         // Should still succeed (data is safe in new location)
         expect(result.isError).toBeUndefined();
-        const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
+        const response = JSON.parse(
+          getResponseText(result.content as ToolResultContent[]),
+        );
 
         expect(response.migration).toBeDefined();
         expect(response.migration.migrated).toBe(true);
 
         // Warning should be in updates
-        expect(response.updates.some((u: string) => u.includes("Warning"))).toBe(true);
+        expect(
+          response.updates.some((u: string) => u.includes("Warning")),
+        ).toBe(true);
       });
     });
 
@@ -960,7 +1024,9 @@ describe("edit_project tool", () => {
         const result = await handler(args);
 
         expect(result.isError).toBeUndefined();
-        const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
+        const response = JSON.parse(
+          getResponseText(result.content as ToolResultContent[]),
+        );
 
         expect(response.migration).toBeDefined();
         expect(response.migration.migrated).toBe(true);
@@ -990,7 +1056,9 @@ describe("edit_project tool", () => {
         const result = await handler(args);
 
         expect(result.isError).toBe(true);
-        const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
+        const response = JSON.parse(
+          getResponseText(result.content as ToolResultContent[]),
+        );
 
         expect(response.error).toContain("protected path");
       });
@@ -1016,7 +1084,9 @@ describe("edit_project tool", () => {
         const result = await handler(args);
 
         expect(result.isError).toBe(true);
-        const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
+        const response = JSON.parse(
+          getResponseText(result.content as ToolResultContent[]),
+        );
 
         expect(response.error).toContain("system path");
       });
@@ -1048,7 +1118,12 @@ describe("edit_project tool", () => {
       });
 
       test("rejects when parent directory does not exist", async () => {
-        const noParentPath = path.join(homeDir, "missing-parent", "subdir", "notes");
+        const noParentPath = path.join(
+          homeDir,
+          "missing-parent",
+          "subdir",
+          "notes",
+        );
 
         setupMigrationTest({
           oldPath: oldNotesPath,
@@ -1068,7 +1143,9 @@ describe("edit_project tool", () => {
         const result = await handler(args);
 
         expect(result.isError).toBe(true);
-        const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
+        const response = JSON.parse(
+          getResponseText(result.content as ToolResultContent[]),
+        );
 
         expect(response.error).toContain("Parent directory does not exist");
       });

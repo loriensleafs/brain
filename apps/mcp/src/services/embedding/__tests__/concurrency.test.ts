@@ -3,8 +3,8 @@
  * Tests p-limit behavior and concurrent note processing patterns.
  */
 
-import { describe, test, expect } from "vitest";
 import pLimit from "p-limit";
+import { describe, expect, test } from "vitest";
 
 /**
  * Helper to track concurrent execution watermark
@@ -36,7 +36,7 @@ describe("p-limit concurrency control", () => {
     };
 
     const results = await Promise.all(
-      items.map((item) => limit(() => processItem(item)))
+      items.map((item) => limit(() => processItem(item))),
     );
 
     expect(results).toEqual([0, 2, 4, 6, 8, 10, 12, 14, 16, 18]);
@@ -57,7 +57,7 @@ describe("p-limit concurrency control", () => {
     };
 
     const results = await Promise.allSettled(
-      items.map((item) => limit(() => processItem(item)))
+      items.map((item) => limit(() => processItem(item))),
     );
 
     const fulfilled = results.filter((r) => r.status === "fulfilled");
@@ -82,7 +82,7 @@ describe("p-limit concurrency control", () => {
     };
 
     await Promise.allSettled(
-      items.map((item) => limit(() => processItem(item)))
+      items.map((item) => limit(() => processItem(item))),
     );
 
     expect(processedCount).toBe(20); // All items attempted
@@ -139,7 +139,7 @@ describe("concurrent note processing patterns", () => {
     };
 
     const results = await Promise.allSettled(
-      notes.map((notePath) => limit(async () => processNote(notePath)))
+      notes.map((notePath) => limit(async () => processNote(notePath))),
     );
 
     // Aggregate results like embed tool does
@@ -165,7 +165,7 @@ describe("concurrent note processing patterns", () => {
     const notes: string[] = [];
 
     const results = await Promise.allSettled(
-      notes.map((note) => limit(async () => ({ note, success: true })))
+      notes.map((note) => limit(async () => ({ note, success: true }))),
     );
 
     expect(results).toHaveLength(0);
@@ -185,7 +185,7 @@ describe("concurrent note processing patterns", () => {
     };
 
     const results = await Promise.allSettled(
-      notes.map((note) => limit(() => processNote(note)))
+      notes.map((note) => limit(() => processNote(note))),
     );
 
     expect(results).toHaveLength(1);
@@ -212,8 +212,8 @@ describe("concurrent note processing patterns", () => {
       Array.from({ length: TASK_COUNT }, () =>
         limit(async () => {
           await sleep(TASK_DURATION);
-        })
-      )
+        }),
+      ),
     );
     const concurrentTime = Date.now() - concurrentStart;
 
@@ -242,13 +242,13 @@ describe("error handling and resilience", () => {
     };
 
     await Promise.allSettled(
-      items.map((item) => limit(() => processItem(item)))
+      items.map((item) => limit(() => processItem(item))),
     );
 
     expect(successfulItems).toHaveLength(6);
     expect(failedItems).toHaveLength(4);
     expect(successfulItems.concat(failedItems).sort((a, b) => a - b)).toEqual(
-      items
+      items,
     );
   });
 
@@ -275,8 +275,8 @@ describe("error handling and resilience", () => {
             errors.push(`${item}: ${msg}`);
             throw error;
           }
-        })
-      )
+        }),
+      ),
     );
 
     expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(2);
@@ -320,7 +320,7 @@ describe("resource management", () => {
     };
 
     const results = await Promise.all(
-      items.map((item) => limit(() => processItem(item)))
+      items.map((item) => limit(() => processItem(item))),
     );
 
     expect(results).toEqual([0, 1, 2, 3, 4]);

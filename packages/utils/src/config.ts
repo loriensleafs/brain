@@ -43,7 +43,7 @@ export async function readConfig(): Promise<BasicMemoryConfig> {
   if (!exists) {
     throw new Error(
       `Basic-memory config not found at ${configPath}. ` +
-        `Run 'basic-memory init' to create it.`
+        `Run 'basic-memory init' to create it.`,
     );
   }
 
@@ -52,7 +52,7 @@ export async function readConfig(): Promise<BasicMemoryConfig> {
     return JSON.parse(content) as BasicMemoryConfig;
   } catch (error) {
     throw new Error(
-      `Invalid JSON in config file at ${configPath}: ${error instanceof Error ? error.message : String(error)}`
+      `Invalid JSON in config file at ${configPath}: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
 }

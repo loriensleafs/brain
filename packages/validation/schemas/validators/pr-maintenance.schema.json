@@ -6,12 +6,25 @@
   "definitions": {
     "BotCategory": {
       "type": "string",
-      "enum": ["agent-controlled", "mention-triggered", "review-bot", "human", "human-blocked", "has-derivatives"],
+      "enum": [
+        "agent-controlled",
+        "mention-triggered",
+        "review-bot",
+        "human",
+        "human-blocked",
+        "has-derivatives"
+      ],
       "description": "Classification of PR author or state"
     },
     "PRActionReason": {
       "type": "string",
-      "enum": ["CHANGES_REQUESTED", "HAS_CONFLICTS", "HAS_FAILING_CHECKS", "PENDING_DERIVATIVES", "MENTION"],
+      "enum": [
+        "CHANGES_REQUESTED",
+        "HAS_CONFLICTS",
+        "HAS_FAILING_CHECKS",
+        "PENDING_DERIVATIVES",
+        "MENTION"
+      ],
       "description": "Reason a PR requires action"
     },
     "MergeableState": {
@@ -253,7 +266,14 @@
           }
         }
       },
-      "required": ["number", "category", "hasConflicts", "reason", "author", "title"],
+      "required": [
+        "number",
+        "category",
+        "hasConflicts",
+        "reason",
+        "author",
+        "title"
+      ],
       "additionalProperties": false
     },
     "DerivativePR": {
@@ -358,7 +378,13 @@
           }
         }
       },
-      "required": ["totalPRs", "actionRequired", "blocked", "derivativePRs", "parentsWithDerivatives"],
+      "required": [
+        "totalPRs",
+        "actionRequired",
+        "blocked",
+        "derivativePRs",
+        "parentsWithDerivatives"
+      ],
       "additionalProperties": false
     },
     "PRMaintenanceSummary": {

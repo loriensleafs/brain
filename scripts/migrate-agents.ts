@@ -16,7 +16,10 @@ import * as path from "path";
 
 // Import transformer functions from MCP package
 import { parseAgentFile } from "../apps/mcp/src/tools/migrate-agents/parser";
-import { transformToBasicMemory, validateTransformation } from "../apps/mcp/src/tools/migrate-agents/transformer";
+import {
+  transformToBasicMemory,
+  validateTransformation,
+} from "../apps/mcp/src/tools/migrate-agents/transformer";
 
 const AGENTS_ROOT = "/Users/peter.kloss/Dev/brain/.agents";
 const PROJECT = "brain";
@@ -42,12 +45,12 @@ async function discoverMarkdownFiles(dirPath: string): Promise<string[]> {
 
         if (entry.isDirectory()) {
           // Skip hidden directories
-          if (!entry.name.startsWith('.') && entry.name !== 'node_modules') {
+          if (!entry.name.startsWith(".") && entry.name !== "node_modules") {
             await walk(fullPath);
           }
-        } else if (entry.isFile() && entry.name.endsWith('.md')) {
+        } else if (entry.isFile() && entry.name.endsWith(".md")) {
           // Skip backup files
-          if (!entry.name.endsWith('.bak')) {
+          if (!entry.name.endsWith(".bak")) {
             files.push(fullPath);
           }
         }
@@ -66,23 +69,25 @@ async function discoverMarkdownFiles(dirPath: string): Promise<string[]> {
  */
 function sanitizeTitle(title: string): string {
   // Replace colons with dashes to avoid YAML issues
-  return title
-    .replace(/:/g, ' -')
-    .replace(/\s+/g, ' ')
-    .trim();
+  return title.replace(/:/g, " -").replace(/\s+/g, " ").trim();
 }
 
-async function writeNote(folder: string, title: string, content: string): Promise<boolean> {
+async function writeNote(
+  folder: string,
+  title: string,
+  content: string,
+): Promise<boolean> {
   try {
     // Sanitize title to avoid YAML issues
     const safeTitle = sanitizeTitle(title);
 
     // Write content to temp file to avoid shell escaping issues
     const tempFile = `/tmp/brain-migrate-${Date.now()}.md`;
-    await fs.writeFile(tempFile, content, 'utf-8');
+    await fs.writeFile(tempFile, content, "utf-8");
 
     // Use basic-memory CLI with file input
-    const result = await $`cat ${tempFile} | basic-memory tool write-note --title ${safeTitle} --folder ${folder} --project ${PROJECT}`.quiet();
+    const result =
+      await $`cat ${tempFile} | basic-memory tool write-note --title ${safeTitle} --folder ${folder} --project ${PROJECT}`.quiet();
 
     // Clean up temp file
     await fs.unlink(tempFile).catch(() => {});
@@ -97,7 +102,8 @@ async function writeNote(folder: string, title: string, content: string): Promis
 async function verifyIndexing(): Promise<{ total: number; indexed: number }> {
   try {
     // Search for any notes to verify indexing
-    const result = await $`basic-memory tool search-notes --query "session OR decision OR analysis" --project ${PROJECT}`.quiet();
+    const result =
+      await $`basic-memory tool search-notes --query "session OR decision OR analysis" --project ${PROJECT}`.quiet();
     const output = result.text();
     // Count results (basic estimate)
     const matches = output.match(/permalink:/g);
@@ -109,8 +115,9 @@ async function verifyIndexing(): Promise<{ total: number; indexed: number }> {
 
 async function testSearch(query: string): Promise<boolean> {
   try {
-    const result = await $`basic-memory tool search-notes --query ${query} --project ${PROJECT}`.quiet();
-    return result.exitCode === 0 && result.text().includes('permalink:');
+    const result =
+      await $`basic-memory tool search-notes --query ${query} --project ${PROJECT}`.quiet();
+    return result.exitCode === 0 && result.text().includes("permalink:");
   } catch {
     return false;
   }
@@ -118,30 +125,30 @@ async function testSearch(query: string): Promise<boolean> {
 
 async function main() {
   const args = process.argv.slice(2);
-  const dryRun = args.includes('--dry-run');
-  const verifyOnly = args.includes('--verify-only');
+  const dryRun = args.includes("--dry-run");
+  const verifyOnly = args.includes("--verify-only");
 
   if (verifyOnly) {
-    console.log('\n=== Verification Mode ===\n');
+    console.log("\n=== Verification Mode ===\n");
     const { total, indexed } = await verifyIndexing();
     console.log(`Total expected: ${total}`);
     console.log(`Indexed: ${indexed}`);
 
-    console.log('\n=== Search Tests ===');
+    console.log("\n=== Search Tests ===");
     const tests = [
-      'session protocol',
-      'ADR decision',
-      'analysis implementation',
-      'security review',
+      "session protocol",
+      "ADR decision",
+      "analysis implementation",
+      "security review",
     ];
     for (const query of tests) {
       const found = await testSearch(query);
-      console.log(`  "${query}": ${found ? '[PASS]' : '[FAIL]'}`);
+      console.log(`  "${query}": ${found ? "[PASS]" : "[FAIL]"}`);
     }
     return;
   }
 
-  console.log(`\n=== ${dryRun ? 'Dry Run' : 'Migration'} ===\n`);
+  console.log(`\n=== ${dryRun ? "Dry Run" : "Migration"} ===\n`);
   console.log(`Source: ${AGENTS_ROOT}`);
   console.log(`Project: ${PROJECT}`);
   console.log(`Dry Run: ${dryRun}\n`);
@@ -159,7 +166,7 @@ async function main() {
 
   for (const filePath of files) {
     try {
-      const content = await fs.readFile(filePath, 'utf-8');
+      const content = await fs.readFile(filePath, "utf-8");
       const parsed = parseAgentFile(content, filePath, AGENTS_ROOT);
       const transformed = transformToBasicMemory(parsed);
       const validation = validateTransformation(transformed);
@@ -169,9 +176,11 @@ async function main() {
       if (dryRun) {
         console.log(`[DRY] ${relativePath}`);
         console.log(`  -> ${transformed.folder}/${transformed.title}`);
-        console.log(`  -> ${transformed.observations.length} obs, ${transformed.relations.length} rel`);
+        console.log(
+          `  -> ${transformed.observations.length} obs, ${transformed.relations.length} rel`,
+        );
         if (validation.warnings.length > 0) {
-          console.log(`  -> Warnings: ${validation.warnings.join(', ')}`);
+          console.log(`  -> Warnings: ${validation.warnings.join(", ")}`);
         }
 
         results.push({
@@ -179,7 +188,7 @@ async function main() {
           target: `${transformed.folder}/${transformed.title}`,
           success: true,
           observationCount: transformed.observations.length,
-          relationCount: transformed.relations.length
+          relationCount: transformed.relations.length,
         });
         migrated++;
         totalObservations += transformed.observations.length;
@@ -189,11 +198,13 @@ async function main() {
         const success = await writeNote(
           transformed.folder,
           transformed.title,
-          transformed.fullContent
+          transformed.fullContent,
         );
 
         if (success) {
-          console.log(`[OK] ${relativePath} -> ${transformed.folder}/${transformed.title}`);
+          console.log(
+            `[OK] ${relativePath} -> ${transformed.folder}/${transformed.title}`,
+          );
           migrated++;
           totalObservations += transformed.observations.length;
           totalRelations += transformed.relations.length;
@@ -202,7 +213,7 @@ async function main() {
             target: `${transformed.folder}/${transformed.title}`,
             success: true,
             observationCount: transformed.observations.length,
-            relationCount: transformed.relations.length
+            relationCount: transformed.relations.length,
           });
         } else {
           console.log(`[FAIL] ${relativePath}`);
@@ -213,7 +224,7 @@ async function main() {
             success: false,
             observationCount: 0,
             relationCount: 0,
-            error: 'Write failed'
+            error: "Write failed",
           });
         }
       }
@@ -223,28 +234,30 @@ async function main() {
       failed++;
       results.push({
         source: filePath,
-        target: '',
+        target: "",
         success: false,
         observationCount: 0,
         relationCount: 0,
-        error: String(error)
+        error: String(error),
       });
     }
   }
 
   // Summary
-  console.log('\n=== Summary ===\n');
+  console.log("\n=== Summary ===\n");
   console.log(`Files processed: ${files.length}`);
-  console.log(`${dryRun ? 'Would migrate' : 'Migrated'}: ${migrated}`);
+  console.log(`${dryRun ? "Would migrate" : "Migrated"}: ${migrated}`);
   console.log(`Failed: ${failed}`);
   console.log(`Total observations: ${totalObservations}`);
   console.log(`Total relations: ${totalRelations}`);
-  console.log(`Avg observations/note: ${(totalObservations / migrated).toFixed(1)}`);
+  console.log(
+    `Avg observations/note: ${(totalObservations / migrated).toFixed(1)}`,
+  );
   console.log(`Avg relations/note: ${(totalRelations / migrated).toFixed(1)}`);
 
   if (!dryRun) {
-    console.log('\n=== Running verification ===\n');
-    await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for indexing
+    console.log("\n=== Running verification ===\n");
+    await new Promise((resolve) => setTimeout(resolve, 2000)); // Wait for indexing
     const { total, indexed } = await verifyIndexing();
     console.log(`Indexed: ${indexed} of ${total} expected`);
   }

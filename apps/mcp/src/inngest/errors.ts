@@ -90,7 +90,7 @@ export function createNonRetriableError(
   options?: {
     cause?: unknown;
     context?: Record<string, unknown>;
-  }
+  },
 ): NonRetriableError {
   const fullMessage = `[${type}] ${message}`;
 
@@ -101,7 +101,7 @@ export function createNonRetriableError(
       cause: options?.cause,
       context: options?.context,
     },
-    "Creating non-retriable error"
+    "Creating non-retriable error",
   );
 
   return new NonRetriableError(fullMessage, {
@@ -152,9 +152,7 @@ export function isRetriable(error: unknown): boolean {
       /validation failed/i,
     ];
 
-    return !nonRetriablePatterns.some((pattern) =>
-      pattern.test(error.message)
-    );
+    return !nonRetriablePatterns.some((pattern) => pattern.test(error.message));
   }
 
   // Unknown error types are considered retriable
@@ -176,15 +174,12 @@ export function isRetriable(error: unknown): boolean {
  * }
  * ```
  */
-export function validateFeatureId(
-  featureId: string,
-  agentName: string
-): void {
+export function validateFeatureId(featureId: string, agentName: string): void {
   if (!featureId || typeof featureId !== "string") {
     throw createNonRetriableError(
       WorkflowErrorType.VALIDATION_ERROR,
       "Feature ID is required and must be a non-empty string",
-      { context: { agentName, providedValue: featureId } }
+      { context: { agentName, providedValue: featureId } },
     );
   }
 
@@ -192,7 +187,7 @@ export function validateFeatureId(
     throw createNonRetriableError(
       WorkflowErrorType.VALIDATION_ERROR,
       "Feature ID cannot be empty or whitespace only",
-      { context: { agentName, providedValue: featureId } }
+      { context: { agentName, providedValue: featureId } },
     );
   }
 }
@@ -213,10 +208,10 @@ export function validateFeatureId(
 export function validateRequiredContext(
   context: Record<string, unknown>,
   requiredFields: string[],
-  agentName: string
+  agentName: string,
 ): void {
   const missingFields = requiredFields.filter(
-    (field) => context[field] === undefined || context[field] === null
+    (field) => context[field] === undefined || context[field] === null,
   );
 
   if (missingFields.length > 0) {
@@ -230,7 +225,7 @@ export function validateRequiredContext(
           missingFields,
           providedFields: Object.keys(context),
         },
-      }
+      },
     );
   }
 }
@@ -256,7 +251,7 @@ export function validateRequiredContext(
  */
 export async function wrapAgentExecution<T>(
   agentName: string,
-  operation: () => Promise<T>
+  operation: () => Promise<T>,
 ): Promise<T> {
   try {
     return await operation();
@@ -271,7 +266,7 @@ export async function wrapAgentExecution<T>(
       throw createNonRetriableError(
         WorkflowErrorType.AGENT_FAILURE,
         `Agent ${agentName} failed with non-retriable error`,
-        { cause: error, context: { agentName } }
+        { cause: error, context: { agentName } },
       );
     }
 
@@ -281,7 +276,7 @@ export async function wrapAgentExecution<T>(
         agentName,
         error: serializeError(error),
       },
-      "Agent encountered retriable error"
+      "Agent encountered retriable error",
     );
 
     throw error;

@@ -9,14 +9,19 @@
  * Migrated from Zod to JSON Schema + AJV per ADR-022.
  * JSON Schema source: packages/validation/schemas/tools/projects/create-project.schema.json
  */
-import type { Tool } from "@modelcontextprotocol/sdk/types.js";
+
 import {
+  type CreateProjectArgs,
+  parseCreateProjectArgs,
+  validateCreateProjectArgs,
+} from "@brain/validation";
+import type { Tool } from "@modelcontextprotocol/sdk/types.js";
+
+export {
   validateCreateProjectArgs,
   parseCreateProjectArgs,
   type CreateProjectArgs,
-} from "@brain/validation";
-
-export { validateCreateProjectArgs, parseCreateProjectArgs, type CreateProjectArgs };
+};
 
 /**
  * Memories path options:

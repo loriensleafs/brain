@@ -53,5 +53,5 @@ export interface AgentContext {
  */
 export type AgentFunction = (
   featureId: string,
-  context: Record<string, unknown>
+  context: Record<string, unknown>,
 ) => Promise<AgentVerdict>;

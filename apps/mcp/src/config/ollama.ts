@@ -5,7 +5,7 @@
 
 /// <reference types="node" />
 
-import { OllamaConfig } from "../services/ollama/types";
+import type { OllamaConfig } from "../services/ollama/types";
 
 /**
  * Ollama configuration loaded from environment variables.

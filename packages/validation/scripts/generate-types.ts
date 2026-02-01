@@ -7,10 +7,10 @@
  * Usage: bun run scripts/generate-types.ts
  */
 
-import { compile, type JSONSchema } from "json-schema-to-typescript";
-import { readdir, readFile, writeFile, mkdir } from "node:fs/promises";
-import { join, basename, dirname } from "node:path";
 import { existsSync } from "node:fs";
+import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
+import { basename, dirname, join } from "node:path";
+import { compile, type JSONSchema } from "json-schema-to-typescript";
 
 const BANNER_COMMENT = `/**
  * AUTO-GENERATED FILE - DO NOT EDIT

@@ -17,7 +17,18 @@
     },
     "status": {
       "type": "string",
-      "enum": ["draft", "review", "approved", "pending", "in-progress", "complete", "done", "implemented", "rejected", "deferred"],
+      "enum": [
+        "draft",
+        "review",
+        "approved",
+        "pending",
+        "in-progress",
+        "complete",
+        "done",
+        "implemented",
+        "rejected",
+        "deferred"
+      ],
       "description": "Current status of the specification"
     },
     "related": {

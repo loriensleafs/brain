@@ -11,9 +11,9 @@
  */
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { discoverAndRegisterPrompts } from "./prompts";
 import { discoverAndRegisterTools } from "./tools";
 import { discoverAndRegisterResources } from "./transport/resources";
-import { discoverAndRegisterPrompts } from "./prompts";
 import { logger } from "./utils/internal/logger";
 
 /**
@@ -52,7 +52,7 @@ export async function createServer(): Promise<McpServer> {
         prompts: {},
       },
       instructions: SERVER_INSTRUCTIONS,
-    }
+    },
   );
 
   // Discover and register ALL tools (wrapper + proxied) via low-level handlers

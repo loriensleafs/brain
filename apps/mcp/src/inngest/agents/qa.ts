@@ -8,10 +8,7 @@
  */
 
 import { logger } from "../../utils/internal/logger";
-import {
-  validateFeatureId,
-  wrapAgentExecution,
-} from "../errors";
+import { validateFeatureId, wrapAgentExecution } from "../errors";
 import type { AgentVerdict } from "./types";
 
 const AGENT_NAME = "qa";
@@ -29,7 +26,7 @@ const AGENT_NAME = "qa";
  */
 export async function runQaAgent(
   featureId: string,
-  context: Record<string, unknown>
+  context: Record<string, unknown>,
 ): Promise<AgentVerdict> {
   // Validate required inputs - throws NonRetriableError if invalid
   validateFeatureId(featureId, AGENT_NAME);
@@ -37,7 +34,7 @@ export async function runQaAgent(
   return wrapAgentExecution(AGENT_NAME, async () => {
     logger.debug(
       { featureId, context, agent: AGENT_NAME },
-      "Running QA agent validation"
+      "Running QA agent validation",
     );
 
     // Placeholder: actual QA validation logic deferred per C-001

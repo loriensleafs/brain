@@ -9,23 +9,29 @@
  * - FIFO eviction when >10 snapshots
  */
 
-import { describe, test, expect, beforeEach, vi } from "vitest";
 import * as os from "os";
 import * as path from "path";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import type { BrainConfig } from "../schema";
 import { DEFAULT_BRAIN_CONFIG } from "../schema";
 
 // Mock filesystem
 const mockFs = {
-  existsSync: vi.fn(() => false) as ReturnType<typeof mock<(p: string) => boolean>>,
-  readFileSync: vi.fn(() => "") as ReturnType<typeof mock<(p: string, enc: string) => string>>,
+  existsSync: vi.fn(() => false) as ReturnType<
+    typeof mock<(p: string) => boolean>
+  >,
+  readFileSync: vi.fn(() => "") as ReturnType<
+    typeof mock<(p: string, enc: string) => string>
+  >,
   writeFileSync: vi.fn(() => undefined) as ReturnType<
     typeof mock<(p: string, content: string, opts: unknown) => void>
   >,
   mkdirSync: vi.fn(() => undefined) as ReturnType<
     typeof mock<(p: string, opts: unknown) => void>
   >,
-  unlinkSync: vi.fn(() => undefined) as ReturnType<typeof mock<(p: string) => void>>,
+  unlinkSync: vi.fn(() => undefined) as ReturnType<
+    typeof mock<(p: string) => void>
+  >,
 };
 
 vi.mock("fs", () => mockFs);
@@ -79,7 +85,9 @@ describe("ConfigRollbackManager", () => {
 
     // Default mock behaviors
     mockFs.existsSync.mockReturnValue(false);
-    mockBrainConfig.loadBrainConfig.mockResolvedValue({ ...DEFAULT_BRAIN_CONFIG });
+    mockBrainConfig.loadBrainConfig.mockResolvedValue({
+      ...DEFAULT_BRAIN_CONFIG,
+    });
     mockBrainConfig.saveBrainConfig.mockResolvedValue(undefined);
     mockTranslationLayer.syncConfigToBasicMemory.mockResolvedValue(undefined);
 
@@ -129,9 +137,15 @@ describe("ConfigRollbackManager", () => {
 
       // Compute correct checksum using the same stable serialization as rollback.ts
       const sortedReplacer = (_key: string, value: unknown): unknown => {
-        if (value !== null && typeof value === "object" && !Array.isArray(value)) {
+        if (
+          value !== null &&
+          typeof value === "object" &&
+          !Array.isArray(value)
+        ) {
           const sorted: Record<string, unknown> = {};
-          for (const k of Object.keys(value as Record<string, unknown>).sort()) {
+          for (const k of Object.keys(
+            value as Record<string, unknown>,
+          ).sort()) {
             sorted[k] = (value as Record<string, unknown>)[k];
           }
           return sorted;
@@ -140,7 +154,10 @@ describe("ConfigRollbackManager", () => {
       };
       const json = JSON.stringify(savedSnapshot.config, sortedReplacer);
       const crypto = await import("crypto");
-      savedSnapshot.checksum = crypto.createHash("sha256").update(json).digest("hex");
+      savedSnapshot.checksum = crypto
+        .createHash("sha256")
+        .update(json)
+        .digest("hex");
 
       mockFs.existsSync.mockImplementation((p: string) => {
         return String(p).includes("last-known-good.json");
@@ -209,7 +226,9 @@ describe("ConfigRollbackManager", () => {
 
       const snapshot = manager.snapshot(config, "Test snapshot reason");
 
-      expect(snapshot.createdAt.getTime()).toBeGreaterThanOrEqual(before.getTime());
+      expect(snapshot.createdAt.getTime()).toBeGreaterThanOrEqual(
+        before.getTime(),
+      );
       expect(snapshot.reason).toBe("Test snapshot reason");
     });
 
@@ -379,9 +398,9 @@ describe("ConfigRollbackManager", () => {
     test("fails on checksum mismatch", async () => {
       // Corrupt the snapshot checksum
       const corruptSnapshot = { ...testSnapshot, checksum: "corrupted" };
-      (manager as unknown as { rollbackHistory: RollbackSnapshot[] }).rollbackHistory = [
-        corruptSnapshot,
-      ];
+      (
+        manager as unknown as { rollbackHistory: RollbackSnapshot[] }
+      ).rollbackHistory = [corruptSnapshot];
 
       const result = await manager.rollback("previous");
 

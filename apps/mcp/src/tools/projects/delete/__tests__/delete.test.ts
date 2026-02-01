@@ -11,7 +11,7 @@
  * Security controls are tested directly in pathValidation.test.ts and configLock.test.ts.
  */
 
-import { describe, test, expect } from "vitest";
+import { describe, expect, test } from "vitest";
 
 // Import schema for validation tests
 import { DeleteProjectArgsSchema, toolDefinition } from "../schema";
@@ -91,12 +91,18 @@ describe("delete_project tool definition", () => {
   });
 
   test("defines project property", () => {
-    const props = toolDefinition.inputSchema.properties as Record<string, unknown>;
+    const props = toolDefinition.inputSchema.properties as Record<
+      string,
+      unknown
+    >;
     expect(props.project).toBeDefined();
   });
 
   test("defines delete_notes property with default false", () => {
-    const props = toolDefinition.inputSchema.properties as Record<string, unknown>;
+    const props = toolDefinition.inputSchema.properties as Record<
+      string,
+      unknown
+    >;
     expect(props.delete_notes).toBeDefined();
     const deleteNotes = props.delete_notes as { default?: boolean };
     expect(deleteNotes.default).toBe(false);
@@ -112,17 +118,23 @@ describe("delete_project security integration", () => {
    */
 
   test("validateProjectName is imported correctly", async () => {
-    const { validateProjectName } = await import("../../../../utils/security/pathValidation");
+    const { validateProjectName } = await import(
+      "../../../../utils/security/pathValidation"
+    );
     expect(typeof validateProjectName).toBe("function");
   });
 
   test("validateDeleteOperation is imported correctly", async () => {
-    const { validateDeleteOperation } = await import("../../../../utils/security/pathValidation");
+    const { validateDeleteOperation } = await import(
+      "../../../../utils/security/pathValidation"
+    );
     expect(typeof validateDeleteOperation).toBe("function");
   });
 
   test("withConfigLockSync is imported correctly", async () => {
-    const { withConfigLockSync } = await import("../../../../utils/security/configLock");
+    const { withConfigLockSync } = await import(
+      "../../../../utils/security/configLock"
+    );
     expect(typeof withConfigLockSync).toBe("function");
   });
 

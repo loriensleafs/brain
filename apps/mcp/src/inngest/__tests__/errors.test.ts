@@ -2,15 +2,15 @@
  * Tests for Inngest error handling utilities.
  */
 
-import { describe, test, expect } from "vitest";
 import { NonRetriableError } from "inngest";
+import { describe, expect, test } from "vitest";
 import {
   createNonRetriableError,
   isRetriable,
   validateFeatureId,
   validateRequiredContext,
-  wrapAgentExecution,
   WorkflowErrorType,
+  wrapAgentExecution,
 } from "../errors";
 
 describe("WorkflowErrorType", () => {
@@ -31,7 +31,7 @@ describe("createNonRetriableError", () => {
   test("creates NonRetriableError with type prefix in message", () => {
     const error = createNonRetriableError(
       WorkflowErrorType.VALIDATION_ERROR,
-      "Feature ID is required"
+      "Feature ID is required",
     );
 
     expect(error).toBeInstanceOf(NonRetriableError);
@@ -43,7 +43,7 @@ describe("createNonRetriableError", () => {
     const error = createNonRetriableError(
       WorkflowErrorType.AGENT_FAILURE,
       "Agent failed",
-      { cause: originalError }
+      { cause: originalError },
     );
 
     expect(error).toBeInstanceOf(NonRetriableError);
@@ -54,7 +54,7 @@ describe("createNonRetriableError", () => {
     const error = createNonRetriableError(
       WorkflowErrorType.CONFIGURATION_ERROR,
       "Missing config",
-      { context: { configKey: "API_KEY" } }
+      { context: { configKey: "API_KEY" } },
     );
 
     expect(error).toBeInstanceOf(NonRetriableError);
@@ -65,7 +65,7 @@ describe("createNonRetriableError", () => {
     const error = createNonRetriableError(
       WorkflowErrorType.CONFIGURATION_ERROR,
       "Config loading failed",
-      { cause: originalError, context: { filePath: "/etc/config.json" } }
+      { cause: originalError, context: { filePath: "/etc/config.json" } },
     );
 
     expect(error).toBeInstanceOf(NonRetriableError);
@@ -133,11 +133,11 @@ describe("validateFeatureId", () => {
   });
 
   test("throws NonRetriableError for null-ish values", () => {
+    expect(() => validateFeatureId(null as unknown as string, "qa")).toThrow(
+      NonRetriableError,
+    );
     expect(() =>
-      validateFeatureId(null as unknown as string, "qa")
-    ).toThrow(NonRetriableError);
-    expect(() =>
-      validateFeatureId(undefined as unknown as string, "qa")
+      validateFeatureId(undefined as unknown as string, "qa"),
     ).toThrow(NonRetriableError);
   });
 
@@ -155,14 +155,22 @@ describe("validateRequiredContext", () => {
   test("accepts context with all required fields", () => {
     const context = { featurePath: "/features/foo", projectRoot: "/project" };
     expect(() =>
-      validateRequiredContext(context, ["featurePath", "projectRoot"], "architect")
+      validateRequiredContext(
+        context,
+        ["featurePath", "projectRoot"],
+        "architect",
+      ),
     ).not.toThrow();
   });
 
   test("throws NonRetriableError when required field is missing", () => {
     const context = { featurePath: "/features/foo" };
     expect(() =>
-      validateRequiredContext(context, ["featurePath", "projectRoot"], "architect")
+      validateRequiredContext(
+        context,
+        ["featurePath", "projectRoot"],
+        "architect",
+      ),
     ).toThrow(NonRetriableError);
   });
 
@@ -172,15 +180,19 @@ describe("validateRequiredContext", () => {
       validateRequiredContext(
         context as unknown as Record<string, unknown>,
         ["featurePath", "projectRoot"],
-        "architect"
-      )
+        "architect",
+      ),
     ).toThrow(NonRetriableError);
   });
 
   test("throws NonRetriableError when required field is undefined", () => {
     const context = { featurePath: "/features/foo", projectRoot: undefined };
     expect(() =>
-      validateRequiredContext(context, ["featurePath", "projectRoot"], "architect")
+      validateRequiredContext(
+        context,
+        ["featurePath", "projectRoot"],
+        "architect",
+      ),
     ).toThrow(NonRetriableError);
   });
 
@@ -190,7 +202,7 @@ describe("validateRequiredContext", () => {
       validateRequiredContext(
         context,
         ["featurePath", "projectRoot", "branch"],
-        "architect"
+        "architect",
       );
     } catch (error) {
       expect(error).toBeInstanceOf(NonRetriableError);

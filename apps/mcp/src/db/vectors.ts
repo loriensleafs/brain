@@ -1,5 +1,5 @@
-import { Database } from "bun:sqlite";
-import { makeChunkId, type ChunkedEmbedding } from "./schema";
+import type { Database } from "bun:sqlite";
+import { type ChunkedEmbedding, makeChunkId } from "./schema";
 
 const VECTOR_DIM = 768;
 
@@ -35,7 +35,7 @@ export interface ChunkEmbeddingInput {
 export function storeChunkedEmbeddings(
   db: Database,
   entityId: string,
-  chunks: ChunkEmbeddingInput[]
+  chunks: ChunkEmbeddingInput[],
 ): number {
   if (chunks.length === 0) {
     return 0;
@@ -49,7 +49,7 @@ export function storeChunkedEmbeddings(
         : new Float32Array(chunk.embedding);
     if (arr.length !== VECTOR_DIM) {
       throw new Error(
-        `Chunk ${chunk.chunkIndex}: Expected ${VECTOR_DIM} dimensions, got ${arr.length}`
+        `Chunk ${chunk.chunkIndex}: Expected ${VECTOR_DIM} dimensions, got ${arr.length}`,
       );
     }
   }
@@ -83,7 +83,7 @@ export function storeChunkedEmbeddings(
         chunk.chunkStart,
         chunk.chunkEnd,
         chunk.totalChunks,
-        chunk.chunkText
+        chunk.chunkText,
       );
       inserted++;
     }
@@ -99,12 +99,11 @@ export function storeChunkedEmbeddings(
  */
 export function deleteChunkedEmbeddings(
   db: Database,
-  entityId: string
+  entityId: string,
 ): boolean {
-  const result = db.run(
-    "DELETE FROM brain_embeddings WHERE entity_id = ?",
-    [entityId]
-  );
+  const result = db.run("DELETE FROM brain_embeddings WHERE entity_id = ?", [
+    entityId,
+  ]);
   return result.changes > 0;
 }
 
@@ -113,7 +112,7 @@ export function deleteChunkedEmbeddings(
  */
 export function getChunkedEmbeddings(
   db: Database,
-  entityId: string
+  entityId: string,
 ): ChunkedEmbedding[] {
   const rows = db
     .query(
@@ -121,7 +120,7 @@ export function getChunkedEmbeddings(
               chunk_start, chunk_end, total_chunks, chunk_text
        FROM brain_embeddings
        WHERE entity_id = ?
-       ORDER BY chunk_index ASC`
+       ORDER BY chunk_index ASC`,
     )
     .all(entityId) as Array<{
     chunk_id: string;
@@ -165,9 +164,7 @@ export function hasEmbeddings(db: Database): boolean {
  */
 export function countChunksForEntity(db: Database, entityId: string): number {
   const row = db
-    .query(
-      "SELECT COUNT(*) as count FROM brain_embeddings WHERE entity_id = ?"
-    )
+    .query("SELECT COUNT(*) as count FROM brain_embeddings WHERE entity_id = ?")
     .get(entityId) as { count: number } | null;
   return row?.count ?? 0;
 }
@@ -199,7 +196,7 @@ export function semanticSearchChunked(
   db: Database,
   queryEmbedding: number[] | Float32Array,
   limit: number,
-  threshold: number
+  threshold: number,
 ): SemanticSearchResult[] {
   const embeddingArr =
     queryEmbedding instanceof Float32Array
@@ -225,7 +222,7 @@ export function semanticSearchChunked(
       WHERE distance <= ?
       ORDER BY distance ASC
       LIMIT ?
-      `
+      `,
     )
     .all(embeddingArr, maxDistance, limit) as Array<{
     chunk_id: string;
@@ -255,7 +252,7 @@ export function semanticSearchChunked(
  * @returns Deduplicated results with one entry per entity
  */
 export function deduplicateByEntity(
-  results: SemanticSearchResult[]
+  results: SemanticSearchResult[],
 ): SemanticSearchResult[] {
   const bestByEntity = new Map<string, SemanticSearchResult>();
 
@@ -268,6 +265,6 @@ export function deduplicateByEntity(
 
   // Return sorted by similarity (highest first)
   return Array.from(bestByEntity.values()).sort(
-    (a, b) => b.similarity - a.similarity
+    (a, b) => b.similarity - a.similarity,
   );
 }

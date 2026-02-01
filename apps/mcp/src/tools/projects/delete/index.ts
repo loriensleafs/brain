@@ -13,18 +13,25 @@
  */
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import * as fs from "fs";
-import * as path from "path";
 import * as os from "os";
-import { removeCodePath, getCodePath, getCodePaths } from "../../../project/config";
-import { validateProjectName, validateDeleteOperation } from "../../../utils/security/pathValidation";
-import { withConfigLockSync } from "../../../utils/security/configLock";
+import * as path from "path";
+import {
+  getCodePath,
+  getCodePaths,
+  removeCodePath,
+} from "../../../project/config";
 import { logger } from "../../../utils/internal/logger";
+import { withConfigLockSync } from "../../../utils/security/configLock";
+import {
+  validateDeleteOperation,
+  validateProjectName,
+} from "../../../utils/security/pathValidation";
 import type { DeleteProjectArgs } from "./schema";
 
 export {
-  toolDefinition,
-  DeleteProjectArgsSchema,
   type DeleteProjectArgs,
+  DeleteProjectArgsSchema,
+  toolDefinition,
 } from "./schema";
 
 /**
@@ -33,7 +40,7 @@ export {
 const BASIC_MEMORY_CONFIG_PATH = path.join(
   os.homedir(),
   ".basic-memory",
-  "config.json"
+  "config.json",
 );
 
 /**
@@ -63,9 +70,16 @@ function removeNotesPath(project: string): boolean {
       const content = fs.readFileSync(BASIC_MEMORY_CONFIG_PATH, "utf-8");
       const config = JSON.parse(content);
 
-      if (config.projects && typeof config.projects === "object" && project in config.projects) {
+      if (
+        config.projects &&
+        typeof config.projects === "object" &&
+        project in config.projects
+      ) {
         delete config.projects[project];
-        fs.writeFileSync(BASIC_MEMORY_CONFIG_PATH, JSON.stringify(config, null, 2));
+        fs.writeFileSync(
+          BASIC_MEMORY_CONFIG_PATH,
+          JSON.stringify(config, null, 2),
+        );
         logger.info({ project }, "Removed notes path from basic-memory config");
         return true;
       }
@@ -73,7 +87,7 @@ function removeNotesPath(project: string): boolean {
   } catch (error) {
     logger.error({ error, project }, "Failed to remove notes path from config");
     throw new Error(
-      `Failed to update config: ${error instanceof Error ? error.message : String(error)}`
+      `Failed to update config: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
   return false;
@@ -108,7 +122,9 @@ function countFiles(dirPath: string): number {
   return count;
 }
 
-export async function handler(args: DeleteProjectArgs): Promise<CallToolResult> {
+export async function handler(
+  args: DeleteProjectArgs,
+): Promise<CallToolResult> {
   const { project, delete_notes = false } = args;
 
   // FIRST: Validate project name for security (C-001)
@@ -117,7 +133,7 @@ export async function handler(args: DeleteProjectArgs): Promise<CallToolResult> 
   if (!nameValidation.valid) {
     logger.warn(
       { project, error: nameValidation.error },
-      "Project name validation failed"
+      "Project name validation failed",
     );
     return {
       content: [
@@ -129,7 +145,7 @@ export async function handler(args: DeleteProjectArgs): Promise<CallToolResult> 
               project,
             },
             null,
-            2
+            2,
           ),
         },
       ],
@@ -154,7 +170,7 @@ export async function handler(args: DeleteProjectArgs): Promise<CallToolResult> 
               available_projects: availableProjects,
             },
             null,
-            2
+            2,
           ),
         },
       ],
@@ -167,7 +183,7 @@ export async function handler(args: DeleteProjectArgs): Promise<CallToolResult> 
   if (!validation.valid) {
     logger.warn(
       { project, notesPath, delete_notes, error: validation.error },
-      "Delete operation validation failed"
+      "Delete operation validation failed",
     );
     return {
       content: [
@@ -180,7 +196,7 @@ export async function handler(args: DeleteProjectArgs): Promise<CallToolResult> 
               memories_path: notesPath,
             },
             null,
-            2
+            2,
           ),
         },
       ],
@@ -207,7 +223,7 @@ export async function handler(args: DeleteProjectArgs): Promise<CallToolResult> 
 
       logger.info(
         { project, brainConfigRemoved, basicMemoryConfigRemoved },
-        "Stage 1 complete: Config entries removed"
+        "Stage 1 complete: Config entries removed",
       );
 
       // Stage 2: File deletion (irreversible, only if requested)
@@ -223,14 +239,14 @@ export async function handler(args: DeleteProjectArgs): Promise<CallToolResult> 
           notesDeleted = true;
           logger.info(
             { project, notesPath, filesRemoved },
-            "Stage 2 complete: Notes directory deleted"
+            "Stage 2 complete: Notes directory deleted",
           );
         } catch (error) {
           // File deletion failed - config is already removed
           // This is a partial success state
           logger.error(
             { error, project, notesPath },
-            "Stage 2 failed: Notes directory deletion failed"
+            "Stage 2 failed: Notes directory deletion failed",
           );
           return {
             partial: true,
@@ -258,16 +274,18 @@ export async function handler(args: DeleteProjectArgs): Promise<CallToolResult> 
             type: "text" as const,
             text: JSON.stringify(
               {
-                warning: "Partial deletion - config removed but file deletion failed",
+                warning:
+                  "Partial deletion - config removed but file deletion failed",
                 project,
                 deleted_config: result.config_removed,
                 deleted_notes: false,
                 memories_path: notesPath,
                 error: result.error,
-                recovery: "Notes directory still exists at the path above. You can manually delete it or recreate the project config.",
+                recovery:
+                  "Notes directory still exists at the path above. You can manually delete it or recreate the project config.",
               },
               null,
-              2
+              2,
             ),
           },
         ],
@@ -305,7 +323,7 @@ export async function handler(args: DeleteProjectArgs): Promise<CallToolResult> 
               project,
             },
             null,
-            2
+            2,
           ),
         },
       ],

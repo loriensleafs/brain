@@ -11,24 +11,36 @@
  * - Lock timeout handling
  */
 
-import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 import * as os from "os";
 import * as path from "path";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 // Mock filesystem
 const mockFs = {
-  existsSync: vi.fn(() => false) as ReturnType<typeof mock<(p: string) => boolean>>,
+  existsSync: vi.fn(() => false) as ReturnType<
+    typeof mock<(p: string) => boolean>
+  >,
   mkdirSync: vi.fn(() => undefined) as ReturnType<
     typeof mock<(p: string, opts: unknown) => void>
   >,
-  openSync: vi.fn(() => 3) as ReturnType<typeof mock<(p: string, flags: number, mode?: number) => number>>,
-  writeSync: vi.fn(() => undefined) as ReturnType<typeof mock<(fd: number, content: string) => void>>,
-  closeSync: vi.fn(() => undefined) as ReturnType<typeof mock<(fd: number) => void>>,
-  unlinkSync: vi.fn(() => undefined) as ReturnType<typeof mock<(p: string) => void>>,
+  openSync: vi.fn(() => 3) as ReturnType<
+    typeof mock<(p: string, flags: number, mode?: number) => number>
+  >,
+  writeSync: vi.fn(() => undefined) as ReturnType<
+    typeof mock<(fd: number, content: string) => void>
+  >,
+  closeSync: vi.fn(() => undefined) as ReturnType<
+    typeof mock<(fd: number) => void>
+  >,
+  unlinkSync: vi.fn(() => undefined) as ReturnType<
+    typeof mock<(p: string) => void>
+  >,
   statSync: vi.fn(() => ({ mtimeMs: Date.now() })) as ReturnType<
     typeof mock<(p: string) => { mtimeMs: number }>
   >,
-  readdirSync: vi.fn(() => [] as string[]) as ReturnType<typeof mock<(p: string) => string[]>>,
+  readdirSync: vi.fn(() => [] as string[]) as ReturnType<
+    typeof mock<(p: string) => string[]>
+  >,
   constants: {
     O_CREAT: 0x0200,
     O_EXCL: 0x0800,
@@ -51,16 +63,16 @@ vi.mock("../../utils/internal/logger", () => ({
 }));
 
 import {
-  LockManager,
-  getLockManager,
   acquireGlobalLock,
-  releaseGlobalLock,
   acquireProjectLock,
+  getLockManager,
+  LockManager,
+  LockResult,
+  releaseGlobalLock,
   releaseProjectLock,
   withGlobalLock,
   withProjectLock,
   withProjectLocks,
-  LockResult,
 } from "../lock";
 
 describe("LockManager", () => {
@@ -192,7 +204,9 @@ describe("LockManager", () => {
         throw error;
       });
 
-      const result = await lockManager.acquireProjectLock("test", { timeoutMs: 200 });
+      const result = await lockManager.acquireProjectLock("test", {
+        timeoutMs: 200,
+      });
 
       expect(result.acquired).toBe(false);
       expect(result.error).toContain("timed out");
@@ -279,7 +293,11 @@ describe("LockManager", () => {
         return 3;
       });
 
-      const result = await lockManager.acquireProjectLocks(["charlie", "alpha", "bravo"]);
+      const result = await lockManager.acquireProjectLocks([
+        "charlie",
+        "alpha",
+        "bravo",
+      ]);
 
       expect(result.acquired).toBe(true);
       expect(acquiredOrder).toEqual(["alpha", "bravo", "charlie"]);
@@ -306,7 +324,7 @@ describe("LockManager", () => {
 
       const result = await lockManager.acquireProjectLocks(
         ["alpha", "bravo", "charlie"],
-        { timeoutMs: 200 }
+        { timeoutMs: 200 },
       );
 
       expect(result.acquired).toBe(false);
@@ -472,7 +490,7 @@ describe("Convenience Functions", () => {
       });
 
       await expect(
-        withGlobalLock(async () => "success", { timeoutMs: 100 })
+        withGlobalLock(async () => "success", { timeoutMs: 100 }),
       ).rejects.toThrow("timed out");
     });
   });
@@ -506,14 +524,17 @@ describe("Convenience Functions", () => {
 
   describe("withProjectLocks", () => {
     test("acquires multiple locks in order", async () => {
-      const result = await withProjectLocks(["charlie", "alpha", "bravo"], async () => {
-        const manager = getLockManager();
-        return {
-          alpha: manager.isProjectLocked("alpha"),
-          bravo: manager.isProjectLocked("bravo"),
-          charlie: manager.isProjectLocked("charlie"),
-        };
-      });
+      const result = await withProjectLocks(
+        ["charlie", "alpha", "bravo"],
+        async () => {
+          const manager = getLockManager();
+          return {
+            alpha: manager.isProjectLocked("alpha"),
+            bravo: manager.isProjectLocked("bravo"),
+            charlie: manager.isProjectLocked("charlie"),
+          };
+        },
+      );
 
       expect(result.alpha).toBe(true);
       expect(result.bravo).toBe(true);

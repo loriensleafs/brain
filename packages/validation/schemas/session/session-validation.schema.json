@@ -10,7 +10,14 @@
       "properties": {
         "mode": {
           "type": "string",
-          "enum": ["", "analysis", "planning", "coding", "implementation", "disabled"],
+          "enum": [
+            "",
+            "analysis",
+            "planning",
+            "coding",
+            "implementation",
+            "disabled"
+          ],
           "description": "Current workflow mode"
         },
         "task": {

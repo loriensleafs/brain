@@ -3,9 +3,9 @@
  * Verifies Ollama availability and nomic-embed-text model presence.
  */
 
-import { OllamaClient } from "./client";
 import { ollamaConfig } from "../../config/ollama";
 import { logger } from "../../utils/internal/logger";
+import { OllamaClient } from "./client";
 
 /**
  * Response structure from Ollama /api/tags endpoint.
@@ -37,10 +37,12 @@ export async function checkOllamaHealth(): Promise<boolean> {
       `${ollamaConfig.baseUrl ?? "http://localhost:11434"}/api/tags`,
       {
         signal: AbortSignal.timeout(5000),
-      }
+      },
     );
     const data = (await response.json()) as TagsResponse;
-    const hasModel = data.models?.some((m) => m.name.includes("nomic-embed-text"));
+    const hasModel = data.models?.some((m) =>
+      m.name.includes("nomic-embed-text"),
+    );
 
     if (!hasModel) {
       logger.warn("nomic-embed-text model not found.");

@@ -90,7 +90,7 @@ export interface DetailedConfigDiff extends ConfigDiff {
  */
 export function detectConfigDiff(
   oldConfig: BrainConfig | null,
-  newConfig: BrainConfig
+  newConfig: BrainConfig,
 ): ConfigDiff {
   // Handle null oldConfig (initial configuration)
   if (oldConfig === null) {
@@ -133,7 +133,11 @@ export function detectConfigDiff(
     if (newProjectNames.has(name)) {
       const oldProject = oldConfig.projects?.[name];
       const newProject = newConfig.projects?.[name];
-      if (oldProject && newProject && !projectConfigsEqual(oldProject, newProject)) {
+      if (
+        oldProject &&
+        newProject &&
+        !projectConfigsEqual(oldProject, newProject)
+      ) {
         projectsModified.push(name);
       }
     }
@@ -174,7 +178,8 @@ export function detectConfigDiff(
       return pathFieldsChanged(oldProject, newProject);
     }) ||
     (globalFieldsChanged.includes("defaults") &&
-      oldConfig.defaults.memories_location !== newConfig.defaults.memories_location);
+      oldConfig.defaults.memories_location !==
+        newConfig.defaults.memories_location);
 
   return {
     projectsAdded,
@@ -198,11 +203,15 @@ export function detectConfigDiff(
  */
 export function detectDetailedConfigDiff(
   oldConfig: BrainConfig | null,
-  newConfig: BrainConfig
+  newConfig: BrainConfig,
 ): DetailedConfigDiff {
   const baseDiff = detectConfigDiff(oldConfig, newConfig);
   const projectChanges: Record<string, ProjectFieldChanges> = {};
-  const globalChanges: { field: string; oldValue: unknown; newValue: unknown }[] = [];
+  const globalChanges: {
+    field: string;
+    oldValue: unknown;
+    newValue: unknown;
+  }[] = [];
 
   // Get detailed changes for modified projects
   for (const name of baseDiff.projectsModified) {
@@ -216,14 +225,19 @@ export function detectDetailedConfigDiff(
   // Get detailed global changes
   if (oldConfig !== null) {
     if (baseDiff.globalFieldsChanged.includes("defaults")) {
-      if (oldConfig.defaults.memories_location !== newConfig.defaults.memories_location) {
+      if (
+        oldConfig.defaults.memories_location !==
+        newConfig.defaults.memories_location
+      ) {
         globalChanges.push({
           field: "defaults.memories_location",
           oldValue: oldConfig.defaults.memories_location,
           newValue: newConfig.defaults.memories_location,
         });
       }
-      if (oldConfig.defaults.memories_mode !== newConfig.defaults.memories_mode) {
+      if (
+        oldConfig.defaults.memories_mode !== newConfig.defaults.memories_mode
+      ) {
         globalChanges.push({
           field: "defaults.memories_mode",
           oldValue: oldConfig.defaults.memories_mode,
@@ -293,7 +307,11 @@ export function detectDetailedConfigDiff(
  * @returns Array of all affected project names
  */
 export function getAffectedProjects(diff: ConfigDiff): string[] {
-  return [...diff.projectsAdded, ...diff.projectsRemoved, ...diff.projectsModified];
+  return [
+    ...diff.projectsAdded,
+    ...diff.projectsRemoved,
+    ...diff.projectsModified,
+  ];
 }
 
 /**
@@ -303,7 +321,10 @@ export function getAffectedProjects(diff: ConfigDiff): string[] {
  * @param projectName - Project name to look for
  * @returns true if project is affected
  */
-export function isProjectAffected(diff: ConfigDiff, projectName: string): boolean {
+export function isProjectAffected(
+  diff: ConfigDiff,
+  projectName: string,
+): boolean {
   return (
     diff.projectsAdded.includes(projectName) ||
     diff.projectsRemoved.includes(projectName) ||
@@ -325,13 +346,14 @@ export function isProjectAffected(diff: ConfigDiff, projectName: string): boolea
 export function getDefaultModeAffectedProjects(
   diff: ConfigDiff,
   oldConfig: BrainConfig | null,
-  newConfig: BrainConfig
+  newConfig: BrainConfig,
 ): string[] {
   // If memories_location didn't change, no DEFAULT mode projects are affected
   if (
     !diff.globalFieldsChanged.includes("defaults") ||
     oldConfig === null ||
-    oldConfig.defaults.memories_location === newConfig.defaults.memories_location
+    oldConfig.defaults.memories_location ===
+      newConfig.defaults.memories_location
   ) {
     return [];
   }
@@ -365,7 +387,10 @@ function projectConfigsEqual(a: ProjectConfig, b: ProjectConfig): boolean {
 /**
  * Check if path-related fields changed between project configs.
  */
-function pathFieldsChanged(oldProject: ProjectConfig, newProject: ProjectConfig): boolean {
+function pathFieldsChanged(
+  oldProject: ProjectConfig,
+  newProject: ProjectConfig,
+): boolean {
   return (
     oldProject.code_path !== newProject.code_path ||
     oldProject.memories_path !== newProject.memories_path ||
@@ -378,7 +403,7 @@ function pathFieldsChanged(oldProject: ProjectConfig, newProject: ProjectConfig)
  */
 function getProjectFieldChanges(
   oldProject: ProjectConfig,
-  newProject: ProjectConfig
+  newProject: ProjectConfig,
 ): ProjectFieldChanges {
   const fieldsAdded: string[] = [];
   const fieldsRemoved: string[] = [];
@@ -390,18 +415,30 @@ function getProjectFieldChanges(
   }
 
   // Check memories_path
-  if (oldProject.memories_path === undefined && newProject.memories_path !== undefined) {
+  if (
+    oldProject.memories_path === undefined &&
+    newProject.memories_path !== undefined
+  ) {
     fieldsAdded.push("memories_path");
-  } else if (oldProject.memories_path !== undefined && newProject.memories_path === undefined) {
+  } else if (
+    oldProject.memories_path !== undefined &&
+    newProject.memories_path === undefined
+  ) {
     fieldsRemoved.push("memories_path");
   } else if (oldProject.memories_path !== newProject.memories_path) {
     fieldsModified.push("memories_path");
   }
 
   // Check memories_mode
-  if (oldProject.memories_mode === undefined && newProject.memories_mode !== undefined) {
+  if (
+    oldProject.memories_mode === undefined &&
+    newProject.memories_mode !== undefined
+  ) {
     fieldsAdded.push("memories_mode");
-  } else if (oldProject.memories_mode !== undefined && newProject.memories_mode === undefined) {
+  } else if (
+    oldProject.memories_mode !== undefined &&
+    newProject.memories_mode === undefined
+  ) {
     fieldsRemoved.push("memories_mode");
   } else if (oldProject.memories_mode !== newProject.memories_mode) {
     fieldsModified.push("memories_mode");
@@ -415,7 +452,7 @@ function getProjectFieldChanges(
  */
 function defaultsEqual(
   a: BrainConfig["defaults"],
-  b: BrainConfig["defaults"]
+  b: BrainConfig["defaults"],
 ): boolean {
   return (
     a.memories_location === b.memories_location &&
@@ -435,7 +472,7 @@ function syncEqual(a: BrainConfig["sync"], b: BrainConfig["sync"]): boolean {
  */
 function loggingEqual(
   a: BrainConfig["logging"],
-  b: BrainConfig["logging"]
+  b: BrainConfig["logging"],
 ): boolean {
   return a.level === b.level;
 }
@@ -445,7 +482,7 @@ function loggingEqual(
  */
 function watcherEqual(
   a: BrainConfig["watcher"],
-  b: BrainConfig["watcher"]
+  b: BrainConfig["watcher"],
 ): boolean {
   return a.enabled === b.enabled && a.debounce_ms === b.debounce_ms;
 }
@@ -475,7 +512,9 @@ export function summarizeConfigDiff(diff: ConfigDiff): string {
     lines.push(`Projects modified: ${diff.projectsModified.join(", ")}`);
   }
   if (diff.globalFieldsChanged.length > 0) {
-    lines.push(`Global settings changed: ${diff.globalFieldsChanged.join(", ")}`);
+    lines.push(
+      `Global settings changed: ${diff.globalFieldsChanged.join(", ")}`,
+    );
   }
 
   if (diff.requiresMigration) {

@@ -4,8 +4,8 @@
  * Renders active features with their phases and tasks.
  */
 
-import type { NoteStatus } from "../statusParser";
 import type { NoteType } from "../noteType";
+import type { NoteStatus } from "../statusParser";
 
 export interface FeatureData {
   title: string;

@@ -5,22 +5,24 @@
  * Gap references indicate missing knowledge or broken links.
  */
 
-import type { QualityIssue } from '../types';
-import { getBasicMemoryClient } from '../../../proxy/client';
-import { extractTitle } from '../utils/markdown';
-import { extractWikilinks } from '../utils/wikilinks';
+import { getBasicMemoryClient } from "../../../proxy/client";
+import type { QualityIssue } from "../types";
+import { extractTitle } from "../utils/markdown";
+import { extractWikilinks } from "../utils/wikilinks";
 
 /**
  * Find referenced notes that don't exist
  */
-export async function findGapReferences(project: string): Promise<QualityIssue[]> {
+export async function findGapReferences(
+  project: string,
+): Promise<QualityIssue[]> {
   const client = await getBasicMemoryClient();
   const issues: QualityIssue[] = [];
 
   // Get all notes in project
   const listResult = await client.callTool({
-    name: 'list_directory',
-    arguments: { project, depth: 10, file_name_glob: '*.md' },
+    name: "list_directory",
+    arguments: { project, depth: 10, file_name_glob: "*.md" },
   });
 
   const noteFiles = parseListDirectoryResult(listResult);
@@ -31,20 +33,17 @@ export async function findGapReferences(project: string): Promise<QualityIssue[]
   for (const permalink of noteFiles) {
     try {
       const readResult = await client.callTool({
-        name: 'read_note',
+        name: "read_note",
         arguments: { identifier: permalink, project },
       });
 
-      const noteContent = (readResult.content as any)?.[0]?.text || '';
+      const noteContent = (readResult.content as any)?.[0]?.text || "";
       const title = extractTitle(noteContent);
 
       if (title) {
         titleToPath.set(title.toLowerCase(), permalink);
       }
-    } catch (error) {
-      // Skip notes that fail to read
-      continue;
-    }
+    } catch (error) {}
   }
 
   // Track references and their source notes
@@ -54,11 +53,11 @@ export async function findGapReferences(project: string): Promise<QualityIssue[]
   for (const permalink of noteFiles) {
     try {
       const readResult = await client.callTool({
-        name: 'read_note',
+        name: "read_note",
         arguments: { identifier: permalink, project },
       });
 
-      const noteContent = (readResult.content as any)?.[0]?.text || '';
+      const noteContent = (readResult.content as any)?.[0]?.text || "";
       const wikilinks = extractWikilinks(noteContent);
 
       for (const link of wikilinks) {
@@ -72,19 +71,16 @@ export async function findGapReferences(project: string): Promise<QualityIssue[]
           referenceMap.get(link)!.push(permalink);
         }
       }
-    } catch (error) {
-      // Skip notes that fail to read
-      continue;
-    }
+    } catch (error) {}
   }
 
   // Create issues for missing references
   for (const [reference, sourceNotes] of referenceMap) {
     issues.push({
-      type: 'GAP',
+      type: "GAP",
       reference,
       note: sourceNotes[0], // Primary source
-      recommendation: `Create note "${reference}" (referenced by ${sourceNotes.length} note${sourceNotes.length > 1 ? 's' : ''}: ${sourceNotes.join(', ')})`,
+      recommendation: `Create note "${reference}" (referenced by ${sourceNotes.length} note${sourceNotes.length > 1 ? "s" : ""}: ${sourceNotes.join(", ")})`,
     });
   }
 
@@ -95,12 +91,12 @@ export async function findGapReferences(project: string): Promise<QualityIssue[]
  * Parse list_directory output to extract file paths
  */
 function parseListDirectoryResult(result: any): string[] {
-  const text = result.content?.[0]?.text || '';
+  const text = result.content?.[0]?.text || "";
   const files: string[] = [];
-  const lines = text.split('\n');
+  const lines = text.split("\n");
 
   for (const line of lines) {
-    if (line.includes('.md') && !line.includes('Directory:')) {
+    if (line.includes(".md") && !line.includes("Directory:")) {
       const match = line.match(/([^\s]+\.md)/);
       if (match) files.push(match[1]);
     }
@@ -115,7 +111,7 @@ function parseListDirectoryResult(result: any): string[] {
 function checkNoteExists(
   reference: string,
   existingNotes: Set<string>,
-  titleToPath: Map<string, string>
+  titleToPath: Map<string, string>,
 ): boolean {
   // Check if reference matches a note title (case-insensitive)
   if (titleToPath.has(reference.toLowerCase())) {
@@ -134,8 +130,8 @@ function checkNoteExists(
 
   // Try matching just the filename part
   for (const note of existingNotes) {
-    const noteName = note.replace(/\.md$/, '');
-    const noteBasename = noteName.split('/').pop() || '';
+    const noteName = note.replace(/\.md$/, "");
+    const noteBasename = noteName.split("/").pop() || "";
 
     if (noteBasename === reference || noteName === reference) {
       return true;

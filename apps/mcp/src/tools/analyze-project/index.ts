@@ -6,31 +6,31 @@
  */
 
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
+import * as fs from "fs";
+import * as path from "path";
 import { resolveProject } from "../../project/resolve";
 import { getBasicMemoryClient } from "../../proxy/client";
-import type {
-  AnalyzeProjectArgs,
-  AnalyzeProjectOutput,
-  NonConformingFile,
-  ConformanceIssueType,
-} from "./schema";
-import { brainTargetSchema } from "./schema";
+import { detectClusters } from "../organizer/clusterDetection";
+import type { ParsedSourceFile } from "../organizer/schemas/clusterSchema";
 import {
   checkConformance,
   getSuggestedTarget,
   inferTypeFromPath,
 } from "./conformanceChecker";
-import { generatePreview, formatPreviewText } from "./preview";
-import { detectClusters } from "../organizer/clusterDetection";
-import type { ParsedSourceFile } from "../organizer/schemas/clusterSchema";
-import * as fs from "fs";
-import * as path from "path";
+import { formatPreviewText, generatePreview } from "./preview";
+import type {
+  AnalyzeProjectArgs,
+  AnalyzeProjectOutput,
+  ConformanceIssueType,
+  NonConformingFile,
+} from "./schema";
+import { brainTargetSchema } from "./schema";
 
 /**
  * Main handler for the analyze_project tool
  */
 export async function handler(
-  args: AnalyzeProjectArgs
+  args: AnalyzeProjectArgs,
 ): Promise<CallToolResult> {
   const project = args.project || resolveProject();
   const mode = args.mode || "conform";
@@ -73,7 +73,7 @@ export async function handler(
     return handleImportMode(
       args.source_path!,
       args.source_schema!,
-      args.preview || false
+      args.preview || false,
     );
   } else {
     return handleConformMode(project, args.preview || false);
@@ -85,7 +85,7 @@ export async function handler(
  */
 async function handleConformMode(
   project: string,
-  preview: boolean
+  preview: boolean,
 ): Promise<CallToolResult> {
   const client = await getBasicMemoryClient();
 
@@ -211,7 +211,7 @@ async function handleConformMode(
 async function handleImportMode(
   sourcePath: string,
   sourceSchema: any,
-  preview: boolean
+  preview: boolean,
 ): Promise<CallToolResult> {
   // Expand ~ to home directory
   const expandedPath = sourcePath.replace(/^~/, process.env.HOME || "");
@@ -302,7 +302,7 @@ async function handleImportMode(
     lines.push(`### Detected Clusters`);
     for (const cluster of clusters) {
       lines.push(
-        `- **${cluster.id}** (${cluster.cluster_type}): ${cluster.files.length} files`
+        `- **${cluster.id}** (${cluster.cluster_type}): ${cluster.files.length} files`,
       );
       lines.push(`  ${cluster.rationale}`);
       lines.push(`  Recommendation: ${cluster.merge_recommendation}`);
@@ -357,7 +357,7 @@ function findMarkdownFiles(dir: string): string[] {
 function extractTitle(content: string): string | undefined {
   // Try YAML frontmatter
   const fmMatch = content.match(
-    /^---\n[\s\S]*?title:\s*['"]?([^'"\n]+)['"]?[\s\S]*?\n---/
+    /^---\n[\s\S]*?title:\s*['"]?([^'"\n]+)['"]?[\s\S]*?\n---/,
   );
   if (fmMatch) return fmMatch[1];
 
@@ -447,7 +447,7 @@ function parseListDirectoryResult(result: any): string[] {
  */
 function parseNoteContent(
   path: string,
-  result: any
+  result: any,
 ): {
   path: string;
   relativePath: string;

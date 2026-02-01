@@ -3,12 +3,12 @@
  * Tests fire-and-forget behavior, success storage, and error handling.
  */
 
-import { describe, test, expect, vi, afterEach, beforeEach } from "vitest";
-import { triggerEmbedding } from "../triggerEmbedding";
-import * as vectorsModule from "../../../db/vectors";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import * as connectionModule from "../../../db/connection";
 import * as schemaModule from "../../../db/schema";
+import * as vectorsModule from "../../../db/vectors";
 import { logger } from "../../../utils/internal/logger";
+import { triggerEmbedding } from "../triggerEmbedding";
 
 describe("triggerEmbedding", () => {
   const originalFetch = globalThis.fetch;
@@ -24,13 +24,19 @@ describe("triggerEmbedding", () => {
     mockDb = { close: vi.fn(() => {}) };
 
     // Spy on storeChunkedEmbeddings
-    storeChunkedEmbeddingsSpy = vi.spyOn(vectorsModule, "storeChunkedEmbeddings").mockReturnValue(1);
+    storeChunkedEmbeddingsSpy = vi
+      .spyOn(vectorsModule, "storeChunkedEmbeddings")
+      .mockReturnValue(1);
 
     // Spy on createVectorConnection
-    createVectorConnectionSpy = vi.spyOn(connectionModule, "createVectorConnection").mockReturnValue(mockDb as any);
+    createVectorConnectionSpy = vi
+      .spyOn(connectionModule, "createVectorConnection")
+      .mockReturnValue(mockDb as any);
 
     // Spy on ensureEmbeddingTables
-    ensureEmbeddingTablesSpy = vi.spyOn(schemaModule, "ensureEmbeddingTables").mockImplementation(() => {});
+    ensureEmbeddingTablesSpy = vi
+      .spyOn(schemaModule, "ensureEmbeddingTables")
+      .mockImplementation(() => {});
 
     // Spy on logger methods
     loggerDebugSpy = vi.spyOn(logger, "debug").mockImplementation(() => {});
@@ -53,7 +59,7 @@ describe("triggerEmbedding", () => {
         ok: true,
         status: 200,
         json: () => Promise.resolve({ embedding }),
-      } as Response)
+      } as Response),
     ) as unknown as typeof fetch;
   };
 
@@ -107,7 +113,7 @@ describe("triggerEmbedding", () => {
   describe("fire-and-forget behavior", () => {
     test("does not throw on failure", () => {
       globalThis.fetch = vi.fn(() =>
-        Promise.reject(new Error("Network error"))
+        Promise.reject(new Error("Network error")),
       ) as unknown as typeof fetch;
 
       // Should not throw - fire and forget
@@ -116,20 +122,20 @@ describe("triggerEmbedding", () => {
 
     test("logs warning on failure", async () => {
       globalThis.fetch = vi.fn(() =>
-        Promise.reject(new Error("Connection refused"))
+        Promise.reject(new Error("Connection refused")),
       ) as unknown as typeof fetch;
 
       triggerEmbedding("note-123", "Test content");
       await waitForAsync();
 
       expect(loggerWarnSpy).toHaveBeenCalledWith(
-        "Embedding failed for note note-123: Connection refused"
+        "Embedding failed for note note-123: Connection refused",
       );
     });
 
     test("does not call storeChunkedEmbeddings when generateEmbedding fails", async () => {
       globalThis.fetch = vi.fn(() =>
-        Promise.reject(new Error("API error"))
+        Promise.reject(new Error("API error")),
       ) as unknown as typeof fetch;
 
       triggerEmbedding("note-123", "Test content");

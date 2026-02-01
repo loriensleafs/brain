@@ -8,17 +8,17 @@
  * @see TASK-011: Implement session-protocol-start Workflow
  */
 
-import { describe, test, expect, beforeAll, afterAll, vi } from "vitest";
 import * as fs from "fs/promises";
-import * as path from "path";
 import * as os from "os";
+import * as path from "path";
+import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
 import {
-  sessionProtocolStartWorkflow,
   getSessionProtocolContext,
   isProtocolStartComplete,
   type ProtocolStartEvidence,
   type SessionProtocolContext,
   type SessionProtocolStartResult,
+  sessionProtocolStartWorkflow,
 } from "../sessionProtocolStart";
 
 describe("Session Protocol Start Workflow", () => {
@@ -59,7 +59,7 @@ describe("Session Protocol Start Workflow", () => {
       expect(evidence.brainMcpInitialized).toBe("2026-01-18T10:00:00Z");
       expect(evidence.handoffRead).toBe("yes");
       expect(evidence.sessionLogPath).toBe(
-        ".agents/sessions/2026-01-18-session-01.md"
+        ".agents/sessions/2026-01-18-session-01.md",
       );
       expect(evidence.skillScriptsCount).toBe("5");
       expect(evidence.gitBranch).toBe("main");

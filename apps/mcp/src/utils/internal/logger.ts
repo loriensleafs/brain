@@ -6,9 +6,9 @@
  * All logs must go to a file.
  */
 
-import pino from "pino";
 import * as fs from "fs";
 import * as path from "path";
+import pino from "pino";
 import { config } from "../../config";
 
 // Ensure log directory exists
@@ -49,7 +49,7 @@ export const logger = pino(
     dest: config.logFile,
     sync: false, // Async for performance, buffer flushes on close
     mkdir: true,
-  })
+  }),
 );
 
 /**
@@ -62,7 +62,7 @@ export function logStartup(): void {
       logFile: config.logFile,
       pid: process.pid,
     },
-    "Brain MCP server starting"
+    "Brain MCP server starting",
   );
 }
 

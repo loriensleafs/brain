@@ -17,10 +17,10 @@
  * @see TASK-020-26 for implementation requirements
  */
 
-import * as fs from "fs";
-import * as path from "path";
-import * as os from "os";
 import * as crypto from "crypto";
+import * as fs from "fs";
+import * as os from "os";
+import * as path from "path";
 import { logger } from "../utils/internal/logger";
 
 /**
@@ -233,7 +233,9 @@ function deserializeManifest(serialized: SerializedManifest): CopyManifest {
     sourceRoot: serialized.sourceRoot,
     targetRoot: serialized.targetRoot,
     startedAt: new Date(serialized.startedAt),
-    completedAt: serialized.completedAt ? new Date(serialized.completedAt) : null,
+    completedAt: serialized.completedAt
+      ? new Date(serialized.completedAt)
+      : null,
     entries: serialized.entries.map((entry) => ({
       sourcePath: entry.sourcePath,
       targetPath: entry.targetPath,
@@ -355,7 +357,7 @@ export async function createCopyManifest(
   project: string,
   sourceRoot: string,
   targetRoot: string,
-  files: string[]
+  files: string[],
 ): Promise<CopyManifest> {
   const migrationId = generateMigrationId();
   const entries: CopyManifestEntry[] = [];
@@ -397,7 +399,7 @@ export async function createCopyManifest(
   saveManifest(manifest);
   logger.info(
     { migrationId, project, fileCount: files.length },
-    "Copy manifest created"
+    "Copy manifest created",
   );
 
   return manifest;
@@ -413,14 +415,15 @@ export async function createCopyManifest(
  */
 export async function markEntryCopied(
   manifest: CopyManifest,
-  entry: CopyManifestEntry
+  entry: CopyManifestEntry,
 ): Promise<void> {
   // Compute target checksum
   try {
     entry.targetChecksum = await computeFileChecksum(entry.targetPath);
   } catch (error) {
     entry.status = "failed";
-    entry.error = error instanceof Error ? error.message : "Checksum computation failed";
+    entry.error =
+      error instanceof Error ? error.message : "Checksum computation failed";
     saveManifest(manifest);
     return;
   }
@@ -443,7 +446,7 @@ export async function markEntryCopied(
  */
 export async function verifyEntry(
   manifest: CopyManifest,
-  entry: CopyManifestEntry
+  entry: CopyManifestEntry,
 ): Promise<boolean> {
   if (entry.status !== "copied") {
     return false;
@@ -465,7 +468,8 @@ export async function verifyEntry(
     return true;
   } catch (error) {
     entry.status = "failed";
-    entry.error = error instanceof Error ? error.message : "Verification failed";
+    entry.error =
+      error instanceof Error ? error.message : "Verification failed";
     saveManifest(manifest);
     return false;
   }
@@ -481,7 +485,7 @@ export async function verifyEntry(
 export function markEntryFailed(
   manifest: CopyManifest,
   entry: CopyManifestEntry,
-  error: string
+  error: string,
 ): void {
   entry.status = "failed";
   entry.error = error;
@@ -508,7 +512,9 @@ export function markManifestCompleted(manifest: CopyManifest): void {
  * @param manifest - Manifest to rollback
  * @returns Rollback result
  */
-export async function rollbackPartialCopy(manifest: CopyManifest): Promise<RollbackResult> {
+export async function rollbackPartialCopy(
+  manifest: CopyManifest,
+): Promise<RollbackResult> {
   const failures: Array<{ path: string; error: string }> = [];
   let filesRolledBack = 0;
 
@@ -554,8 +560,12 @@ export async function rollbackPartialCopy(manifest: CopyManifest): Promise<Rollb
   };
 
   logger.info(
-    { migrationId: manifest.migrationId, filesRolledBack, failures: failures.length },
-    "Rollback completed"
+    {
+      migrationId: manifest.migrationId,
+      filesRolledBack,
+      failures: failures.length,
+    },
+    "Rollback completed",
   );
 
   return result;
@@ -602,7 +612,7 @@ export async function recoverIncompleteMigrations(): Promise<RecoveryResult> {
       found++;
       logger.info(
         { migrationId, project: manifest.project },
-        "Found incomplete migration, rolling back"
+        "Found incomplete migration, rolling back",
       );
 
       try {
@@ -626,7 +636,10 @@ export async function recoverIncompleteMigrations(): Promise<RecoveryResult> {
   };
 
   if (found > 0) {
-    logger.info({ found, recovered, failures: failures.length }, "Migration recovery completed");
+    logger.info(
+      { found, recovered, failures: failures.length },
+      "Migration recovery completed",
+    );
   }
 
   return result;
@@ -648,7 +661,9 @@ export function getManifest(migrationId: string): CopyManifest | null {
  * @param manifest - Manifest to analyze
  * @returns Object with counts by status
  */
-export function getStatusCounts(manifest: CopyManifest): Record<CopyStatus, number> {
+export function getStatusCounts(
+  manifest: CopyManifest,
+): Record<CopyStatus, number> {
   const counts: Record<CopyStatus, number> = {
     pending: 0,
     copied: 0,

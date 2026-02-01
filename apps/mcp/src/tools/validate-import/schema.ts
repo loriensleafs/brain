@@ -52,7 +52,7 @@ export interface ValidateImportOutput {
 }
 
 export const toolDefinition: Tool = {
-  name: 'validate_import',
+  name: "validate_import",
   description: `Verify migration quality after running migrate_cluster. Checks that:
 - Target files exist and contain content (content preservation)
 - Migrated files now conform to Brain project conventions
@@ -65,26 +65,32 @@ Usage:
 
 The tool re-runs conformance checks on migrated files to verify improvements.`,
   inputSchema: {
-    type: 'object' as const,
+    type: "object" as const,
     properties: {
       project: {
-        type: 'string',
-        description: 'Project to validate. Auto-resolved if not specified.'
+        type: "string",
+        description: "Project to validate. Auto-resolved if not specified.",
       },
       migration_results: {
-        type: 'array',
-        description: 'Array of migration results from migrate_cluster',
+        type: "array",
+        description: "Array of migration results from migrate_cluster",
         items: {
-          type: 'object',
+          type: "object",
           properties: {
-            source: { type: 'string', description: 'Original source path' },
-            target: { type: 'string', description: 'Target path after migration' },
-            success: { type: 'boolean', description: 'Whether migration succeeded' }
+            source: { type: "string", description: "Original source path" },
+            target: {
+              type: "string",
+              description: "Target path after migration",
+            },
+            success: {
+              type: "boolean",
+              description: "Whether migration succeeded",
+            },
           },
-          required: ['source', 'target', 'success']
-        }
-      }
+          required: ["source", "target", "success"],
+        },
+      },
     },
-    required: ['migration_results']
-  }
+    required: ["migration_results"],
+  },
 };

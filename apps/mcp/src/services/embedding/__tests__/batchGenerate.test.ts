@@ -7,7 +7,7 @@
  * consistently fail all retry attempts for 5xx errors.
  */
 
-import { describe, test, expect, vi, afterEach, beforeEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { batchGenerate } from "../batchGenerate";
 import { resetOllamaClient } from "../generateEmbedding";
 
@@ -21,7 +21,7 @@ describe("batchGenerate", () => {
         ok: true,
         status: 200,
         json: () => Promise.resolve({ embedding }),
-      } as Response)
+      } as Response),
     ) as unknown as typeof fetch;
   };
 
@@ -29,7 +29,7 @@ describe("batchGenerate", () => {
   // Uses 400 Bad Request (non-retryable) to ensure immediate failure
   const mockFetchWithFailures = (
     embedding: number[],
-    failTextIndices: Set<number>
+    failTextIndices: Set<number>,
   ) => {
     // Track which text index we're processing based on successful calls
     let textIndex = 0;
@@ -133,7 +133,7 @@ describe("batchGenerate", () => {
           ok: true,
           status: 200,
           json: () => Promise.resolve({ embedding: mockEmbedding }),
-        } as Response)
+        } as Response),
       );
       globalThis.fetch = mockFetch as unknown as typeof fetch;
 

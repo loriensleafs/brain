@@ -6,12 +6,13 @@
  *
  * Validation: Uses JSON Schema via AJV from @brain/validation
  */
-import type { Tool } from "@modelcontextprotocol/sdk/types.js";
+
 import {
   parseBootstrapContextArgs as _parseBootstrapContextArgs,
   type BootstrapContextArgs,
 } from "@brain/validation";
 import bootstrapContextSchema from "@brain/validation/schemas/tools/bootstrap-context.schema.json";
+import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 
 // Re-export type for backward compatibility
 export type { BootstrapContextArgs };

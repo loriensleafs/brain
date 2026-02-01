@@ -8,14 +8,14 @@
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { resolveProject } from "../../project/resolve";
 import { findDuplicates } from "../organizer/modes/dedupe";
-import type { FindDuplicatesArgs } from "./schema";
 import type { DuplicatePair } from "../organizer/types";
+import type { FindDuplicatesArgs } from "./schema";
 
 /**
  * Main handler for the find_duplicates tool
  */
 export async function handler(
-  args: FindDuplicatesArgs
+  args: FindDuplicatesArgs,
 ): Promise<CallToolResult> {
   const project = args.project || resolveProject();
 
@@ -54,8 +54,12 @@ export async function handler(
       lines.push(`**Pair:**`);
       lines.push(`- ${pair.note1}`);
       lines.push(`- ${pair.note2}`);
-      lines.push(`- Embedding Similarity: ${pair.embeddingSimilarity.toFixed(3)}`);
-      lines.push(`- Fulltext Similarity: ${pair.fulltextSimilarity.toFixed(3)}`);
+      lines.push(
+        `- Embedding Similarity: ${pair.embeddingSimilarity.toFixed(3)}`,
+      );
+      lines.push(
+        `- Fulltext Similarity: ${pair.fulltextSimilarity.toFixed(3)}`,
+      );
       if (pair.rationale) {
         lines.push(`- Rationale: ${pair.rationale}`);
       }
@@ -65,7 +69,7 @@ export async function handler(
 
   if (result.candidates.length > result.confirmed.length) {
     const unconfirmed = result.candidates.filter(
-      (c) => !result.confirmed.includes(c)
+      (c) => !result.confirmed.includes(c),
     );
     lines.push(`### Candidate Duplicates (Below Threshold)`);
     lines.push(``);
@@ -74,8 +78,12 @@ export async function handler(
       lines.push(`**Pair:**`);
       lines.push(`- ${pair.note1}`);
       lines.push(`- ${pair.note2}`);
-      lines.push(`- Embedding Similarity: ${pair.embeddingSimilarity.toFixed(3)}`);
-      lines.push(`- Fulltext Similarity: ${pair.fulltextSimilarity.toFixed(3)}`);
+      lines.push(
+        `- Embedding Similarity: ${pair.embeddingSimilarity.toFixed(3)}`,
+      );
+      lines.push(
+        `- Fulltext Similarity: ${pair.fulltextSimilarity.toFixed(3)}`,
+      );
       lines.push(``);
     }
     if (unconfirmed.length > 10) {

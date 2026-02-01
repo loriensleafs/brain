@@ -3,7 +3,7 @@
  * Verifies that edit_note triggers embedding generation asynchronously.
  */
 
-import { describe, test, expect, vi, afterEach, beforeEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import * as triggerModule from "../../services/embedding/triggerEmbedding";
 import { logger } from "../../utils/internal/logger";
 
@@ -14,7 +14,9 @@ describe("edit_note embedding trigger integration", () => {
 
   beforeEach(() => {
     // Spy on triggerEmbedding
-    triggerEmbeddingSpy = vi.spyOn(triggerModule, "triggerEmbedding").mockImplementation(() => {});
+    triggerEmbeddingSpy = vi
+      .spyOn(triggerModule, "triggerEmbedding")
+      .mockImplementation(() => {});
 
     // Spy on logger methods
     loggerDebugSpy = vi.spyOn(logger, "debug").mockImplementation(() => {});
@@ -49,20 +51,22 @@ describe("edit_note embedding trigger integration", () => {
       const mockClient = {
         callTool: vi.fn((): Promise<MockCallToolResult> => {
           return Promise.resolve({
-            content: [{ type: "text" as const, text: content }]
+            content: [{ type: "text" as const, text: content }],
           });
-        })
+        }),
       };
 
       // Simulate the edit_note flow
-      const editNotePromise = mockClient.callTool().then((readResult: MockCallToolResult) => {
-        const firstContent = readResult.content?.[0];
-        if (firstContent?.type === "text") {
-          const fetchedContent = firstContent.text;
-          triggerModule.triggerEmbedding(identifier, fetchedContent);
-          logger.debug({ identifier }, "Triggered embedding for edited note");
-        }
-      });
+      const editNotePromise = mockClient
+        .callTool()
+        .then((readResult: MockCallToolResult) => {
+          const firstContent = readResult.content?.[0];
+          if (firstContent?.type === "text") {
+            const fetchedContent = firstContent.text;
+            triggerModule.triggerEmbedding(identifier, fetchedContent);
+            logger.debug({ identifier }, "Triggered embedding for edited note");
+          }
+        });
 
       // Wait for async flow
       await editNotePromise;
@@ -90,11 +94,11 @@ describe("edit_note embedding trigger integration", () => {
           return new Promise((resolve) => {
             setTimeout(() => {
               resolve({
-                content: [{ type: "text" as const, text: "Slow content" }]
+                content: [{ type: "text" as const, text: "Slow content" }],
               });
             }, 50);
           });
-        })
+        }),
       };
 
       // Start the async flow (fire-and-forget)
@@ -123,12 +127,17 @@ describe("edit_note embedding trigger integration", () => {
       const identifier = "failing-note";
 
       const mockClient = {
-        callTool: vi.fn((): Promise<never> => Promise.reject(new Error("Read failed")))
+        callTool: vi.fn(
+          (): Promise<never> => Promise.reject(new Error("Read failed")),
+        ),
       };
 
       // Simulate the error path
       await mockClient.callTool().catch((error: Error) => {
-        logger.warn({ identifier, error }, "Failed to fetch content for embedding");
+        logger.warn(
+          { identifier, error },
+          "Failed to fetch content for embedding",
+        );
       });
 
       await waitForAsync();
@@ -159,13 +168,25 @@ describe("edit_note embedding trigger integration", () => {
       const identifier = "image-note";
 
       type MockCallToolResult = {
-        content: Array<{ type: string; resource?: { uri: string; mimeType: string }; text?: string }>;
+        content: Array<{
+          type: string;
+          resource?: { uri: string; mimeType: string };
+          text?: string;
+        }>;
       };
 
       const mockClient = {
-        callTool: vi.fn((): Promise<MockCallToolResult> => Promise.resolve({
-          content: [{ type: "resource", resource: { uri: "file://image.png", mimeType: "image/png" } }]
-        }))
+        callTool: vi.fn(
+          (): Promise<MockCallToolResult> =>
+            Promise.resolve({
+              content: [
+                {
+                  type: "resource",
+                  resource: { uri: "file://image.png", mimeType: "image/png" },
+                },
+              ],
+            }),
+        ),
       };
 
       // Simulate the flow with non-text content

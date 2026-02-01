@@ -9,8 +9,8 @@
  */
 
 import * as fs from "fs";
-import * as path from "path";
 import * as os from "os";
+import * as path from "path";
 
 export interface PathValidationResult {
   valid: boolean;
@@ -176,7 +176,10 @@ export function validateDeletePath(targetPath: string): PathValidationResult {
       resolved === normalizedRoot ||
       resolved.startsWith(normalizedRoot + path.sep)
     ) {
-      return { valid: false, error: `Cannot delete system path: ${systemRoot}` };
+      return {
+        valid: false,
+        error: `Cannot delete system path: ${systemRoot}`,
+      };
     }
   }
 
@@ -224,7 +227,7 @@ export function isSymlink(targetPath: string): boolean {
 export function validateDeleteOperation(
   projectName: string,
   notesPath: string | null | undefined,
-  deleteNotes: boolean
+  deleteNotes: boolean,
 ): PathValidationResult {
   // Validate project name
   const nameValidation = validateProjectName(projectName);

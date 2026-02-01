@@ -15,7 +15,7 @@ import type { ManageBacklogArgs } from "./schema";
  * Main handler for the manage_backlog tool
  */
 export async function handler(
-  args: ManageBacklogArgs
+  args: ManageBacklogArgs,
 ): Promise<CallToolResult> {
   if (!args.operation) {
     return {

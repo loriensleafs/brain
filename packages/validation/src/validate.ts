@@ -14,28 +14,8 @@
  *   // Or use parse function that throws on invalid data
  *   const args = parseSearchArgs(data);
  */
-import Ajv, { type ValidateFunction, type ErrorObject } from "ajv";
+import Ajv, { type ErrorObject, type ValidateFunction } from "ajv";
 import addFormats from "ajv-formats";
-
-import bootstrapContextSchema from "../schemas/tools/bootstrap-context.schema.json";
-import brainConfigSchema from "../schemas/config/brain-config.schema.json";
-import configGetSchema from "../schemas/tools/config/get.schema.json";
-import configResetSchema from "../schemas/tools/config/reset.schema.json";
-import configSetSchema from "../schemas/tools/config/set.schema.json";
-import getWorkflowSchema from "../schemas/tools/get-workflow.schema.json";
-import listFeaturesByPrioritySchema from "../schemas/tools/list-features-by-priority.schema.json";
-import listWorkflowsSchema from "../schemas/tools/list-workflows.schema.json";
-import activeProjectSchema from "../schemas/tools/projects/active-project.schema.json";
-import createProjectSchema from "../schemas/tools/projects/create-project.schema.json";
-import deleteProjectSchema from "../schemas/tools/projects/delete-project.schema.json";
-import editProjectSchema from "../schemas/tools/projects/edit-project.schema.json";
-import getProjectDetailsSchema from "../schemas/tools/projects/get-project-details.schema.json";
-import listProjectsSchema from "../schemas/tools/projects/list-projects.schema.json";
-import searchSchema from "../schemas/tools/search.schema.json";
-import sendWorkflowEventSchema from "../schemas/tools/send-workflow-event.schema.json";
-import sessionSchema from "../schemas/tools/session.schema.json";
-import sessionStateSchema from "../schemas/session/session-state.schema.json";
-
 import type {
   ActiveProjectArgs,
   AgentInvocation,
@@ -76,6 +56,24 @@ import type {
   WorkflowMode,
   WorkflowPhase,
 } from "../generated/types";
+import brainConfigSchema from "../schemas/config/brain-config.schema.json";
+import sessionStateSchema from "../schemas/session/session-state.schema.json";
+import bootstrapContextSchema from "../schemas/tools/bootstrap-context.schema.json";
+import configGetSchema from "../schemas/tools/config/get.schema.json";
+import configResetSchema from "../schemas/tools/config/reset.schema.json";
+import configSetSchema from "../schemas/tools/config/set.schema.json";
+import getWorkflowSchema from "../schemas/tools/get-workflow.schema.json";
+import listFeaturesByPrioritySchema from "../schemas/tools/list-features-by-priority.schema.json";
+import listWorkflowsSchema from "../schemas/tools/list-workflows.schema.json";
+import activeProjectSchema from "../schemas/tools/projects/active-project.schema.json";
+import createProjectSchema from "../schemas/tools/projects/create-project.schema.json";
+import deleteProjectSchema from "../schemas/tools/projects/delete-project.schema.json";
+import editProjectSchema from "../schemas/tools/projects/edit-project.schema.json";
+import getProjectDetailsSchema from "../schemas/tools/projects/get-project-details.schema.json";
+import listProjectsSchema from "../schemas/tools/projects/list-projects.schema.json";
+import searchSchema from "../schemas/tools/search.schema.json";
+import sendWorkflowEventSchema from "../schemas/tools/send-workflow-event.schema.json";
+import sessionSchema from "../schemas/tools/session.schema.json";
 
 // Export generated types
 export type {
@@ -150,7 +148,9 @@ addFormats(ajv);
  * Convert AJV errors to structured ValidationError format.
  * Sanitizes errors to avoid exposing raw input values.
  */
-function toValidationErrors(errors: ErrorObject[] | null | undefined): ValidationError[] {
+function toValidationErrors(
+  errors: ErrorObject[] | null | undefined,
+): ValidationError[] {
   if (!errors) return [];
 
   return errors.map((error) => ({
@@ -163,7 +163,9 @@ function toValidationErrors(errors: ErrorObject[] | null | undefined): Validatio
 /**
  * Create a validation error message from AJV errors.
  */
-function formatValidationError(errors: ErrorObject[] | null | undefined): string {
+function formatValidationError(
+  errors: ErrorObject[] | null | undefined,
+): string {
   const validationErrors = toValidationErrors(errors);
   if (validationErrors.length === 0) {
     return "Validation failed";
@@ -175,22 +177,37 @@ function formatValidationError(errors: ErrorObject[] | null | undefined): string
 }
 
 // Compile validators
-const _validateActiveProjectArgs = ajv.compile<ActiveProjectArgs>(activeProjectSchema);
-const _validateBootstrapContextArgs = ajv.compile<BootstrapContextArgs>(bootstrapContextSchema);
+const _validateActiveProjectArgs =
+  ajv.compile<ActiveProjectArgs>(activeProjectSchema);
+const _validateBootstrapContextArgs = ajv.compile<BootstrapContextArgs>(
+  bootstrapContextSchema,
+);
 const _validateBrainConfig = ajv.compile<BrainConfig>(brainConfigSchema);
 const _validateConfigGetArgs = ajv.compile<ConfigGetArgs>(configGetSchema);
-const _validateConfigResetArgs = ajv.compile<ConfigResetArgs>(configResetSchema);
+const _validateConfigResetArgs =
+  ajv.compile<ConfigResetArgs>(configResetSchema);
 const _validateConfigSetArgs = ajv.compile<ConfigSetArgs>(configSetSchema);
-const _validateCreateProjectArgs = ajv.compile<CreateProjectArgs>(createProjectSchema);
-const _validateDeleteProjectArgs = ajv.compile<DeleteProjectArgs>(deleteProjectSchema);
-const _validateEditProjectArgs = ajv.compile<EditProjectArgs>(editProjectSchema);
-const _validateGetProjectDetailsArgs = ajv.compile<GetProjectDetailsArgs>(getProjectDetailsSchema);
-const _validateGetWorkflowArgs = ajv.compile<GetWorkflowArgs>(getWorkflowSchema);
-const _validateListFeaturesByPriorityArgs = ajv.compile<ListFeaturesByPriorityArgs>(listFeaturesByPrioritySchema);
-const _validateListProjectsArgs = ajv.compile<ListProjectsArgs>(listProjectsSchema);
-const _validateListWorkflowsArgs = ajv.compile<ListWorkflowsArgs>(listWorkflowsSchema);
+const _validateCreateProjectArgs =
+  ajv.compile<CreateProjectArgs>(createProjectSchema);
+const _validateDeleteProjectArgs =
+  ajv.compile<DeleteProjectArgs>(deleteProjectSchema);
+const _validateEditProjectArgs =
+  ajv.compile<EditProjectArgs>(editProjectSchema);
+const _validateGetProjectDetailsArgs = ajv.compile<GetProjectDetailsArgs>(
+  getProjectDetailsSchema,
+);
+const _validateGetWorkflowArgs =
+  ajv.compile<GetWorkflowArgs>(getWorkflowSchema);
+const _validateListFeaturesByPriorityArgs =
+  ajv.compile<ListFeaturesByPriorityArgs>(listFeaturesByPrioritySchema);
+const _validateListProjectsArgs =
+  ajv.compile<ListProjectsArgs>(listProjectsSchema);
+const _validateListWorkflowsArgs =
+  ajv.compile<ListWorkflowsArgs>(listWorkflowsSchema);
 const _validateSearchArgs = ajv.compile<SearchArgs>(searchSchema);
-const _validateSendWorkflowEventArgs = ajv.compile<SendWorkflowEventArgs>(sendWorkflowEventSchema);
+const _validateSendWorkflowEventArgs = ajv.compile<SendWorkflowEventArgs>(
+  sendWorkflowEventSchema,
+);
 const _validateSessionArgs = ajv.compile<SessionArgs>(sessionSchema);
 const _validateSessionState = ajv.compile<SessionState>(sessionStateSchema);
 
@@ -311,7 +328,8 @@ export const validateListWorkflowsArgs: ValidateFunction<ListWorkflowsArgs> =
  * Returns true if valid, false otherwise.
  * Access errors via validateSearchArgs.errors after validation.
  */
-export const validateSearchArgs: ValidateFunction<SearchArgs> = _validateSearchArgs;
+export const validateSearchArgs: ValidateFunction<SearchArgs> =
+  _validateSearchArgs;
 
 /**
  * Validate SendWorkflowEventArgs.
@@ -326,14 +344,16 @@ export const validateSendWorkflowEventArgs: ValidateFunction<SendWorkflowEventAr
  * Returns true if valid, false otherwise.
  * Access errors via validateSessionArgs.errors after validation.
  */
-export const validateSessionArgs: ValidateFunction<SessionArgs> = _validateSessionArgs;
+export const validateSessionArgs: ValidateFunction<SessionArgs> =
+  _validateSessionArgs;
 
 /**
  * Validate SessionState.
  * Returns true if valid, false otherwise.
  * Access errors via validateSessionState.errors after validation.
  */
-export const validateSessionState: ValidateFunction<SessionState> = _validateSessionState;
+export const validateSessionState: ValidateFunction<SessionState> =
+  _validateSessionState;
 
 /**
  * Parse and validate ActiveProjectArgs.
@@ -374,7 +394,10 @@ export function parseBootstrapContextArgs(data: unknown): BootstrapContextArgs {
  */
 export function parseBrainConfig(data: unknown): BrainConfig {
   // Deep clone data to avoid mutating input when applying defaults
-  const cloned = typeof data === "object" && data !== null ? JSON.parse(JSON.stringify(data)) : data;
+  const cloned =
+    typeof data === "object" && data !== null
+      ? JSON.parse(JSON.stringify(data))
+      : data;
 
   if (_validateBrainConfig(cloned)) {
     return cloned;
@@ -484,7 +507,9 @@ export function parseEditProjectArgs(data: unknown): EditProjectArgs {
  * Returns validated data with defaults applied.
  * Throws Error with structured message on validation failure.
  */
-export function parseGetProjectDetailsArgs(data: unknown): GetProjectDetailsArgs {
+export function parseGetProjectDetailsArgs(
+  data: unknown,
+): GetProjectDetailsArgs {
   // Clone data to avoid mutating input when applying defaults
   const cloned = typeof data === "object" && data !== null ? { ...data } : data;
 
@@ -516,7 +541,9 @@ export function parseGetWorkflowArgs(data: unknown): GetWorkflowArgs {
  * Returns validated data with defaults applied.
  * Throws Error with structured message on validation failure.
  */
-export function parseListFeaturesByPriorityArgs(data: unknown): ListFeaturesByPriorityArgs {
+export function parseListFeaturesByPriorityArgs(
+  data: unknown,
+): ListFeaturesByPriorityArgs {
   // Clone data to avoid mutating input when applying defaults
   const cloned = typeof data === "object" && data !== null ? { ...data } : data;
 
@@ -524,7 +551,9 @@ export function parseListFeaturesByPriorityArgs(data: unknown): ListFeaturesByPr
     return cloned;
   }
 
-  throw new Error(formatValidationError(_validateListFeaturesByPriorityArgs.errors));
+  throw new Error(
+    formatValidationError(_validateListFeaturesByPriorityArgs.errors),
+  );
 }
 
 /**
@@ -580,7 +609,9 @@ export function parseSearchArgs(data: unknown): SearchArgs {
  * Returns validated data with defaults applied.
  * Throws Error with structured message on validation failure.
  */
-export function parseSendWorkflowEventArgs(data: unknown): SendWorkflowEventArgs {
+export function parseSendWorkflowEventArgs(
+  data: unknown,
+): SendWorkflowEventArgs {
   // Clone data to avoid mutating input when applying defaults
   const cloned = typeof data === "object" && data !== null ? { ...data } : data;
 
@@ -614,7 +645,10 @@ export function parseSessionArgs(data: unknown): SessionArgs {
  */
 export function parseSessionState(data: unknown): SessionState {
   // Deep clone data to avoid mutating input when applying defaults
-  const cloned = typeof data === "object" && data !== null ? JSON.parse(JSON.stringify(data)) : data;
+  const cloned =
+    typeof data === "object" && data !== null
+      ? JSON.parse(JSON.stringify(data))
+      : data;
 
   if (_validateSessionState(cloned)) {
     return cloned;
@@ -630,7 +664,10 @@ export function parseSessionState(data: unknown): SessionState {
  * @returns Validated SessionState or null if invalid
  */
 export function safeParseSessionState(value: unknown): SessionState | null {
-  const cloned = typeof value === "object" && value !== null ? JSON.parse(JSON.stringify(value)) : value;
+  const cloned =
+    typeof value === "object" && value !== null
+      ? JSON.parse(JSON.stringify(value))
+      : value;
   if (_validateSessionState(cloned)) {
     return cloned;
   }
@@ -651,7 +688,9 @@ export function getActiveProjectArgsErrors(data: unknown): ValidationError[] {
  * Get validation errors for BootstrapContextArgs without throwing.
  * Returns empty array if valid, array of ValidationError otherwise.
  */
-export function getBootstrapContextArgsErrors(data: unknown): ValidationError[] {
+export function getBootstrapContextArgsErrors(
+  data: unknown,
+): ValidationError[] {
   const cloned = typeof data === "object" && data !== null ? { ...data } : data;
   _validateBootstrapContextArgs(cloned);
   return toValidationErrors(_validateBootstrapContextArgs.errors);
@@ -662,7 +701,10 @@ export function getBootstrapContextArgsErrors(data: unknown): ValidationError[] 
  * Returns empty array if valid, array of ValidationError otherwise.
  */
 export function getBrainConfigErrors(data: unknown): ValidationError[] {
-  const cloned = typeof data === "object" && data !== null ? JSON.parse(JSON.stringify(data)) : data;
+  const cloned =
+    typeof data === "object" && data !== null
+      ? JSON.parse(JSON.stringify(data))
+      : data;
   _validateBrainConfig(cloned);
   return toValidationErrors(_validateBrainConfig.errors);
 }
@@ -731,7 +773,9 @@ export function getEditProjectArgsErrors(data: unknown): ValidationError[] {
  * Get validation errors for GetProjectDetailsArgs without throwing.
  * Returns empty array if valid, array of ValidationError otherwise.
  */
-export function getGetProjectDetailsArgsErrors(data: unknown): ValidationError[] {
+export function getGetProjectDetailsArgsErrors(
+  data: unknown,
+): ValidationError[] {
   const cloned = typeof data === "object" && data !== null ? { ...data } : data;
   _validateGetProjectDetailsArgs(cloned);
   return toValidationErrors(_validateGetProjectDetailsArgs.errors);
@@ -751,7 +795,9 @@ export function getGetWorkflowArgsErrors(data: unknown): ValidationError[] {
  * Get validation errors for ListFeaturesByPriorityArgs without throwing.
  * Returns empty array if valid, array of ValidationError otherwise.
  */
-export function getListFeaturesByPriorityArgsErrors(data: unknown): ValidationError[] {
+export function getListFeaturesByPriorityArgsErrors(
+  data: unknown,
+): ValidationError[] {
   const cloned = typeof data === "object" && data !== null ? { ...data } : data;
   _validateListFeaturesByPriorityArgs(cloned);
   return toValidationErrors(_validateListFeaturesByPriorityArgs.errors);
@@ -791,7 +837,9 @@ export function getSearchArgsErrors(data: unknown): ValidationError[] {
  * Get validation errors for SendWorkflowEventArgs without throwing.
  * Returns empty array if valid, array of ValidationError otherwise.
  */
-export function getSendWorkflowEventArgsErrors(data: unknown): ValidationError[] {
+export function getSendWorkflowEventArgsErrors(
+  data: unknown,
+): ValidationError[] {
   const cloned = typeof data === "object" && data !== null ? { ...data } : data;
   _validateSendWorkflowEventArgs(cloned);
   return toValidationErrors(_validateSendWorkflowEventArgs.errors);
@@ -812,7 +860,10 @@ export function getSessionArgsErrors(data: unknown): ValidationError[] {
  * Returns empty array if valid, array of ValidationError otherwise.
  */
 export function getSessionStateErrors(data: unknown): ValidationError[] {
-  const cloned = typeof data === "object" && data !== null ? JSON.parse(JSON.stringify(data)) : data;
+  const cloned =
+    typeof data === "object" && data !== null
+      ? JSON.parse(JSON.stringify(data))
+      : data;
   _validateSessionState(cloned);
   return toValidationErrors(_validateSessionState.errors);
 }

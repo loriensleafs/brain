@@ -10,23 +10,19 @@
  * Orchestrates all analyzers and aggregates results.
  */
 
-import type { MaintainConfig, MaintainResult } from '../types';
-import { findOrphanNotes } from '../analyzers/orphans';
-import { findStaleNotes } from '../analyzers/stale';
-import { findGapReferences } from '../analyzers/gaps';
-import { findWeakNotes } from '../analyzers/weak';
+import { findGapReferences } from "../analyzers/gaps";
+import { findOrphanNotes } from "../analyzers/orphans";
+import { findStaleNotes } from "../analyzers/stale";
+import { findWeakNotes } from "../analyzers/weak";
+import type { MaintainConfig, MaintainResult } from "../types";
 
 /**
  * Find all maintenance issues in a project
  */
 export async function findMaintainIssues(
-  config: MaintainConfig
+  config: MaintainConfig,
 ): Promise<MaintainResult> {
-  const {
-    project,
-    staleThresholdDays = 90,
-    qualityThreshold = 0.5,
-  } = config;
+  const { project, staleThresholdDays = 90, qualityThreshold = 0.5 } = config;
 
   // Run all analyzers in parallel for efficiency
   const [orphans, stale, gaps, weak] = await Promise.all([

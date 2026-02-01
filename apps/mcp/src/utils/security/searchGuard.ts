@@ -10,8 +10,8 @@
  */
 
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { logger } from "../internal/logger";
 import { config } from "../../config";
+import { logger } from "../internal/logger";
 
 export interface SearchGuardResult {
   allowed: boolean;
@@ -46,7 +46,7 @@ interface ToolResult {
  */
 export async function checkForDuplicates(
   client: Client,
-  args: Record<string, unknown>
+  args: Record<string, unknown>,
 ): Promise<SearchGuardResult> {
   // Only check write_note calls
   const title = args.title as string;
@@ -101,7 +101,7 @@ export async function checkForDuplicates(
 
     const matchTitles = matches.map((m) => m.title);
     const warning = `Potential duplicate: "${title}" matches existing notes: ${matchTitles.join(
-      ", "
+      ", ",
     )}. Consider using edit_note instead.`;
 
     logger.warn(
@@ -110,7 +110,7 @@ export async function checkForDuplicates(
         matches: matchTitles,
         project: args.project,
       },
-      "Search guard: potential duplicate detected"
+      "Search guard: potential duplicate detected",
     );
 
     // In enforce mode, block the write
@@ -132,7 +132,7 @@ export async function checkForDuplicates(
     // If search fails, log and allow the write
     logger.error(
       { error, title },
-      "Search guard: search failed, allowing write"
+      "Search guard: search failed, allowing write",
     );
     return { allowed: true };
   }

@@ -8,14 +8,14 @@
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { resolveProject } from "../../project/resolve";
 import { findMaintainIssues } from "../organizer/modes/maintain";
-import type { MaintainKnowledgeGraphArgs } from "./schema";
 import type { MaintainConfig } from "../organizer/types";
+import type { MaintainKnowledgeGraphArgs } from "./schema";
 
 /**
  * Main handler for the maintain_knowledge_graph tool
  */
 export async function handler(
-  args: MaintainKnowledgeGraphArgs
+  args: MaintainKnowledgeGraphArgs,
 ): Promise<CallToolResult> {
   const project = args.project || resolveProject();
 
@@ -71,7 +71,7 @@ export async function handler(
   if (result.stale.length > 0) {
     lines.push(`### Stale Notes (${result.stale.length})`);
     lines.push(
-      `Notes not updated within ${config.staleThresholdDays || 90} days:`
+      `Notes not updated within ${config.staleThresholdDays || 90} days:`,
     );
     for (const issue of result.stale.slice(0, 10)) {
       const lastModified = issue.lastModified
@@ -104,10 +104,11 @@ export async function handler(
   if (result.weak.length > 0) {
     lines.push(`### Weak Notes (${result.weak.length})`);
     lines.push(
-      `Notes below quality threshold (${config.qualityThreshold || 0.5}):`
+      `Notes below quality threshold (${config.qualityThreshold || 0.5}):`,
     );
     for (const issue of result.weak.slice(0, 10)) {
-      const scoreText = issue.score !== undefined ? issue.score.toFixed(2) : "N/A";
+      const scoreText =
+        issue.score !== undefined ? issue.score.toFixed(2) : "N/A";
       lines.push(`- **${issue.note}** (score: ${scoreText})`);
       lines.push(`  ${issue.recommendation}`);
     }

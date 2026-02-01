@@ -7,8 +7,8 @@
  * LOCAL ONLY - queries local Inngest dev server.
  */
 
-import { getInngestDevServerUrl } from "../client";
 import { logger } from "../../utils/internal/logger";
+import { getInngestDevServerUrl } from "../client";
 
 /**
  * Workflow run status values.
@@ -73,7 +73,7 @@ export function registerWorkflowRun(
   eventName: string,
   functionId: string,
   featureId?: string,
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown>,
 ): void {
   const state: WorkflowState = {
     runId,
@@ -96,7 +96,7 @@ export function registerWorkflowRun(
 
   logger.debug(
     { runId, eventName, functionId, featureId },
-    "Registered workflow run for tracking"
+    "Registered workflow run for tracking",
   );
 }
 
@@ -110,7 +110,7 @@ export function registerWorkflowRun(
 export function updateWorkflowStatus(
   runId: string,
   status: WorkflowStatus,
-  error?: string
+  error?: string,
 ): void {
   const state = workflowStates.get(runId);
   if (!state) {
@@ -139,7 +139,7 @@ export function updateWorkflowStatus(
  * @returns Workflow state or undefined if not found
  */
 export async function getWorkflowStateByRunId(
-  runId: string
+  runId: string,
 ): Promise<WorkflowState | undefined> {
   // Check local cache first
   let state = workflowStates.get(runId);
@@ -165,7 +165,7 @@ export async function getWorkflowStateByRunId(
  * @returns Array of workflow states
  */
 export async function getWorkflowStatesByFeatureId(
-  featureId: string
+  featureId: string,
 ): Promise<WorkflowState[]> {
   const runIds = featureWorkflowIndex.get(featureId) || [];
   const states: WorkflowState[] = [];
@@ -221,7 +221,7 @@ export function clearWorkflowState(runId: string): boolean {
     const runs = featureWorkflowIndex.get(state.featureId) || [];
     featureWorkflowIndex.set(
       state.featureId,
-      runs.filter((id) => id !== runId)
+      runs.filter((id) => id !== runId),
     );
   }
   return workflowStates.delete(runId);
@@ -256,7 +256,7 @@ function isTerminalStatus(status: WorkflowStatus): boolean {
  * @returns Partial workflow state or undefined if fetch fails
  */
 async function fetchRunStateFromInngest(
-  runId: string
+  runId: string,
 ): Promise<Partial<WorkflowState> | undefined> {
   try {
     const baseUrl = getInngestDevServerUrl();
@@ -281,7 +281,7 @@ async function fetchRunStateFromInngest(
       }
       logger.warn(
         { runId, status: response.status },
-        "Failed to fetch run state from Inngest"
+        "Failed to fetch run state from Inngest",
       );
       return undefined;
     }
@@ -292,7 +292,7 @@ async function fetchRunStateFromInngest(
     const message = error instanceof Error ? error.message : String(error);
     logger.debug(
       { runId, error: message },
-      "Error fetching run state from Inngest"
+      "Error fetching run state from Inngest",
     );
     return undefined;
   }
@@ -305,7 +305,7 @@ async function fetchRunStateFromInngest(
  * @returns Partial workflow state
  */
 function mapInngestRunToState(
-  run: Record<string, unknown>
+  run: Record<string, unknown>,
 ): Partial<WorkflowState> {
   const status = mapInngestStatus(run.status as string);
   const result: Partial<WorkflowState> = { status };

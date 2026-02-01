@@ -11,7 +11,16 @@
     },
     "scenario": {
       "type": "string",
-      "enum": ["BUG", "FEATURE", "SPEC", "ANALYSIS", "RESEARCH", "DECISION", "TESTING", ""],
+      "enum": [
+        "BUG",
+        "FEATURE",
+        "SPEC",
+        "ANALYSIS",
+        "RESEARCH",
+        "DECISION",
+        "TESTING",
+        ""
+      ],
       "description": "The detected scenario type"
     },
     "keywords": {
@@ -42,6 +51,13 @@
     }
   },
   "then": {
-    "required": ["detected", "scenario", "keywords", "recommended", "directory", "noteType"]
+    "required": [
+      "detected",
+      "scenario",
+      "keywords",
+      "recommended",
+      "directory",
+      "noteType"
+    ]
   }
 }

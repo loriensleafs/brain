@@ -9,18 +9,18 @@
  * - Immutable state helpers
  */
 
-import { describe, test, expect, beforeEach } from "vitest";
-import { createDefaultSessionState } from "../types";
+import { beforeEach, describe, expect, test } from "vitest";
 import {
   DEFAULT_MODE,
-  MODE_DESCRIPTIONS,
-  withModeChange,
-  withFeatureChange,
-  withTaskChange,
-  serializeSessionState,
   deserializeSessionState,
   getRecentModeHistory,
+  MODE_DESCRIPTIONS,
+  serializeSessionState,
+  withFeatureChange,
+  withModeChange,
+  withTaskChange,
 } from "../index";
+import { createDefaultSessionState } from "../types";
 
 describe("Session Service", () => {
   describe("createDefaultSessionState", () => {
@@ -161,7 +161,11 @@ describe("Session Service", () => {
       expect(recent).toHaveLength(3);
       // History: analysis, planning, coding, analysis, planning, coding, disabled
       // Last 3: planning, coding, disabled
-      expect(recent.map((h: { mode: string }) => h.mode)).toEqual(["planning", "coding", "disabled"] as const);
+      expect(recent.map((h: { mode: string }) => h.mode)).toEqual([
+        "planning",
+        "coding",
+        "disabled",
+      ] as const);
     });
 
     test("returns all entries if fewer than count", () => {

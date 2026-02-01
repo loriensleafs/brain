@@ -68,7 +68,7 @@ export const inngest = new Inngest({
  * @returns Promise<boolean> - true if Inngest is available
  */
 export async function checkInngestAvailability(
-  timeout: number = AVAILABILITY_CHECK_TIMEOUT
+  timeout: number = AVAILABILITY_CHECK_TIMEOUT,
 ): Promise<boolean> {
   try {
     const controller = new AbortController();
@@ -85,7 +85,7 @@ export async function checkInngestAvailability(
       inngestAvailable = true;
       logger.info(
         { url: INNGEST_DEV_SERVER_URL },
-        "Inngest dev server available"
+        "Inngest dev server available",
       );
       return true;
     }
@@ -93,7 +93,7 @@ export async function checkInngestAvailability(
     inngestAvailable = false;
     logger.warn(
       { url: INNGEST_DEV_SERVER_URL, status: response.status },
-      "Inngest dev server returned non-OK status"
+      "Inngest dev server returned non-OK status",
     );
     return false;
   } catch (error) {
@@ -101,7 +101,7 @@ export async function checkInngestAvailability(
     const message = error instanceof Error ? error.message : String(error);
     logger.warn(
       { url: INNGEST_DEV_SERVER_URL, error: message },
-      "Inngest dev server unavailable - workflow features disabled"
+      "Inngest dev server unavailable - workflow features disabled",
     );
     return false;
   }

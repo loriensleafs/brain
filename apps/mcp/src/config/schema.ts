@@ -10,16 +10,16 @@
  */
 
 import {
-  validateBrainConfig as ajvValidate,
   parseBrainConfig as ajvParse,
-  getBrainConfigErrors,
+  validateBrainConfig as ajvValidate,
   type BrainConfig,
-  type ProjectConfig,
   type DefaultsConfig,
-  type SyncConfig,
+  getBrainConfigErrors,
   type LoggingConfig,
-  type WatcherConfig,
+  type ProjectConfig,
+  type SyncConfig,
   type ValidationError,
+  type WatcherConfig,
 } from "@brain/validation";
 
 // Re-export types from @brain/validation
@@ -74,11 +74,14 @@ export interface ValidationResult<T> {
  * }
  * ```
  */
-export function validateBrainConfig(config: unknown): ValidationResult<BrainConfig> {
+export function validateBrainConfig(
+  config: unknown,
+): ValidationResult<BrainConfig> {
   // Deep clone to avoid mutating input
-  const cloned = typeof config === "object" && config !== null
-    ? JSON.parse(JSON.stringify(config))
-    : config;
+  const cloned =
+    typeof config === "object" && config !== null
+      ? JSON.parse(JSON.stringify(config))
+      : config;
 
   if (ajvValidate(cloned)) {
     return { success: true, data: cloned as BrainConfig };
@@ -94,16 +97,20 @@ export function validateBrainConfig(config: unknown): ValidationResult<BrainConf
  * @param project - The project configuration to validate
  * @returns ValidationResult with success status and data or errors
  */
-export function validateProjectConfig(project: unknown): ValidationResult<ProjectConfig> {
+export function validateProjectConfig(
+  project: unknown,
+): ValidationResult<ProjectConfig> {
   // Project validation is a subset - validate required fields
   if (typeof project !== "object" || project === null) {
     return {
       success: false,
-      errors: [{
-        field: "",
-        constraint: "type",
-        message: "Expected object",
-      }],
+      errors: [
+        {
+          field: "",
+          constraint: "type",
+          message: "Expected object",
+        },
+      ],
     };
   }
 
@@ -112,11 +119,13 @@ export function validateProjectConfig(project: unknown): ValidationResult<Projec
   if (typeof p.code_path !== "string" || p.code_path.length === 0) {
     return {
       success: false,
-      errors: [{
-        field: "/code_path",
-        constraint: "required",
-        message: "code_path is required",
-      }],
+      errors: [
+        {
+          field: "/code_path",
+          constraint: "required",
+          message: "code_path is required",
+        },
+      ],
     };
   }
 
@@ -125,11 +134,13 @@ export function validateProjectConfig(project: unknown): ValidationResult<Projec
     if (!validModes.includes(p.memories_mode as string)) {
       return {
         success: false,
-        errors: [{
-          field: "/memories_mode",
-          constraint: "enum",
-          message: `memories_mode must be one of: ${validModes.join(", ")}`,
-        }],
+        errors: [
+          {
+            field: "/memories_mode",
+            constraint: "enum",
+            message: `memories_mode must be one of: ${validModes.join(", ")}`,
+          },
+        ],
       };
     }
   }

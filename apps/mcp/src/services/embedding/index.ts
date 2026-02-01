@@ -3,26 +3,25 @@
  * Provides text embedding generation functionality.
  */
 
-export { generateEmbedding } from "./generateEmbedding";
-export { batchGenerate } from "./batchGenerate";
-export { triggerEmbedding } from "./triggerEmbedding";
 export type { BatchResult, ProgressCallback } from "./batchGenerate";
+export { batchGenerate } from "./batchGenerate";
+export { generateEmbedding } from "./generateEmbedding";
+export type { QueueItem } from "./queue";
 
 // Queue functions for offline mode
 export {
   createEmbeddingQueueTable,
-  enqueueEmbedding,
   dequeueEmbedding,
-  markEmbeddingProcessed,
-  incrementAttempts,
+  enqueueEmbedding,
   getQueueLength,
+  incrementAttempts,
+  markEmbeddingProcessed,
 } from "./queue";
-export type { QueueItem } from "./queue";
-
 // Retry logic with exponential backoff
 export {
-  processWithRetry,
-  processEmbeddingQueue,
-  MAX_RETRIES,
   BASE_DELAY_MS,
+  MAX_RETRIES,
+  processEmbeddingQueue,
+  processWithRetry,
 } from "./retry";
+export { triggerEmbedding } from "./triggerEmbedding";

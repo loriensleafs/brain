@@ -9,14 +9,14 @@
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { resolveProject } from "../../project/resolve";
 import { getBasicMemoryClient } from "../../proxy/client";
-import type {
-  ValidateImportArgs,
-  ValidateImportOutput,
-  MigrationResultInput
-} from "./schema";
+import { logger } from "../../utils/internal/logger";
 import { checkConformance } from "../analyze-project/conformanceChecker";
 import { brainTargetSchema } from "../analyze-project/schema";
-import { logger } from "../../utils/internal/logger";
+import type {
+  MigrationResultInput,
+  ValidateImportArgs,
+  ValidateImportOutput,
+} from "./schema";
 
 /**
  * Parsed note structure for conformance checking
@@ -32,20 +32,24 @@ interface ParsedNote {
 /**
  * Validates a single migration result input has required fields
  */
-function isValidMigrationResult(result: unknown): result is MigrationResultInput {
-  if (typeof result !== 'object' || result === null) return false;
+function isValidMigrationResult(
+  result: unknown,
+): result is MigrationResultInput {
+  if (typeof result !== "object" || result === null) return false;
   const obj = result as Record<string, unknown>;
   return (
-    typeof obj.source === 'string' &&
-    typeof obj.target === 'string' &&
-    typeof obj.success === 'boolean'
+    typeof obj.source === "string" &&
+    typeof obj.target === "string" &&
+    typeof obj.success === "boolean"
   );
 }
 
 /**
  * Main handler for the validate_import tool
  */
-export async function handler(args: ValidateImportArgs): Promise<CallToolResult> {
+export async function handler(
+  args: ValidateImportArgs,
+): Promise<CallToolResult> {
   const project = args.project || resolveProject();
   const migrationResults = args.migration_results || [];
 
@@ -58,10 +62,12 @@ export async function handler(args: ValidateImportArgs): Promise<CallToolResult>
 
   if (!Array.isArray(migrationResults) || migrationResults.length === 0) {
     return {
-      content: [{
-        type: "text" as const,
-        text: "No migration results provided. Run migrate_cluster first and pass its results."
-      }],
+      content: [
+        {
+          type: "text" as const,
+          text: "No migration results provided. Run migrate_cluster first and pass its results.",
+        },
+      ],
       isError: true,
     };
   }
@@ -76,21 +82,27 @@ export async function handler(args: ValidateImportArgs): Promise<CallToolResult>
 
   if (validResults.length === 0) {
     return {
-      content: [{
-        type: "text" as const,
-        text: "No valid migration results found. Each result must have source, target, and success fields."
-      }],
+      content: [
+        {
+          type: "text" as const,
+          text: "No valid migration results found. Each result must have source, target, and success fields.",
+        },
+      ],
       isError: true,
     };
   }
 
   // Filter to only successful migrations for validation
-  const successfulMigrations = validResults.filter(r => r.success);
-  const failedMigrations = validResults.filter(r => !r.success);
+  const successfulMigrations = validResults.filter((r) => r.success);
+  const failedMigrations = validResults.filter((r) => !r.success);
 
   logger.info(
-    { project, total: validResults.length, successful: successfulMigrations.length },
-    "Starting migration validation"
+    {
+      project,
+      total: validResults.length,
+      successful: successfulMigrations.length,
+    },
+    "Starting migration validation",
   );
 
   const client = await getBasicMemoryClient();
@@ -102,13 +114,15 @@ export async function handler(args: ValidateImportArgs): Promise<CallToolResult>
   for (const migration of successfulMigrations) {
     try {
       const readResult = await client.callTool({
-        name: 'read_note',
-        arguments: { identifier: migration.target, project }
+        name: "read_note",
+        arguments: { identifier: migration.target, project },
       });
 
-      const content = readResult.content as Array<{ text?: string }> | undefined;
-      const text = content?.[0]?.text || '';
-      if (!text || text.includes('not found') || text.includes('Error')) {
+      const content = readResult.content as
+        | Array<{ text?: string }>
+        | undefined;
+      const text = content?.[0]?.text || "";
+      if (!text || text.includes("not found") || text.includes("Error")) {
         missingContent.push(migration.target);
       } else {
         existingTargets.push(migration.target);
@@ -120,9 +134,10 @@ export async function handler(args: ValidateImportArgs): Promise<CallToolResult>
   }
 
   const contentPreserved = missingContent.length === 0;
-  const contentCoverage = successfulMigrations.length > 0
-    ? existingTargets.length / successfulMigrations.length
-    : 0;
+  const contentCoverage =
+    successfulMigrations.length > 0
+      ? existingTargets.length / successfulMigrations.length
+      : 0;
 
   // Re-run conformance checks on existing targets
   const stillNonConforming: string[] = [];
@@ -131,8 +146,8 @@ export async function handler(args: ValidateImportArgs): Promise<CallToolResult>
   for (const targetPath of existingTargets) {
     try {
       const readResult = await client.callTool({
-        name: 'read_note',
-        arguments: { identifier: targetPath, project }
+        name: "read_note",
+        arguments: { identifier: targetPath, project },
       });
 
       const parsed = parseNoteContent(targetPath, readResult);
@@ -150,31 +165,42 @@ export async function handler(args: ValidateImportArgs): Promise<CallToolResult>
     }
   }
 
-  const allConform = stillNonConforming.length === 0 && existingTargets.length > 0;
+  const allConform =
+    stillNonConforming.length === 0 && existingTargets.length > 0;
 
   // Calculate quality score (0-100)
   // Weight factors: content preservation (40%), conformance (60%)
   const contentScore = contentCoverage * 40;
-  const conformanceRate = existingTargets.length > 0
-    ? (existingTargets.length - stillNonConforming.length) / existingTargets.length
-    : 0;
+  const conformanceRate =
+    existingTargets.length > 0
+      ? (existingTargets.length - stillNonConforming.length) /
+        existingTargets.length
+      : 0;
   const conformanceScore = conformanceRate * 60;
   const qualityScore = Math.round(contentScore + conformanceScore);
 
   // Build summary
   const summaryParts: string[] = [];
   if (contentPreserved && allConform) {
-    summaryParts.push("Migration successful - all files preserved and conform to conventions.");
+    summaryParts.push(
+      "Migration successful - all files preserved and conform to conventions.",
+    );
   } else {
     if (!contentPreserved) {
-      summaryParts.push(`${missingContent.length} file(s) missing or unreadable.`);
+      summaryParts.push(
+        `${missingContent.length} file(s) missing or unreadable.`,
+      );
     }
     if (!allConform) {
-      summaryParts.push(`${stillNonConforming.length} file(s) still have conformance issues.`);
+      summaryParts.push(
+        `${stillNonConforming.length} file(s) still have conformance issues.`,
+      );
     }
   }
   if (failedMigrations.length > 0) {
-    summaryParts.push(`${failedMigrations.length} migration(s) were not attempted (marked as failed).`);
+    summaryParts.push(
+      `${failedMigrations.length} migration(s) were not attempted (marked as failed).`,
+    );
   }
   summaryParts.push(`Quality score: ${qualityScore}/100`);
 
@@ -186,16 +212,16 @@ export async function handler(args: ValidateImportArgs): Promise<CallToolResult>
     conformance_check: {
       all_conform: allConform,
       still_non_conforming: stillNonConforming,
-      issues_fixed: issuesFixed
+      issues_fixed: issuesFixed,
     },
 
     quality_score: qualityScore,
-    summary: summaryParts.join(' ')
+    summary: summaryParts.join(" "),
   };
 
   logger.info(
     { project, qualityScore, contentPreserved, allConform },
-    "Migration validation complete"
+    "Migration validation complete",
   );
 
   // Build text output
@@ -203,7 +229,7 @@ export async function handler(args: ValidateImportArgs): Promise<CallToolResult>
 
   return {
     structuredContent: output as unknown as { [x: string]: unknown },
-    content: [{ type: "text" as const, text: lines.join("\n") }]
+    content: [{ type: "text" as const, text: lines.join("\n") }],
   };
 }
 
@@ -212,7 +238,7 @@ export async function handler(args: ValidateImportArgs): Promise<CallToolResult>
  */
 function parseNoteContent(path: string, result: unknown): ParsedNote {
   const resultObj = result as { content?: Array<{ text?: string }> };
-  const text = resultObj.content?.[0]?.text || '';
+  const text = resultObj.content?.[0]?.text || "";
 
   // Check for frontmatter
   let frontmatter: Record<string, unknown> | null = null;
@@ -220,12 +246,12 @@ function parseNoteContent(path: string, result: unknown): ParsedNote {
   if (fmMatch) {
     try {
       // Simple YAML-like parsing
-      const lines = fmMatch[1].split('\n');
+      const lines = fmMatch[1].split("\n");
       frontmatter = {};
       for (const line of lines) {
-        const [key, ...valueParts] = line.split(':');
+        const [key, ...valueParts] = line.split(":");
         if (key && valueParts.length) {
-          frontmatter[key.trim()] = valueParts.join(':').trim();
+          frontmatter[key.trim()] = valueParts.join(":").trim();
         }
       }
     } catch {
@@ -237,8 +263,8 @@ function parseNoteContent(path: string, result: unknown): ParsedNote {
     path,
     relativePath: path,
     frontmatter,
-    hasObservations: text.includes('## Observations'),
-    hasRelations: text.includes('## Relations')
+    hasObservations: text.includes("## Observations"),
+    hasRelations: text.includes("## Relations"),
   };
 }
 
@@ -248,19 +274,19 @@ function parseNoteContent(path: string, result: unknown): ParsedNote {
 function buildResultText(
   project: string,
   output: ValidateImportOutput,
-  skippedCount: number
+  skippedCount: number,
 ): string[] {
   const lines: string[] = [
     `## Migration Validation Results`,
     ``,
     `**Project:** ${project}`,
     `**Quality Score:** ${output.quality_score}/100`,
-    ``
+    ``,
   ];
 
   // Content preservation section
   lines.push(`### Content Preservation`);
-  lines.push(`- **Preserved:** ${output.content_preserved ? 'Yes' : 'No'}`);
+  lines.push(`- **Preserved:** ${output.content_preserved ? "Yes" : "No"}`);
   lines.push(`- **Coverage:** ${Math.round(output.content_coverage * 100)}%`);
   if (output.missing_content.length > 0) {
     lines.push(`- **Missing (${output.missing_content.length}):**`);
@@ -275,15 +301,24 @@ function buildResultText(
 
   // Conformance check section
   lines.push(`### Conformance Check`);
-  lines.push(`- **All Conform:** ${output.conformance_check.all_conform ? 'Yes' : 'No'}`);
+  lines.push(
+    `- **All Conform:** ${output.conformance_check.all_conform ? "Yes" : "No"}`,
+  );
   lines.push(`- **Issues Fixed:** ${output.conformance_check.issues_fixed}`);
   if (output.conformance_check.still_non_conforming.length > 0) {
-    lines.push(`- **Still Non-Conforming (${output.conformance_check.still_non_conforming.length}):**`);
-    for (const path of output.conformance_check.still_non_conforming.slice(0, 10)) {
+    lines.push(
+      `- **Still Non-Conforming (${output.conformance_check.still_non_conforming.length}):**`,
+    );
+    for (const path of output.conformance_check.still_non_conforming.slice(
+      0,
+      10,
+    )) {
       lines.push(`  - ${path}`);
     }
     if (output.conformance_check.still_non_conforming.length > 10) {
-      lines.push(`  - ... and ${output.conformance_check.still_non_conforming.length - 10} more`);
+      lines.push(
+        `  - ... and ${output.conformance_check.still_non_conforming.length - 10} more`,
+      );
     }
   }
   lines.push(``);
@@ -294,7 +329,9 @@ function buildResultText(
 
   if (skippedCount > 0) {
     lines.push(``);
-    lines.push(`*Note: ${skippedCount} failed migration(s) were not validated.*`);
+    lines.push(
+      `*Note: ${skippedCount} failed migration(s) were not validated.*`,
+    );
   }
 
   return lines;

@@ -46,7 +46,7 @@ export function enqueueEmbedding(noteId: string): void {
       INSERT INTO embedding_queue (note_id) VALUES (?)
       ON CONFLICT(note_id) DO UPDATE SET created_at = CURRENT_TIMESTAMP, attempts = 0
     `,
-      [noteId]
+      [noteId],
     );
   } finally {
     db.close();
@@ -65,7 +65,7 @@ export function dequeueEmbedding(): QueueItem | null {
         `
       SELECT id, note_id as noteId, created_at as createdAt, attempts, last_error as lastError
       FROM embedding_queue ORDER BY created_at ASC LIMIT 1
-    `
+    `,
       )
       .get();
     return result ?? null;
@@ -96,7 +96,7 @@ export function incrementAttempts(id: number, error?: string): void {
       `
       UPDATE embedding_queue SET attempts = attempts + 1, last_error = ? WHERE id = ?
     `,
-      [error ?? null, id]
+      [error ?? null, id],
     );
   } finally {
     db.close();
@@ -111,7 +111,7 @@ export function getQueueLength(): number {
   try {
     const result = db
       .query<{ count: number }, []>(
-        "SELECT COUNT(*) as count FROM embedding_queue"
+        "SELECT COUNT(*) as count FROM embedding_queue",
       )
       .get();
     return result?.count ?? 0;

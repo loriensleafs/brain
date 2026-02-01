@@ -26,7 +26,7 @@ export type ProgressCallback = (completed: number, total: number) => void;
 export async function batchGenerate(
   texts: string[],
   batchSize: number = 100,
-  onProgress?: ProgressCallback
+  onProgress?: ProgressCallback,
 ): Promise<BatchResult> {
   const embeddings: (number[] | null)[] = [];
   const failed: number[] = [];
@@ -34,7 +34,7 @@ export async function batchGenerate(
   for (let i = 0; i < texts.length; i += batchSize) {
     const batch = texts.slice(i, i + batchSize);
     const results = await Promise.allSettled(
-      batch.map((text) => generateEmbedding(text))
+      batch.map((text) => generateEmbedding(text)),
     );
 
     results.forEach((result, idx) => {

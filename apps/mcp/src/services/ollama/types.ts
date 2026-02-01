@@ -44,7 +44,7 @@ export type TaskType = "search_document" | "search_query";
 export class OllamaError extends Error {
   constructor(
     message: string,
-    public statusCode: number
+    public statusCode: number,
   ) {
     super(message);
     this.name = "OllamaError";

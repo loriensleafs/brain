@@ -14,21 +14,25 @@
  */
 
 import * as fs from "fs";
-import * as path from "path";
 import * as os from "os";
+import * as path from "path";
 import {
-  BrainConfig,
+  acquireConfigLock,
+  releaseConfigLock,
+} from "../utils/security/configLock";
+import { validatePathOrThrow } from "./path-validator";
+import {
+  type BrainConfig,
   DEFAULT_BRAIN_CONFIG,
   validateBrainConfig,
 } from "./schema";
-import { validatePathOrThrow } from "./path-validator";
-import { acquireConfigLock, releaseConfigLock } from "../utils/security/configLock";
 
 /**
  * XDG-compliant configuration directory for Brain.
  * Uses ~/.config/brain/ on Unix-like systems.
  */
-const XDG_CONFIG_HOME = process.env.XDG_CONFIG_HOME || path.join(os.homedir(), ".config");
+const XDG_CONFIG_HOME =
+  process.env.XDG_CONFIG_HOME || path.join(os.homedir(), ".config");
 const BRAIN_CONFIG_DIR = path.join(XDG_CONFIG_HOME, "brain");
 const BRAIN_CONFIG_FILE = "config.json";
 const BRAIN_CONFIG_TEMP_FILE = "config.json.tmp";
@@ -52,8 +56,12 @@ const DEFAULT_LOCK_TIMEOUT_MS = 5000;
 export class BrainConfigError extends Error {
   constructor(
     message: string,
-    public readonly code: "PARSE_ERROR" | "VALIDATION_ERROR" | "IO_ERROR" | "LOCK_ERROR",
-    public readonly cause?: unknown
+    public readonly code:
+      | "PARSE_ERROR"
+      | "VALIDATION_ERROR"
+      | "IO_ERROR"
+      | "LOCK_ERROR",
+    public readonly cause?: unknown,
   ) {
     super(message);
     this.name = "BrainConfigError";
@@ -110,7 +118,7 @@ function ensureConfigDir(): void {
       throw new BrainConfigError(
         `Failed to create config directory: ${configDir}`,
         "IO_ERROR",
-        error
+        error,
       );
     }
   }
@@ -155,7 +163,9 @@ function setSecureFilePermissions(filePath: string): void {
  * console.log(config.defaults.memories_location);
  * ```
  */
-export async function loadBrainConfig(options: BrainConfigOptions = {}): Promise<BrainConfig> {
+export async function loadBrainConfig(
+  options: BrainConfigOptions = {},
+): Promise<BrainConfig> {
   const configPath = getBrainConfigPath();
   const { lockTimeoutMs = DEFAULT_LOCK_TIMEOUT_MS } = options;
 
@@ -164,7 +174,7 @@ export async function loadBrainConfig(options: BrainConfigOptions = {}): Promise
   if (!lockResult.acquired) {
     throw new BrainConfigError(
       lockResult.error || "Failed to acquire config lock for reading",
-      "LOCK_ERROR"
+      "LOCK_ERROR",
     );
   }
 
@@ -182,7 +192,7 @@ export async function loadBrainConfig(options: BrainConfigOptions = {}): Promise
       throw new BrainConfigError(
         `Failed to read config file: ${configPath}`,
         "IO_ERROR",
-        error
+        error,
       );
     }
 
@@ -194,7 +204,7 @@ export async function loadBrainConfig(options: BrainConfigOptions = {}): Promise
       throw new BrainConfigError(
         `Invalid JSON in config file: ${error instanceof SyntaxError ? error.message : "parse error"}`,
         "PARSE_ERROR",
-        error
+        error,
       );
     }
 
@@ -208,7 +218,7 @@ export async function loadBrainConfig(options: BrainConfigOptions = {}): Promise
       throw new BrainConfigError(
         `Config validation failed: ${errorDetails}`,
         "VALIDATION_ERROR",
-        new Error(errorDetails)
+        new Error(errorDetails),
       );
     }
 
@@ -270,7 +280,7 @@ export function loadBrainConfigSync(): BrainConfig {
  */
 export async function saveBrainConfig(
   config: BrainConfig,
-  options: BrainConfigOptions = {}
+  options: BrainConfigOptions = {},
 ): Promise<void> {
   const { lockTimeoutMs = DEFAULT_LOCK_TIMEOUT_MS } = options;
 
@@ -284,7 +294,7 @@ export async function saveBrainConfig(
     throw new BrainConfigError(
       `Invalid config: ${errorDetails}`,
       "VALIDATION_ERROR",
-      new Error(errorDetails)
+      new Error(errorDetails),
     );
   }
 
@@ -296,7 +306,7 @@ export async function saveBrainConfig(
   if (!lockResult.acquired) {
     throw new BrainConfigError(
       lockResult.error || "Failed to acquire config lock for writing",
-      "LOCK_ERROR"
+      "LOCK_ERROR",
     );
   }
 
@@ -312,12 +322,15 @@ export async function saveBrainConfig(
 
     // Write to temp file
     try {
-      fs.writeFileSync(tempPath, content, { encoding: "utf-8", mode: FILE_MODE });
+      fs.writeFileSync(tempPath, content, {
+        encoding: "utf-8",
+        mode: FILE_MODE,
+      });
     } catch (error) {
       throw new BrainConfigError(
         `Failed to write temp config file: ${tempPath}`,
         "IO_ERROR",
-        error
+        error,
       );
     }
 
@@ -331,7 +344,7 @@ export async function saveBrainConfig(
       throw new BrainConfigError(
         "Temp file verification failed: written JSON is invalid",
         "PARSE_ERROR",
-        error
+        error,
       );
     }
 
@@ -343,7 +356,7 @@ export async function saveBrainConfig(
       throw new BrainConfigError(
         `Failed to rename temp file to config: ${error instanceof Error ? error.message : "rename error"}`,
         "IO_ERROR",
-        error
+        error,
       );
     }
 
@@ -372,7 +385,9 @@ export async function saveBrainConfig(
  * const config = await initBrainConfig();
  * ```
  */
-export async function initBrainConfig(options: BrainConfigOptions = {}): Promise<BrainConfig> {
+export async function initBrainConfig(
+  options: BrainConfigOptions = {},
+): Promise<BrainConfig> {
   const configPath = getBrainConfigPath();
 
   if (!fs.existsSync(configPath)) {
@@ -397,12 +412,14 @@ function validateConfigPaths(config: BrainConfig): void {
     throw new BrainConfigError(
       `Invalid memories_location: ${error instanceof Error ? error.message : "validation error"}`,
       "VALIDATION_ERROR",
-      error
+      error,
     );
   }
 
   // Validate project paths
-  for (const [projectName, projectConfig] of Object.entries(config.projects ?? {})) {
+  for (const [projectName, projectConfig] of Object.entries(
+    config.projects ?? {},
+  )) {
     if (!projectConfig) continue;
 
     // Validate code_path
@@ -412,7 +429,7 @@ function validateConfigPaths(config: BrainConfig): void {
       throw new BrainConfigError(
         `Invalid code_path for project '${projectName}': ${error instanceof Error ? error.message : "validation error"}`,
         "VALIDATION_ERROR",
-        error
+        error,
       );
     }
 
@@ -424,7 +441,7 @@ function validateConfigPaths(config: BrainConfig): void {
         throw new BrainConfigError(
           `Invalid memories_path for project '${projectName}': ${error instanceof Error ? error.message : "validation error"}`,
           "VALIDATION_ERROR",
-          error
+          error,
         );
       }
     }
@@ -483,7 +500,9 @@ export function getDefaultMemoriesLocation(): string {
  * @param options - Configuration options
  * @throws BrainConfigError if deletion fails
  */
-export async function deleteBrainConfig(options: BrainConfigOptions = {}): Promise<void> {
+export async function deleteBrainConfig(
+  options: BrainConfigOptions = {},
+): Promise<void> {
   const { lockTimeoutMs = DEFAULT_LOCK_TIMEOUT_MS } = options;
   const configPath = getBrainConfigPath();
 
@@ -495,7 +514,7 @@ export async function deleteBrainConfig(options: BrainConfigOptions = {}): Promi
   if (!lockResult.acquired) {
     throw new BrainConfigError(
       lockResult.error || "Failed to acquire config lock for deletion",
-      "LOCK_ERROR"
+      "LOCK_ERROR",
     );
   }
 
@@ -505,7 +524,7 @@ export async function deleteBrainConfig(options: BrainConfigOptions = {}): Promi
     throw new BrainConfigError(
       `Failed to delete config file: ${configPath}`,
       "IO_ERROR",
-      error
+      error,
     );
   } finally {
     releaseConfigLock();

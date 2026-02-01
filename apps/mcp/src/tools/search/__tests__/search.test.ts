@@ -1,4 +1,4 @@
-import { describe, test, expect } from "vitest";
+import { describe, expect, test } from "vitest";
 import { SearchArgsSchema, type SearchResult } from "../schema";
 
 describe("search schema validation", () => {
@@ -9,7 +9,7 @@ describe("search schema validation", () => {
         limit: 10,
         threshold: 0.7,
         mode: "auto",
-      })
+      }),
     ).toThrow();
 
     const valid = SearchArgsSchema.parse({
@@ -27,7 +27,7 @@ describe("search schema validation", () => {
       SearchArgsSchema.parse({
         query: "test",
         limit: 0,
-      })
+      }),
     ).toThrow();
 
     // Above maximum
@@ -35,7 +35,7 @@ describe("search schema validation", () => {
       SearchArgsSchema.parse({
         query: "test",
         limit: 101,
-      })
+      }),
     ).toThrow();
 
     // Valid
@@ -52,7 +52,7 @@ describe("search schema validation", () => {
       SearchArgsSchema.parse({
         query: "test",
         threshold: -0.1,
-      })
+      }),
     ).toThrow();
 
     // Above maximum
@@ -60,7 +60,7 @@ describe("search schema validation", () => {
       SearchArgsSchema.parse({
         query: "test",
         threshold: 1.1,
-      })
+      }),
     ).toThrow();
 
     // Valid
@@ -76,13 +76,16 @@ describe("search schema validation", () => {
       SearchArgsSchema.parse({
         query: "test",
         mode: "invalid",
-      })
+      }),
     ).toThrow();
 
     const auto = SearchArgsSchema.parse({ query: "test", mode: "auto" });
     expect(auto.mode).toBe("auto");
 
-    const semantic = SearchArgsSchema.parse({ query: "test", mode: "semantic" });
+    const semantic = SearchArgsSchema.parse({
+      query: "test",
+      mode: "semantic",
+    });
     expect(semantic.mode).toBe("semantic");
 
     const keyword = SearchArgsSchema.parse({ query: "test", mode: "keyword" });
@@ -173,11 +176,12 @@ describe("search result structure", () => {
       similarity_score: 0.85,
       snippet: "Short snippet",
       source: "keyword",
-      fullContent: "This is the full note content that can be much longer than the snippet.",
+      fullContent:
+        "This is the full note content that can be much longer than the snippet.",
     };
 
     expect(resultWithFullContent.fullContent).toBe(
-      "This is the full note content that can be much longer than the snippet."
+      "This is the full note content that can be much longer than the snippet.",
     );
   });
 

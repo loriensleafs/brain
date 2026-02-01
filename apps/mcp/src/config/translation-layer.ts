@@ -15,11 +15,19 @@
  */
 
 import * as fs from "fs";
-import * as path from "path";
 import * as os from "os";
-import { BrainConfig, ProjectConfig, MemoriesMode, LogLevel } from "./schema";
+import * as path from "path";
+import {
+  acquireConfigLock,
+  releaseConfigLock,
+} from "../utils/security/configLock";
 import { expandTilde, normalizePath, validatePath } from "./path-validator";
-import { acquireConfigLock, releaseConfigLock } from "../utils/security/configLock";
+import type {
+  BrainConfig,
+  LogLevel,
+  MemoriesMode,
+  ProjectConfig,
+} from "./schema";
 
 /**
  * Path to basic-memory's configuration file.
@@ -77,7 +85,7 @@ export class TranslationError extends Error {
   constructor(
     message: string,
     public readonly code: "IO_ERROR" | "VALIDATION_ERROR" | "LOCK_ERROR",
-    public readonly cause?: unknown
+    public readonly cause?: unknown,
   ) {
     super(message);
     this.name = "TranslationError";
@@ -153,7 +161,7 @@ export function getBasicMemoryConfigPath(): string {
 export function resolveMemoriesPath(
   projectName: string,
   projectConfig: ProjectConfig,
-  defaultMemoriesLocation: string
+  defaultMemoriesLocation: string,
 ): ResolvedMemoriesPath {
   // Determine which mode to use
   const mode: MemoriesMode = projectConfig.memories_mode || "DEFAULT";
@@ -282,20 +290,22 @@ export function resolveMemoriesPath(
  */
 export function translateBrainToBasicMemory(
   brainConfig: BrainConfig,
-  existingConfig?: BasicMemoryConfig
+  existingConfig?: BasicMemoryConfig,
 ): BasicMemoryConfig {
   // Start with existing config to preserve unknown fields
   const result: BasicMemoryConfig = existingConfig ? { ...existingConfig } : {};
 
   // Translate projects with resolved paths
   result.projects = {};
-  for (const [projectName, projectConfig] of Object.entries(brainConfig.projects)) {
+  for (const [projectName, projectConfig] of Object.entries(
+    brainConfig.projects,
+  )) {
     if (!projectConfig) continue;
 
     const resolved = resolveMemoriesPath(
       projectName,
       projectConfig,
-      brainConfig.defaults.memories_location
+      brainConfig.defaults.memories_location,
     );
 
     // Only include projects with successfully resolved paths
@@ -389,7 +399,7 @@ function writeBasicMemoryConfig(config: BasicMemoryConfig): void {
     throw new TranslationError(
       `Failed to write basic-memory config: ${error instanceof Error ? error.message : "unknown error"}`,
       "IO_ERROR",
-      error
+      error,
     );
   }
 }
@@ -416,7 +426,7 @@ function writeBasicMemoryConfig(config: BasicMemoryConfig): void {
  */
 export async function syncConfigToBasicMemory(
   brainConfig: BrainConfig,
-  options: TranslationOptions = {}
+  options: TranslationOptions = {},
 ): Promise<void> {
   const { lockTimeoutMs = DEFAULT_LOCK_TIMEOUT_MS } = options;
 
@@ -425,7 +435,7 @@ export async function syncConfigToBasicMemory(
   if (!lockResult.acquired) {
     throw new TranslationError(
       lockResult.error || "Failed to acquire lock for basic-memory sync",
-      "LOCK_ERROR"
+      "LOCK_ERROR",
     );
   }
 
@@ -434,7 +444,10 @@ export async function syncConfigToBasicMemory(
     const existingConfig = loadExistingBasicMemoryConfig();
 
     // Translate Brain config
-    const translatedConfig = translateBrainToBasicMemory(brainConfig, existingConfig);
+    const translatedConfig = translateBrainToBasicMemory(
+      brainConfig,
+      existingConfig,
+    );
 
     // Write to basic-memory config
     writeBasicMemoryConfig(translatedConfig);
@@ -454,7 +467,7 @@ export async function syncConfigToBasicMemory(
  */
 export async function trySyncConfigToBasicMemory(
   brainConfig: BrainConfig,
-  options: TranslationOptions = {}
+  options: TranslationOptions = {},
 ): Promise<{ success: boolean; error?: string }> {
   try {
     await syncConfigToBasicMemory(brainConfig, options);
@@ -486,13 +499,15 @@ export function validateTranslation(brainConfig: BrainConfig): string[] {
 
   // Check that at least one project can be resolved
   let resolvedCount = 0;
-  for (const [projectName, projectConfig] of Object.entries(brainConfig.projects)) {
+  for (const [projectName, projectConfig] of Object.entries(
+    brainConfig.projects,
+  )) {
     if (!projectConfig) continue;
 
     const resolved = resolveMemoriesPath(
       projectName,
       projectConfig,
-      brainConfig.defaults.memories_location
+      brainConfig.defaults.memories_location,
     );
 
     if (resolved.error) {
@@ -503,7 +518,13 @@ export function validateTranslation(brainConfig: BrainConfig): string[] {
   }
 
   // Validate log level
-  const validLogLevels: LogLevel[] = ["trace", "debug", "info", "warn", "error"];
+  const validLogLevels: LogLevel[] = [
+    "trace",
+    "debug",
+    "info",
+    "warn",
+    "error",
+  ];
   const logLevel = brainConfig.logging.level ?? "info";
   if (!validLogLevels.includes(logLevel)) {
     errors.push(`Invalid log level: ${logLevel}`);
@@ -533,12 +554,14 @@ export function previewTranslation(brainConfig: BrainConfig): {
   const resolutions: Record<string, ResolvedMemoriesPath> = {};
 
   // Resolve all projects
-  for (const [projectName, projectConfig] of Object.entries(brainConfig.projects)) {
+  for (const [projectName, projectConfig] of Object.entries(
+    brainConfig.projects,
+  )) {
     if (!projectConfig) continue;
     resolutions[projectName] = resolveMemoriesPath(
       projectName,
       projectConfig,
-      brainConfig.defaults.memories_location
+      brainConfig.defaults.memories_location,
     );
   }
 

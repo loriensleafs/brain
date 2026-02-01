@@ -5,7 +5,7 @@
  * with cycle detection to prevent circular dependencies.
  */
 
-import { getBasicMemoryClient } from '../../../proxy/client';
+import { getBasicMemoryClient } from "../../../proxy/client";
 
 /**
  * Result from dependency operation
@@ -14,7 +14,7 @@ export interface DependencyResult {
   success: boolean;
   source: string;
   target: string;
-  operation: 'add' | 'remove';
+  operation: "add" | "remove";
   error?: string;
 }
 
@@ -25,7 +25,7 @@ export interface DependencyResult {
 export async function addDependency(
   project: string,
   source: string,
-  target: string
+  target: string,
 ): Promise<DependencyResult> {
   try {
     const client = await getBasicMemoryClient();
@@ -37,25 +37,25 @@ export async function addDependency(
         success: false,
         source,
         target,
-        operation: 'add',
-        error: `Adding this dependency would create a cycle: ${cycleCheck.cycle?.join(' → ')}`,
+        operation: "add",
+        error: `Adding this dependency would create a cycle: ${cycleCheck.cycle?.join(" → ")}`,
       };
     }
 
     // Read source note
     const readResult = await client.callTool({
-      name: 'read_note',
+      name: "read_note",
       arguments: { identifier: source, project },
     });
 
-    const content = (readResult.content as any)?.[0]?.text || '';
+    const content = (readResult.content as any)?.[0]?.text || "";
 
     // Add dependency relation
     const updatedContent = addDependencyToContent(content, target);
 
     // Write back the note
     await client.callTool({
-      name: 'write_note',
+      name: "write_note",
       arguments: {
         path: source,
         project,
@@ -67,14 +67,14 @@ export async function addDependency(
       success: true,
       source,
       target,
-      operation: 'add',
+      operation: "add",
     };
   } catch (error) {
     return {
       success: false,
       source,
       target,
-      operation: 'add',
+      operation: "add",
       error: error instanceof Error ? error.message : String(error),
     };
   }
@@ -86,25 +86,25 @@ export async function addDependency(
 export async function removeDependency(
   project: string,
   source: string,
-  target: string
+  target: string,
 ): Promise<DependencyResult> {
   try {
     const client = await getBasicMemoryClient();
 
     // Read source note
     const readResult = await client.callTool({
-      name: 'read_note',
+      name: "read_note",
       arguments: { identifier: source, project },
     });
 
-    const content = (readResult.content as any)?.[0]?.text || '';
+    const content = (readResult.content as any)?.[0]?.text || "";
 
     // Remove dependency relation
     const updatedContent = removeDependencyFromContent(content, target);
 
     // Write back the note
     await client.callTool({
-      name: 'write_note',
+      name: "write_note",
       arguments: {
         path: source,
         project,
@@ -116,14 +116,14 @@ export async function removeDependency(
       success: true,
       source,
       target,
-      operation: 'remove',
+      operation: "remove",
     };
   } catch (error) {
     return {
       success: false,
       source,
       target,
-      operation: 'remove',
+      operation: "remove",
       error: error instanceof Error ? error.message : String(error),
     };
   }
@@ -135,7 +135,7 @@ export async function removeDependency(
 async function detectCycleIfAdded(
   project: string,
   source: string,
-  target: string
+  target: string,
 ): Promise<{ hasCycle: boolean; cycle?: string[] }> {
   try {
     const client = await getBasicMemoryClient();
@@ -145,18 +145,18 @@ async function detectCycleIfAdded(
 
     // Read source note to get its current dependencies
     const sourceResult = await client.callTool({
-      name: 'read_note',
+      name: "read_note",
       arguments: { identifier: source, project },
     });
-    const sourceContent = (sourceResult.content as any)?.[0]?.text || '';
+    const sourceContent = (sourceResult.content as any)?.[0]?.text || "";
     dependencies.set(source, extractDependencies(sourceContent));
 
     // Read target note to get its dependencies
     const targetResult = await client.callTool({
-      name: 'read_note',
+      name: "read_note",
       arguments: { identifier: target, project },
     });
-    const targetContent = (targetResult.content as any)?.[0]?.text || '';
+    const targetContent = (targetResult.content as any)?.[0]?.text || "";
     dependencies.set(target, extractDependencies(targetContent));
 
     // Simulate adding the new dependency
@@ -206,7 +206,7 @@ async function detectCycleIfAdded(
  * Add dependency relation to note content
  */
 function addDependencyToContent(content: string, target: string): string {
-  const lines = content.split('\n');
+  const lines = content.split("\n");
 
   // Find Relations section or create it
   let relationsIndex = -1;
@@ -225,9 +225,9 @@ function addDependencyToContent(content: string, target: string): string {
 
   if (relationsIndex === -1) {
     // No Relations section, add it at the end
-    lines.push('');
-    lines.push('## Relations');
-    lines.push('');
+    lines.push("");
+    lines.push("## Relations");
+    lines.push("");
     lines.push(dependencyLine);
   } else {
     // Add to existing Relations section
@@ -236,7 +236,7 @@ function addDependencyToContent(content: string, target: string): string {
       (line, idx) =>
         idx > relationsIndex &&
         (nextSectionIndex === -1 || idx < nextSectionIndex) &&
-        line.includes(`depends_on [[${target}]]`)
+        line.includes(`depends_on [[${target}]]`),
     );
 
     if (!existingDep) {
@@ -246,7 +246,7 @@ function addDependencyToContent(content: string, target: string): string {
 
       // Find first non-empty line after Relations heading
       let insertPos = relationsIndex + 1;
-      while (insertPos < insertIndex && lines[insertPos].trim() === '') {
+      while (insertPos < insertIndex && lines[insertPos].trim() === "") {
         insertPos++;
       }
 
@@ -254,18 +254,18 @@ function addDependencyToContent(content: string, target: string): string {
     }
   }
 
-  return lines.join('\n');
+  return lines.join("\n");
 }
 
 /**
  * Remove dependency relation from note content
  */
 function removeDependencyFromContent(content: string, target: string): string {
-  const lines = content.split('\n');
+  const lines = content.split("\n");
   const filteredLines = lines.filter(
-    (line) => !line.includes(`depends_on [[${target}]]`)
+    (line) => !line.includes(`depends_on [[${target}]]`),
   );
-  return filteredLines.join('\n');
+  return filteredLines.join("\n");
 }
 
 /**
@@ -273,13 +273,20 @@ function removeDependencyFromContent(content: string, target: string): string {
  */
 function extractDependencies(content: string): string[] {
   const deps: string[] = [];
-  const lines = content.split('\n');
-  const dependencyRelations = ['requires', 'builds_on', 'blocked_by', 'depends_on'];
+  const lines = content.split("\n");
+  const dependencyRelations = [
+    "requires",
+    "builds_on",
+    "blocked_by",
+    "depends_on",
+  ];
 
   for (const line of lines) {
     const trimmed = line.trim();
     for (const rel of dependencyRelations) {
-      const match = trimmed.match(new RegExp(`^-\\s*${rel}\\s+\\[\\[([^\\]]+)\\]\\]`));
+      const match = trimmed.match(
+        new RegExp(`^-\\s*${rel}\\s+\\[\\[([^\\]]+)\\]\\]`),
+      );
       if (match) {
         deps.push(match[1]);
       }

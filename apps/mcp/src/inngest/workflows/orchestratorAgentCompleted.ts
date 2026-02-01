@@ -25,16 +25,16 @@
  */
 
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { inngest } from "../client";
-import { logger } from "../../utils/internal/logger";
 import { getBasicMemoryClient } from "../../proxy/client";
-import {
-  type SessionState,
-  type AgentInvocation,
-  type OrchestratorWorkflow,
-  type CompactionEntry,
-} from "../../services/session/types";
 import { BrainSessionPersistence } from "../../services/session";
+import type {
+  AgentInvocation,
+  CompactionEntry,
+  OrchestratorWorkflow,
+  SessionState,
+} from "../../services/session/types";
+import { logger } from "../../utils/internal/logger";
+import { inngest } from "../client";
 import { createNonRetriableError, WorkflowErrorType } from "../errors";
 import type { AgentInvocationOutputData } from "../events";
 
@@ -87,7 +87,7 @@ function validateEventData(data: {
     throw createNonRetriableError(
       WorkflowErrorType.VALIDATION_ERROR,
       "Event data must include a valid sessionId string",
-      { context: { providedData: data } }
+      { context: { providedData: data } },
     );
   }
 
@@ -95,7 +95,7 @@ function validateEventData(data: {
     throw createNonRetriableError(
       WorkflowErrorType.VALIDATION_ERROR,
       "Event data must include a valid agent string",
-      { context: { providedData: data } }
+      { context: { providedData: data } },
     );
   }
 
@@ -103,7 +103,7 @@ function validateEventData(data: {
     throw createNonRetriableError(
       WorkflowErrorType.VALIDATION_ERROR,
       "Event data must include an output object",
-      { context: { providedData: data } }
+      { context: { providedData: data } },
     );
   }
 }
@@ -117,7 +117,7 @@ function validateEventData(data: {
  */
 function findInProgressInvocation(
   history: AgentInvocation[],
-  agent: string
+  agent: string,
 ): number {
   // Search from the end to find the most recent in-progress invocation
   for (let i = history.length - 1; i >= 0; i--) {
@@ -143,7 +143,7 @@ function completeInvocation(
   output: AgentInvocationOutputData,
   handoffTo: string | null,
   handoffReason: string,
-  timestamp: string
+  timestamp: string,
 ): AgentInvocation {
   const hasBlockers = output.blockers && output.blockers.length > 0;
 
@@ -183,7 +183,7 @@ function needsCompaction(workflow: OrchestratorWorkflow): boolean {
 function generateCompactionNoteContent(
   invocations: AgentInvocation[],
   sessionId: string,
-  timestamp: string
+  timestamp: string,
 ): string {
   const header = `# Agent History Archive
 
@@ -241,7 +241,7 @@ async function compactAgentHistory(
   workflow: OrchestratorWorkflow,
   sessionId: string,
   client: Client,
-  projectPath: string
+  projectPath: string,
 ): Promise<{ workflow: OrchestratorWorkflow; notePath: string }> {
   const timestamp = new Date().toISOString();
   const historyLength = workflow.agentHistory.length;
@@ -258,7 +258,7 @@ async function compactAgentHistory(
   const noteContent = generateCompactionNoteContent(
     archiveInvocations,
     sessionId,
-    timestamp
+    timestamp,
   );
 
   // Write to Brain note
@@ -278,7 +278,7 @@ async function compactAgentHistory(
       archivedCount: archiveInvocations.length,
       keptCount: keepInvocations.length,
     },
-    "Agent history compacted to Brain note"
+    "Agent history compacted to Brain note",
   );
 
   // Create compaction entry
@@ -335,7 +335,7 @@ export const orchestratorAgentCompletedWorkflow = inngest.createFunction(
       validateEventData(event.data);
       logger.info(
         { sessionId, agent, handoffTo },
-        "Orchestrator agent completion workflow initiated"
+        "Orchestrator agent completion workflow initiated",
       );
     });
 
@@ -350,7 +350,7 @@ export const orchestratorAgentCompletedWorkflow = inngest.createFunction(
           throw createNonRetriableError(
             WorkflowErrorType.VALIDATION_ERROR,
             "Session not found",
-            { context: { sessionId } }
+            { context: { sessionId } },
           );
         }
 
@@ -358,12 +358,12 @@ export const orchestratorAgentCompletedWorkflow = inngest.createFunction(
           throw createNonRetriableError(
             WorkflowErrorType.VALIDATION_ERROR,
             "Session has no orchestrator workflow",
-            { context: { sessionId } }
+            { context: { sessionId } },
           );
         }
 
         return state;
-      }
+      },
     );
 
     // Step 2: Update invocation with completion data
@@ -375,13 +375,13 @@ export const orchestratorAgentCompletedWorkflow = inngest.createFunction(
         // Find the in-progress invocation for this agent
         const invocationIndex = findInProgressInvocation(
           workflow.agentHistory,
-          agent
+          agent,
         );
 
         if (invocationIndex === -1) {
           logger.warn(
             { sessionId, agent },
-            "No in-progress invocation found for agent - creating completion record"
+            "No in-progress invocation found for agent - creating completion record",
           );
           // This can happen if the invocation event was missed
           // We still record the completion
@@ -396,7 +396,7 @@ export const orchestratorAgentCompletedWorkflow = inngest.createFunction(
             output,
             handoffTo,
             handoffReason,
-            timestamp
+            timestamp,
           );
         }
 
@@ -413,7 +413,7 @@ export const orchestratorAgentCompletedWorkflow = inngest.createFunction(
           updatedAt: new Date().toISOString(),
           version: currentState.version + 1,
         };
-      }
+      },
     );
 
     // Step 3: Check if compaction is needed
@@ -430,11 +430,11 @@ export const orchestratorAgentCompletedWorkflow = inngest.createFunction(
             threshold: COMPACTION_THRESHOLD,
             needsCompaction: result,
           },
-          "Compaction check completed"
+          "Compaction check completed",
         );
 
         return result;
-      }
+      },
     );
 
     // Step 4: Compact history if needed
@@ -451,7 +451,7 @@ export const orchestratorAgentCompletedWorkflow = inngest.createFunction(
           } catch (error) {
             logger.warn(
               { error },
-              "Brain MCP unavailable - skipping compaction"
+              "Brain MCP unavailable - skipping compaction",
             );
             // Return current state without compaction
             return { state: stateWithCompletion, notePath: "" };
@@ -461,7 +461,7 @@ export const orchestratorAgentCompletedWorkflow = inngest.createFunction(
             stateWithCompletion.orchestratorWorkflow!,
             sessionId,
             client,
-            process.cwd()
+            process.cwd(),
           );
 
           const newState: SessionState = {
@@ -472,7 +472,7 @@ export const orchestratorAgentCompletedWorkflow = inngest.createFunction(
           };
 
           return { state: newState, notePath };
-        }
+        },
       );
 
       finalState = compactionResult.state;
@@ -490,7 +490,7 @@ export const orchestratorAgentCompletedWorkflow = inngest.createFunction(
           version: finalState.version,
           historyLength: finalState.orchestratorWorkflow?.agentHistory.length,
         },
-        "Session state saved with agent completion"
+        "Session state saved with agent completion",
       );
     });
 
@@ -513,7 +513,7 @@ export const orchestratorAgentCompletedWorkflow = inngest.createFunction(
         compactionNotePath,
         historyLength: finalState.orchestratorWorkflow?.agentHistory.length,
       },
-      "Orchestrator agent completion workflow completed"
+      "Orchestrator agent completion workflow completed",
     );
 
     return {
@@ -523,7 +523,7 @@ export const orchestratorAgentCompletedWorkflow = inngest.createFunction(
       compacted: shouldCompact && !!compactionNotePath,
       compactionNotePath,
     };
-  }
+  },
 );
 
 /**
@@ -559,7 +559,7 @@ export async function getTotalInvocationCount(): Promise<number> {
   const currentCount = workflow.agentHistory.length;
   const compactedCount = workflow.compactionHistory.reduce(
     (sum, entry) => sum + entry.count,
-    0
+    0,
   );
 
   return currentCount + compactedCount;

@@ -3,9 +3,9 @@
  * Tests health check logic with mocked fetch.
  */
 
-import { describe, test, expect, vi, afterEach, beforeEach } from "vitest";
-import { checkOllamaHealth } from "../checkHealth";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { logger } from "../../../utils/internal/logger";
+import { checkOllamaHealth } from "../checkHealth";
 
 // Helper to create a typed mock for fetch
 const createFetchMock = (impl: () => unknown) => {
@@ -38,21 +38,21 @@ describe("checkOllamaHealth", () => {
 
     expect(result).toBe(false);
     expect(warnSpy).toHaveBeenCalledWith(
-      "Ollama not available. Semantic search disabled."
+      "Ollama not available. Semantic search disabled.",
     );
     expect(warnSpy).toHaveBeenCalledWith("Start Ollama with: ollama serve");
   });
 
   test("returns false when Ollama returns non-OK response", async () => {
     globalThis.fetch = createFetchMock(() =>
-      Promise.resolve({ ok: false, status: 500 } as Response)
+      Promise.resolve({ ok: false, status: 500 } as Response),
     );
 
     const result = await checkOllamaHealth();
 
     expect(result).toBe(false);
     expect(warnSpy).toHaveBeenCalledWith(
-      "Ollama not available. Semantic search disabled."
+      "Ollama not available. Semantic search disabled.",
     );
   });
 
@@ -142,7 +142,7 @@ describe("checkOllamaHealth", () => {
 
     expect(result).toBe(true);
     expect(infoSpy).toHaveBeenCalledWith(
-      "Ollama health check passed. Semantic search enabled."
+      "Ollama health check passed. Semantic search enabled.",
     );
   });
 

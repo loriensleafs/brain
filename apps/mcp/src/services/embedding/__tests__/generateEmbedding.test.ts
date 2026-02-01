@@ -3,9 +3,9 @@
  * Tests empty input handling, truncation, retry logic, and Ollama integration.
  */
 
-import { describe, test, expect, vi, afterEach, beforeEach } from "vitest";
-import { generateEmbedding, resetOllamaClient } from "../generateEmbedding";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { OllamaError } from "../../ollama/types";
+import { generateEmbedding, resetOllamaClient } from "../generateEmbedding";
 
 describe("generateEmbedding", () => {
   const originalFetch = globalThis.fetch;
@@ -17,7 +17,7 @@ describe("generateEmbedding", () => {
         ok: true,
         status: 200,
         json: () => Promise.resolve({ embedding }),
-      } as Response)
+      } as Response),
     ) as unknown as typeof fetch;
   };
 
@@ -78,7 +78,7 @@ describe("generateEmbedding", () => {
           ok: true,
           status: 200,
           json: () => Promise.resolve({ embedding: mockEmbedding }),
-        } as Response)
+        } as Response),
       );
       globalThis.fetch = mockFetch as unknown as typeof fetch;
 
@@ -87,7 +87,7 @@ describe("generateEmbedding", () => {
       expect(mockFetch).toHaveBeenCalledTimes(1);
       const callArgs = mockFetch.mock.calls[0] as unknown as [
         string,
-        RequestInit
+        RequestInit,
       ];
       const body = JSON.parse(callArgs[1].body as string);
       expect(body.model).toBe("nomic-embed-text");
@@ -106,7 +106,7 @@ describe("generateEmbedding", () => {
           ok: true,
           status: 200,
           json: () => Promise.resolve({ embedding: [0.1] }),
-        } as Response)
+        } as Response),
       );
       globalThis.fetch = mockFetch as unknown as typeof fetch;
 
@@ -114,7 +114,7 @@ describe("generateEmbedding", () => {
 
       const callArgs = mockFetch.mock.calls[0] as unknown as [
         string,
-        RequestInit
+        RequestInit,
       ];
       const body = JSON.parse(callArgs[1].body as string);
       // Text is passed through without truncation - caller is responsible for chunking
@@ -128,7 +128,7 @@ describe("generateEmbedding", () => {
           ok: true,
           status: 200,
           json: () => Promise.resolve({ embedding: [0.1] }),
-        } as Response)
+        } as Response),
       );
       globalThis.fetch = mockFetch as unknown as typeof fetch;
 
@@ -136,7 +136,7 @@ describe("generateEmbedding", () => {
 
       const callArgs = mockFetch.mock.calls[0] as unknown as [
         string,
-        RequestInit
+        RequestInit,
       ];
       const body = JSON.parse(callArgs[1].body as string);
       expect(body.prompt.length).toBe(1000);
@@ -149,7 +149,7 @@ describe("generateEmbedding", () => {
           ok: true,
           status: 200,
           json: () => Promise.resolve({ embedding: [0.1] }),
-        } as Response)
+        } as Response),
       );
       globalThis.fetch = mockFetch as unknown as typeof fetch;
 
@@ -157,7 +157,7 @@ describe("generateEmbedding", () => {
 
       const callArgs = mockFetch.mock.calls[0] as unknown as [
         string,
-        RequestInit
+        RequestInit,
       ];
       const body = JSON.parse(callArgs[1].body as string);
       expect(body.prompt.length).toBe(32000);

@@ -8,10 +8,7 @@
  */
 
 import { logger } from "../../utils/internal/logger";
-import {
-  validateFeatureId,
-  wrapAgentExecution,
-} from "../errors";
+import { validateFeatureId, wrapAgentExecution } from "../errors";
 import type { AgentVerdict } from "./types";
 
 const AGENT_NAME = "analyst";
@@ -29,7 +26,7 @@ const AGENT_NAME = "analyst";
  */
 export async function runAnalystAgent(
   featureId: string,
-  context: Record<string, unknown>
+  context: Record<string, unknown>,
 ): Promise<AgentVerdict> {
   // Validate required inputs - throws NonRetriableError if invalid
   validateFeatureId(featureId, AGENT_NAME);
@@ -37,7 +34,7 @@ export async function runAnalystAgent(
   return wrapAgentExecution(AGENT_NAME, async () => {
     logger.debug(
       { featureId, context, agent: AGENT_NAME },
-      "Running analyst agent validation"
+      "Running analyst agent validation",
     );
 
     // Placeholder: actual analyst validation logic deferred per C-001
@@ -50,7 +47,8 @@ export async function runAnalystAgent(
     return {
       agent: AGENT_NAME,
       verdict: "PASS",
-      details: "Analyst validation placeholder - actual implementation deferred",
+      details:
+        "Analyst validation placeholder - actual implementation deferred",
     };
   });
 }

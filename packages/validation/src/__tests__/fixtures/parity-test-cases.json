@@ -186,7 +186,9 @@
         "name": "minimal valid",
         "data": {
           "currentMode": "analysis",
-          "modeHistory": [{ "mode": "analysis", "timestamp": "2026-01-18T10:00:00.000Z" }],
+          "modeHistory": [
+            { "mode": "analysis", "timestamp": "2026-01-18T10:00:00.000Z" }
+          ],
           "protocolStartComplete": false,
           "protocolEndComplete": false,
           "protocolStartEvidence": {},
@@ -482,7 +484,10 @@
         "data": [
           {
             "version": "2.0.0",
-            "defaults": { "memories_location": "~/memories", "memories_mode": "DEFAULT" },
+            "defaults": {
+              "memories_location": "~/memories",
+              "memories_mode": "DEFAULT"
+            },
             "projects": {},
             "sync": { "enabled": true, "delay_ms": 500 },
             "logging": { "level": "info" },
@@ -490,7 +495,10 @@
           },
           {
             "version": "2.0.0",
-            "defaults": { "memories_location": "~/memories", "memories_mode": "CODE" },
+            "defaults": {
+              "memories_location": "~/memories",
+              "memories_mode": "CODE"
+            },
             "projects": {},
             "sync": { "enabled": true, "delay_ms": 500 },
             "logging": { "level": "info" },
@@ -498,7 +506,10 @@
           },
           {
             "version": "2.0.0",
-            "defaults": { "memories_location": "~/memories", "memories_mode": "CUSTOM" },
+            "defaults": {
+              "memories_location": "~/memories",
+              "memories_mode": "CUSTOM"
+            },
             "projects": {},
             "sync": { "enabled": true, "delay_ms": 500 },
             "logging": { "level": "info" },
@@ -558,7 +569,10 @@
         "name": "invalid memories mode",
         "data": {
           "version": "2.0.0",
-          "defaults": { "memories_location": "~/memories", "memories_mode": "INVALID" },
+          "defaults": {
+            "memories_location": "~/memories",
+            "memories_mode": "INVALID"
+          },
           "projects": {},
           "sync": { "enabled": true, "delay_ms": 500 },
           "logging": { "level": "info" },

@@ -25,7 +25,9 @@ import { handler as generateEmbeddings } from "../embed";
  * @param project - Project name to filter notes
  * @returns Count of notes without embeddings
  */
-export async function getMissingEmbeddingsCount(project: string): Promise<number> {
+export async function getMissingEmbeddingsCount(
+  project: string,
+): Promise<number> {
   if (!project || project.trim().length === 0) {
     throw new Error("Project parameter is required");
   }
@@ -45,7 +47,7 @@ export async function getMissingEmbeddingsCount(project: string): Promise<number
     const notes: string[] = [];
     if (listResult.content && Array.isArray(listResult.content)) {
       const textContent = listResult.content.find(
-        (c: { type: string }) => c.type === "text"
+        (c: { type: string }) => c.type === "text",
       );
       if (textContent && "text" in textContent) {
         const text = textContent.text as string;
@@ -77,7 +79,9 @@ export async function getMissingEmbeddingsCount(project: string): Promise<number
 
     try {
       const existing = db
-        .query<{ entity_id: string }, []>("SELECT DISTINCT entity_id FROM brain_embeddings")
+        .query<{ entity_id: string }, []>(
+          "SELECT DISTINCT entity_id FROM brain_embeddings",
+        )
         .all();
       existing.forEach((e) => existingIds.add(e.entity_id));
     } catch {
@@ -89,23 +93,26 @@ export async function getMissingEmbeddingsCount(project: string): Promise<number
 
     // Count notes without embeddings
     const uniqueNotes = [...new Set(notes)];
-    const missingCount = uniqueNotes.filter(n => !existingIds.has(n)).length;
+    const missingCount = uniqueNotes.filter((n) => !existingIds.has(n)).length;
 
     logger.debug(
       {
         project,
         totalNotes: uniqueNotes.length,
         embeddedNotes: existingIds.size,
-        missingCount
+        missingCount,
       },
-      "Missing embeddings count calculated"
+      "Missing embeddings count calculated",
     );
 
     return missingCount;
   } catch (error) {
     logger.warn(
-      { project, error: error instanceof Error ? error.message : String(error) },
-      "Failed to query missing embeddings count"
+      {
+        project,
+        error: error instanceof Error ? error.message : String(error),
+      },
+      "Failed to query missing embeddings count",
     );
     return 0; // Return 0 on error to prevent blocking bootstrap_context
   }
@@ -135,16 +142,16 @@ export async function triggerCatchupEmbedding(project: string): Promise<void> {
   // Log trigger event (REQ-003a from requirements)
   logger.info(
     { project, missingCount: count },
-    "Catch-up embedding trigger activated"
+    "Catch-up embedding trigger activated",
   );
 
   // Fire-and-forget batch embedding
   // Use limit: 0 to process all missing embeddings
   generateEmbeddings({ project, limit: 0, force: false })
-    .then(result => {
+    .then((result) => {
       // Log completion event (REQ-003b)
       const content = result.content?.[0];
-      if (content && 'text' in content) {
+      if (content && "text" in content) {
         try {
           const stats = JSON.parse(content.text as string);
           logger.info(
@@ -152,23 +159,26 @@ export async function triggerCatchupEmbedding(project: string): Promise<void> {
               project,
               processed: stats.processed,
               failed: stats.failed,
-              totalChunks: stats.totalChunksGenerated
+              totalChunks: stats.totalChunksGenerated,
             },
-            "Catch-up embedding complete"
+            "Catch-up embedding complete",
           );
         } catch {
-          logger.info({ project }, "Catch-up embedding complete (unable to parse stats)");
+          logger.info(
+            { project },
+            "Catch-up embedding complete (unable to parse stats)",
+          );
         }
       }
     })
-    .catch(error => {
+    .catch((error) => {
       // Log error event (REQ-003b)
       logger.error(
         {
           project,
-          error: error instanceof Error ? error.message : String(error)
+          error: error instanceof Error ? error.message : String(error),
         },
-        "Catch-up embedding failed"
+        "Catch-up embedding failed",
       );
     });
 }

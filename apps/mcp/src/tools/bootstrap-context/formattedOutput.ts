@@ -7,7 +7,7 @@
 
 import type { ContextNote } from "./sectionQueries";
 import type { SessionEnrichment } from "./sessionEnrichment";
-import { renderContext, type ContextData } from "./templates";
+import { type ContextData, renderContext } from "./templates";
 
 /**
  * Input data for building formatted output
@@ -32,7 +32,7 @@ export interface FormattedOutputInput {
  */
 export function buildFormattedOutput(
   input: FormattedOutputInput,
-  fullContent = false
+  fullContent = false,
 ): string {
   const {
     project,
@@ -79,7 +79,7 @@ export function buildFormattedOutputWithLimits(
     activity?: number;
     referenced?: number;
   } = {},
-  fullContent = false
+  fullContent = false,
 ): string {
   const {
     features = 10,
@@ -99,6 +99,6 @@ export function buildFormattedOutputWithLimits(
       referencedNotes: input.referencedNotes.slice(0, referenced),
       sessionEnrichment: input.sessionEnrichment,
     },
-    fullContent
+    fullContent,
   );
 }

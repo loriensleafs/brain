@@ -12,7 +12,11 @@ import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { rollbackManager } from "../../config/rollback";
 import type { ConfigRollbackArgs } from "./schema";
 
-export { configRollbackToolDefinition as toolDefinition, ConfigRollbackArgsSchema, type ConfigRollbackArgs } from "./schema";
+export {
+  type ConfigRollbackArgs,
+  ConfigRollbackArgsSchema,
+  configRollbackToolDefinition as toolDefinition,
+} from "./schema";
 
 /**
  * Handler for config_rollback tool.
@@ -20,7 +24,9 @@ export { configRollbackToolDefinition as toolDefinition, ConfigRollbackArgsSchem
  * @param args - Tool arguments
  * @returns CallToolResult with rollback result or error
  */
-export async function handler(args: ConfigRollbackArgs): Promise<CallToolResult> {
+export async function handler(
+  args: ConfigRollbackArgs,
+): Promise<CallToolResult> {
   const { target } = args;
 
   // Check if rollback manager is initialized
@@ -34,11 +40,12 @@ export async function handler(args: ConfigRollbackArgs): Promise<CallToolResult>
             type: "text" as const,
             text: JSON.stringify(
               {
-                error: "Rollback manager not initialized and failed to initialize",
+                error:
+                  "Rollback manager not initialized and failed to initialize",
                 details: error instanceof Error ? error.message : String(error),
               },
               null,
-              2
+              2,
             ),
           },
         ],
@@ -61,7 +68,7 @@ export async function handler(args: ConfigRollbackArgs): Promise<CallToolResult>
                 hint: "A snapshot is created on MCP server startup. If the server just started, there may not be a baseline yet.",
               },
               null,
-              2
+              2,
             ),
           },
         ],
@@ -81,7 +88,7 @@ export async function handler(args: ConfigRollbackArgs): Promise<CallToolResult>
                 hint: "Snapshots are created before config changes. No changes have been made since startup.",
               },
               null,
-              2
+              2,
             ),
           },
         ],
@@ -104,7 +111,7 @@ export async function handler(args: ConfigRollbackArgs): Promise<CallToolResult>
               target,
             },
             null,
-            2
+            2,
           ),
         },
       ],
@@ -137,7 +144,10 @@ export async function handler(args: ConfigRollbackArgs): Promise<CallToolResult>
   const history = rollbackManager.getHistory();
   response.rollback_history = {
     total_snapshots: history.length,
-    available_targets: ["lastKnownGood", ...(history.length > 0 ? ["previous"] : [])],
+    available_targets: [
+      "lastKnownGood",
+      ...(history.length > 0 ? ["previous"] : []),
+    ],
   };
 
   return {

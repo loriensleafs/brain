@@ -1,6 +1,6 @@
-import { Database } from 'bun:sqlite';
-import { homedir } from 'os';
-import { join } from 'path';
+import { Database } from "bun:sqlite";
+import { homedir } from "os";
+import { join } from "path";
 
 // On macOS, use Homebrew SQLite for extension support
 if (process.platform === "darwin") {
@@ -11,7 +11,7 @@ if (process.platform === "darwin") {
   }
 }
 
-const dbPath = join(homedir(), '.basic-memory', 'memory.db');
+const dbPath = join(homedir(), ".basic-memory", "memory.db");
 const db = new Database(dbPath);
 
 // Load sqlite-vec extension
@@ -20,10 +20,10 @@ sqliteVec.load(db);
 
 // Drop old table
 try {
-  db.run('DROP TABLE IF EXISTS brain_embeddings');
-  console.log('Dropped old brain_embeddings table');
+  db.run("DROP TABLE IF EXISTS brain_embeddings");
+  console.log("Dropped old brain_embeddings table");
 } catch (e: any) {
-  console.log('Error dropping table:', e.message);
+  console.log("Error dropping table:", e.message);
 }
 
 // Create new table with chunked schema
@@ -39,7 +39,7 @@ db.run(`
     +chunk_text TEXT
   )
 `);
-console.log('Created new chunked embeddings table');
+console.log("Created new chunked embeddings table");
 
 db.close();
-console.log('Migration complete!');
+console.log("Migration complete!");

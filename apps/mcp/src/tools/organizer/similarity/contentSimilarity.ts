@@ -7,8 +7,8 @@
  * - Common keywords in content
  */
 
-import type { DuplicatePair } from '../types';
-import { extractKeywords } from '../utils/keywords';
+import type { DuplicatePair } from "../types";
+import { extractKeywords } from "../utils/keywords";
 
 /**
  * Note content for similarity comparison
@@ -26,7 +26,7 @@ export interface NoteContent {
  */
 export async function calculateContentSimilarity(
   pairs: DuplicatePair[],
-  noteContents: Map<string, NoteContent>
+  noteContents: Map<string, NoteContent>,
 ): Promise<DuplicatePair[]> {
   const refined: DuplicatePair[] = [];
 
@@ -57,7 +57,7 @@ export async function calculateContentSimilarity(
  */
 function calculateSimilarity(
   content1: NoteContent,
-  content2: NoteContent
+  content2: NoteContent,
 ): number {
   let score = 0;
   let weights = 0;
@@ -65,7 +65,7 @@ function calculateSimilarity(
   // Observation overlap (weight: 0.4)
   const obsSim = calculateObservationSimilarity(
     content1.observations,
-    content2.observations
+    content2.observations,
   );
   score += obsSim * 0.4;
   weights += 0.4;
@@ -73,7 +73,7 @@ function calculateSimilarity(
   // Wikilink overlap (weight: 0.3)
   const linkSim = calculateJaccardSimilarity(
     content1.wikilinks,
-    content2.wikilinks
+    content2.wikilinks,
   );
   score += linkSim * 0.3;
   weights += 0.3;
@@ -81,7 +81,7 @@ function calculateSimilarity(
   // Keyword overlap (weight: 0.3)
   const keywordSim = calculateJaccardSimilarity(
     content1.keywords,
-    content2.keywords
+    content2.keywords,
   );
   score += keywordSim * 0.3;
   weights += 0.3;
@@ -94,7 +94,7 @@ function calculateSimilarity(
  */
 function calculateObservationSimilarity(
   obs1: string[],
-  obs2: string[]
+  obs2: string[],
 ): number {
   if (obs1.length === 0 && obs2.length === 0) return 0;
   if (obs1.length === 0 || obs2.length === 0) return 0;
@@ -126,10 +126,7 @@ function areSimilarObservations(obs1: string, obs2: string): boolean {
   if (normalized1 === normalized2) return true;
 
   // Check for substring containment
-  if (
-    normalized1.includes(normalized2) ||
-    normalized2.includes(normalized1)
-  ) {
+  if (normalized1.includes(normalized2) || normalized2.includes(normalized1)) {
     return true;
   }
 
@@ -149,8 +146,8 @@ function areSimilarObservations(obs1: string, obs2: string): boolean {
 function normalizeObservation(obs: string): string {
   return obs
     .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, ' ') // Remove punctuation
-    .replace(/\s+/g, ' ') // Normalize whitespace
+    .replace(/[^a-z0-9\s]/g, " ") // Remove punctuation
+    .replace(/\s+/g, " ") // Normalize whitespace
     .trim();
 }
 
@@ -174,7 +171,7 @@ function calculateJaccardSimilarity(arr1: string[], arr2: string[]): number {
  */
 export function extractObservations(content: string): string[] {
   const observations: string[] = [];
-  const lines = content.split('\n');
+  const lines = content.split("\n");
   let inObservations = false;
 
   for (const line of lines) {
@@ -201,6 +198,6 @@ export function extractObservations(content: string): string[] {
   return observations;
 }
 
+export { extractKeywords } from "../utils/keywords";
 // Re-export for backward compatibility
-export { extractWikilinks } from '../utils/wikilinks';
-export { extractKeywords } from '../utils/keywords';
+export { extractWikilinks } from "../utils/wikilinks";

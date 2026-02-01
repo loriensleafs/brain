@@ -11,49 +11,49 @@ import type { Tool } from "@modelcontextprotocol/sdk/types.js";
  * Entity type mappings for .agents/ directories
  */
 export type AgentEntityType =
-  | 'session'
-  | 'decision'
-  | 'requirement'
-  | 'design'
-  | 'task'
-  | 'analysis'
-  | 'feature'
-  | 'epic'
-  | 'critique'
-  | 'test-report'
-  | 'security'
-  | 'retrospective'
-  | 'skill'
-  | 'note';
+  | "session"
+  | "decision"
+  | "requirement"
+  | "design"
+  | "task"
+  | "analysis"
+  | "feature"
+  | "epic"
+  | "critique"
+  | "test-report"
+  | "security"
+  | "retrospective"
+  | "skill"
+  | "note";
 
 /**
  * Observation categories per basic-memory format
  */
 export type ObservationCategory =
-  | 'fact'
-  | 'decision'
-  | 'requirement'
-  | 'technique'
-  | 'insight'
-  | 'problem'
-  | 'solution'
-  | 'outcome';
+  | "fact"
+  | "decision"
+  | "requirement"
+  | "technique"
+  | "insight"
+  | "problem"
+  | "solution"
+  | "outcome";
 
 /**
  * Relation types per basic-memory format
  */
 export type RelationType =
-  | 'implements'
-  | 'depends_on'
-  | 'relates_to'
-  | 'extends'
-  | 'part_of'
-  | 'inspired_by'
-  | 'contains'
-  | 'pairs_with'
-  | 'supersedes'
-  | 'leads_to'
-  | 'caused_by';
+  | "implements"
+  | "depends_on"
+  | "relates_to"
+  | "extends"
+  | "part_of"
+  | "inspired_by"
+  | "contains"
+  | "pairs_with"
+  | "supersedes"
+  | "leads_to"
+  | "caused_by";
 
 /**
  * A single observation extracted from content
@@ -160,20 +160,26 @@ export interface MigrateAgentsOutput {
 /**
  * Directory to folder mapping for .agents/ structure
  */
-export const DIRECTORY_MAPPING: Record<string, { folder: string; entityType: AgentEntityType }> = {
-  'sessions': { folder: 'sessions', entityType: 'session' },
-  'architecture': { folder: 'decisions', entityType: 'decision' },
-  'planning': { folder: 'planning', entityType: 'feature' },
-  'analysis': { folder: 'analysis', entityType: 'analysis' },
-  'roadmap': { folder: 'roadmap', entityType: 'epic' },
-  'critique': { folder: 'critique', entityType: 'critique' },
-  'qa': { folder: 'qa', entityType: 'test-report' },
-  'security': { folder: 'security', entityType: 'security' },
-  'retrospective': { folder: 'retrospective', entityType: 'retrospective' },
-  'skills': { folder: 'skills', entityType: 'skill' },
-  'specs/requirements': { folder: 'specs/requirements', entityType: 'requirement' },
-  'specs/design': { folder: 'specs/design', entityType: 'design' },
-  'specs/tasks': { folder: 'specs/tasks', entityType: 'task' },
+export const DIRECTORY_MAPPING: Record<
+  string,
+  { folder: string; entityType: AgentEntityType }
+> = {
+  sessions: { folder: "sessions", entityType: "session" },
+  architecture: { folder: "decisions", entityType: "decision" },
+  planning: { folder: "planning", entityType: "feature" },
+  analysis: { folder: "analysis", entityType: "analysis" },
+  roadmap: { folder: "roadmap", entityType: "epic" },
+  critique: { folder: "critique", entityType: "critique" },
+  qa: { folder: "qa", entityType: "test-report" },
+  security: { folder: "security", entityType: "security" },
+  retrospective: { folder: "retrospective", entityType: "retrospective" },
+  skills: { folder: "skills", entityType: "skill" },
+  "specs/requirements": {
+    folder: "specs/requirements",
+    entityType: "requirement",
+  },
+  "specs/design": { folder: "specs/design", entityType: "design" },
+  "specs/tasks": { folder: "specs/tasks", entityType: "task" },
 };
 
 /**
@@ -187,7 +193,7 @@ export const QUALITY_THRESHOLDS = {
 };
 
 export const toolDefinition: Tool = {
-  name: 'migrate_agents',
+  name: "migrate_agents",
   description: `Migrate .agents/ content to basic-memory format with full transformation.
 
 This tool:
@@ -207,30 +213,31 @@ Usage:
 - dry_run: Preview transformations without writing
 - limit: Maximum files to process (for testing)`,
   inputSchema: {
-    type: 'object' as const,
+    type: "object" as const,
     properties: {
       source_path: {
-        type: 'string',
-        description: 'Path to .agents/ directory to migrate'
+        type: "string",
+        description: "Path to .agents/ directory to migrate",
       },
       project: {
-        type: 'string',
-        description: 'Target Brain project. Auto-resolved if not specified.'
+        type: "string",
+        description: "Target Brain project. Auto-resolved if not specified.",
       },
       subdirectory: {
-        type: 'string',
-        description: 'Only process specific subdirectory (sessions, planning, etc.)'
+        type: "string",
+        description:
+          "Only process specific subdirectory (sessions, planning, etc.)",
       },
       dry_run: {
-        type: 'boolean',
+        type: "boolean",
         default: false,
-        description: 'Preview transformations without writing'
+        description: "Preview transformations without writing",
       },
       limit: {
-        type: 'number',
-        description: 'Maximum files to process (for testing)'
-      }
+        type: "number",
+        description: "Maximum files to process (for testing)",
+      },
     },
-    required: ['source_path']
-  }
+    required: ["source_path"],
+  },
 };

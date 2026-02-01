@@ -3,25 +3,18 @@
  * Tests processWithRetry and processEmbeddingQueue functions.
  */
 
-import {
-  describe,
-  test,
-  expect,
-  vi,
-  afterEach,
-  beforeEach,
-} from "vitest";
-import {
-  processWithRetry,
-  processEmbeddingQueue,
-  MAX_RETRIES,
-  BASE_DELAY_MS,
-} from "../retry";
-import * as vectorsModule from "../../../db/vectors";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import * as connectionModule from "../../../db/connection";
 import * as schemaModule from "../../../db/schema";
-import * as queueModule from "../queue";
+import * as vectorsModule from "../../../db/vectors";
 import { logger } from "../../../utils/internal/logger";
+import * as queueModule from "../queue";
+import {
+  BASE_DELAY_MS,
+  MAX_RETRIES,
+  processEmbeddingQueue,
+  processWithRetry,
+} from "../retry";
 
 describe("retry", () => {
   const originalFetch = globalThis.fetch;
@@ -34,15 +27,15 @@ describe("retry", () => {
 
   beforeEach(() => {
     mockDb = { close: vi.fn(() => {}) };
-    storeChunkedEmbeddingsSpy = vi.spyOn(vectorsModule, "storeChunkedEmbeddings").mockReturnValue(1);
-    createVectorConnectionSpy = vi.spyOn(
-      connectionModule,
-      "createVectorConnection"
-    ).mockReturnValue(mockDb as any);
-    ensureEmbeddingTablesSpy = vi.spyOn(
-      schemaModule,
-      "ensureEmbeddingTables"
-    ).mockImplementation(() => {});
+    storeChunkedEmbeddingsSpy = vi
+      .spyOn(vectorsModule, "storeChunkedEmbeddings")
+      .mockReturnValue(1);
+    createVectorConnectionSpy = vi
+      .spyOn(connectionModule, "createVectorConnection")
+      .mockReturnValue(mockDb as any);
+    ensureEmbeddingTablesSpy = vi
+      .spyOn(schemaModule, "ensureEmbeddingTables")
+      .mockImplementation(() => {});
     loggerInfoSpy = vi.spyOn(logger, "info").mockImplementation(() => {});
     loggerWarnSpy = vi.spyOn(logger, "warn").mockImplementation(() => {});
   });
@@ -62,13 +55,13 @@ describe("retry", () => {
         ok: true,
         status: 200,
         json: () => Promise.resolve({ embedding }),
-      } as Response)
+      } as Response),
     ) as unknown as typeof fetch;
   };
 
   const mockFetchFailure = () => {
     globalThis.fetch = vi.fn(() =>
-      Promise.reject(new Error("API error"))
+      Promise.reject(new Error("API error")),
     ) as unknown as typeof fetch;
   };
 
@@ -107,12 +100,12 @@ describe("retry", () => {
       const result = await processWithRetry(
         "note-123",
         "Test content",
-        MAX_RETRIES
+        MAX_RETRIES,
       );
 
       expect(result).toBe(false);
       expect(loggerWarnSpy).toHaveBeenCalledWith(
-        `Max retries (${MAX_RETRIES}) exceeded for note note-123`
+        `Max retries (${MAX_RETRIES}) exceeded for note note-123`,
       );
       expect(storeChunkedEmbeddingsSpy).not.toHaveBeenCalled();
     });
@@ -126,7 +119,7 @@ describe("retry", () => {
 
       expect(result).toBe(false);
       expect(loggerWarnSpy).toHaveBeenCalledWith(
-        `Retry 1/${MAX_RETRIES} for note note-123. Next in ${BASE_DELAY_MS}ms`
+        `Retry 1/${MAX_RETRIES} for note note-123. Next in ${BASE_DELAY_MS}ms`,
       );
       // Verify delay was applied (at least 900ms to account for timing variance)
       expect(elapsed).toBeGreaterThanOrEqual(900);
@@ -187,14 +180,12 @@ describe("retry", () => {
 
     beforeEach(() => {
       dequeueSpy = vi.spyOn(queueModule, "dequeueEmbedding");
-      markProcessedSpy = vi.spyOn(
-        queueModule,
-        "markEmbeddingProcessed"
-      ).mockImplementation(() => {});
-      incrementAttemptsSpy = vi.spyOn(
-        queueModule,
-        "incrementAttempts"
-      ).mockImplementation(() => {});
+      markProcessedSpy = vi
+        .spyOn(queueModule, "markEmbeddingProcessed")
+        .mockImplementation(() => {});
+      incrementAttemptsSpy = vi
+        .spyOn(queueModule, "incrementAttempts")
+        .mockImplementation(() => {});
     });
 
     afterEach(() => {
@@ -220,10 +211,22 @@ describe("retry", () => {
       dequeueSpy.mockImplementation(() => {
         callCount++;
         if (callCount === 1) {
-          return { id: 1, noteId: "note-1", createdAt: "", attempts: 0, lastError: null };
+          return {
+            id: 1,
+            noteId: "note-1",
+            createdAt: "",
+            attempts: 0,
+            lastError: null,
+          };
         }
         if (callCount === 2) {
-          return { id: 2, noteId: "note-2", createdAt: "", attempts: 0, lastError: null };
+          return {
+            id: 2,
+            noteId: "note-2",
+            createdAt: "",
+            attempts: 0,
+            lastError: null,
+          };
         }
         return null;
       });
@@ -248,7 +251,7 @@ describe("retry", () => {
 
       expect(result).toEqual({ processed: 0, failed: 1 });
       expect(loggerWarnSpy).toHaveBeenCalledWith(
-        "Could not fetch content for note note-1"
+        "Could not fetch content for note note-1",
       );
       expect(markProcessedSpy).toHaveBeenCalledWith(1);
     });
@@ -267,7 +270,7 @@ describe("retry", () => {
 
       expect(result).toEqual({ processed: 0, failed: 1 });
       expect(loggerWarnSpy).toHaveBeenCalledWith(
-        `Removing note note-1 from queue after ${MAX_RETRIES} failures`
+        `Removing note note-1 from queue after ${MAX_RETRIES} failures`,
       );
       expect(markProcessedSpy).toHaveBeenCalledWith(1);
     });
@@ -299,10 +302,22 @@ describe("retry", () => {
         callCount++;
         if (callCount === 1) {
           mockFetchSuccess(mockEmbedding);
-          return { id: 1, noteId: "note-1", createdAt: "", attempts: 0, lastError: null };
+          return {
+            id: 1,
+            noteId: "note-1",
+            createdAt: "",
+            attempts: 0,
+            lastError: null,
+          };
         }
         if (callCount === 2) {
-          return { id: 2, noteId: "note-2", createdAt: "", attempts: MAX_RETRIES, lastError: null };
+          return {
+            id: 2,
+            noteId: "note-2",
+            createdAt: "",
+            attempts: MAX_RETRIES,
+            lastError: null,
+          };
         }
         return null;
       });

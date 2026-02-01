@@ -5,8 +5,8 @@
  * better quality similarity scoring.
  */
 
-import keywordExtractor from 'keyword-extractor';
-import { removeStopwords } from 'stopword';
+import keywordExtractor from "keyword-extractor";
+import { removeStopwords } from "stopword";
 
 /**
  * Extract meaningful keywords from text content
@@ -17,7 +17,7 @@ import { removeStopwords } from 'stopword';
 export function extractKeywords(content: string): string[] {
   // Extract keywords using keyword-extractor
   const extracted = keywordExtractor.extract(content, {
-    language: 'english',
+    language: "english",
     remove_digits: true,
     return_changed_case: true,
     remove_duplicates: true,

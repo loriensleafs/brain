@@ -5,15 +5,15 @@
  * requiring the Inngest dev server to be running.
  */
 
-import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 import * as fs from "fs";
-import * as path from "path";
 import * as os from "os";
+import * as path from "path";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
-  sessionProtocolEndWorkflow,
-  validateSessionProtocolEnd,
   type SessionProtocolEndResult,
   type StepResult,
+  sessionProtocolEndWorkflow,
+  validateSessionProtocolEnd,
 } from "../sessionProtocolEnd";
 
 describe("Session Protocol End Workflow", () => {
@@ -23,7 +23,9 @@ describe("Session Protocol End Workflow", () => {
     });
 
     test("workflow has id property set to 'session-protocol-end'", () => {
-      const workflowId = (sessionProtocolEndWorkflow as unknown as { id: () => string }).id();
+      const workflowId = (
+        sessionProtocolEndWorkflow as unknown as { id: () => string }
+      ).id();
       expect(workflowId).toBe("session-protocol-end");
     });
   });
@@ -42,12 +44,28 @@ describe("Session Protocol End Workflow", () => {
         sessionId: "test-session-123",
         verdict: "PASS",
         steps: {
-          sessionLogComplete: { passed: true, message: "Complete", evidence: "/path/to/log" },
+          sessionLogComplete: {
+            passed: true,
+            message: "Complete",
+            evidence: "/path/to/log",
+          },
           brainMemoryUpdated: { passed: true, message: "Updated" },
           markdownLintPassed: { passed: true, message: "Passed" },
-          changesCommitted: { passed: true, message: "Committed", evidence: "Branch: main" },
-          protocolValidationPassed: { passed: true, message: "Passed", evidence: "Exit code: 0" },
-          consistencyValidationPassed: { passed: true, message: "Passed", evidence: "Features: none" },
+          changesCommitted: {
+            passed: true,
+            message: "Committed",
+            evidence: "Branch: main",
+          },
+          protocolValidationPassed: {
+            passed: true,
+            message: "Passed",
+            evidence: "Exit code: 0",
+          },
+          consistencyValidationPassed: {
+            passed: true,
+            message: "Passed",
+            evidence: "Features: none",
+          },
           sessionStateClosed: { passed: true, message: "Closed" },
         },
         completedAt: new Date().toISOString(),
@@ -71,13 +89,29 @@ describe("Session Protocol End Workflow", () => {
         sessionId: "test-session-456",
         verdict: "FAIL",
         steps: {
-          sessionLogComplete: { passed: false, message: "Session log not found" },
+          sessionLogComplete: {
+            passed: false,
+            message: "Session log not found",
+          },
           brainMemoryUpdated: { passed: true, message: "Updated" },
           markdownLintPassed: { passed: true, message: "Passed" },
-          changesCommitted: { passed: false, message: "Uncommitted changes: file1.ts, file2.ts" },
-          protocolValidationPassed: { passed: false, message: "Validation failed" },
-          consistencyValidationPassed: { passed: true, message: "Passed", evidence: "Features: none" },
-          sessionStateClosed: { passed: false, message: "Cannot close session" },
+          changesCommitted: {
+            passed: false,
+            message: "Uncommitted changes: file1.ts, file2.ts",
+          },
+          protocolValidationPassed: {
+            passed: false,
+            message: "Validation failed",
+          },
+          consistencyValidationPassed: {
+            passed: true,
+            message: "Passed",
+            evidence: "Features: none",
+          },
+          sessionStateClosed: {
+            passed: false,
+            message: "Cannot close session",
+          },
         },
         completedAt: new Date().toISOString(),
         blockers: [
@@ -104,7 +138,9 @@ describe("Session Protocol End Workflow", () => {
 
       expect(stepResult.passed).toBe(true);
       expect(stepResult.message).toBe("Session log validated");
-      expect(stepResult.evidence).toBe("/path/to/.agents/sessions/2026-01-18-session-01.md");
+      expect(stepResult.evidence).toBe(
+        "/path/to/.agents/sessions/2026-01-18-session-01.md",
+      );
     });
 
     test("step result without evidence", () => {
@@ -147,7 +183,11 @@ describe("Session Protocol End Workflow", () => {
           markdownLintPassed: { passed: true, message: "Passed" },
           changesCommitted: { passed: true, message: "Committed" },
           protocolValidationPassed: { passed: true, message: "Passed" },
-          consistencyValidationPassed: { passed: true, message: "Passed", evidence: "Features: none" },
+          consistencyValidationPassed: {
+            passed: true,
+            message: "Passed",
+            evidence: "Features: none",
+          },
           sessionStateClosed: { passed: true, message: "Closed" },
         },
         completedAt: new Date().toISOString(),
@@ -156,7 +196,9 @@ describe("Session Protocol End Workflow", () => {
 
       // Verify all required steps are present
       for (const step of requiredSteps) {
-        expect(mockResult.steps[step as keyof typeof mockResult.steps]).toBeDefined();
+        expect(
+          mockResult.steps[step as keyof typeof mockResult.steps],
+        ).toBeDefined();
       }
     });
   });
@@ -282,7 +324,11 @@ describe("workflow error handling", () => {
         markdownLintPassed: { passed: false, message: "Lint errors" },
         changesCommitted: { passed: false, message: "Uncommitted" },
         protocolValidationPassed: { passed: false, message: "Script failed" },
-        consistencyValidationPassed: { passed: true, message: "OK", evidence: "Features: none" },
+        consistencyValidationPassed: {
+          passed: true,
+          message: "OK",
+          evidence: "Features: none",
+        },
         sessionStateClosed: { passed: false, message: "Cannot close" },
       },
       completedAt: new Date().toISOString(),

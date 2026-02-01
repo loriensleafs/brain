@@ -5,7 +5,7 @@
  * used by organizer tools for duplicate detection and suggestion matching.
  */
 
-import { distance } from 'fastest-levenshtein';
+import { distance } from "fastest-levenshtein";
 
 /**
  * Calculate Levenshtein distance between two strings

@@ -10,12 +10,8 @@
  * @see ADR-001: Search Service Abstraction
  */
 
-import { describe, test, expect, vi, beforeEach, afterEach } from "vitest";
-import {
-  SearchService,
-  getSearchService,
-  createSearchService,
-} from "../index";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { createSearchService, getSearchService, SearchService } from "../index";
 import type { SearchOptions } from "../types";
 
 // Mock modules
@@ -45,11 +41,11 @@ const mockCallTool = vi.fn(() =>
         }),
       },
     ],
-  })
+  }),
 );
 
 const mockGenerateEmbedding = vi.fn(() =>
-  Promise.resolve(Array.from({ length: 768 }, () => 0.5))
+  Promise.resolve(Array.from({ length: 768 }, () => 0.5)),
 );
 
 const mockDbQuery = vi.fn(() => ({
@@ -70,7 +66,7 @@ vi.mock("../../../proxy/client", () => ({
   getBasicMemoryClient: vi.fn(() =>
     Promise.resolve({
       callTool: mockCallTool,
-    })
+    }),
   ),
 }));
 
@@ -186,7 +182,7 @@ describe("SearchService", () => {
       for (const result of response.results) {
         expect(
           result.permalink.startsWith("features/") ||
-            result.permalink.startsWith("features")
+            result.permalink.startsWith("features"),
         ).toBe(true);
       }
     });
@@ -298,7 +294,9 @@ describe("SearchResult structure", () => {
       expect(typeof result.title).toBe("string");
       expect(typeof result.similarity_score).toBe("number");
       expect(typeof result.snippet).toBe("string");
-      expect(["semantic", "keyword", "related", "hybrid"]).toContain(result.source);
+      expect(["semantic", "keyword", "related", "hybrid"]).toContain(
+        result.source,
+      );
     }
   });
 });
@@ -328,7 +326,10 @@ describe("fullContent option", () => {
   // Helper to create mock implementation for fullContent tests
   const createFullContentMock = () => {
     return (call: unknown) => {
-      const typedCall = call as { name: string; arguments: Record<string, unknown> };
+      const typedCall = call as {
+        name: string;
+        arguments: Record<string, unknown>;
+      };
       if (typedCall.name === "search_notes") {
         return Promise.resolve({
           content: [
@@ -394,7 +395,10 @@ describe("fullContent option", () => {
   });
 
   test("fullContent=false returns snippets without fullContent field", async () => {
-    const response = await service.search("test", { mode: "keyword", fullContent: false });
+    const response = await service.search("test", {
+      mode: "keyword",
+      fullContent: false,
+    });
 
     expect(response.results.length).toBeGreaterThan(0);
     for (const result of response.results) {
@@ -413,12 +417,17 @@ describe("fullContent option", () => {
   });
 
   test("fullContent=true fetches and includes full note content", async () => {
-    const response = await service.search("test", { mode: "keyword", fullContent: true });
+    const response = await service.search("test", {
+      mode: "keyword",
+      fullContent: true,
+    });
 
     expect(response.results.length).toBeGreaterThan(0);
 
     // Check that fullContent is populated
-    const resultWithContent = response.results.find(r => r.permalink === "notes/test-note");
+    const resultWithContent = response.results.find(
+      (r) => r.permalink === "notes/test-note",
+    );
     expect(resultWithContent).toBeDefined();
     expect(resultWithContent!.fullContent).toContain("# Test Note");
     expect(resultWithContent!.fullContent).toContain("full content");
@@ -458,7 +467,10 @@ describe("fullContent option", () => {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     mockCallTool.mockImplementation(((call: unknown) => {
-      const typedCall = call as { name: string; arguments: Record<string, unknown> };
+      const typedCall = call as {
+        name: string;
+        arguments: Record<string, unknown>;
+      };
       if (typedCall.name === "search_notes") {
         return Promise.resolve({
           content: [
@@ -492,7 +504,10 @@ describe("fullContent option", () => {
     }) as any);
 
     const svc = new SearchService();
-    const response = await svc.search("test", { mode: "keyword", fullContent: true });
+    const response = await svc.search("test", {
+      mode: "keyword",
+      fullContent: true,
+    });
 
     expect(response.results.length).toBe(1);
     const result = response.results[0];
@@ -536,7 +551,10 @@ describe("fullContent option", () => {
     }) as any);
 
     const svc = new SearchService();
-    const response = await svc.search("test", { mode: "keyword", fullContent: true });
+    const response = await svc.search("test", {
+      mode: "keyword",
+      fullContent: true,
+    });
 
     expect(response.results.length).toBe(1);
     // Should not throw - gracefully handles error
@@ -559,7 +577,7 @@ describe("fullContent option", () => {
       (c: unknown[]) => {
         const arg = c[0] as { name: string } | undefined;
         return arg?.name === "read_note";
-      }
+      },
     );
     expect(readNoteCalls.length).toBeGreaterThan(0);
     for (const call of readNoteCalls) {

@@ -13,32 +13,31 @@
  * @see TASK-020-19 for implementation requirements
  */
 
-// Re-export all schemas
-export {
-  ConfigGetArgsSchema,
-  configGetToolDefinition,
-  type ConfigGetArgs,
-  ConfigSetArgsSchema,
-  configSetToolDefinition,
-  type ConfigSetArgs,
-  ConfigResetArgsSchema,
-  configResetToolDefinition,
-  type ConfigResetArgs,
-  ConfigRollbackArgsSchema,
-  configRollbackToolDefinition,
-  type ConfigRollbackArgs,
-  ConfigUpdateProjectArgsSchema,
-  configUpdateProjectToolDefinition,
-  type ConfigUpdateProjectArgs,
-  ConfigUpdateGlobalArgsSchema,
-  configUpdateGlobalToolDefinition,
-  type ConfigUpdateGlobalArgs,
-} from "./schema";
-
 // Re-export tool modules
 export * as configGet from "./get";
-export * as configSet from "./set";
 export * as configReset from "./reset";
 export * as configRollback from "./rollback";
-export * as configUpdateProject from "./update-project";
+// Re-export all schemas
+export {
+  type ConfigGetArgs,
+  ConfigGetArgsSchema,
+  type ConfigResetArgs,
+  ConfigResetArgsSchema,
+  type ConfigRollbackArgs,
+  ConfigRollbackArgsSchema,
+  type ConfigSetArgs,
+  ConfigSetArgsSchema,
+  type ConfigUpdateGlobalArgs,
+  ConfigUpdateGlobalArgsSchema,
+  type ConfigUpdateProjectArgs,
+  ConfigUpdateProjectArgsSchema,
+  configGetToolDefinition,
+  configResetToolDefinition,
+  configRollbackToolDefinition,
+  configSetToolDefinition,
+  configUpdateGlobalToolDefinition,
+  configUpdateProjectToolDefinition,
+} from "./schema";
+export * as configSet from "./set";
 export * as configUpdateGlobal from "./update-global";
+export * as configUpdateProject from "./update-project";

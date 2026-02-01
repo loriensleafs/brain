@@ -10,31 +10,45 @@
 
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { loadBrainConfig, saveBrainConfig } from "../../config/brain-config";
-import { syncConfigToBasicMemory } from "../../config/translation-layer";
-import { rollbackManager } from "../../config/rollback";
 import { detectConfigDiff, summarizeConfigDiff } from "../../config/diff";
+import { rollbackManager } from "../../config/rollback";
 import type { BrainConfig } from "../../config/schema";
-import { ConfigSetArgsSchema, type ConfigSetArgs } from "./schema";
+import { syncConfigToBasicMemory } from "../../config/translation-layer";
+import { type ConfigSetArgs, ConfigSetArgsSchema } from "./schema";
 
-export { configSetToolDefinition as toolDefinition, ConfigSetArgsSchema, type ConfigSetArgs } from "./schema";
+export {
+  type ConfigSetArgs,
+  ConfigSetArgsSchema,
+  configSetToolDefinition as toolDefinition,
+} from "./schema";
 
 /**
  * Settable configuration keys with their expected types and validation.
  */
-const SETTABLE_KEYS: Record<string, { type: "string" | "number" | "boolean"; validate?: (v: unknown) => boolean }> = {
+const SETTABLE_KEYS: Record<
+  string,
+  { type: "string" | "number" | "boolean"; validate?: (v: unknown) => boolean }
+> = {
   "defaults.memories_location": { type: "string" },
   "defaults.memories_mode": {
     type: "string",
     validate: (v) => ["DEFAULT", "CODE", "CUSTOM"].includes(v as string),
   },
   "sync.enabled": { type: "boolean" },
-  "sync.delay_ms": { type: "number", validate: (v) => typeof v === "number" && v >= 0 },
+  "sync.delay_ms": {
+    type: "number",
+    validate: (v) => typeof v === "number" && v >= 0,
+  },
   "logging.level": {
     type: "string",
-    validate: (v) => ["trace", "debug", "info", "warn", "error"].includes(v as string),
+    validate: (v) =>
+      ["trace", "debug", "info", "warn", "error"].includes(v as string),
   },
   "watcher.enabled": { type: "boolean" },
-  "watcher.debounce_ms": { type: "number", validate: (v) => typeof v === "number" && v >= 0 },
+  "watcher.debounce_ms": {
+    type: "number",
+    validate: (v) => typeof v === "number" && v >= 0,
+  },
 };
 
 /**
@@ -44,13 +58,21 @@ const SETTABLE_KEYS: Record<string, { type: "string" | "number" | "boolean"; val
  * @param path - Dot-separated path
  * @param value - Value to set
  */
-function setNestedValue(obj: Record<string, unknown>, path: string, value: unknown): void {
+function setNestedValue(
+  obj: Record<string, unknown>,
+  path: string,
+  value: unknown,
+): void {
   const keys = path.split(".");
   let current = obj;
 
   for (let i = 0; i < keys.length - 1; i++) {
     const key = keys[i];
-    if (!(key in current) || typeof current[key] !== "object" || current[key] === null) {
+    if (
+      !(key in current) ||
+      typeof current[key] !== "object" ||
+      current[key] === null
+    ) {
       current[key] = {};
     }
     current = current[key] as Record<string, unknown>;
@@ -65,7 +87,9 @@ function setNestedValue(obj: Record<string, unknown>, path: string, value: unkno
  * @param args - Tool arguments (raw from MCP, will be validated)
  * @returns CallToolResult with update confirmation or error
  */
-export async function handler(args: Record<string, unknown>): Promise<CallToolResult> {
+export async function handler(
+  args: Record<string, unknown>,
+): Promise<CallToolResult> {
   // Validate and parse input using AJV
   const parsed: ConfigSetArgs = ConfigSetArgsSchema.parse(args);
   const { key, value } = parsed;
@@ -83,7 +107,7 @@ export async function handler(args: Record<string, unknown>): Promise<CallToolRe
               hint: "Use config_update_project for project-specific settings",
             },
             null,
-            2
+            2,
           ),
         },
       ],
@@ -107,7 +131,7 @@ export async function handler(args: Record<string, unknown>): Promise<CallToolRe
               value,
             },
             null,
-            2
+            2,
           ),
         },
       ],
@@ -128,7 +152,7 @@ export async function handler(args: Record<string, unknown>): Promise<CallToolRe
               hint: getValidationHint(key),
             },
             null,
-            2
+            2,
           ),
         },
       ],
@@ -160,7 +184,10 @@ export async function handler(args: Record<string, unknown>): Promise<CallToolRe
 
     // Mark as good after successful update
     if (rollbackManager.isInitialized()) {
-      await rollbackManager.markAsGood(newConfig as BrainConfig, `After config_set: ${key}`);
+      await rollbackManager.markAsGood(
+        newConfig as BrainConfig,
+        `After config_set: ${key}`,
+      );
     }
 
     return {
@@ -171,13 +198,16 @@ export async function handler(args: Record<string, unknown>): Promise<CallToolRe
             {
               success: true,
               key,
-              old_value: getNestedValue(oldConfig as unknown as Record<string, unknown>, key),
+              old_value: getNestedValue(
+                oldConfig as unknown as Record<string, unknown>,
+                key,
+              ),
               new_value: value,
               requires_migration: diff.requiresMigration,
               changes: summarizeConfigDiff(diff),
             },
             null,
-            2
+            2,
           ),
         },
       ],
@@ -194,7 +224,7 @@ export async function handler(args: Record<string, unknown>): Promise<CallToolRe
               value,
             },
             null,
-            2
+            2,
           ),
         },
       ],
@@ -211,7 +241,11 @@ function getNestedValue(obj: Record<string, unknown>, path: string): unknown {
   let current: unknown = obj;
 
   for (const key of keys) {
-    if (current === null || current === undefined || typeof current !== "object") {
+    if (
+      current === null ||
+      current === undefined ||
+      typeof current !== "object"
+    ) {
       return undefined;
     }
     current = (current as Record<string, unknown>)[key];

@@ -10,15 +10,17 @@
  * - recoverIncompleteMigrations(): Startup recovery
  */
 
-import { describe, test, expect, beforeEach, vi } from "vitest";
 import * as path from "path";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 // Track mock checksum value
 let mockChecksumValue = "abc123def456";
 
 // Mock filesystem
 const mockFs = {
-  existsSync: vi.fn(() => false) as ReturnType<typeof mock<(p: string) => boolean>>,
+  existsSync: vi.fn(() => false) as ReturnType<
+    typeof mock<(p: string) => boolean>
+  >,
   mkdirSync: vi.fn(() => undefined) as ReturnType<
     typeof mock<(p: string, opts: unknown) => void>
   >,
@@ -31,8 +33,12 @@ const mockFs = {
   renameSync: vi.fn(() => undefined) as ReturnType<
     typeof mock<(from: string, to: string) => void>
   >,
-  unlinkSync: vi.fn(() => undefined) as ReturnType<typeof mock<(p: string) => void>>,
-  rmdirSync: vi.fn(() => undefined) as ReturnType<typeof mock<(p: string) => void>>,
+  unlinkSync: vi.fn(() => undefined) as ReturnType<
+    typeof mock<(p: string) => void>
+  >,
+  rmdirSync: vi.fn(() => undefined) as ReturnType<
+    typeof mock<(p: string) => void>
+  >,
   readdirSync: vi.fn(() => [] as string[]) as ReturnType<
     typeof mock<(p: string) => string[]>
   >,
@@ -87,22 +93,22 @@ vi.mock("../../utils/internal/logger", () => ({
 }));
 
 import {
+  type CopyManifest,
+  type CopyManifestEntry,
+  computeFileChecksumSync,
   createCopyManifest,
-  markEntryCopied,
-  verifyEntry,
-  markEntryFailed,
-  markManifestCompleted,
-  rollbackPartialCopy,
-  recoverIncompleteMigrations,
-  getStatusCounts,
   getFailedEntries,
+  getManifestDir,
   getPendingEntries,
   getProgress,
+  getStatusCounts,
   isIncomplete,
-  computeFileChecksumSync,
-  getManifestDir,
-  CopyManifest,
-  CopyManifestEntry,
+  markEntryCopied,
+  markEntryFailed,
+  markManifestCompleted,
+  recoverIncompleteMigrations,
+  rollbackPartialCopy,
+  verifyEntry,
 } from "../copy-manifest";
 
 describe("createCopyManifest", () => {
@@ -130,7 +136,7 @@ describe("createCopyManifest", () => {
       "test-project",
       "/source",
       "/target",
-      ["file1.md", "file2.md"]
+      ["file1.md", "file2.md"],
     );
 
     expect(manifest.project).toBe("test-project");
@@ -143,7 +149,9 @@ describe("createCopyManifest", () => {
   });
 
   test("generates unique migration ID", async () => {
-    const manifest1 = await createCopyManifest("test", "/src", "/dst", ["a.md"]);
+    const manifest1 = await createCopyManifest("test", "/src", "/dst", [
+      "a.md",
+    ]);
 
     expect(manifest1.migrationId).toContain("migration-");
   });
@@ -160,14 +168,14 @@ describe("createCopyManifest", () => {
       "test",
       "/source/root",
       "/target/root",
-      ["docs/file.md"]
+      ["docs/file.md"],
     );
 
     expect(manifest.entries[0].sourcePath).toBe(
-      path.join("/source/root", "docs/file.md")
+      path.join("/source/root", "docs/file.md"),
     );
     expect(manifest.entries[0].targetPath).toBe(
-      path.join("/target/root", "docs/file.md")
+      path.join("/target/root", "docs/file.md"),
     );
   });
 });
@@ -184,7 +192,9 @@ describe("markEntryCopied", () => {
 
     mockFs.existsSync.mockReturnValue(false);
     mockChecksumValue = "targetChecksum123";
-    mockFs.readFileSync.mockReturnValue(JSON.stringify({ migrationId: "test" }));
+    mockFs.readFileSync.mockReturnValue(
+      JSON.stringify({ migrationId: "test" }),
+    );
 
     manifest = {
       migrationId: "test-migration",
@@ -227,7 +237,9 @@ describe("verifyEntry", () => {
     mockFs.renameSync.mockReset();
 
     mockFs.existsSync.mockReturnValue(false);
-    mockFs.readFileSync.mockReturnValue(JSON.stringify({ migrationId: "test" }));
+    mockFs.readFileSync.mockReturnValue(
+      JSON.stringify({ migrationId: "test" }),
+    );
 
     manifest = {
       migrationId: "test-migration",
@@ -269,7 +281,9 @@ describe("markEntryFailed", () => {
     mockFs.renameSync.mockReset();
 
     mockFs.existsSync.mockReturnValue(false);
-    mockFs.readFileSync.mockReturnValue(JSON.stringify({ migrationId: "test" }));
+    mockFs.readFileSync.mockReturnValue(
+      JSON.stringify({ migrationId: "test" }),
+    );
   });
 
   test("updates entry status and error", () => {
@@ -308,7 +322,9 @@ describe("markManifestCompleted", () => {
     mockFs.renameSync.mockReset();
 
     mockFs.existsSync.mockReturnValue(false);
-    mockFs.readFileSync.mockReturnValue(JSON.stringify({ migrationId: "test" }));
+    mockFs.readFileSync.mockReturnValue(
+      JSON.stringify({ migrationId: "test" }),
+    );
   });
 
   test("sets completedAt timestamp", () => {
@@ -484,7 +500,7 @@ describe("rollbackPartialCopy", () => {
     // Manifest should be deleted
     const unlinkCalls = mockFs.unlinkSync.mock.calls;
     const manifestDeleted = unlinkCalls.some((call) =>
-      String(call[0]).includes("test-migration")
+      String(call[0]).includes("test-migration"),
     );
     expect(manifestDeleted).toBe(true);
   });
@@ -695,8 +711,16 @@ describe("getFailedEntries", () => {
       completedAt: null,
       entries: [
         { status: "verified", sourcePath: "/a" } as CopyManifestEntry,
-        { status: "failed", sourcePath: "/b", error: "Error 1" } as CopyManifestEntry,
-        { status: "failed", sourcePath: "/c", error: "Error 2" } as CopyManifestEntry,
+        {
+          status: "failed",
+          sourcePath: "/b",
+          error: "Error 1",
+        } as CopyManifestEntry,
+        {
+          status: "failed",
+          sourcePath: "/c",
+          error: "Error 2",
+        } as CopyManifestEntry,
       ],
     };
 

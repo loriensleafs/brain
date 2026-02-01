@@ -3,23 +3,23 @@
  *
  * Validates that JSON Schema validators behave identically to the original Zod schemas.
  */
-import { describe, test, expect } from "vitest";
+import { describe, expect, test } from "vitest";
 import {
-  validateSearchArgs,
-  parseSearchArgs,
-  getSearchArgsErrors,
-  validateBootstrapContextArgs,
-  parseBootstrapContextArgs,
-  getBootstrapContextArgsErrors,
-  validateListProjectsArgs,
-  parseListProjectsArgs,
-  getListProjectsArgsErrors,
-  validateDeleteProjectArgs,
-  parseDeleteProjectArgs,
-  getDeleteProjectArgsErrors,
-  validateActiveProjectArgs,
-  parseActiveProjectArgs,
   getActiveProjectArgsErrors,
+  getBootstrapContextArgsErrors,
+  getDeleteProjectArgsErrors,
+  getListProjectsArgsErrors,
+  getSearchArgsErrors,
+  parseActiveProjectArgs,
+  parseBootstrapContextArgs,
+  parseDeleteProjectArgs,
+  parseListProjectsArgs,
+  parseSearchArgs,
+  validateActiveProjectArgs,
+  validateBootstrapContextArgs,
+  validateDeleteProjectArgs,
+  validateListProjectsArgs,
+  validateSearchArgs,
 } from "../validate";
 
 describe("SearchArgs validation", () => {
@@ -31,7 +31,7 @@ describe("SearchArgs validation", () => {
           limit: 10,
           threshold: 0.7,
           mode: "auto",
-        })
+        }),
       ).toThrow();
 
       const valid = parseSearchArgs({
@@ -49,7 +49,7 @@ describe("SearchArgs validation", () => {
         parseSearchArgs({
           query: "test",
           limit: 0,
-        })
+        }),
       ).toThrow();
 
       // Above maximum
@@ -57,7 +57,7 @@ describe("SearchArgs validation", () => {
         parseSearchArgs({
           query: "test",
           limit: 101,
-        })
+        }),
       ).toThrow();
 
       // Valid
@@ -74,7 +74,7 @@ describe("SearchArgs validation", () => {
         parseSearchArgs({
           query: "test",
           threshold: -0.1,
-        })
+        }),
       ).toThrow();
 
       // Above maximum
@@ -82,7 +82,7 @@ describe("SearchArgs validation", () => {
         parseSearchArgs({
           query: "test",
           threshold: 1.1,
-        })
+        }),
       ).toThrow();
 
       // Valid
@@ -98,7 +98,7 @@ describe("SearchArgs validation", () => {
         parseSearchArgs({
           query: "test",
           mode: "invalid",
-        })
+        }),
       ).toThrow();
 
       const auto = parseSearchArgs({ query: "test", mode: "auto" });
@@ -154,7 +154,7 @@ describe("SearchArgs validation", () => {
         parseSearchArgs({
           query: "test",
           depth: -1,
-        })
+        }),
       ).toThrow();
 
       // Above maximum
@@ -162,7 +162,7 @@ describe("SearchArgs validation", () => {
         parseSearchArgs({
           query: "test",
           depth: 4,
-        })
+        }),
       ).toThrow();
 
       // Valid bounds
@@ -178,7 +178,7 @@ describe("SearchArgs validation", () => {
         parseSearchArgs({
           query: "test",
           unknownProp: "value",
-        })
+        }),
       ).toThrow();
     });
   });
@@ -242,7 +242,9 @@ describe("BootstrapContextArgs validation", () => {
     });
 
     test("accepts include_referenced parameter", () => {
-      const withFalse = parseBootstrapContextArgs({ include_referenced: false });
+      const withFalse = parseBootstrapContextArgs({
+        include_referenced: false,
+      });
       expect(withFalse.include_referenced).toBe(false);
 
       const withTrue = parseBootstrapContextArgs({ include_referenced: true });
@@ -253,7 +255,7 @@ describe("BootstrapContextArgs validation", () => {
       expect(() =>
         parseBootstrapContextArgs({
           unknownProp: "value",
-        })
+        }),
       ).toThrow();
     });
   });
@@ -293,7 +295,7 @@ describe("ListProjectsArgs validation", () => {
       expect(() =>
         parseListProjectsArgs({
           unknownProp: "value",
-        })
+        }),
       ).toThrow();
     });
   });
@@ -360,7 +362,7 @@ describe("DeleteProjectArgs validation", () => {
         parseDeleteProjectArgs({
           project: "my-project",
           unknownProp: "value",
-        })
+        }),
       ).toThrow();
     });
   });
@@ -369,7 +371,7 @@ describe("DeleteProjectArgs validation", () => {
     test("returns true for valid data", () => {
       expect(validateDeleteProjectArgs({ project: "test" })).toBe(true);
       expect(
-        validateDeleteProjectArgs({ project: "test", delete_notes: true })
+        validateDeleteProjectArgs({ project: "test", delete_notes: true }),
       ).toBe(true);
     });
 
@@ -422,9 +424,7 @@ describe("ActiveProjectArgs validation", () => {
     });
 
     test("rejects invalid operation", () => {
-      expect(() =>
-        parseActiveProjectArgs({ operation: "invalid" })
-      ).toThrow();
+      expect(() => parseActiveProjectArgs({ operation: "invalid" })).toThrow();
     });
 
     test("rejects additional properties", () => {
@@ -432,7 +432,7 @@ describe("ActiveProjectArgs validation", () => {
         parseActiveProjectArgs({
           operation: "get",
           unknownProp: "value",
-        })
+        }),
       ).toThrow();
     });
   });
@@ -441,9 +441,9 @@ describe("ActiveProjectArgs validation", () => {
     test("returns true for valid data", () => {
       expect(validateActiveProjectArgs({})).toBe(true);
       expect(validateActiveProjectArgs({ operation: "get" })).toBe(true);
-      expect(validateActiveProjectArgs({ operation: "set", project: "test" })).toBe(
-        true
-      );
+      expect(
+        validateActiveProjectArgs({ operation: "set", project: "test" }),
+      ).toBe(true);
       expect(validateActiveProjectArgs({ operation: "clear" })).toBe(true);
     });
 

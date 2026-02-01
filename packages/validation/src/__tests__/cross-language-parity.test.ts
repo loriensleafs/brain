@@ -14,22 +14,23 @@
  * - Run Go validation via subprocess
  * - Compare results
  */
-import { describe, test, expect, beforeAll } from "vitest";
+
 import { execSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { beforeAll, describe, expect, test } from "vitest";
 
 import {
-  validateSearchArgs,
-  getSearchArgsErrors,
-  validateBootstrapContextArgs,
   getBootstrapContextArgsErrors,
-  validateSessionState,
-  getSessionStateErrors,
-  validateBrainConfig,
   getBrainConfigErrors,
+  getSearchArgsErrors,
+  getSessionStateErrors,
   type ValidationError,
+  validateBootstrapContextArgs,
+  validateBrainConfig,
+  validateSearchArgs,
+  validateSessionState,
 } from "../validate";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -92,7 +93,7 @@ describe("Cross-Language Validation Parity", () => {
           for (const data of testData) {
             const errors = getSearchArgsErrors(data);
             expect(errors, `Case "${tc.name}" should have no errors`).toEqual(
-              []
+              [],
             );
           }
         }
@@ -112,14 +113,14 @@ describe("Cross-Language Validation Parity", () => {
           const errors = getSearchArgsErrors(tc.data);
           expect(
             errors.length,
-            `Case "${tc.name}" should have errors`
+            `Case "${tc.name}" should have errors`,
           ).toBeGreaterThan(0);
 
           if (tc.expectedConstraint) {
             const constraints = errors.map((e) => e.constraint);
             expect(
               constraints,
-              `Case "${tc.name}" should contain constraint "${tc.expectedConstraint}"`
+              `Case "${tc.name}" should contain constraint "${tc.expectedConstraint}"`,
             ).toContain(tc.expectedConstraint);
           }
         }
@@ -147,7 +148,7 @@ describe("Cross-Language Validation Parity", () => {
           for (const data of testData) {
             const errors = getBootstrapContextArgsErrors(data);
             expect(errors, `Case "${tc.name}" should have no errors`).toEqual(
-              []
+              [],
             );
           }
         }
@@ -167,14 +168,14 @@ describe("Cross-Language Validation Parity", () => {
           const errors = getBootstrapContextArgsErrors(tc.data);
           expect(
             errors.length,
-            `Case "${tc.name}" should have errors`
+            `Case "${tc.name}" should have errors`,
           ).toBeGreaterThan(0);
 
           if (tc.expectedConstraint) {
             const constraints = errors.map((e) => e.constraint);
             expect(
               constraints,
-              `Case "${tc.name}" should contain constraint "${tc.expectedConstraint}"`
+              `Case "${tc.name}" should contain constraint "${tc.expectedConstraint}"`,
             ).toContain(tc.expectedConstraint);
           }
         }
@@ -202,7 +203,7 @@ describe("Cross-Language Validation Parity", () => {
           for (const data of testData) {
             const errors = getSessionStateErrors(data);
             expect(errors, `Case "${tc.name}" should have no errors`).toEqual(
-              []
+              [],
             );
           }
         }
@@ -222,14 +223,14 @@ describe("Cross-Language Validation Parity", () => {
           const errors = getSessionStateErrors(tc.data);
           expect(
             errors.length,
-            `Case "${tc.name}" should have errors`
+            `Case "${tc.name}" should have errors`,
           ).toBeGreaterThan(0);
 
           if (tc.expectedConstraint) {
             const constraints = errors.map((e) => e.constraint);
             expect(
               constraints,
-              `Case "${tc.name}" should contain constraint "${tc.expectedConstraint}"`
+              `Case "${tc.name}" should contain constraint "${tc.expectedConstraint}"`,
             ).toContain(tc.expectedConstraint);
           }
         }
@@ -257,7 +258,7 @@ describe("Cross-Language Validation Parity", () => {
           for (const data of testData) {
             const errors = getBrainConfigErrors(data);
             expect(errors, `Case "${tc.name}" should have no errors`).toEqual(
-              []
+              [],
             );
           }
         }
@@ -277,14 +278,14 @@ describe("Cross-Language Validation Parity", () => {
           const errors = getBrainConfigErrors(tc.data);
           expect(
             errors.length,
-            `Case "${tc.name}" should have errors`
+            `Case "${tc.name}" should have errors`,
           ).toBeGreaterThan(0);
 
           if (tc.expectedConstraint) {
             const constraints = errors.map((e) => e.constraint);
             expect(
               constraints,
-              `Case "${tc.name}" should contain constraint "${tc.expectedConstraint}"`
+              `Case "${tc.name}" should contain constraint "${tc.expectedConstraint}"`,
             ).toContain(tc.expectedConstraint);
           }
         }
@@ -294,16 +295,22 @@ describe("Cross-Language Validation Parity", () => {
 });
 
 describe("Go Validator Parity (via subprocess)", () => {
-  test.skipIf(!goTestsAvailable)("Go tests pass for search schema", async () => {
-    // Run Go tests for search validation
-    const result = execSync("go test -v -run TestSearchArgsParity ./internal/", {
-      cwd: packageRoot,
-      encoding: "utf-8",
-    });
+  test.skipIf(!goTestsAvailable)(
+    "Go tests pass for search schema",
+    async () => {
+      // Run Go tests for search validation
+      const result = execSync(
+        "go test -v -run TestSearchArgsParity ./internal/",
+        {
+          cwd: packageRoot,
+          encoding: "utf-8",
+        },
+      );
 
-    expect(result).toContain("PASS");
-    expect(result).not.toContain("FAIL");
-  });
+      expect(result).toContain("PASS");
+      expect(result).not.toContain("FAIL");
+    },
+  );
 
   test.skipIf(!goTestsAvailable)(
     "Go tests pass for bootstrap-context schema",
@@ -313,12 +320,12 @@ describe("Go Validator Parity (via subprocess)", () => {
         {
           cwd: packageRoot,
           encoding: "utf-8",
-        }
+        },
       );
 
       expect(result).toContain("PASS");
       expect(result).not.toContain("FAIL");
-    }
+    },
   );
 
   test.skipIf(!goTestsAvailable)(
@@ -329,12 +336,12 @@ describe("Go Validator Parity (via subprocess)", () => {
         {
           cwd: packageRoot,
           encoding: "utf-8",
-        }
+        },
       );
 
       expect(result).toContain("PASS");
       expect(result).not.toContain("FAIL");
-    }
+    },
   );
 });
 
@@ -352,7 +359,10 @@ describe("Parity Summary", () => {
     ] as const;
     const validators: Record<
       string,
-      { validate: (data: unknown) => boolean; getErrors: (data: unknown) => ValidationError[] }
+      {
+        validate: (data: unknown) => boolean;
+        getErrors: (data: unknown) => ValidationError[];
+      }
     > = {
       search: { validate: validateSearchArgs, getErrors: getSearchArgsErrors },
       "bootstrap-context": {
@@ -371,7 +381,12 @@ describe("Parity Summary", () => {
 
     const results: Record<
       string,
-      { validPassed: number; validTotal: number; invalidPassed: number; invalidTotal: number }
+      {
+        validPassed: number;
+        validTotal: number;
+        invalidPassed: number;
+        invalidTotal: number;
+      }
     > = {};
 
     for (const schema of schemas) {
@@ -402,27 +417,30 @@ describe("Parity Summary", () => {
         }
       }
 
-      results[schema] = { validPassed, validTotal, invalidPassed, invalidTotal };
+      results[schema] = {
+        validPassed,
+        validTotal,
+        invalidPassed,
+        invalidTotal,
+      };
     }
 
     // Log summary
     console.log("\n=== Cross-Language Parity Summary (TypeScript/AJV) ===");
     for (const [schema, r] of Object.entries(results)) {
       console.log(
-        `${schema}: Valid ${r.validPassed}/${r.validTotal}, Invalid ${r.invalidPassed}/${r.invalidTotal}`
+        `${schema}: Valid ${r.validPassed}/${r.validTotal}, Invalid ${r.invalidPassed}/${r.invalidTotal}`,
       );
     }
 
     // All TypeScript tests should pass
     for (const [schema, r] of Object.entries(results)) {
-      expect(
-        r.validPassed,
-        `${schema}: All valid cases should pass`
-      ).toBe(r.validTotal);
-      expect(
-        r.invalidPassed,
-        `${schema}: All invalid cases should fail`
-      ).toBe(r.invalidTotal);
+      expect(r.validPassed, `${schema}: All valid cases should pass`).toBe(
+        r.validTotal,
+      );
+      expect(r.invalidPassed, `${schema}: All invalid cases should fail`).toBe(
+        r.invalidTotal,
+      );
     }
   });
 });

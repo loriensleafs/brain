@@ -8,20 +8,20 @@
  * @see TASK-013: Orchestrator Agent Routing Workflow
  */
 
-import { describe, test, expect } from "vitest";
-import {
-  orchestratorAgentCompletedWorkflow,
-  getCompactionHistory,
-  getTotalInvocationCount,
-  type AgentCompletedResult,
-} from "../orchestratorAgentCompleted";
+import { describe, expect, test } from "vitest";
 import type {
-  SessionState,
   AgentInvocation,
   AgentInvocationOutput,
-  OrchestratorWorkflow,
   CompactionEntry,
+  OrchestratorWorkflow,
+  SessionState,
 } from "../../../services/session/types";
+import {
+  type AgentCompletedResult,
+  getCompactionHistory,
+  getTotalInvocationCount,
+  orchestratorAgentCompletedWorkflow,
+} from "../orchestratorAgentCompleted";
 
 describe("Orchestrator Agent Completed Workflow", () => {
   describe("workflow definition", () => {
@@ -221,8 +221,7 @@ describe("Orchestrator Agent Completed Workflow", () => {
     describe("CompactionEntry structure", () => {
       test("entry has all required fields", () => {
         const entry: CompactionEntry = {
-          notePath:
-            "sessions/session-test-id-history-2026-01-18T10-00-00-000Z",
+          notePath: "sessions/session-test-id-history-2026-01-18T10-00-00-000Z",
           compactedAt: "2026-01-18T10:00:00Z",
           count: 9,
         };
@@ -250,7 +249,7 @@ describe("Orchestrator Agent Completed Workflow", () => {
 
         const totalCompacted = compactionHistory.reduce(
           (sum, entry) => sum + entry.count,
-          0
+          0,
         );
         expect(totalCompacted).toBe(18);
       });

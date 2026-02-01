@@ -6,10 +6,10 @@
  * relations, and section organization.
  */
 
-import type { QualityIssue } from '../types';
-import { getBasicMemoryClient } from '../../../proxy/client';
-import { hasFrontmatter } from '../utils/markdown';
-import { extractWikilinks } from '../utils/wikilinks';
+import { getBasicMemoryClient } from "../../../proxy/client";
+import type { QualityIssue } from "../types";
+import { hasFrontmatter } from "../utils/markdown";
+import { extractWikilinks } from "../utils/wikilinks";
 
 /**
  * Quality scoring weights
@@ -26,15 +26,15 @@ const QUALITY_WEIGHTS = {
  */
 export async function findWeakNotes(
   project: string,
-  threshold: number
+  threshold: number,
 ): Promise<QualityIssue[]> {
   const client = await getBasicMemoryClient();
   const issues: QualityIssue[] = [];
 
   // Get all notes in project
   const listResult = await client.callTool({
-    name: 'list_directory',
-    arguments: { project, depth: 10, file_name_glob: '*.md' },
+    name: "list_directory",
+    arguments: { project, depth: 10, file_name_glob: "*.md" },
   });
 
   const noteFiles = parseListDirectoryResult(listResult);
@@ -43,7 +43,7 @@ export async function findWeakNotes(
   for (const permalink of noteFiles) {
     try {
       const readResult = await client.callTool({
-        name: 'read_note',
+        name: "read_note",
         arguments: { identifier: permalink, project },
       });
 
@@ -53,16 +53,13 @@ export async function findWeakNotes(
         const recommendations = generateRecommendations(readResult, score);
 
         issues.push({
-          type: 'WEAK',
+          type: "WEAK",
           note: permalink,
           score,
           recommendation: `"${permalink}" has quality score ${score.toFixed(2)} (threshold: ${threshold}). ${recommendations}`,
         });
       }
-    } catch (error) {
-      // Skip notes that fail to read
-      continue;
-    }
+    } catch (error) {}
   }
 
   return issues;
@@ -72,7 +69,7 @@ export async function findWeakNotes(
  * Calculate quality score for a note
  */
 function calculateQualityScore(result: any): number {
-  const text = result.content?.[0]?.text || '';
+  const text = result.content?.[0]?.text || "";
   let score = 0;
 
   // Check for frontmatter
@@ -102,28 +99,28 @@ function calculateQualityScore(result: any): number {
  * Generate recommendations for improving note quality
  */
 function generateRecommendations(result: any, currentScore: number): string {
-  const text = result.content?.[0]?.text || '';
+  const text = result.content?.[0]?.text || "";
   const recommendations: string[] = [];
 
   if (!hasFrontmatter(text)) {
-    recommendations.push('add frontmatter');
+    recommendations.push("add frontmatter");
   }
 
   if (!hasObservations(text, 3)) {
-    recommendations.push('add more observations');
+    recommendations.push("add more observations");
   }
 
   if (!hasRelations(text, 2)) {
-    recommendations.push('link to related notes');
+    recommendations.push("link to related notes");
   }
 
   if (!hasSections(text)) {
-    recommendations.push('organize with sections');
+    recommendations.push("organize with sections");
   }
 
   return recommendations.length > 0
-    ? `Improve by: ${recommendations.join(', ')}`
-    : 'Consider enriching content';
+    ? `Improve by: ${recommendations.join(", ")}`
+    : "Consider enriching content";
 }
 
 /**
@@ -159,12 +156,12 @@ function hasSections(content: string): boolean {
  * Parse list_directory output to extract file paths
  */
 function parseListDirectoryResult(result: any): string[] {
-  const text = result.content?.[0]?.text || '';
+  const text = result.content?.[0]?.text || "";
   const files: string[] = [];
-  const lines = text.split('\n');
+  const lines = text.split("\n");
 
   for (const line of lines) {
-    if (line.includes('.md') && !line.includes('Directory:')) {
+    if (line.includes(".md") && !line.includes("Directory:")) {
       const match = line.match(/([^\s]+\.md)/);
       if (match) files.push(match[1]);
     }

@@ -69,7 +69,7 @@ export function renderContext(data: ContextData): string {
 function renderHeader(
   project: string,
   timestamp: string,
-  fullContent: boolean
+  fullContent: boolean,
 ): string {
   const modeIndicator = fullContent ? " (Full)" : "";
   return `## Memory Context [v7]${modeIndicator}
@@ -126,7 +126,9 @@ function renderSessionBlock(session: SessionEnrichment): string {
     lines.push("");
     lines.push("**Recent Agent Activity:**");
     recentAgentHistory.slice(0, 5).forEach((entry) => {
-      const summary = entry.summary ? ` - ${entry.summary.slice(0, 50)}...` : "";
+      const summary = entry.summary
+        ? ` - ${entry.summary.slice(0, 50)}...`
+        : "";
       lines.push(`- ${entry.agent} (${entry.status})${summary}`);
     });
   }
@@ -136,7 +138,7 @@ function renderSessionBlock(session: SessionEnrichment): string {
 
 function renderFeaturesBlock(
   features: ContextNote[],
-  fullContent: boolean
+  fullContent: boolean,
 ): string {
   if (fullContent) {
     // Full mode: include note content
@@ -166,7 +168,7 @@ ${lines.join("\n")}`;
 
 function renderDecisionsBlock(
   decisions: ContextNote[],
-  fullContent: boolean
+  fullContent: boolean,
 ): string {
   if (fullContent) {
     // Full mode: include note content
@@ -203,7 +205,7 @@ ${lines.join("\n")}`;
 
 function renderActivityBlock(
   activity: ContextNote[],
-  fullContent: boolean
+  fullContent: boolean,
 ): string {
   const limited = activity.slice(0, 10);
 

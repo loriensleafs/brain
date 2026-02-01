@@ -14,18 +14,18 @@
  * @see ADR-020 Security Requirements section
  */
 
-import { describe, test, expect, beforeEach, afterEach } from "vitest";
 import * as os from "os";
 import * as path from "path";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
 import {
+  expandTilde,
+  explainPathValidation,
+  isPathWithin,
+  normalizePath,
+  type PathValidationResult,
   validatePath,
   validatePathOrThrow,
-  expandTilde,
-  normalizePath,
-  isPathWithin,
-  explainPathValidation,
-  type PathValidationResult,
 } from "../path-validator";
 
 describe("Path Validator - Security Tests", () => {
@@ -282,7 +282,9 @@ describe("Path Validator - Security Tests", () => {
     test("validates tilde-expanded path correctly", () => {
       const result = validatePath("~/memories");
       expect(result.valid).toBe(true);
-      expect(result.normalizedPath).toBe(path.normalize(path.join(os.homedir(), "memories")));
+      expect(result.normalizedPath).toBe(
+        path.normalize(path.join(os.homedir(), "memories")),
+      );
     });
   });
 
@@ -434,11 +436,15 @@ describe("Path Validator - Security Tests", () => {
     });
 
     test("throws Error for traversal attempt", () => {
-      expect(() => validatePathOrThrow("../etc/passwd")).toThrow("Path traversal not allowed");
+      expect(() => validatePathOrThrow("../etc/passwd")).toThrow(
+        "Path traversal not allowed",
+      );
     });
 
     test("throws Error for null byte injection", () => {
-      expect(() => validatePathOrThrow("file\0.txt")).toThrow("Invalid path characters: null byte detected");
+      expect(() => validatePathOrThrow("file\0.txt")).toThrow(
+        "Invalid path characters: null byte detected",
+      );
     });
 
     test("throws Error for empty path", () => {
@@ -447,9 +453,13 @@ describe("Path Validator - Security Tests", () => {
 
     test("throws Error for system path", () => {
       if (process.platform === "win32") {
-        expect(() => validatePathOrThrow("C:\\Windows\\System32")).toThrow("System path not allowed");
+        expect(() => validatePathOrThrow("C:\\Windows\\System32")).toThrow(
+          "System path not allowed",
+        );
       } else {
-        expect(() => validatePathOrThrow("/etc/passwd")).toThrow("System path not allowed: /etc");
+        expect(() => validatePathOrThrow("/etc/passwd")).toThrow(
+          "System path not allowed: /etc",
+        );
       }
     });
   });
@@ -459,7 +469,10 @@ describe("Path Validator - Security Tests", () => {
   // ==========================================================================
   describe("isPathWithin", () => {
     test("returns true for path within base directory", () => {
-      const result = isPathWithin("/home/user/project/file.md", "/home/user/project");
+      const result = isPathWithin(
+        "/home/user/project/file.md",
+        "/home/user/project",
+      );
       expect(result).toBe(true);
     });
 
@@ -469,12 +482,18 @@ describe("Path Validator - Security Tests", () => {
     });
 
     test("returns false for path outside base directory", () => {
-      const result = isPathWithin("/home/user/other/file.md", "/home/user/project");
+      const result = isPathWithin(
+        "/home/user/other/file.md",
+        "/home/user/project",
+      );
       expect(result).toBe(false);
     });
 
     test("returns false for sibling directory", () => {
-      const result = isPathWithin("/home/user/project-backup", "/home/user/project");
+      const result = isPathWithin(
+        "/home/user/project-backup",
+        "/home/user/project",
+      );
       expect(result).toBe(false);
     });
 
@@ -596,7 +615,9 @@ describe("Path Validator - Integration", () => {
   test("full validation flow for project path", () => {
     const result = validatePath("~/Dev/brain/notes");
     expect(result.valid).toBe(true);
-    expect(result.normalizedPath).toBe(path.join(os.homedir(), "Dev", "brain", "notes"));
+    expect(result.normalizedPath).toBe(
+      path.join(os.homedir(), "Dev", "brain", "notes"),
+    );
   });
 
   test("validatePathOrThrow works with isPathWithin", () => {

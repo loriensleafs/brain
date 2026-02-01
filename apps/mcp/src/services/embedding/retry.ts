@@ -5,17 +5,20 @@
  * Uses chunked embeddings for content that exceeds model token limits.
  */
 
-import { generateEmbedding } from "./generateEmbedding";
-import { chunkText } from "./chunking";
-import { storeChunkedEmbeddings, type ChunkEmbeddingInput } from "../../db/vectors";
 import { createVectorConnection } from "../../db/connection";
 import { ensureEmbeddingTables } from "../../db/schema";
 import {
-  dequeueEmbedding,
-  markEmbeddingProcessed,
-  incrementAttempts,
-} from "./queue";
+  type ChunkEmbeddingInput,
+  storeChunkedEmbeddings,
+} from "../../db/vectors";
 import { logger } from "../../utils/internal/logger";
+import { chunkText } from "./chunking";
+import { generateEmbedding } from "./generateEmbedding";
+import {
+  dequeueEmbedding,
+  incrementAttempts,
+  markEmbeddingProcessed,
+} from "./queue";
 
 const MAX_RETRIES = 3;
 const BASE_DELAY_MS = 1000;
@@ -33,7 +36,7 @@ function sleep(ms: number): Promise<void> {
  * @returns Array of chunk embeddings or null if any chunk fails
  */
 async function generateChunkedEmbeddings(
-  content: string
+  content: string,
 ): Promise<ChunkEmbeddingInput[] | null> {
   const chunks = chunkText(content);
   const results: ChunkEmbeddingInput[] = [];
@@ -67,7 +70,7 @@ async function generateChunkedEmbeddings(
 export async function processWithRetry(
   noteId: string,
   content: string,
-  attempts: number = 0
+  attempts: number = 0,
 ): Promise<boolean> {
   if (attempts >= MAX_RETRIES) {
     logger.warn(`Max retries (${MAX_RETRIES}) exceeded for note ${noteId}`);
@@ -81,7 +84,9 @@ export async function processWithRetry(
       try {
         ensureEmbeddingTables(db);
         storeChunkedEmbeddings(db, noteId, chunkEmbeddings);
-        logger.info(`Embedding retry succeeded for note ${noteId} (${chunkEmbeddings.length} chunks)`);
+        logger.info(
+          `Embedding retry succeeded for note ${noteId} (${chunkEmbeddings.length} chunks)`,
+        );
         return true;
       } finally {
         db.close();
@@ -89,9 +94,9 @@ export async function processWithRetry(
     }
     return true; // null embedding (empty content) is still "success"
   } catch (error) {
-    const delay = BASE_DELAY_MS * Math.pow(2, attempts);
+    const delay = BASE_DELAY_MS * 2 ** attempts;
     logger.warn(
-      `Retry ${attempts + 1}/${MAX_RETRIES} for note ${noteId}. Next in ${delay}ms`
+      `Retry ${attempts + 1}/${MAX_RETRIES} for note ${noteId}. Next in ${delay}ms`,
     );
     await sleep(delay);
     return false;
@@ -103,7 +108,7 @@ export async function processWithRetry(
  * @param fetchContent - Function to fetch note content by ID
  */
 export async function processEmbeddingQueue(
-  fetchContent: (noteId: string) => Promise<string | null>
+  fetchContent: (noteId: string) => Promise<string | null>,
 ): Promise<{ processed: number; failed: number }> {
   let processed = 0;
   let failed = 0;
@@ -114,7 +119,7 @@ export async function processEmbeddingQueue(
 
     if (attempts >= MAX_RETRIES) {
       logger.warn(
-        `Removing note ${noteId} from queue after ${MAX_RETRIES} failures`
+        `Removing note ${noteId} from queue after ${MAX_RETRIES} failures`,
       );
       markEmbeddingProcessed(id);
       failed++;

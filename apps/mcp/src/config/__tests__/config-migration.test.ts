@@ -11,9 +11,9 @@
  * - Remove old config after success
  */
 
-import { describe, test, expect, beforeEach, vi } from "vitest";
 import * as os from "os";
 import * as path from "path";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import type { BrainConfig } from "../schema";
 import { DEFAULT_BRAIN_CONFIG } from "../schema";
 
@@ -33,7 +33,9 @@ const mockFs = {
   }) as ReturnType<typeof mock<(p: string, enc: string) => string>>,
   writeFileSync: vi.fn((p: string, content: string) => {
     fileSystem.set(p, content);
-  }) as ReturnType<typeof mock<(p: string, content: string, opts: unknown) => void>>,
+  }) as ReturnType<
+    typeof mock<(p: string, content: string, opts: unknown) => void>
+  >,
   mkdirSync: vi.fn(() => undefined) as ReturnType<
     typeof mock<(p: string, opts: unknown) => void>
   >,
@@ -74,7 +76,7 @@ const mockBrainConfig = {
   }),
   getBrainConfigDir: vi.fn(() => path.join(os.homedir(), ".config", "brain")),
   getBrainConfigPath: vi.fn(() =>
-    path.join(os.homedir(), ".config", "brain", "config.json")
+    path.join(os.homedir(), ".config", "brain", "config.json"),
   ),
 };
 
@@ -98,21 +100,23 @@ vi.mock("../../utils/internal/logger", () => ({
 }));
 
 import {
-  migrateToNewConfigLocation,
-  transformOldToNew,
-  loadOldConfig,
-  needsMigration,
-  oldConfigExists,
   getOldConfigPath,
-  rollbackMigration,
-  type OldBrainConfig,
+  loadOldConfig,
   type MigrationOptions,
+  migrateToNewConfigLocation,
+  needsMigration,
+  type OldBrainConfig,
+  oldConfigExists,
+  rollbackMigration,
+  transformOldToNew,
 } from "../config-migration";
 
 /**
  * Create a test old config.
  */
-function createOldConfig(overrides: Partial<OldBrainConfig> = {}): OldBrainConfig {
+function createOldConfig(
+  overrides: Partial<OldBrainConfig> = {},
+): OldBrainConfig {
   return {
     version: "1.0.0",
     notes_path: "~/old-memories",
@@ -311,7 +315,7 @@ describe("transformOldToNew", () => {
     const newConfig = transformOldToNew(oldConfig);
 
     expect(newConfig.defaults.memories_location).toBe(
-      DEFAULT_BRAIN_CONFIG.defaults.memories_location
+      DEFAULT_BRAIN_CONFIG.defaults.memories_location,
     );
     expect(newConfig.sync.enabled).toBe(DEFAULT_BRAIN_CONFIG.sync.enabled);
     expect(newConfig.logging.level).toBe(DEFAULT_BRAIN_CONFIG.logging.level);
@@ -341,13 +345,25 @@ describe("migrateToNewConfigLocation", () => {
     mockBrainConfig.loadBrainConfig.mockReset();
     mockTranslationLayer.syncConfigToBasicMemory.mockReset();
 
-    mockBrainConfig.saveBrainConfig.mockImplementation(async (config: BrainConfig) => {
-      const newPath = path.join(os.homedir(), ".config", "brain", "config.json");
-      fileSystem.set(newPath, JSON.stringify(config, null, 2));
-    });
+    mockBrainConfig.saveBrainConfig.mockImplementation(
+      async (config: BrainConfig) => {
+        const newPath = path.join(
+          os.homedir(),
+          ".config",
+          "brain",
+          "config.json",
+        );
+        fileSystem.set(newPath, JSON.stringify(config, null, 2));
+      },
+    );
 
     mockBrainConfig.loadBrainConfig.mockImplementation(async () => {
-      const newPath = path.join(os.homedir(), ".config", "brain", "config.json");
+      const newPath = path.join(
+        os.homedir(),
+        ".config",
+        "brain",
+        "config.json",
+      );
       const content = fileSystem.get(newPath);
       if (!content) return { ...DEFAULT_BRAIN_CONFIG };
       return JSON.parse(content) as BrainConfig;

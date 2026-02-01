@@ -5,14 +5,16 @@
  */
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import {
-  getSession,
-  setSession,
-  MODE_DESCRIPTIONS,
   getRecentModeHistory,
+  getSession,
+  MODE_DESCRIPTIONS,
+  setSession,
 } from "../../services/session";
 import { SessionArgsSchema } from "./schema";
 
-export async function handler(rawArgs: Record<string, unknown>): Promise<CallToolResult> {
+export async function handler(
+  rawArgs: Record<string, unknown>,
+): Promise<CallToolResult> {
   // Validate and parse input
   const args = SessionArgsSchema.parse(rawArgs);
   if (args.operation === "get") {
@@ -102,13 +104,11 @@ export async function handler(rawArgs: Record<string, unknown>): Promise<CallToo
     parts.push(MODE_DESCRIPTIONS[state.currentMode]);
   }
   if (updates.task !== undefined) {
-    parts.push(
-      updates.task ? `Task: ${state.activeTask}` : "Task cleared"
-    );
+    parts.push(updates.task ? `Task: ${state.activeTask}` : "Task cleared");
   }
   if (updates.feature !== undefined) {
     parts.push(
-      updates.feature ? `Feature: ${state.activeFeature}` : "Feature cleared"
+      updates.feature ? `Feature: ${state.activeFeature}` : "Feature cleared",
     );
   }
 

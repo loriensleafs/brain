@@ -16,7 +16,7 @@
  * - orchestrator/agent.completed: Agent completion events
  */
 
-import type { WorkflowMode, AgentType } from "../services/session";
+import type { AgentType, WorkflowMode } from "../services/session";
 
 // ============================================================================
 // Session Protocol Events (ADR-016)

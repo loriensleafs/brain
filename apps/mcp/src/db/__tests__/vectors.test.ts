@@ -1,16 +1,16 @@
-import { describe, test, expect, beforeEach, afterEach } from "vitest";
 import { Database } from "bun:sqlite";
 import * as sqliteVec from "sqlite-vec";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { createEmbeddingsTable, makeChunkId } from "../schema";
 import {
-  storeChunkedEmbeddings,
-  getChunkedEmbeddings,
-  deleteChunkedEmbeddings,
-  hasEmbeddings,
-  countChunksForEntity,
-  semanticSearchChunked,
-  deduplicateByEntity,
   type ChunkEmbeddingInput,
+  countChunksForEntity,
+  deduplicateByEntity,
+  deleteChunkedEmbeddings,
+  getChunkedEmbeddings,
+  hasEmbeddings,
+  semanticSearchChunked,
+  storeChunkedEmbeddings,
 } from "../vectors";
 
 // Note: Custom SQLite is configured in test preload (src/__tests__/setup.ts)
@@ -88,7 +88,9 @@ describe("chunked embedding CRUD operations", () => {
       },
     ];
 
-    expect(() => storeChunkedEmbeddings(db, "entity-1", chunks)).toThrow("Expected 768");
+    expect(() => storeChunkedEmbeddings(db, "entity-1", chunks)).toThrow(
+      "Expected 768",
+    );
   });
 
   test("storeChunkedEmbeddings replaces existing chunks", () => {

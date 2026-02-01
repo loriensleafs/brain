@@ -26,11 +26,7 @@
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { getBasicMemoryClient } from "../../proxy/client";
 import { logger } from "../../utils/internal/logger";
-import type {
-  SessionState,
-  AgentInvocation,
-  AgentType,
-} from "./types";
+import type { AgentInvocation, AgentType, SessionState } from "./types";
 
 // ============================================================================
 // Constants
@@ -54,7 +50,10 @@ const AGENT_CONTEXT_PREFIX = "sessions/agent-";
  * Error thrown when Brain MCP is unavailable.
  */
 export class BrainUnavailableError extends Error {
-  constructor(message: string, public readonly cause?: Error) {
+  constructor(
+    message: string,
+    public readonly cause?: Error,
+  ) {
     super(message);
     this.name = "BrainUnavailableError";
   }
@@ -144,7 +143,7 @@ export class BrainSessionPersistence {
     } catch (error) {
       throw new BrainUnavailableError(
         "Failed to connect to Brain MCP",
-        error instanceof Error ? error : undefined
+        error instanceof Error ? error : undefined,
       );
     }
   }
@@ -163,7 +162,7 @@ export class BrainSessionPersistence {
 
     logger.debug(
       { notePath: SESSION_PATH, version: session.version },
-      "Saving session to Brain note"
+      "Saving session to Brain note",
     );
 
     // Write session state to Brain note
@@ -176,10 +175,7 @@ export class BrainSessionPersistence {
       },
     });
 
-    logger.info(
-      { version: session.version },
-      "Session saved to Brain note"
-    );
+    logger.info({ version: session.version }, "Session saved to Brain note");
   }
 
   /**
@@ -222,16 +218,13 @@ export class BrainSessionPersistence {
 
       logger.debug(
         { version: state.version },
-        "Session loaded from Brain note"
+        "Session loaded from Brain note",
       );
 
       return state;
     } catch (error) {
       // Log and return null for errors (note not found, etc.)
-      logger.debug(
-        { error },
-        "Failed to load session - may not exist"
-      );
+      logger.debug({ error }, "Failed to load session - may not exist");
       return null;
     }
   }
@@ -246,7 +239,10 @@ export class BrainSessionPersistence {
   async deleteSession(): Promise<void> {
     const client = await this.getClient();
 
-    logger.debug({ notePath: SESSION_PATH }, "Deleting session from Brain note");
+    logger.debug(
+      { notePath: SESSION_PATH },
+      "Deleting session from Brain note",
+    );
 
     // Write tombstone content to mark as deleted
     const tombstone = {
@@ -278,16 +274,13 @@ export class BrainSessionPersistence {
    */
   async saveAgentContext(
     agent: AgentType,
-    invocation: AgentInvocation
+    invocation: AgentInvocation,
   ): Promise<void> {
     const client = await this.getClient();
 
     const notePath = `${AGENT_CONTEXT_PREFIX}${agent}`;
 
-    logger.debug(
-      { agent, notePath },
-      "Saving agent context to Brain note"
-    );
+    logger.debug({ agent, notePath }, "Saving agent context to Brain note");
 
     await client.callTool({
       name: "write_note",
@@ -308,9 +301,7 @@ export class BrainSessionPersistence {
    * @returns Agent invocation or null if not found
    * @throws BrainUnavailableError if Brain MCP is unavailable
    */
-  async loadAgentContext(
-    agent: AgentType
-  ): Promise<AgentInvocation | null> {
+  async loadAgentContext(agent: AgentType): Promise<AgentInvocation | null> {
     const client = await this.getClient();
 
     const notePath = `${AGENT_CONTEXT_PREFIX}${agent}`;

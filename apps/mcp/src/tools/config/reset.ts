@@ -10,12 +10,16 @@
 
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { loadBrainConfig, saveBrainConfig } from "../../config/brain-config";
-import { syncConfigToBasicMemory } from "../../config/translation-layer";
 import { rollbackManager } from "../../config/rollback";
-import { DEFAULT_BRAIN_CONFIG, type BrainConfig } from "../../config/schema";
-import { ConfigResetArgsSchema, type ConfigResetArgs } from "./schema";
+import { type BrainConfig, DEFAULT_BRAIN_CONFIG } from "../../config/schema";
+import { syncConfigToBasicMemory } from "../../config/translation-layer";
+import { type ConfigResetArgs, ConfigResetArgsSchema } from "./schema";
 
-export { configResetToolDefinition as toolDefinition, ConfigResetArgsSchema, type ConfigResetArgs } from "./schema";
+export {
+  type ConfigResetArgs,
+  ConfigResetArgsSchema,
+  configResetToolDefinition as toolDefinition,
+} from "./schema";
 
 /**
  * Resettable top-level configuration keys.
@@ -29,7 +33,9 @@ type ResettableKey = (typeof RESETTABLE_KEYS)[number];
  * @param args - Tool arguments (raw from MCP, will be validated)
  * @returns CallToolResult with reset confirmation or error
  */
-export async function handler(args: Record<string, unknown>): Promise<CallToolResult> {
+export async function handler(
+  args: Record<string, unknown>,
+): Promise<CallToolResult> {
   // Validate and parse input using AJV
   const parsed: ConfigResetArgs = ConfigResetArgsSchema.parse(args);
   const { key, all } = parsed;
@@ -50,7 +56,7 @@ export async function handler(args: Record<string, unknown>): Promise<CallToolRe
               ],
             },
             null,
-            2
+            2,
           ),
         },
       ],
@@ -74,7 +80,7 @@ export async function handler(args: Record<string, unknown>): Promise<CallToolRe
                 hint: "Projects cannot be reset via config_reset. Use delete_project and create_project instead.",
               },
               null,
-              2
+              2,
             ),
           },
         ],
@@ -91,7 +97,7 @@ export async function handler(args: Record<string, unknown>): Promise<CallToolRe
     if (rollbackManager.isInitialized()) {
       rollbackManager.snapshot(
         oldConfig,
-        all ? "Before config_reset --all" : `Before config_reset: ${key}`
+        all ? "Before config_reset --all" : `Before config_reset: ${key}`,
       );
     }
 
@@ -104,7 +110,8 @@ export async function handler(args: Record<string, unknown>): Promise<CallToolRe
         ...DEFAULT_BRAIN_CONFIG,
         projects: oldConfig.projects, // Preserve existing projects
       };
-      resetDescription = "Reset entire configuration to defaults (projects preserved)";
+      resetDescription =
+        "Reset entire configuration to defaults (projects preserved)";
     } else if (key) {
       // Reset specific section
       const topLevelKey = key.split(".")[0] as ResettableKey;
@@ -175,7 +182,7 @@ export async function handler(args: Record<string, unknown>): Promise<CallToolRe
               projects_preserved: Object.keys(newConfig.projects).length,
             },
             null,
-            2
+            2,
           ),
         },
       ],
@@ -190,7 +197,7 @@ export async function handler(args: Record<string, unknown>): Promise<CallToolRe
               error: `Failed to reset config: ${error instanceof Error ? error.message : String(error)}`,
             },
             null,
-            2
+            2,
           ),
         },
       ],

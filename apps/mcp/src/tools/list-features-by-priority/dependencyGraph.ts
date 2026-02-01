@@ -38,7 +38,7 @@ function extractPriorityFromFrontmatter(content: string): number | undefined {
 async function readNotesForPriority(
   client: Client,
   project: string,
-  permalinks: string[]
+  permalinks: string[],
 ): Promise<Map<string, number | undefined>> {
   const priorities = new Map<string, number | undefined>();
 
@@ -52,13 +52,16 @@ async function readNotesForPriority(
             name: "read_note",
             arguments: { identifier: permalink, project },
           });
-          const content = result.content as Array<{ type: string; text: string }>;
+          const content = result.content as Array<{
+            type: string;
+            text: string;
+          }>;
           const text = content?.[0]?.text || "";
           return { permalink, priority: extractPriorityFromFrontmatter(text) };
         } catch {
           return { permalink, priority: undefined };
         }
-      })
+      }),
     );
     for (const { permalink, priority } of results) {
       priorities.set(permalink, priority);
@@ -73,7 +76,7 @@ async function readNotesForPriority(
  */
 export async function buildDependencyGraph(
   project: string,
-  entityType: "feature" | "task" | "phase" = "feature"
+  entityType: "feature" | "task" | "phase" = "feature",
 ): Promise<DependencyGraph> {
   const client = await getBasicMemoryClient();
   const warnings: string[] = [];
@@ -105,7 +108,9 @@ export async function buildDependencyGraph(
 
   try {
     const parsed = JSON.parse(content[0].text);
-    features = parsed.results?.filter((r: { type: string }) => r.type === "entity") || [];
+    features =
+      parsed.results?.filter((r: { type: string }) => r.type === "entity") ||
+      [];
   } catch {
     warnings.push("Failed to parse feature search results");
     return { nodes, warnings };
@@ -155,7 +160,9 @@ function extractDependencies(content: string): string[] {
   for (const line of lines) {
     const trimmed = line.trim();
     for (const rel of DEPENDENCY_RELATIONS) {
-      const match = trimmed.match(new RegExp(`^-\\s*${rel}\\s+\\[\\[([^\\]]+)\\]\\]`));
+      const match = trimmed.match(
+        new RegExp(`^-\\s*${rel}\\s+\\[\\[([^\\]]+)\\]\\]`),
+      );
       if (match) {
         deps.push(match[1]);
       }

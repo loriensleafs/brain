@@ -8,8 +8,8 @@
  * @see ADR-022 for Zod to JSON Schema + AJV migration rationale
  */
 
-import Ajv from "ajv";
 import inngestSchema from "@brain/validation/schemas/config/inngest.schema.json";
+import Ajv from "ajv";
 
 /**
  * Inngest configuration type - local dev mode only.

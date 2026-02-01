@@ -10,7 +10,7 @@ import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 /**
  * Supported migration operation types
  */
-export type MigrationOperation = 'move' | 'rename' | 'restructure';
+export type MigrationOperation = "move" | "rename" | "restructure";
 
 /**
  * Single migration change to execute
@@ -56,7 +56,7 @@ export interface MigrateClusterOutput {
 }
 
 export const toolDefinition: Tool = {
-  name: 'migrate_cluster',
+  name: "migrate_cluster",
   description: `Execute migrations from an analyze_project preview. Moves, renames, or restructures notes to conform to Brain project conventions.
 
 Usage:
@@ -66,35 +66,35 @@ Usage:
 
 The tool uses Basic Memory's move_note internally and handles errors gracefully - one failed migration won't stop the rest.`,
   inputSchema: {
-    type: 'object' as const,
+    type: "object" as const,
     properties: {
       project: {
-        type: 'string',
-        description: 'Project to migrate. Auto-resolved if not specified.'
+        type: "string",
+        description: "Project to migrate. Auto-resolved if not specified.",
       },
       changes: {
-        type: 'array',
-        description: 'Array of migration changes from analyze_project preview',
+        type: "array",
+        description: "Array of migration changes from analyze_project preview",
         items: {
-          type: 'object',
+          type: "object",
           properties: {
-            source: { type: 'string', description: 'Source path of the note' },
-            target: { type: 'string', description: 'Target path for the note' },
+            source: { type: "string", description: "Source path of the note" },
+            target: { type: "string", description: "Target path for the note" },
             operation: {
-              type: 'string',
-              enum: ['move', 'rename', 'restructure'],
-              description: 'Type of migration operation'
-            }
+              type: "string",
+              enum: ["move", "rename", "restructure"],
+              description: "Type of migration operation",
+            },
           },
-          required: ['source', 'target', 'operation']
-        }
+          required: ["source", "target", "operation"],
+        },
       },
       dry_run: {
-        type: 'boolean',
+        type: "boolean",
         default: false,
-        description: 'When true, show what would happen without making changes'
-      }
+        description: "When true, show what would happen without making changes",
+      },
     },
-    required: ['changes']
-  }
+    required: ["changes"],
+  },
 };

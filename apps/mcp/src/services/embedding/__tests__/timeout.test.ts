@@ -7,7 +7,7 @@
  * Timeout functionality is validated manually and through integration tests.
  */
 
-import { describe, test, expect, vi, afterEach } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
 import { OllamaClient } from "../../ollama/client";
 import { OllamaError } from "../../ollama/types";
 
@@ -22,15 +22,12 @@ describe("OllamaClient timeout behavior", () => {
     globalThis.fetch = originalFetch;
   });
 
-  test.skip(
-    "throws on timeout after configured duration",
-    async () => {
-      // SKIPPED: AbortSignal.timeout() doesn't work with Bun test mocks
-      // This functionality is validated through manual testing and integration tests
-      const client = new OllamaClient({ timeout: 100 });
-      await client.generateBatchEmbeddings(["test"]);
-    }
-  );
+  test.skip("throws on timeout after configured duration", async () => {
+    // SKIPPED: AbortSignal.timeout() doesn't work with Bun test mocks
+    // This functionality is validated through manual testing and integration tests
+    const client = new OllamaClient({ timeout: 100 });
+    await client.generateBatchEmbeddings(["test"]);
+  });
 
   test("completes successfully within timeout", async () => {
     globalThis.fetch = createFetchMock(() =>
@@ -42,7 +39,7 @@ describe("OllamaClient timeout behavior", () => {
             model: "nomic-embed-text",
             embeddings: [[1, 2, 3]],
           }),
-      } as Response)
+      } as Response),
     );
 
     const client = new OllamaClient({ timeout: 5000 });
@@ -62,7 +59,7 @@ describe("OllamaClient timeout behavior", () => {
             model: "nomic-embed-text",
             embeddings: [[1]],
           }),
-      } as Response)
+      } as Response),
     );
     globalThis.fetch = mockFetch as unknown as typeof fetch;
 
@@ -70,7 +67,10 @@ describe("OllamaClient timeout behavior", () => {
     await client.generateBatchEmbeddings(["test"]);
 
     // Verify timeout was applied via AbortSignal
-    const callArgs = mockFetch.mock.calls[0] as unknown as [string, RequestInit];
+    const callArgs = mockFetch.mock.calls[0] as unknown as [
+      string,
+      RequestInit,
+    ];
     expect(callArgs[1].signal).toBeDefined();
   });
 
@@ -79,7 +79,7 @@ describe("OllamaClient timeout behavior", () => {
       Promise.resolve({
         ok: true,
         status: 200,
-      } as Response)
+      } as Response),
     );
     globalThis.fetch = mockFetch as unknown as typeof fetch;
 
@@ -87,27 +87,24 @@ describe("OllamaClient timeout behavior", () => {
     await client.healthCheck();
 
     // Health check should use 5-second timeout
-    const callArgs = mockFetch.mock.calls[0] as unknown as [string, RequestInit];
+    const callArgs = mockFetch.mock.calls[0] as unknown as [
+      string,
+      RequestInit,
+    ];
     expect(callArgs[1].signal).toBeDefined();
   });
 
-  test.skip(
-    "timeout applies to batch embeddings with multiple texts",
-    async () => {
-      // SKIPPED: AbortSignal.timeout() doesn't work with Bun test mocks
-      const client = new OllamaClient({ timeout: 100 });
-      await client.generateBatchEmbeddings(["text1", "text2", "text3"]);
-    }
-  );
+  test.skip("timeout applies to batch embeddings with multiple texts", async () => {
+    // SKIPPED: AbortSignal.timeout() doesn't work with Bun test mocks
+    const client = new OllamaClient({ timeout: 100 });
+    await client.generateBatchEmbeddings(["text1", "text2", "text3"]);
+  });
 
-  test.skip(
-    "timeout applies to single embedding delegation",
-    async () => {
-      // SKIPPED: AbortSignal.timeout() doesn't work with Bun test mocks
-      const client = new OllamaClient({ timeout: 100 });
-      await client.generateEmbedding("test");
-    }
-  );
+  test.skip("timeout applies to single embedding delegation", async () => {
+    // SKIPPED: AbortSignal.timeout() doesn't work with Bun test mocks
+    const client = new OllamaClient({ timeout: 100 });
+    await client.generateEmbedding("test");
+  });
 });
 
 describe("Error classification", () => {
@@ -122,7 +119,7 @@ describe("Error classification", () => {
       Promise.resolve({
         ok: false,
         status: 500,
-      } as Response)
+      } as Response),
     );
 
     const client = new OllamaClient();
@@ -141,7 +138,7 @@ describe("Error classification", () => {
       Promise.resolve({
         ok: false,
         status: 503,
-      } as Response)
+      } as Response),
     );
 
     const client = new OllamaClient();
@@ -160,7 +157,7 @@ describe("Error classification", () => {
       Promise.resolve({
         ok: false,
         status: 400,
-      } as Response)
+      } as Response),
     );
 
     const client = new OllamaClient();
@@ -179,7 +176,7 @@ describe("Error classification", () => {
       Promise.resolve({
         ok: false,
         status: 404,
-      } as Response)
+      } as Response),
     );
 
     const client = new OllamaClient();
@@ -211,7 +208,7 @@ describe("Timeout configuration", () => {
             model: "nomic-embed-text",
             embeddings: [[1]],
           }),
-      } as Response)
+      } as Response),
     );
     globalThis.fetch = mockFetch as unknown as typeof fetch;
 
@@ -219,7 +216,10 @@ describe("Timeout configuration", () => {
     await client.generateBatchEmbeddings(["test"]);
 
     // Verify custom timeout was used
-    const callArgs = mockFetch.mock.calls[0] as unknown as [string, RequestInit];
+    const callArgs = mockFetch.mock.calls[0] as unknown as [
+      string,
+      RequestInit,
+    ];
     expect(callArgs[1].signal).toBeDefined();
   });
 
@@ -233,7 +233,7 @@ describe("Timeout configuration", () => {
             model: "nomic-embed-text",
             embeddings: [[1]],
           }),
-      } as Response)
+      } as Response),
     );
     globalThis.fetch = mockFetch as unknown as typeof fetch;
 
@@ -243,19 +243,19 @@ describe("Timeout configuration", () => {
     });
     await client.generateBatchEmbeddings(["test"]);
 
-    const callArgs = mockFetch.mock.calls[0] as unknown as [string, RequestInit];
+    const callArgs = mockFetch.mock.calls[0] as unknown as [
+      string,
+      RequestInit,
+    ];
     expect(callArgs[0]).toBe("http://custom:9999/api/embed");
     expect(callArgs[1].signal).toBeDefined();
   });
 
-  test.skip(
-    "health check always uses short timeout",
-    async () => {
-      // SKIPPED: AbortSignal.timeout() doesn't work with Bun test mocks
-      const client = new OllamaClient({ timeout: 120000 });
-      await client.healthCheck();
-    }
-  );
+  test.skip("health check always uses short timeout", async () => {
+    // SKIPPED: AbortSignal.timeout() doesn't work with Bun test mocks
+    const client = new OllamaClient({ timeout: 120000 });
+    await client.healthCheck();
+  });
 });
 
 describe("Performance validation", () => {
@@ -289,14 +289,11 @@ describe("Performance validation", () => {
     expect(elapsed).toBeLessThan(200);
   });
 
-  test.skip(
-    "timeout prevents indefinite hang",
-    async () => {
-      // SKIPPED: AbortSignal.timeout() doesn't work with Bun test mocks
-      const client = new OllamaClient({ timeout: 200 });
-      await client.generateBatchEmbeddings(["test"]);
-    }
-  );
+  test.skip("timeout prevents indefinite hang", async () => {
+    // SKIPPED: AbortSignal.timeout() doesn't work with Bun test mocks
+    const client = new OllamaClient({ timeout: 200 });
+    await client.generateBatchEmbeddings(["test"]);
+  });
 
   test("batches complete faster than sequential calls would", async () => {
     const CALL_DURATION = 30; // ms per API call
@@ -320,7 +317,7 @@ describe("Performance validation", () => {
 
     const startTime = Date.now();
     await client.generateBatchEmbeddings(
-      Array.from({ length: TEXT_COUNT }, (_, i) => `text${i}`)
+      Array.from({ length: TEXT_COUNT }, (_, i) => `text${i}`),
     );
     const elapsed = Date.now() - startTime;
 

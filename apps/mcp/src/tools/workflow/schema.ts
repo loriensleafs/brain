@@ -6,18 +6,19 @@
  *
  * Validation: Uses JSON Schema via AJV from @brain/validation
  */
-import type { Tool } from "@modelcontextprotocol/sdk/types.js";
+
 import {
+  parseGetWorkflowArgs as _parseGetWorkflowArgs,
   parseListWorkflowsArgs as _parseListWorkflowsArgs,
   parseSendWorkflowEventArgs as _parseSendWorkflowEventArgs,
-  parseGetWorkflowArgs as _parseGetWorkflowArgs,
+  type GetWorkflowArgs,
   type ListWorkflowsArgs,
   type SendWorkflowEventArgs,
-  type GetWorkflowArgs,
 } from "@brain/validation";
+import getWorkflowSchema from "@brain/validation/schemas/tools/get-workflow.schema.json";
 import listWorkflowsSchema from "@brain/validation/schemas/tools/list-workflows.schema.json";
 import sendWorkflowEventSchema from "@brain/validation/schemas/tools/send-workflow-event.schema.json";
-import getWorkflowSchema from "@brain/validation/schemas/tools/get-workflow.schema.json";
+import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 
 // Re-export types for backward compatibility
 export type { ListWorkflowsArgs, SendWorkflowEventArgs, GetWorkflowArgs };
@@ -32,11 +33,18 @@ export type { ListWorkflowsArgs, SendWorkflowEventArgs, GetWorkflowArgs };
  */
 export const ListWorkflowsArgsSchema = {
   parse: _parseListWorkflowsArgs,
-  safeParse: (data: unknown): { success: true; data: ListWorkflowsArgs } | { success: false; error: Error } => {
+  safeParse: (
+    data: unknown,
+  ):
+    | { success: true; data: ListWorkflowsArgs }
+    | { success: false; error: Error } => {
     try {
       return { success: true, data: _parseListWorkflowsArgs(data) };
     } catch (e) {
-      return { success: false, error: e instanceof Error ? e : new Error(String(e)) };
+      return {
+        success: false,
+        error: e instanceof Error ? e : new Error(String(e)),
+      };
     }
   },
 };
@@ -47,11 +55,18 @@ export const ListWorkflowsArgsSchema = {
  */
 export const SendWorkflowEventArgsSchema = {
   parse: _parseSendWorkflowEventArgs,
-  safeParse: (data: unknown): { success: true; data: SendWorkflowEventArgs } | { success: false; error: Error } => {
+  safeParse: (
+    data: unknown,
+  ):
+    | { success: true; data: SendWorkflowEventArgs }
+    | { success: false; error: Error } => {
     try {
       return { success: true, data: _parseSendWorkflowEventArgs(data) };
     } catch (e) {
-      return { success: false, error: e instanceof Error ? e : new Error(String(e)) };
+      return {
+        success: false,
+        error: e instanceof Error ? e : new Error(String(e)),
+      };
     }
   },
 };
@@ -62,11 +77,18 @@ export const SendWorkflowEventArgsSchema = {
  */
 export const GetWorkflowArgsSchema = {
   parse: _parseGetWorkflowArgs,
-  safeParse: (data: unknown): { success: true; data: GetWorkflowArgs } | { success: false; error: Error } => {
+  safeParse: (
+    data: unknown,
+  ):
+    | { success: true; data: GetWorkflowArgs }
+    | { success: false; error: Error } => {
     try {
       return { success: true, data: _parseGetWorkflowArgs(data) };
     } catch (e) {
-      return { success: false, error: e instanceof Error ? e : new Error(String(e)) };
+      return {
+        success: false,
+        error: e instanceof Error ? e : new Error(String(e)),
+      };
     }
   },
 };

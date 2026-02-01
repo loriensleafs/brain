@@ -9,12 +9,13 @@
  * Migrated from Zod to JSON Schema + AJV per ADR-022.
  * JSON Schema source: packages/validation/schemas/tools/projects/edit-project.schema.json
  */
-import type { Tool } from "@modelcontextprotocol/sdk/types.js";
+
 import {
-  validateEditProjectArgs,
-  parseEditProjectArgs,
   type EditProjectArgs,
+  parseEditProjectArgs,
+  validateEditProjectArgs,
 } from "@brain/validation";
+import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 
 export { validateEditProjectArgs, parseEditProjectArgs, type EditProjectArgs };
 
@@ -69,7 +70,8 @@ Examples:
       },
       code_path: {
         type: "string",
-        description: "Code directory path (use ~ for home). Required for editing.",
+        description:
+          "Code directory path (use ~ for home). Required for editing.",
       },
       memories_path: {
         type: "string",

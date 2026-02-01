@@ -5,21 +5,23 @@
  * to produce fully compliant basic-memory notes.
  */
 
+import { generateObservations } from "./observations";
+import { getTargetFolder } from "./parser";
+import { formatRelationsMarkdown, generateRelations } from "./relations";
 import type {
-  ParsedAgentFile,
-  TransformedNote,
+  AgentEntityType,
   Observation,
+  ParsedAgentFile,
   Relation,
-  AgentEntityType
-} from './schema';
-import { generateObservations } from './observations';
-import { generateRelations, formatRelationsMarkdown } from './relations';
-import { getTargetFolder } from './parser';
+  TransformedNote,
+} from "./schema";
 
 /**
  * Transform a parsed agent file to basic-memory format
  */
-export function transformToBasicMemory(parsed: ParsedAgentFile): TransformedNote {
+export function transformToBasicMemory(
+  parsed: ParsedAgentFile,
+): TransformedNote {
   // Generate observations and relations
   const observations = generateObservations(parsed);
   const relations = generateRelations(parsed);
@@ -40,7 +42,7 @@ export function transformToBasicMemory(parsed: ParsedAgentFile): TransformedNote
     tags,
     context,
     observations,
-    relations
+    relations,
   });
 
   return {
@@ -51,7 +53,7 @@ export function transformToBasicMemory(parsed: ParsedAgentFile): TransformedNote
     observations,
     relations,
     context,
-    fullContent
+    fullContent,
   };
 }
 
@@ -60,7 +62,7 @@ export function transformToBasicMemory(parsed: ParsedAgentFile): TransformedNote
  */
 function extractTags(
   parsed: ParsedAgentFile,
-  observations: Observation[]
+  observations: Observation[],
 ): string[] {
   const tags = new Set<string>();
 
@@ -71,24 +73,24 @@ function extractTags(
   const fm = parsed.originalFrontmatter;
   if (Array.isArray(fm.tags)) {
     for (const tag of fm.tags) {
-      if (typeof tag === 'string') {
+      if (typeof tag === "string") {
         tags.add(normalizeTag(tag));
       }
     }
   }
 
   // Extract from category
-  if (typeof fm.category === 'string') {
+  if (typeof fm.category === "string") {
     tags.add(normalizeTag(fm.category));
   }
 
   // Extract from priority
-  if (typeof fm.priority === 'string') {
+  if (typeof fm.priority === "string") {
     tags.add(fm.priority.toLowerCase());
   }
 
   // Extract from status
-  if (typeof fm.status === 'string') {
+  if (typeof fm.status === "string") {
     tags.add(normalizeTag(fm.status));
   }
 
@@ -115,15 +117,18 @@ function extractTags(
 function normalizeTag(tag: string): string {
   return tag
     .toLowerCase()
-    .replace(/[^a-z0-9-]/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
+    .replace(/[^a-z0-9-]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
 }
 
 /**
  * Extract tags from title patterns
  */
-function extractTitleTags(title: string, entityType: AgentEntityType): string[] {
+function extractTitleTags(
+  title: string,
+  entityType: AgentEntityType,
+): string[] {
   const tags: string[] = [];
 
   // Session date extraction
@@ -140,16 +145,16 @@ function extractTitleTags(title: string, entityType: AgentEntityType): string[] 
 
   // Topic extraction from title
   const topicPatterns: Record<string, string[]> = {
-    security: ['security', 'auth', 'vulnerability', 'cwe', 'remediation'],
-    testing: ['test', 'qa', 'validation', 'pester', 'jest'],
-    ci: ['workflow', 'ci', 'pipeline', 'github-actions', 'build'],
-    documentation: ['docs', 'documentation', 'readme', 'guide'],
-    performance: ['performance', 'optimization', 'speed', 'benchmark'],
+    security: ["security", "auth", "vulnerability", "cwe", "remediation"],
+    testing: ["test", "qa", "validation", "pester", "jest"],
+    ci: ["workflow", "ci", "pipeline", "github-actions", "build"],
+    documentation: ["docs", "documentation", "readme", "guide"],
+    performance: ["performance", "optimization", "speed", "benchmark"],
   };
 
   const lowerTitle = title.toLowerCase();
   for (const [tag, patterns] of Object.entries(topicPatterns)) {
-    if (patterns.some(p => lowerTitle.includes(p))) {
+    if (patterns.some((p) => lowerTitle.includes(p))) {
       tags.push(tag);
     }
   }
@@ -166,12 +171,12 @@ function generateContext(parsed: ParsedAgentFile): string {
 
   // Try various context sources
   const contextSources = [
-    sections.get('Context'),
-    sections.get('Overview'),
-    sections.get('Objective'),
-    sections.get('Background'),
-    sections.get('Description'),
-    sections.get('_intro'),
+    sections.get("Context"),
+    sections.get("Overview"),
+    sections.get("Objective"),
+    sections.get("Background"),
+    sections.get("Description"),
+    sections.get("_intro"),
   ];
 
   for (const source of contextSources) {
@@ -179,7 +184,7 @@ function generateContext(parsed: ParsedAgentFile): string {
       // Extract first 2-3 sentences
       const sentences = source.match(/[^.!?]+[.!?]/g) || [];
       if (sentences.length > 0) {
-        return sentences.slice(0, 3).join(' ').trim();
+        return sentences.slice(0, 3).join(" ").trim();
       }
       return source.slice(0, 300).trim();
     }
@@ -199,7 +204,7 @@ function generateContext(parsed: ParsedAgentFile): string {
   }
 
   if (contextParts.length > 0) {
-    return contextParts.join('. ') + '.';
+    return contextParts.join(". ") + ".";
   }
 
   // Fallback to entity description
@@ -220,37 +225,37 @@ function generateFullContent(data: {
   const lines: string[] = [];
 
   // Frontmatter
-  lines.push('---');
+  lines.push("---");
   lines.push(`title: ${data.title}`);
   lines.push(`type: ${data.type}`);
-  lines.push(`tags: [${data.tags.join(', ')}]`);
+  lines.push(`tags: [${data.tags.join(", ")}]`);
   lines.push(`permalink: ${generatePermalink(data.title, data.type)}`);
-  lines.push('---');
-  lines.push('');
+  lines.push("---");
+  lines.push("");
 
   // Title
   lines.push(`# ${data.title}`);
-  lines.push('');
+  lines.push("");
 
   // Context section
-  lines.push('## Context');
-  lines.push('');
+  lines.push("## Context");
+  lines.push("");
   lines.push(data.context);
-  lines.push('');
+  lines.push("");
 
   // Observations section
-  lines.push('## Observations');
-  lines.push('');
+  lines.push("## Observations");
+  lines.push("");
   for (const obs of data.observations) {
-    const tagStr = obs.tags.length > 0 ? ` #${obs.tags.join(' #')}` : '';
+    const tagStr = obs.tags.length > 0 ? ` #${obs.tags.join(" #")}` : "";
     lines.push(`- [${obs.category}] ${obs.content}${tagStr}`);
   }
-  lines.push('');
+  lines.push("");
 
   // Relations section
   lines.push(formatRelationsMarkdown(data.relations));
 
-  return lines.join('\n');
+  return lines.join("\n");
 }
 
 /**
@@ -259,29 +264,29 @@ function generateFullContent(data: {
 function generatePermalink(title: string, type: AgentEntityType): string {
   // Get base folder
   const folderMap: Record<AgentEntityType, string> = {
-    'session': 'sessions',
-    'decision': 'decisions',
-    'requirement': 'specs/requirements',
-    'design': 'specs/design',
-    'task': 'specs/tasks',
-    'analysis': 'analysis',
-    'feature': 'planning',
-    'epic': 'roadmap',
-    'critique': 'critique',
-    'test-report': 'qa',
-    'security': 'security',
-    'retrospective': 'retrospective',
-    'skill': 'skills',
-    'note': 'notes'
+    session: "sessions",
+    decision: "decisions",
+    requirement: "specs/requirements",
+    design: "specs/design",
+    task: "specs/tasks",
+    analysis: "analysis",
+    feature: "planning",
+    epic: "roadmap",
+    critique: "critique",
+    "test-report": "qa",
+    security: "security",
+    retrospective: "retrospective",
+    skill: "skills",
+    note: "notes",
   };
 
-  const folder = folderMap[type] || 'notes';
+  const folder = folderMap[type] || "notes";
 
   // Convert title to slug
   const slug = title
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 
   return `${folder}/${slug}`;
 }
@@ -289,19 +294,21 @@ function generatePermalink(title: string, type: AgentEntityType): string {
 /**
  * Format observations as markdown
  */
-export function formatObservationsMarkdown(observations: Observation[]): string {
+export function formatObservationsMarkdown(
+  observations: Observation[],
+): string {
   if (observations.length === 0) {
-    return '## Observations\n\n- [fact] Document created #metadata';
+    return "## Observations\n\n- [fact] Document created #metadata";
   }
 
-  const lines = ['## Observations', ''];
+  const lines = ["## Observations", ""];
 
   for (const obs of observations) {
-    const tagStr = obs.tags.length > 0 ? ` #${obs.tags.join(' #')}` : '';
+    const tagStr = obs.tags.length > 0 ? ` #${obs.tags.join(" #")}` : "";
     lines.push(`- [${obs.category}] ${obs.content}${tagStr}`);
   }
 
-  return lines.join('\n');
+  return lines.join("\n");
 }
 
 /**
@@ -322,7 +329,7 @@ export function validateTransformation(note: TransformedNote): {
   }
 
   if (!note.context || note.context.length < 10) {
-    warnings.push('Context section is too short');
+    warnings.push("Context section is too short");
   }
 
   if (note.tags.length < 2) {
@@ -331,6 +338,6 @@ export function validateTransformation(note: TransformedNote): {
 
   return {
     valid: warnings.length === 0,
-    warnings
+    warnings,
   };
 }

@@ -210,13 +210,14 @@ export const ENTITY_PATTERNS: EntityPattern[] = [
 /**
  * Pattern lookup by type for backward compatibility.
  */
-export const ENTITY_PATTERNS_BY_TYPE: Record<string, EntityPattern> = ENTITY_PATTERNS.reduce(
-  (acc, pattern) => {
-    acc[pattern.type] = pattern;
-    return acc;
-  },
-  {} as Record<string, EntityPattern>
-);
+export const ENTITY_PATTERNS_BY_TYPE: Record<string, EntityPattern> =
+  ENTITY_PATTERNS.reduce(
+    (acc, pattern) => {
+      acc[pattern.type] = pattern;
+      return acc;
+    },
+    {} as Record<string, EntityPattern>,
+  );
 
 /**
  * Audited file information.
@@ -362,13 +363,15 @@ export function getEntityType(filename: string): string {
 export function generateSuggestedTitle(
   relativePath: string,
   filename: string,
-  category: AgentEntityCategory
+  category: AgentEntityCategory,
 ): string {
   // Remove .md extension
   const baseName = filename.replace(/\.md(\.bak)?$/i, "");
 
   // Session logs: YYYY-MM-DD-session-NN-topic -> session-YYYY-MM-DD-NN-topic
-  const sessionMatch = baseName.match(/^(\d{4}-\d{2}-\d{2})-session-(\d+)(.*)$/);
+  const sessionMatch = baseName.match(
+    /^(\d{4}-\d{2}-\d{2})-session-(\d+)(.*)$/,
+  );
   if (sessionMatch) {
     const [, date, num, rest] = sessionMatch;
     return `session-${date}-${num}${rest}`;
@@ -462,8 +465,13 @@ function auditFile(filePath: string, rootPath: string): AuditedFile {
   const entityType = getEntityType(filename);
   const matched = entityType !== "UNKNOWN" && entityType !== "GENERIC_MD";
 
-  const suggestedTitle = generateSuggestedTitle(relativePath, filename, category);
-  const suggestedFolder = category === AgentEntityCategory.UNKNOWN ? "uncategorized" : category;
+  const suggestedTitle = generateSuggestedTitle(
+    relativePath,
+    filename,
+    category,
+  );
+  const suggestedFolder =
+    category === AgentEntityCategory.UNKNOWN ? "uncategorized" : category;
 
   return {
     path: filePath,
@@ -518,7 +526,10 @@ export function auditAgentsDirectory(agentsPath: string): AuditedFile[] {
  * @param rootPath - Root .agents/ directory path
  * @returns Complete audit report
  */
-export function generateAuditReport(auditedFiles: AuditedFile[], rootPath: string): AgentsAuditReport {
+export function generateAuditReport(
+  auditedFiles: AuditedFile[],
+  rootPath: string,
+): AgentsAuditReport {
   const categories = new Map<AgentEntityCategory, CategoryStats>();
 
   // Initialize all categories
@@ -619,7 +630,9 @@ export function formatAuditReport(report: AgentsAuditReport): string {
     lines.push(`## ${cat.category.toUpperCase()}`);
     lines.push(`   Files: ${cat.fileCount}`);
     lines.push(`   Size: ${formatSize(cat.totalSizeBytes)}`);
-    lines.push(`   Brain Folder: ${cat.category === AgentEntityCategory.UNKNOWN ? "uncategorized" : cat.category}`);
+    lines.push(
+      `   Brain Folder: ${cat.category === AgentEntityCategory.UNKNOWN ? "uncategorized" : cat.category}`,
+    );
     lines.push("");
   }
 
@@ -646,8 +659,13 @@ export function formatAuditReport(report: AgentsAuditReport): string {
 
   for (const cat of sortedCategories) {
     const sourceDir = `.agents/${cat.category}/`;
-    const brainCategory = cat.category === AgentEntityCategory.UNKNOWN ? "uncategorized" : cat.category;
-    lines.push(`| ${sourceDir.padEnd(18)} | ${brainCategory.padEnd(20)} | ${cat.fileCount.toString().padStart(10)} |`);
+    const brainCategory =
+      cat.category === AgentEntityCategory.UNKNOWN
+        ? "uncategorized"
+        : cat.category;
+    lines.push(
+      `| ${sourceDir.padEnd(18)} | ${brainCategory.padEnd(20)} | ${cat.fileCount.toString().padStart(10)} |`,
+    );
   }
 
   lines.push("");

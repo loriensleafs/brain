@@ -1,8 +1,8 @@
-import { describe, test, expect, beforeAll, afterAll } from "vitest";
 import { Database } from "bun:sqlite";
 import * as sqliteVec from "sqlite-vec";
+import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { createEmbeddingsTable } from "../schema";
-import { storeChunkedEmbeddings, type ChunkEmbeddingInput } from "../vectors";
+import { type ChunkEmbeddingInput, storeChunkedEmbeddings } from "../vectors";
 
 // Note: Custom SQLite is configured in test preload (src/__tests__/setup.ts)
 
@@ -48,7 +48,9 @@ describe("Vector Search Performance", () => {
       storeChunkedEmbeddings(db, `entity-${i}`, chunks);
     }
 
-    console.log(`Generation took ${(performance.now() - startGen).toFixed(0)}ms`);
+    console.log(
+      `Generation took ${(performance.now() - startGen).toFixed(0)}ms`,
+    );
   });
 
   afterAll(() => {
@@ -91,7 +93,7 @@ describe("Vector Search Performance", () => {
       const p99 = latencies[Math.floor(iterations * 0.99)];
 
       console.log(
-        `Latency (ms): p50=${p50.toFixed(2)}, p95=${p95.toFixed(2)}, p99=${p99.toFixed(2)}`
+        `Latency (ms): p50=${p50.toFixed(2)}, p95=${p95.toFixed(2)}, p99=${p99.toFixed(2)}`,
       );
 
       // NOTE: Current brute-force implementation averages ~183ms.
@@ -99,7 +101,7 @@ describe("Vector Search Performance", () => {
       // This test documents the current baseline performance.
       expect(p95).toBeLessThan(250); // Baseline threshold - optimize in future phase
     },
-    { timeout: 30000 }
+    { timeout: 30000 },
   );
 
   test("query with various limit values", () => {
@@ -108,15 +110,19 @@ describe("Vector Search Performance", () => {
 
     for (const limit of limits) {
       const start = performance.now();
-      const results = db.query(`
+      const results = db
+        .query(`
         SELECT entity_id, vec_distance_cosine(embedding, ?) as distance
         FROM brain_embeddings
         ORDER BY distance
         LIMIT ?
-      `).all(queryVector, limit);
+      `)
+        .all(queryVector, limit);
       const elapsed = performance.now() - start;
 
-      console.log(`limit=${limit}: ${elapsed.toFixed(2)}ms, results=${results.length}`);
+      console.log(
+        `limit=${limit}: ${elapsed.toFixed(2)}ms, results=${results.length}`,
+      );
       expect(results.length).toBeLessThanOrEqual(limit);
     }
   });

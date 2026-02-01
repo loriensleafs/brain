@@ -4,8 +4,8 @@
  */
 
 import { spawn, spawnSync } from "child_process";
-import { logger } from "../../utils/internal/logger";
 import { ollamaConfig } from "../../config/ollama";
+import { logger } from "../../utils/internal/logger";
 
 const OLLAMA_MODEL = "nomic-embed-text";
 const STARTUP_TIMEOUT_MS = 30000;
@@ -23,10 +23,7 @@ function findOllamaBinary(): string | null {
   }
 
   // Check Homebrew locations
-  const homebrewPaths = [
-    "/opt/homebrew/bin/ollama",
-    "/usr/local/bin/ollama",
-  ];
+  const homebrewPaths = ["/opt/homebrew/bin/ollama", "/usr/local/bin/ollama"];
 
   for (const path of homebrewPaths) {
     const testResult = spawnSync("test", ["-x", path]);
@@ -43,10 +40,9 @@ function findOllamaBinary(): string | null {
  */
 async function isOllamaRunning(): Promise<boolean> {
   try {
-    const response = await fetch(
-      `${ollamaConfig.baseUrl}/api/tags`,
-      { signal: AbortSignal.timeout(2000) }
-    );
+    const response = await fetch(`${ollamaConfig.baseUrl}/api/tags`, {
+      signal: AbortSignal.timeout(2000),
+    });
     return response.ok;
   } catch {
     return false;
@@ -58,11 +54,10 @@ async function isOllamaRunning(): Promise<boolean> {
  */
 async function hasRequiredModel(): Promise<boolean> {
   try {
-    const response = await fetch(
-      `${ollamaConfig.baseUrl}/api/tags`,
-      { signal: AbortSignal.timeout(5000) }
-    );
-    const data = await response.json() as { models?: { name: string }[] };
+    const response = await fetch(`${ollamaConfig.baseUrl}/api/tags`, {
+      signal: AbortSignal.timeout(5000),
+    });
+    const data = (await response.json()) as { models?: { name: string }[] };
     return data.models?.some((m) => m.name.includes(OLLAMA_MODEL)) ?? false;
   } catch {
     return false;
@@ -128,7 +123,9 @@ async function startOllamaServer(ollamaPath: string): Promise<boolean> {
       logger.info("Ollama server started successfully");
       return true;
     }
-    await new Promise((resolve) => setTimeout(resolve, HEALTH_CHECK_INTERVAL_MS));
+    await new Promise((resolve) =>
+      setTimeout(resolve, HEALTH_CHECK_INTERVAL_MS),
+    );
   }
 
   logger.error("Ollama server failed to start within timeout");
@@ -159,7 +156,7 @@ export async function ensureOllama(): Promise<boolean> {
 
     logger.warn(
       { model: OLLAMA_MODEL },
-      "Ollama running but model missing. Run: ollama pull nomic-embed-text"
+      "Ollama running but model missing. Run: ollama pull nomic-embed-text",
     );
     return false;
   }
@@ -168,7 +165,7 @@ export async function ensureOllama(): Promise<boolean> {
   const ollamaPath = findOllamaBinary();
   if (!ollamaPath) {
     logger.warn(
-      "Ollama not installed. Semantic search disabled. Install with: brew install ollama"
+      "Ollama not installed. Semantic search disabled. Install with: brew install ollama",
     );
     return false;
   }

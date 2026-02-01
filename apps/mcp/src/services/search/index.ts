@@ -10,38 +10,40 @@
  * @see ADR-001: Search Service Abstraction
  */
 
-import { getBasicMemoryClient } from "../../proxy/client";
+import { ollamaConfig } from "../../config/ollama";
 import { createVectorConnection } from "../../db";
 import { ensureEmbeddingTables } from "../../db/schema";
 import {
+  deduplicateByEntity,
   hasEmbeddings,
   semanticSearchChunked,
-  deduplicateByEntity,
 } from "../../db/vectors";
 import { resolveProject } from "../../project/resolve";
+import { getBasicMemoryClient } from "../../proxy/client";
 import { logger } from "../../utils/internal/logger";
 import { OllamaClient } from "../ollama/client";
-import { ollamaConfig } from "../../config/ollama";
 import type {
   SearchOptions,
-  SearchResult,
   SearchResponse,
+  SearchResult,
   SearchSource,
 } from "./types";
 
 // Re-export types for consumers
 export type {
   SearchMode,
-  SearchSource,
   SearchOptions,
-  SearchResult,
   SearchResponse,
+  SearchResult,
+  SearchSource,
 } from "./types";
 
 /**
  * Default search options.
  */
-const DEFAULT_OPTIONS: Required<Omit<SearchOptions, "project" | "folders" | "afterDate" | "fullContent">> & { fullContent: boolean } = {
+const DEFAULT_OPTIONS: Required<
+  Omit<SearchOptions, "project" | "folders" | "afterDate" | "fullContent">
+> & { fullContent: boolean } = {
   limit: 10,
   threshold: 0.7,
   mode: "auto",
@@ -121,7 +123,10 @@ export class SearchService {
    * @param options - Search configuration options
    * @returns Search response with results and metadata
    */
-  async search(query: string, options?: SearchOptions): Promise<SearchResponse> {
+  async search(
+    query: string,
+    options?: SearchOptions,
+  ): Promise<SearchResponse> {
     const opts = {
       ...DEFAULT_OPTIONS,
       ...options,
@@ -134,7 +139,7 @@ export class SearchService {
 
     logger.debug(
       { query, ...opts, resolvedProject },
-      "SearchService executing search"
+      "SearchService executing search",
     );
 
     let results: SearchResult[] = [];
@@ -142,12 +147,20 @@ export class SearchService {
 
     switch (opts.mode) {
       case "keyword":
-        results = await this.executeKeywordSearch(query, opts.limit, resolvedProject);
+        results = await this.executeKeywordSearch(
+          query,
+          opts.limit,
+          resolvedProject,
+        );
         actualSource = "keyword";
         break;
 
       case "semantic":
-        results = await this.executeSemanticSearch(query, opts.limit, opts.threshold);
+        results = await this.executeSemanticSearch(
+          query,
+          opts.limit,
+          opts.threshold,
+        );
         actualSource = "semantic";
         break;
 
@@ -156,22 +169,23 @@ export class SearchService {
           query,
           opts.limit,
           opts.threshold,
-          resolvedProject
+          resolvedProject,
         );
         actualSource = "hybrid";
         break;
 
       case "auto":
-      default:
+      default: {
         const searchResult = await this.executeAutoSearch(
           query,
           opts.limit,
           opts.threshold,
-          resolvedProject
+          resolvedProject,
         );
         results = searchResult.results;
         actualSource = searchResult.source;
         break;
+      }
     }
 
     // Apply folder filter if specified
@@ -181,7 +195,11 @@ export class SearchService {
 
     // Expand with related notes if depth > 0
     if (opts.depth > 0) {
-      results = await this.expandWithRelations(results, opts.depth, resolvedProject);
+      results = await this.expandWithRelations(
+        results,
+        opts.depth,
+        resolvedProject,
+      );
     }
 
     // Fetch full content if requested
@@ -202,12 +220,17 @@ export class SearchService {
   /**
    * Filter results to only include notes in specified folders.
    */
-  private filterByFolders(results: SearchResult[], folders: string[]): SearchResult[] {
+  private filterByFolders(
+    results: SearchResult[],
+    folders: string[],
+  ): SearchResult[] {
     return results.filter((result) => {
       return folders.some((folder) => {
         const normalizedFolder = folder.endsWith("/") ? folder : `${folder}/`;
-        return result.permalink.startsWith(normalizedFolder) ||
-               result.permalink.startsWith(folder);
+        return (
+          result.permalink.startsWith(normalizedFolder) ||
+          result.permalink.startsWith(folder)
+        );
       });
     });
   }
@@ -223,7 +246,7 @@ export class SearchService {
   async semanticSearch(
     query: string,
     limit: number = DEFAULT_OPTIONS.limit,
-    threshold: number = DEFAULT_OPTIONS.threshold
+    threshold: number = DEFAULT_OPTIONS.threshold,
   ): Promise<SearchResult[]> {
     return this.executeSemanticSearch(query, limit, threshold);
   }
@@ -239,10 +262,10 @@ export class SearchService {
   async keywordSearch(
     query: string,
     limit: number = DEFAULT_OPTIONS.limit,
-    project?: string
+    project?: string,
   ): Promise<SearchResult[]> {
     const resolvedProject = this.resolveProjectContext(
-      project ?? this.defaultProject
+      project ?? this.defaultProject,
     );
     return this.executeKeywordSearch(query, limit, resolvedProject);
   }
@@ -291,7 +314,7 @@ export class SearchService {
    */
   private async fetchFullContent(
     permalink: string,
-    project?: string
+    project?: string,
   ): Promise<string> {
     // Check cache first
     const cacheKey = project ? `${project}:${permalink}` : permalink;
@@ -317,7 +340,7 @@ export class SearchService {
 
       if (result.content && Array.isArray(result.content)) {
         const textContent = result.content.find(
-          (c: { type: string }) => c.type === "text"
+          (c: { type: string }) => c.type === "text",
         );
         if (textContent && "text" in textContent) {
           let content = textContent.text as string;
@@ -326,8 +349,11 @@ export class SearchService {
           if (content.length > FULL_CONTENT_CHAR_LIMIT) {
             content = content.slice(0, FULL_CONTENT_CHAR_LIMIT);
             logger.debug(
-              { permalink, originalLength: (textContent.text as string).length },
-              "Truncated full content to character limit"
+              {
+                permalink,
+                originalLength: (textContent.text as string).length,
+              },
+              "Truncated full content to character limit",
             );
           }
 
@@ -337,10 +363,16 @@ export class SearchService {
         }
       }
 
-      logger.debug({ permalink }, "No text content found in read_note response");
+      logger.debug(
+        { permalink },
+        "No text content found in read_note response",
+      );
       return "";
     } catch (error) {
-      logger.debug({ error, permalink }, "Failed to fetch full content for note");
+      logger.debug(
+        { error, permalink },
+        "Failed to fetch full content for note",
+      );
       return "";
     }
   }
@@ -355,21 +387,27 @@ export class SearchService {
    */
   private async enrichWithFullContent(
     results: SearchResult[],
-    project?: string
+    project?: string,
   ): Promise<SearchResult[]> {
     const enriched = await Promise.all(
       results.map(async (result) => {
-        const fullContent = await this.fetchFullContent(result.permalink, project);
+        const fullContent = await this.fetchFullContent(
+          result.permalink,
+          project,
+        );
         return {
           ...result,
           fullContent: fullContent || undefined,
         };
-      })
+      }),
     );
 
     logger.debug(
-      { count: results.length, enrichedCount: enriched.filter(r => r.fullContent).length },
-      "Enriched search results with full content"
+      {
+        count: results.length,
+        enrichedCount: enriched.filter((r) => r.fullContent).length,
+      },
+      "Enriched search results with full content",
     );
 
     return enriched;
@@ -378,7 +416,7 @@ export class SearchService {
   private async executeSemanticSearch(
     query: string,
     limit: number,
-    threshold: number
+    threshold: number,
   ): Promise<SearchResult[]> {
     if (!this.checkEmbeddingsExist()) {
       logger.debug("No embeddings in database, semantic search unavailable");
@@ -388,7 +426,10 @@ export class SearchService {
     try {
       // Generate query embedding using OllamaClient directly to specify search_query task type
       const client = new OllamaClient(ollamaConfig);
-      const queryEmbedding = await client.generateEmbedding(query, "search_query");
+      const queryEmbedding = await client.generateEmbedding(
+        query,
+        "search_query",
+      );
       if (!queryEmbedding) {
         logger.debug("Failed to generate query embedding");
         return [];
@@ -402,7 +443,7 @@ export class SearchService {
         db,
         queryEmbedding,
         limit * 3, // Fetch extra to ensure enough after deduplication
-        threshold
+        threshold,
       );
       db.close();
 
@@ -435,7 +476,7 @@ export class SearchService {
   private async executeKeywordSearch(
     query: string,
     limit: number,
-    project?: string
+    project?: string,
   ): Promise<SearchResult[]> {
     const client = await getBasicMemoryClient();
 
@@ -456,12 +497,12 @@ export class SearchService {
 
       if (result.content && Array.isArray(result.content)) {
         const textContent = result.content.find(
-          (c: { type: string }) => c.type === "text"
+          (c: { type: string }) => c.type === "text",
         );
         if (textContent && "text" in textContent) {
           try {
             const parsed = JSON.parse(
-              textContent.text as string
+              textContent.text as string,
             ) as BasicMemorySearchResponse;
             return parsed.results.map((r) => ({
               permalink: r.permalink || "",
@@ -471,7 +512,10 @@ export class SearchService {
               source: "keyword" as const,
             }));
           } catch (parseError) {
-            logger.debug({ error: parseError }, "Failed to parse search response");
+            logger.debug(
+              { error: parseError },
+              "Failed to parse search response",
+            );
           }
         }
       }
@@ -487,7 +531,7 @@ export class SearchService {
     query: string,
     limit: number,
     threshold: number,
-    project?: string
+    project?: string,
   ): Promise<SearchResult[]> {
     // Execute both searches in parallel
     const [semanticResults, keywordResults] = await Promise.all([
@@ -525,7 +569,7 @@ export class SearchService {
     query: string,
     limit: number,
     threshold: number,
-    project?: string
+    project?: string,
   ): Promise<{ results: SearchResult[]; source: SearchSource }> {
     const hasEmbeddings = this.checkEmbeddingsExist();
 
@@ -536,16 +580,29 @@ export class SearchService {
     }
 
     try {
-      const semanticResults = await this.executeSemanticSearch(query, limit, threshold);
+      const semanticResults = await this.executeSemanticSearch(
+        query,
+        limit,
+        threshold,
+      );
       if (semanticResults.length > 0) {
         return { results: semanticResults, source: "semantic" };
       }
 
-      logger.debug("Semantic search returned no results, falling back to keyword");
-      const keywordResults = await this.executeKeywordSearch(query, limit, project);
+      logger.debug(
+        "Semantic search returned no results, falling back to keyword",
+      );
+      const keywordResults = await this.executeKeywordSearch(
+        query,
+        limit,
+        project,
+      );
       return { results: keywordResults, source: "keyword" };
     } catch (error) {
-      logger.error({ error }, "Semantic search failed, falling back to keyword");
+      logger.error(
+        { error },
+        "Semantic search failed, falling back to keyword",
+      );
       const results = await this.executeKeywordSearch(query, limit, project);
       return { results, source: "keyword" };
     }
@@ -554,13 +611,16 @@ export class SearchService {
   private async expandWithRelations(
     results: SearchResult[],
     maxDepth: number,
-    project?: string
+    project?: string,
   ): Promise<SearchResult[]> {
     if (maxDepth <= 0) {
       return results;
     }
 
-    const directMatches: SearchResult[] = results.map((r) => ({ ...r, depth: 0 }));
+    const directMatches: SearchResult[] = results.map((r) => ({
+      ...r,
+      depth: 0,
+    }));
     const seenPermalinks = new Set(directMatches.map((r) => r.permalink));
     const allResults: SearchResult[] = [...directMatches];
 
@@ -587,7 +647,7 @@ export class SearchService {
 
     logger.debug(
       { direct: directMatches.length, total: allResults.length, maxDepth },
-      "Expanded search with relations"
+      "Expanded search with relations",
     );
 
     return allResults;
@@ -595,7 +655,7 @@ export class SearchService {
 
   private async getRelatedNotes(
     permalink: string,
-    project?: string
+    project?: string,
   ): Promise<SearchResult[]> {
     const client = await getBasicMemoryClient();
 
@@ -615,7 +675,7 @@ export class SearchService {
 
       if (result.content && Array.isArray(result.content)) {
         const textContent = result.content.find(
-          (c: { type: string }) => c.type === "text"
+          (c: { type: string }) => c.type === "text",
         );
         if (textContent && "text" in textContent) {
           const content = textContent.text as string;
@@ -625,7 +685,7 @@ export class SearchService {
           for (const title of wikilinks.slice(0, 5)) {
             const resolvedPermalink = await this.resolveWikilinkToPermalink(
               title,
-              project
+              project,
             );
             relatedNotes.push({
               permalink: resolvedPermalink || "",
@@ -661,7 +721,7 @@ export class SearchService {
 
   private async resolveWikilinkToPermalink(
     title: string,
-    project?: string
+    project?: string,
   ): Promise<string | null> {
     try {
       const results = await this.executeKeywordSearch(`"${title}"`, 1, project);

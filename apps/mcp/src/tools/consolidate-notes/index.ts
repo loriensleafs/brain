@@ -15,7 +15,7 @@ import type { ConsolidateNotesArgs } from "./schema";
  * Main handler for the consolidate_notes tool
  */
 export async function handler(
-  args: ConsolidateNotesArgs
+  args: ConsolidateNotesArgs,
 ): Promise<CallToolResult> {
   const project = args.project || resolveProject();
 
@@ -76,8 +76,13 @@ export async function handler(
     }
   }
 
-  if (result.mergeCandidates.length === 0 && result.splitCandidates.length === 0) {
-    lines.push(`No consolidation opportunities found. Your knowledge graph is well-organized!`);
+  if (
+    result.mergeCandidates.length === 0 &&
+    result.splitCandidates.length === 0
+  ) {
+    lines.push(
+      `No consolidation opportunities found. Your knowledge graph is well-organized!`,
+    );
   }
 
   return {

@@ -11,19 +11,19 @@
  * This test file provides basic validation of error paths.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { getMissingEmbeddingsCount } from "../catchupTrigger";
 
 describe("getMissingEmbeddingsCount", () => {
   it("should reject empty project parameter", async () => {
     await expect(getMissingEmbeddingsCount("")).rejects.toThrow(
-      "Project parameter is required"
+      "Project parameter is required",
     );
   });
 
   it("should reject whitespace-only project parameter", async () => {
     await expect(getMissingEmbeddingsCount("   ")).rejects.toThrow(
-      "Project parameter is required"
+      "Project parameter is required",
     );
   });
 

@@ -15,7 +15,7 @@
 
 import { getSearchService, type SearchResult } from "../../services/search";
 import { detectNoteType, type NoteType } from "./noteType";
-import { parseStatus, isOpenStatus, type NoteStatus } from "./statusParser";
+import { isOpenStatus, type NoteStatus, parseStatus } from "./statusParser";
 
 /**
  * Common note structure returned from queries
@@ -50,7 +50,7 @@ function getSearch() {
  * Uses semantic search for better relevance of recent notes.
  */
 export async function queryRecentActivity(
-  options: QueryOptions
+  options: QueryOptions,
 ): Promise<ContextNote[]> {
   const { project, timeframe = "5d" } = options;
   const search = getSearch();
@@ -77,20 +77,23 @@ export async function queryRecentActivity(
  * (type=feature/phase/task, status IN NOT_STARTED/IN_PROGRESS)
  */
 export async function queryActiveFeatures(
-  options: QueryOptions
+  options: QueryOptions,
 ): Promise<ContextNote[]> {
   const { project, timeframe = "30d" } = options;
   const search = getSearch();
 
   // Search for feature/phase/task notes using semantic search
-  const response = await search.search("feature phase task status in progress active", {
-    project,
-    limit: 50,
-    mode: "auto",
-    folders: ["features/"],
-    afterDate: getDateFromTimeframe(timeframe),
-    fullContent: true,
-  });
+  const response = await search.search(
+    "feature phase task status in progress active",
+    {
+      project,
+      limit: 50,
+      mode: "auto",
+      folders: ["features/"],
+      afterDate: getDateFromTimeframe(timeframe),
+      fullContent: true,
+    },
+  );
 
   const notes = convertSearchResultsToContextNotes(response.results);
 
@@ -100,8 +103,7 @@ export async function queryActiveFeatures(
 
   const filtered = notes.filter((note) => {
     return (
-      featureTypes.includes(note.type) &&
-      activeStatuses.includes(note.status)
+      featureTypes.includes(note.type) && activeStatuses.includes(note.status)
     );
   });
 
@@ -113,20 +115,23 @@ export async function queryActiveFeatures(
  * Uses semantic search for decision-related content.
  */
 export async function queryRecentDecisions(
-  options: QueryOptions
+  options: QueryOptions,
 ): Promise<ContextNote[]> {
   const { project, timeframe = "3d" } = options;
   const search = getSearch();
 
   // Search for decision notes using semantic search
-  const response = await search.search("decision architecture ADR technical choice rationale", {
-    project,
-    limit: 30,
-    mode: "auto",
-    folders: ["decisions/"],
-    afterDate: getDateFromTimeframe(timeframe),
-    fullContent: true,
-  });
+  const response = await search.search(
+    "decision architecture ADR technical choice rationale",
+    {
+      project,
+      limit: 30,
+      mode: "auto",
+      folders: ["decisions/"],
+      afterDate: getDateFromTimeframe(timeframe),
+      fullContent: true,
+    },
+  );
 
   const notes = convertSearchResultsToContextNotes(response.results);
 
@@ -141,7 +146,7 @@ export async function queryRecentDecisions(
  * Uses semantic search for bug-related content.
  */
 export async function queryOpenBugs(
-  options: QueryOptions
+  options: QueryOptions,
 ): Promise<ContextNote[]> {
   const { project, timeframe = "7d" } = options;
   const search = getSearch();
@@ -182,7 +187,9 @@ function dedupeByPermalink(notes: ContextNote[]): ContextNote[] {
  * Convert SearchService results to ContextNote format with type/status enrichment.
  * Uses fullContent when available, falling back to snippet.
  */
-function convertSearchResultsToContextNotes(results: SearchResult[]): ContextNote[] {
+function convertSearchResultsToContextNotes(
+  results: SearchResult[],
+): ContextNote[] {
   return results
     .filter((result) => result.title && result.permalink)
     .map((result) => {

@@ -45,7 +45,7 @@ const TITLE_PATTERNS: Record<string, NoteType> = {
 export function detectNoteType(
   frontmatterType?: string,
   folder?: string,
-  title?: string
+  title?: string,
 ): NoteType {
   // Priority 1: Explicit frontmatter type
   if (frontmatterType) {

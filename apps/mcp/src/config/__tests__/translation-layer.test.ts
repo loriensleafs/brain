@@ -10,15 +10,19 @@
  * - Memories mode resolution (DEFAULT, CODE, CUSTOM)
  */
 
-import { describe, test, expect, beforeEach, vi } from "vitest";
 import * as os from "os";
 import * as path from "path";
-import { BrainConfig, DEFAULT_BRAIN_CONFIG } from "../schema";
+import { beforeEach, describe, expect, test, vi } from "vitest";
+import { type BrainConfig, DEFAULT_BRAIN_CONFIG } from "../schema";
 
 // Mock filesystem
 const mockFs = {
-  existsSync: vi.fn(() => false) as ReturnType<typeof mock<(p: string) => boolean>>,
-  readFileSync: vi.fn(() => "") as ReturnType<typeof mock<(p: string, enc: string) => string>>,
+  existsSync: vi.fn(() => false) as ReturnType<
+    typeof mock<(p: string) => boolean>
+  >,
+  readFileSync: vi.fn(() => "") as ReturnType<
+    typeof mock<(p: string, enc: string) => string>
+  >,
   writeFileSync: vi.fn(() => undefined) as ReturnType<
     typeof mock<(p: string, content: string, opts: unknown) => void>
   >,
@@ -31,11 +35,15 @@ const mockFs = {
   renameSync: vi.fn(() => undefined) as ReturnType<
     typeof mock<(from: string, to: string) => void>
   >,
-  unlinkSync: vi.fn(() => undefined) as ReturnType<typeof mock<(p: string) => void>>,
+  unlinkSync: vi.fn(() => undefined) as ReturnType<
+    typeof mock<(p: string) => void>
+  >,
   openSync: vi.fn(() => 1) as ReturnType<
     typeof mock<(p: string, flags: number) => number>
   >,
-  closeSync: vi.fn(() => undefined) as ReturnType<typeof mock<(fd: number) => void>>,
+  closeSync: vi.fn(() => undefined) as ReturnType<
+    typeof mock<(fd: number) => void>
+  >,
   constants: {
     O_CREAT: 0x0200,
     O_EXCL: 0x0800,
@@ -65,24 +73,28 @@ vi.mock("../path-validator", () => ({
 // Mock configLock
 const mockLock = {
   acquireConfigLock: vi.fn(async () => ({ acquired: true })) as ReturnType<
-    typeof mock<(opts: unknown) => Promise<{ acquired: boolean; error?: string }>>
+    typeof mock<
+      (opts: unknown) => Promise<{ acquired: boolean; error?: string }>
+    >
   >,
-  releaseConfigLock: vi.fn(() => true) as ReturnType<typeof mock<() => boolean>>,
+  releaseConfigLock: vi.fn(() => true) as ReturnType<
+    typeof mock<() => boolean>
+  >,
 };
 
 vi.mock("../../utils/security/configLock", () => mockLock);
 
 import {
-  translateBrainToBasicMemory,
+  type BasicMemoryConfig,
+  getBasicMemoryConfigDir,
+  getBasicMemoryConfigPath,
+  previewTranslation,
   resolveMemoriesPath,
   syncConfigToBasicMemory,
+  TranslationError,
+  translateBrainToBasicMemory,
   trySyncConfigToBasicMemory,
   validateTranslation,
-  previewTranslation,
-  getBasicMemoryConfigPath,
-  getBasicMemoryConfigDir,
-  BasicMemoryConfig,
-  TranslationError,
 } from "../translation-layer";
 
 describe("getBasicMemoryConfigPath", () => {
@@ -112,7 +124,7 @@ describe("resolveMemoriesPath", () => {
       const result = resolveMemoriesPath(
         "brain",
         { code_path: "/dev/brain" },
-        "~/memories"
+        "~/memories",
       );
 
       expect(result.mode).toBe("DEFAULT");
@@ -125,7 +137,7 @@ describe("resolveMemoriesPath", () => {
       const result = resolveMemoriesPath(
         "myproject",
         { code_path: "/dev/myproject" },
-        "~/memories"
+        "~/memories",
       );
 
       expect(result.path).toContain(os.homedir());
@@ -138,7 +150,7 @@ describe("resolveMemoriesPath", () => {
       const result = resolveMemoriesPath(
         "brain",
         { code_path: "/dev/brain", memories_mode: "CODE" },
-        "~/memories"
+        "~/memories",
       );
 
       expect(result.mode).toBe("CODE");
@@ -151,7 +163,7 @@ describe("resolveMemoriesPath", () => {
       const result = resolveMemoriesPath(
         "brain",
         { code_path: "~/Dev/brain", memories_mode: "CODE" },
-        "~/memories"
+        "~/memories",
       );
 
       expect(result.path).toContain(os.homedir());
@@ -168,7 +180,7 @@ describe("resolveMemoriesPath", () => {
           memories_path: "~/custom/path",
           memories_mode: "CUSTOM",
         },
-        "~/memories"
+        "~/memories",
       );
 
       expect(result.mode).toBe("CUSTOM");
@@ -180,7 +192,7 @@ describe("resolveMemoriesPath", () => {
       const result = resolveMemoriesPath(
         "brain",
         { code_path: "/dev/brain", memories_mode: "CUSTOM" },
-        "~/memories"
+        "~/memories",
       );
 
       expect(result.error).toBeDefined();
@@ -193,7 +205,7 @@ describe("resolveMemoriesPath", () => {
       const result = resolveMemoriesPath(
         "project",
         { code_path: "/dev/project" },
-        "~/memories"
+        "~/memories",
       );
 
       expect(result.mode).toBe("DEFAULT");
@@ -329,7 +341,7 @@ describe("syncConfigToBasicMemory", () => {
     });
 
     await expect(syncConfigToBasicMemory(DEFAULT_BRAIN_CONFIG)).rejects.toThrow(
-      TranslationError
+      TranslationError,
     );
   });
 
@@ -517,7 +529,11 @@ describe("TranslationError", () => {
 
 describe("Field mapping test cases from ADR-020", () => {
   test("DEFAULT mode: ~/memories + brain -> ~/memories/brain", () => {
-    const result = resolveMemoriesPath("brain", { code_path: "/dev/brain" }, "~/memories");
+    const result = resolveMemoriesPath(
+      "brain",
+      { code_path: "/dev/brain" },
+      "~/memories",
+    );
 
     expect(result.mode).toBe("DEFAULT");
     expect(result.path).toContain("memories");
@@ -528,7 +544,7 @@ describe("Field mapping test cases from ADR-020", () => {
     const result = resolveMemoriesPath(
       "brain",
       { code_path: "/Users/peter/Dev/brain", memories_mode: "CODE" },
-      "~/memories"
+      "~/memories",
     );
 
     expect(result.mode).toBe("CODE");
@@ -544,7 +560,7 @@ describe("Field mapping test cases from ADR-020", () => {
         memories_path: "~/custom/path",
         memories_mode: "CUSTOM",
       },
-      "~/memories"
+      "~/memories",
     );
 
     expect(result.mode).toBe("CUSTOM");

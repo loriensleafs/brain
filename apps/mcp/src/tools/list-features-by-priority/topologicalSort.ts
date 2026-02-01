@@ -112,7 +112,7 @@ export function topologicalSort(graph: DependencyGraph): TopologicalSortResult {
  */
 function detectCycles(
   nodes: Map<string, FeatureNode>,
-  remaining: Set<string>
+  remaining: Set<string>,
 ): string[][] {
   const cycles: string[][] = [];
   const visited = new Set<string>();

@@ -6,8 +6,8 @@
  */
 
 export * as activeProject from "./active";
-export * as listProjects from "./list";
-export * as getProjectDetails from "./get";
-export * as editProject from "./edit";
 export * as createProject from "./create";
 export * as deleteProject from "./delete";
+export * as editProject from "./edit";
+export * as getProjectDetails from "./get";
+export * as listProjects from "./list";

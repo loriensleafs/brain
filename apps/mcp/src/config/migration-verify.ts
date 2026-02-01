@@ -13,8 +13,8 @@
  * @see TASK-020-10 for acceptance criteria
  */
 
-import { SearchService } from "../services/search";
 import { getBasicMemoryClient } from "../proxy/client";
+import { SearchService } from "../services/search";
 import { logger } from "../utils/internal/logger";
 
 /**
@@ -127,22 +127,18 @@ const SEARCH_LIMIT = 5;
  */
 export async function verifyMemoryIndexing(
   memories: MemoryToVerify[],
-  project?: string
+  project?: string,
 ): Promise<VerificationSummary> {
   const searchService = new SearchService(project);
   const results: MemoryVerificationResult[] = [];
 
   logger.info(
     { count: memories.length, project },
-    "Starting memory indexing verification"
+    "Starting memory indexing verification",
   );
 
   for (const memory of memories) {
-    const result = await verifySingleMemory(
-      memory,
-      searchService,
-      project
-    );
+    const result = await verifySingleMemory(memory, searchService, project);
     results.push(result);
   }
 
@@ -168,7 +164,7 @@ export async function verifyMemoryIndexing(
       mismatched: summary.mismatched,
       success: summary.success,
     },
-    "Memory indexing verification complete"
+    "Memory indexing verification complete",
   );
 
   return summary;
@@ -185,7 +181,7 @@ export async function verifyMemoryIndexing(
 async function verifySingleMemory(
   memory: MemoryToVerify,
   searchService: SearchService,
-  project?: string
+  project?: string,
 ): Promise<MemoryVerificationResult> {
   const expectedPrefix = memory.content.slice(0, CONTENT_PREFIX_LENGTH).trim();
 
@@ -200,15 +196,19 @@ async function verifySingleMemory(
 
     // Look for exact permalink match in results
     const exactMatch = searchResponse.results.find(
-      (r) => normalizePermalink(r.permalink) === normalizePermalink(memory.permalink)
+      (r) =>
+        normalizePermalink(r.permalink) ===
+        normalizePermalink(memory.permalink),
     );
 
     if (exactMatch) {
       // Found by permalink, verify content
       const actualContent = await fetchMemoryContent(memory.permalink, project);
-      const actualPrefix = actualContent?.slice(0, CONTENT_PREFIX_LENGTH).trim() ?? "";
+      const actualPrefix =
+        actualContent?.slice(0, CONTENT_PREFIX_LENGTH).trim() ?? "";
 
-      const contentMatches = normalizeContent(actualPrefix) === normalizeContent(expectedPrefix);
+      const contentMatches =
+        normalizeContent(actualPrefix) === normalizeContent(expectedPrefix);
 
       if (contentMatches) {
         return {
@@ -234,13 +234,17 @@ async function verifySingleMemory(
 
     // Check if any result has similar title
     const titleMatch = searchResponse.results.find(
-      (r) => normalizeTitle(r.title) === normalizeTitle(memory.title)
+      (r) => normalizeTitle(r.title) === normalizeTitle(memory.title),
     );
 
     if (titleMatch) {
       // Found by title but different permalink
-      const actualContent = await fetchMemoryContent(titleMatch.permalink, project);
-      const actualPrefix = actualContent?.slice(0, CONTENT_PREFIX_LENGTH).trim() ?? "";
+      const actualContent = await fetchMemoryContent(
+        titleMatch.permalink,
+        project,
+      );
+      const actualPrefix =
+        actualContent?.slice(0, CONTENT_PREFIX_LENGTH).trim() ?? "";
 
       return {
         title: memory.title,
@@ -264,7 +268,7 @@ async function verifySingleMemory(
   } catch (error) {
     logger.debug(
       { error, title: memory.title, permalink: memory.permalink },
-      "Error verifying memory"
+      "Error verifying memory",
     );
 
     return {
@@ -286,7 +290,7 @@ async function verifySingleMemory(
  */
 async function fetchMemoryContent(
   permalink: string,
-  project?: string
+  project?: string,
 ): Promise<string | null> {
   try {
     const client = await getBasicMemoryClient();
@@ -306,7 +310,7 @@ async function fetchMemoryContent(
 
     if (result.content && Array.isArray(result.content)) {
       const textContent = result.content.find(
-        (c: { type: string }) => c.type === "text"
+        (c: { type: string }) => c.type === "text",
       );
       if (textContent && "text" in textContent) {
         return textContent.text as string;
@@ -361,7 +365,7 @@ function normalizeContent(content: string): string {
 export async function isMemoryIndexed(
   title: string,
   expectedPermalink: string,
-  project?: string
+  project?: string,
 ): Promise<boolean> {
   const searchService = new SearchService(project);
 
@@ -374,7 +378,9 @@ export async function isMemoryIndexed(
     });
 
     return response.results.some(
-      (r) => normalizePermalink(r.permalink) === normalizePermalink(expectedPermalink)
+      (r) =>
+        normalizePermalink(r.permalink) ===
+        normalizePermalink(expectedPermalink),
     );
   } catch {
     return false;
@@ -388,9 +394,9 @@ export async function isMemoryIndexed(
  * @returns Array of problem memories with details
  */
 export function getProblematicMemories(
-  summary: VerificationSummary
+  summary: VerificationSummary,
 ): MemoryVerificationResult[] {
   return summary.results.filter(
-    (r) => r.status === "missing" || r.status === "mismatched"
+    (r) => r.status === "missing" || r.status === "mismatched",
   );
 }

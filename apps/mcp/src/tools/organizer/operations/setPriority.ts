@@ -5,7 +5,7 @@
  * Lower priority number = higher priority (processed first).
  */
 
-import { getBasicMemoryClient } from '../../../proxy/client';
+import { getBasicMemoryClient } from "../../../proxy/client";
 
 /**
  * Result from setting priority
@@ -24,18 +24,18 @@ export interface SetPriorityResult {
 export async function setPriority(
   project: string,
   featureId: string,
-  newPriority: number
+  newPriority: number,
 ): Promise<SetPriorityResult> {
   try {
     const client = await getBasicMemoryClient();
 
     // Read current note to get old priority
     const readResult = await client.callTool({
-      name: 'read_note',
+      name: "read_note",
       arguments: { identifier: featureId, project },
     });
 
-    const content = (readResult.content as any)?.[0]?.text || '';
+    const content = (readResult.content as any)?.[0]?.text || "";
     const oldPriority = extractPriority(content);
 
     // Update priority in frontmatter
@@ -43,7 +43,7 @@ export async function setPriority(
 
     // Write back the note
     await client.callTool({
-      name: 'write_note',
+      name: "write_note",
       arguments: {
         path: featureId,
         project,
@@ -79,10 +79,10 @@ function extractPriority(content: string): number | undefined {
  * Update or add priority field in frontmatter
  */
 function updatePriorityInContent(content: string, priority: number): string {
-  const lines = content.split('\n');
+  const lines = content.split("\n");
 
   // Check if content has frontmatter
-  if (lines[0] !== '---') {
+  if (lines[0] !== "---") {
     // No frontmatter, add it
     return `---\npriority: ${priority}\n---\n${content}`;
   }
@@ -90,7 +90,7 @@ function updatePriorityInContent(content: string, priority: number): string {
   // Find end of frontmatter
   let endIndex = -1;
   for (let i = 1; i < lines.length; i++) {
-    if (lines[i] === '---') {
+    if (lines[i] === "---") {
       endIndex = i;
       break;
     }
@@ -116,5 +116,5 @@ function updatePriorityInContent(content: string, priority: number): string {
     lines.splice(1, 0, `priority: ${priority}`);
   }
 
-  return lines.join('\n');
+  return lines.join("\n");
 }

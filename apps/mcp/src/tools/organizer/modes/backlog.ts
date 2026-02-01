@@ -11,68 +11,69 @@
  * and custom operations for mutations.
  */
 
-import type { BacklogConfig, BacklogResult } from '../types';
-import { setPriority } from '../operations/setPriority';
+import { buildDependencyGraph } from "../../list-features-by-priority/dependencyGraph";
+import { topologicalSort } from "../../list-features-by-priority/topologicalSort";
 import {
   addDependency,
   removeDependency,
-} from '../operations/manageDependencies';
-import { buildDependencyGraph } from '../../list-features-by-priority/dependencyGraph';
-import { topologicalSort } from '../../list-features-by-priority/topologicalSort';
+} from "../operations/manageDependencies";
+import { setPriority } from "../operations/setPriority";
+import type { BacklogConfig, BacklogResult } from "../types";
 
 /**
  * Execute backlog mode operation
  */
 export async function executeBacklogOperation(
-  config: BacklogConfig
+  config: BacklogConfig,
 ): Promise<BacklogResult> {
   const { project, operation } = config;
 
   try {
     switch (operation) {
-      case 'QUERY_ORDER':
+      case "QUERY_ORDER":
         return await queryBacklogOrder(project);
 
-      case 'SET_PRIORITY':
+      case "SET_PRIORITY":
         if (!config.feature_id || config.priority === undefined) {
           return {
             operation,
             success: false,
-            error: 'SET_PRIORITY requires feature_id and priority',
+            error: "SET_PRIORITY requires feature_id and priority",
           };
         }
         return await executeSetPriority(
           project,
           config.feature_id,
-          config.priority
+          config.priority,
         );
 
-      case 'ADD_DEPENDENCY':
+      case "ADD_DEPENDENCY":
         if (!config.feature_id || !config.dependency_target) {
           return {
             operation,
             success: false,
-            error: 'ADD_DEPENDENCY requires feature_id and dependency_target',
+            error: "ADD_DEPENDENCY requires feature_id and dependency_target",
           };
         }
         return await executeAddDependency(
           project,
           config.feature_id,
-          config.dependency_target
+          config.dependency_target,
         );
 
-      case 'REMOVE_DEPENDENCY':
+      case "REMOVE_DEPENDENCY":
         if (!config.feature_id || !config.dependency_target) {
           return {
             operation,
             success: false,
-            error: 'REMOVE_DEPENDENCY requires feature_id and dependency_target',
+            error:
+              "REMOVE_DEPENDENCY requires feature_id and dependency_target",
           };
         }
         return await executeRemoveDependency(
           project,
           config.feature_id,
-          config.dependency_target
+          config.dependency_target,
         );
 
       default:
@@ -95,7 +96,7 @@ export async function executeBacklogOperation(
  * Query features in dependency order with priority tie-breaking
  */
 async function queryBacklogOrder(project: string): Promise<BacklogResult> {
-  const graph = await buildDependencyGraph(project, 'feature');
+  const graph = await buildDependencyGraph(project, "feature");
   const { sorted, cycles } = topologicalSort(graph);
 
   // Build reverse dependency map (what each item blocks)
@@ -122,7 +123,7 @@ async function queryBacklogOrder(project: string): Promise<BacklogResult> {
   }));
 
   return {
-    operation: 'QUERY_ORDER',
+    operation: "QUERY_ORDER",
     success: true,
     data: {
       features: orderedFeatures,
@@ -139,12 +140,12 @@ async function queryBacklogOrder(project: string): Promise<BacklogResult> {
 async function executeSetPriority(
   project: string,
   featureId: string,
-  priority: number
+  priority: number,
 ): Promise<BacklogResult> {
   const result = await setPriority(project, featureId, priority);
 
   return {
-    operation: 'SET_PRIORITY',
+    operation: "SET_PRIORITY",
     success: result.success,
     data: result.success
       ? {
@@ -163,12 +164,12 @@ async function executeSetPriority(
 async function executeAddDependency(
   project: string,
   source: string,
-  target: string
+  target: string,
 ): Promise<BacklogResult> {
   const result = await addDependency(project, source, target);
 
   return {
-    operation: 'ADD_DEPENDENCY',
+    operation: "ADD_DEPENDENCY",
     success: result.success,
     data: result.success
       ? {
@@ -187,12 +188,12 @@ async function executeAddDependency(
 async function executeRemoveDependency(
   project: string,
   source: string,
-  target: string
+  target: string,
 ): Promise<BacklogResult> {
   const result = await removeDependency(project, source, target);
 
   return {
-    operation: 'REMOVE_DEPENDENCY',
+    operation: "REMOVE_DEPENDENCY",
     success: result.success,
     data: result.success
       ? {

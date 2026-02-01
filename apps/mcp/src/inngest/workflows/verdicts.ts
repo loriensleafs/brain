@@ -68,7 +68,7 @@ function isWarningVerdict(verdict: Verdict): boolean {
  * Build a reason string for blocking verdicts.
  */
 function buildBlockingReason(
-  blockingAgents: Array<{ agent: string; verdict: Verdict; details?: string }>
+  blockingAgents: Array<{ agent: string; verdict: Verdict; details?: string }>,
 ): string {
   if (blockingAgents.length === 0) {
     return "";
@@ -90,7 +90,7 @@ function buildBlockingReason(
  * Build a reason string for warning verdicts.
  */
 function buildWarningReason(
-  warningAgents: Array<{ agent: string; verdict: Verdict; details?: string }>
+  warningAgents: Array<{ agent: string; verdict: Verdict; details?: string }>,
 ): string {
   if (warningAgents.length === 0) {
     return "";
@@ -167,7 +167,9 @@ export function mergeVerdicts(verdicts: AgentVerdict[]): FinalVerdict {
   if (blockingAgentData.length > 0) {
     // Find highest priority blocking verdict
     for (const blockingVerdict of BLOCKING_VERDICTS) {
-      const found = blockingAgentData.find((a) => a.verdict === blockingVerdict);
+      const found = blockingAgentData.find(
+        (a) => a.verdict === blockingVerdict,
+      );
       if (found) {
         finalVerdict = blockingVerdict;
         break;

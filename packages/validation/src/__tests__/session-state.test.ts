@@ -3,15 +3,15 @@
  *
  * Validates that JSON Schema validators behave correctly for session state types.
  */
-import { describe, test, expect } from "vitest";
+import { describe, expect, test } from "vitest";
 import {
-  validateSessionState,
-  parseSessionState,
-  safeParseSessionState,
   getSessionStateErrors,
   isAgentType,
-  isWorkflowMode,
   isSessionState,
+  isWorkflowMode,
+  parseSessionState,
+  safeParseSessionState,
+  validateSessionState,
 } from "../validate";
 
 describe("SessionState validation", () => {
@@ -221,7 +221,9 @@ describe("Type guards", () => {
     test("returns true for valid session state", () => {
       const validState = {
         currentMode: "analysis",
-        modeHistory: [{ mode: "analysis", timestamp: "2026-01-18T10:00:00.000Z" }],
+        modeHistory: [
+          { mode: "analysis", timestamp: "2026-01-18T10:00:00.000Z" },
+        ],
         protocolStartComplete: false,
         protocolEndComplete: false,
         protocolStartEvidence: {},

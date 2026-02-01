@@ -5,19 +5,31 @@
  * Tests retry logic with timeout as required by critic review (Issue 1).
  */
 
-import { describe, test, expect, beforeEach, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 // Mock filesystem
 const mockFs = {
-  existsSync: vi.fn(() => false) as ReturnType<typeof mock<(p: unknown) => boolean>>,
-  openSync: vi.fn(() => 1) as ReturnType<typeof mock<(p: unknown, flags: unknown) => number>>,
-  writeSync: vi.fn(() => undefined) as ReturnType<typeof mock<(fd: unknown, data: unknown) => void>>,
-  closeSync: vi.fn(() => undefined) as ReturnType<typeof mock<(fd: unknown) => void>>,
-  unlinkSync: vi.fn(() => undefined) as ReturnType<typeof mock<(p: unknown) => void>>,
+  existsSync: vi.fn(() => false) as ReturnType<
+    typeof mock<(p: unknown) => boolean>
+  >,
+  openSync: vi.fn(() => 1) as ReturnType<
+    typeof mock<(p: unknown, flags: unknown) => number>
+  >,
+  writeSync: vi.fn(() => undefined) as ReturnType<
+    typeof mock<(fd: unknown, data: unknown) => void>
+  >,
+  closeSync: vi.fn(() => undefined) as ReturnType<
+    typeof mock<(fd: unknown) => void>
+  >,
+  unlinkSync: vi.fn(() => undefined) as ReturnType<
+    typeof mock<(p: unknown) => void>
+  >,
   statSync: vi.fn(() => ({ mtimeMs: Date.now() })) as ReturnType<
     typeof mock<(p: unknown) => { mtimeMs: number }>
   >,
-  mkdirSync: vi.fn(() => undefined) as ReturnType<typeof mock<(p: unknown, opts: unknown) => void>>,
+  mkdirSync: vi.fn(() => undefined) as ReturnType<
+    typeof mock<(p: unknown, opts: unknown) => void>
+  >,
   constants: {
     O_CREAT: 0x0200,
     O_EXCL: 0x0800,
@@ -59,7 +71,8 @@ describe("acquireConfigLock", () => {
     // Default: directory exists, lock doesn't exist
     mockFs.existsSync.mockImplementation((p: unknown) => {
       const pStr = String(p);
-      if (pStr.includes(".basic-memory") && !pStr.includes(".lock")) return true;
+      if (pStr.includes(".basic-memory") && !pStr.includes(".lock"))
+        return true;
       return false;
     });
     mockFs.openSync.mockReturnValue(1);
@@ -257,7 +270,7 @@ describe("withConfigLock", () => {
     mockFs.statSync.mockReturnValue({ mtimeMs: Date.now() });
 
     await expect(
-      withConfigLock(async () => "should not run", { timeoutMs: 100 })
+      withConfigLock(async () => "should not run", { timeoutMs: 100 }),
     ).rejects.toThrow("timed out");
   });
 });
@@ -318,7 +331,7 @@ describe("withConfigLockSync", () => {
     mockFs.statSync.mockReturnValue({ mtimeMs: Date.now() });
 
     expect(() =>
-      withConfigLockSync(() => "should not run", { timeoutMs: 100 })
+      withConfigLockSync(() => "should not run", { timeoutMs: 100 }),
     ).toThrow("timed out");
   });
 });

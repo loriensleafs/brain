@@ -10,9 +10,13 @@
 
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { loadBrainConfig } from "../../config/brain-config";
-import { ConfigGetArgsSchema, type ConfigGetArgs } from "./schema";
+import { type ConfigGetArgs, ConfigGetArgsSchema } from "./schema";
 
-export { configGetToolDefinition as toolDefinition, ConfigGetArgsSchema, type ConfigGetArgs } from "./schema";
+export {
+  type ConfigGetArgs,
+  ConfigGetArgsSchema,
+  configGetToolDefinition as toolDefinition,
+} from "./schema";
 
 /**
  * Get a nested value from an object using dot notation.
@@ -26,7 +30,11 @@ function getNestedValue(obj: Record<string, unknown>, path: string): unknown {
   let current: unknown = obj;
 
   for (const key of keys) {
-    if (current === null || current === undefined || typeof current !== "object") {
+    if (
+      current === null ||
+      current === undefined ||
+      typeof current !== "object"
+    ) {
       return undefined;
     }
     current = (current as Record<string, unknown>)[key];
@@ -41,7 +49,9 @@ function getNestedValue(obj: Record<string, unknown>, path: string): unknown {
  * @param args - Tool arguments (raw from MCP, will be validated)
  * @returns CallToolResult with config data or error
  */
-export async function handler(args: Record<string, unknown>): Promise<CallToolResult> {
+export async function handler(
+  args: Record<string, unknown>,
+): Promise<CallToolResult> {
   try {
     // Validate and parse input using AJV
     const parsed: ConfigGetArgs = ConfigGetArgsSchema.parse(args);
@@ -61,7 +71,10 @@ export async function handler(args: Record<string, unknown>): Promise<CallToolRe
     }
 
     // Get specific key using dot notation
-    const value = getNestedValue(config as unknown as Record<string, unknown>, parsed.key);
+    const value = getNestedValue(
+      config as unknown as Record<string, unknown>,
+      parsed.key,
+    );
 
     if (value === undefined) {
       return {
@@ -83,7 +96,7 @@ export async function handler(args: Record<string, unknown>): Promise<CallToolRe
                 ],
               },
               null,
-              2
+              2,
             ),
           },
         ],
@@ -101,7 +114,7 @@ export async function handler(args: Record<string, unknown>): Promise<CallToolRe
               value,
             },
             null,
-            2
+            2,
           ),
         },
       ],
@@ -116,7 +129,7 @@ export async function handler(args: Record<string, unknown>): Promise<CallToolRe
               error: `Failed to get config: ${error instanceof Error ? error.message : String(error)}`,
             },
             null,
-            2
+            2,
           ),
         },
       ],

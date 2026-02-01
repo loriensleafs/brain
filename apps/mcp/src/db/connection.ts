@@ -1,6 +1,6 @@
 import { Database } from "bun:sqlite";
-import { join } from "path";
 import { homedir } from "os";
+import { join } from "path";
 
 // On macOS, use Homebrew SQLite for extension support.
 // Wrapped in try/catch to handle case where SQLite is already loaded (e.g., in tests).

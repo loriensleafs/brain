@@ -1,6 +1,6 @@
-import { describe, test, expect, beforeEach, afterEach } from "vitest";
 import { Database } from "bun:sqlite";
 import * as sqliteVec from "sqlite-vec";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { createEmbeddingsTable } from "../schema";
 
 // Note: Custom SQLite is configured in test preload (src/__tests__/setup.ts)
@@ -20,9 +20,11 @@ describe("brain_embeddings schema", () => {
   test("creates brain_embeddings virtual table", () => {
     createEmbeddingsTable(db);
 
-    const result = db.query(
-      "SELECT name FROM sqlite_master WHERE type='table' AND name='brain_embeddings'"
-    ).get() as any;
+    const result = db
+      .query(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='brain_embeddings'",
+      )
+      .get() as any;
 
     expect(result?.name).toBe("brain_embeddings");
   });
@@ -36,13 +38,13 @@ describe("brain_embeddings schema", () => {
     // Insert
     db.run(
       "INSERT INTO brain_embeddings (entity_id, embedding) VALUES (?, ?)",
-      ["test-entity-1", embedding]
+      ["test-entity-1", embedding],
     );
 
     // Query
-    const result = db.query(
-      "SELECT entity_id FROM brain_embeddings WHERE entity_id = ?"
-    ).get("test-entity-1") as any;
+    const result = db
+      .query("SELECT entity_id FROM brain_embeddings WHERE entity_id = ?")
+      .get("test-entity-1") as any;
 
     expect(result?.entity_id).toBe("test-entity-1");
   });

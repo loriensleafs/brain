@@ -8,17 +8,17 @@
  * @see TASK-013: Orchestrator Agent Routing Workflow
  */
 
-import { describe, test, expect } from "vitest";
-import {
-  orchestratorAgentInvokedWorkflow,
-  type AgentInvokedResult,
-} from "../orchestratorAgentInvoked";
+import { describe, expect, test } from "vitest";
 import type {
-  SessionState,
   AgentInvocation,
   AgentType,
   OrchestratorWorkflow,
+  SessionState,
 } from "../../../services/session/types";
+import {
+  type AgentInvokedResult,
+  orchestratorAgentInvokedWorkflow,
+} from "../orchestratorAgentInvoked";
 
 describe("Orchestrator Agent Invoked Workflow", () => {
   describe("workflow definition", () => {
@@ -114,7 +114,7 @@ describe("Orchestrator Agent Invoked Workflow", () => {
 
       expect(invocation.handoffFrom).toBe("planner");
       expect(invocation.input.artifacts).toContain(
-        ".agents/planning/oauth-plan.md"
+        ".agents/planning/oauth-plan.md",
       );
     });
 

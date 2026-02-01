@@ -4,14 +4,19 @@
  * Migrated from Zod to JSON Schema + AJV per ADR-022.
  * JSON Schema source: packages/validation/schemas/tools/projects/get-project-details.schema.json
  */
-import type { Tool } from "@modelcontextprotocol/sdk/types.js";
+
 import {
+  type GetProjectDetailsArgs,
+  parseGetProjectDetailsArgs,
+  validateGetProjectDetailsArgs,
+} from "@brain/validation";
+import type { Tool } from "@modelcontextprotocol/sdk/types.js";
+
+export {
   validateGetProjectDetailsArgs,
   parseGetProjectDetailsArgs,
   type GetProjectDetailsArgs,
-} from "@brain/validation";
-
-export { validateGetProjectDetailsArgs, parseGetProjectDetailsArgs, type GetProjectDetailsArgs };
+};
 
 // Re-export for backward compatibility
 export const GetProjectDetailsArgsSchema = {

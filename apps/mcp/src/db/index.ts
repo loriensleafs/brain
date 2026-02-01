@@ -1,19 +1,19 @@
 export { createVectorConnection, verifySqliteVec } from "./connection";
 export {
+  type ChunkedEmbedding,
   createEmbeddingsTable,
   ensureEmbeddingTables,
   makeChunkId,
   parseChunkId,
-  type ChunkedEmbedding,
 } from "./schema";
 export {
-  storeChunkedEmbeddings,
+  type ChunkEmbeddingInput,
+  countChunksForEntity,
+  deduplicateByEntity,
   deleteChunkedEmbeddings,
   getChunkedEmbeddings,
   hasEmbeddings,
-  countChunksForEntity,
-  semanticSearchChunked,
-  deduplicateByEntity,
-  type ChunkEmbeddingInput,
   type SemanticSearchResult,
+  semanticSearchChunked,
+  storeChunkedEmbeddings,
 } from "./vectors";

@@ -10,17 +10,18 @@
  * - C-002: Symlink resolution before file operations
  * - C-004: Copy-verify-delete pattern for safe migration
  */
-import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
-import * as fs from "fs";
-import * as path from "path";
-import * as os from "os";
-import { setCodePath, getCodePath } from "../../../project/config";
-import { getDefaultMemoriesLocation } from "../../../config/brain-config";
+
 import {
-  getProjectMemoriesPath,
   getAvailableProjects,
+  getProjectMemoriesPath,
   ProjectNotFoundError,
 } from "@brain/utils";
+import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
+import * as fs from "fs";
+import * as os from "os";
+import * as path from "path";
+import { getDefaultMemoriesLocation } from "../../../config/brain-config";
+import { getCodePath, setCodePath } from "../../../project/config";
 import type { EditProjectArgs, MemoriesPathOption } from "./schema";
 
 // ============================================================================
@@ -39,7 +40,16 @@ const PROTECTED_PATHS = [
   "AppData", // Windows
 ];
 
-const SYSTEM_ROOTS = ["/etc", "/usr", "/var", "/bin", "/sbin", "/tmp", "/proc", "/sys"];
+const SYSTEM_ROOTS = [
+  "/etc",
+  "/usr",
+  "/var",
+  "/bin",
+  "/sbin",
+  "/tmp",
+  "/proc",
+  "/sys",
+];
 
 /**
  * Validation result for path operations.
@@ -61,7 +71,10 @@ interface PathValidationResult {
  * @param requireExists - If false, allows validation of non-existent paths (for migration targets)
  * @returns Validation result with resolved path
  */
-function validatePath(targetPath: string, requireExists = true): PathValidationResult {
+function validatePath(
+  targetPath: string,
+  requireExists = true,
+): PathValidationResult {
   const homeDir = os.homedir();
 
   // Handle non-existent paths (Issue 3: symlink resolution edge case)
@@ -73,7 +86,10 @@ function validatePath(targetPath: string, requireExists = true): PathValidationR
     // For migration targets: validate parent directory exists and is safe
     const parentDir = path.dirname(targetPath);
     if (!fs.existsSync(parentDir)) {
-      return { valid: false, error: `Parent directory does not exist: ${parentDir}` };
+      return {
+        valid: false,
+        error: `Parent directory does not exist: ${parentDir}`,
+      };
     }
 
     // Resolve parent symlinks to validate the real location
@@ -111,7 +127,10 @@ function validatePath(targetPath: string, requireExists = true): PathValidationR
 /**
  * Validate a resolved (real) path against security constraints.
  */
-function validateResolvedPath(resolved: string, homeDir: string): PathValidationResult {
+function validateResolvedPath(
+  resolved: string,
+  homeDir: string,
+): PathValidationResult {
   // Check against system roots
   for (const root of SYSTEM_ROOTS) {
     if (resolved.startsWith(root + path.sep) || resolved === root) {
@@ -127,8 +146,14 @@ function validateResolvedPath(resolved: string, homeDir: string): PathValidation
   // Check against protected paths under home
   for (const protectedName of PROTECTED_PATHS) {
     const protectedFull = path.join(homeDir, protectedName);
-    if (resolved === protectedFull || resolved.startsWith(protectedFull + path.sep)) {
-      return { valid: false, error: `Cannot operate on protected path: ${protectedName}` };
+    if (
+      resolved === protectedFull ||
+      resolved.startsWith(protectedFull + path.sep)
+    ) {
+      return {
+        valid: false,
+        error: `Cannot operate on protected path: ${protectedName}`,
+      };
     }
   }
 
@@ -243,7 +268,7 @@ function migrateMemories(oldPath: string, newPath: string): MigrationResult {
   // Log warning for large directories (M-002 from threat model)
   if (sourceCount > LARGE_DIRECTORY_THRESHOLD) {
     console.warn(
-      `[WARNING] Large directory migration: ${sourceCount} files. Consider manual migration for better control.`
+      `[WARNING] Large directory migration: ${sourceCount} files. Consider manual migration for better control.`,
     );
   }
 
@@ -332,10 +357,10 @@ function migrateMemories(oldPath: string, newPath: string): MigrationResult {
 // ============================================================================
 
 export {
-  toolDefinition,
-  EditProjectArgsSchema,
   type EditProjectArgs,
+  EditProjectArgsSchema,
   type MemoriesPathOption,
+  toolDefinition,
 } from "./schema";
 
 // getDefaultMemoriesLocation is imported from ../../../config/brain-config
@@ -343,7 +368,9 @@ export {
 /**
  * Get existing memories path for a project, returning null if not found
  */
-async function getExistingMemoriesPath(project: string): Promise<string | null> {
+async function getExistingMemoriesPath(
+  project: string,
+): Promise<string | null> {
   try {
     return await getProjectMemoriesPath(project);
   } catch (error) {
@@ -381,7 +408,7 @@ function setMemoriesPath(project: string, memoriesPath: string): void {
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
   } catch (error) {
     throw new Error(
-      `Failed to update memories path: ${error instanceof Error ? error.message : String(error)}`
+      `Failed to update memories path: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
 }
@@ -407,7 +434,7 @@ function resolvePath(inputPath: string): string {
 function resolveMemoriesPathOption(
   option: MemoriesPathOption,
   projectName: string,
-  resolvedCodePath: string
+  resolvedCodePath: string,
 ): string {
   if (option === "CODE") {
     return path.join(resolvedCodePath, "docs");
@@ -442,7 +469,7 @@ export async function handler(args: EditProjectArgs): Promise<CallToolResult> {
                 available_projects: error.availableProjects,
               },
               null,
-              2
+              2,
             ),
           },
         ],
@@ -470,19 +497,28 @@ export async function handler(args: EditProjectArgs): Promise<CallToolResult> {
     finalMemoriesPath = resolveMemoriesPathOption(
       memories_path as MemoriesPathOption,
       name,
-      resolvedNewCodePath
+      resolvedNewCodePath,
     );
-    memoriesPathMode = memories_path === "DEFAULT" || memories_path === "CODE" ? memories_path : "CUSTOM";
+    memoriesPathMode =
+      memories_path === "DEFAULT" || memories_path === "CODE"
+        ? memories_path
+        : "CUSTOM";
 
     // Check if migration is needed (path changed AND old directory exists)
     const normalizedCurrent = path.resolve(currentMemoriesPath);
     const normalizedNew = path.resolve(finalMemoriesPath);
 
-    if (normalizedCurrent !== normalizedNew && fs.existsSync(currentMemoriesPath)) {
+    if (
+      normalizedCurrent !== normalizedNew &&
+      fs.existsSync(currentMemoriesPath)
+    ) {
       // Perform migration with copy-verify-delete pattern (C-004)
       migrationResult = migrateMemories(currentMemoriesPath, finalMemoriesPath);
 
-      if (!migrationResult.migrated && !migrationResult.error?.includes("Migration complete")) {
+      if (
+        !migrationResult.migrated &&
+        !migrationResult.error?.includes("Migration complete")
+      ) {
         // Migration failed - return error, config not updated
         return {
           content: [
@@ -496,7 +532,7 @@ export async function handler(args: EditProjectArgs): Promise<CallToolResult> {
                   rollback: "Source memories preserved, no changes made",
                 },
                 null,
-                2
+                2,
               ),
             },
           ],
@@ -505,7 +541,7 @@ export async function handler(args: EditProjectArgs): Promise<CallToolResult> {
       }
 
       updates.push(
-        `Migrated memories: ${migrationResult.files_moved} files from ${currentMemoriesPath} to ${finalMemoriesPath}`
+        `Migrated memories: ${migrationResult.files_moved} files from ${currentMemoriesPath} to ${finalMemoriesPath}`,
       );
       if (migrationResult.error) {
         // Migration succeeded but with warning (e.g., couldn't delete source)
@@ -514,14 +550,19 @@ export async function handler(args: EditProjectArgs): Promise<CallToolResult> {
     }
 
     setMemoriesPath(name, finalMemoriesPath);
-    updates.push(`Set memories path: ${finalMemoriesPath} (${memoriesPathMode})`);
+    updates.push(
+      `Set memories path: ${finalMemoriesPath} (${memoriesPathMode})`,
+    );
   } else {
     // memories_path not specified - check for auto-update scenario first
     let autoUpdated = false;
 
     if (oldCodePath) {
       // Check if memories_path was auto-configured from old code_path (CODE mode)
-      const oldDefaultMemoriesPath = path.join(resolvePath(oldCodePath), "docs");
+      const oldDefaultMemoriesPath = path.join(
+        resolvePath(oldCodePath),
+        "docs",
+      );
       if (currentMemoriesPath === oldDefaultMemoriesPath) {
         // Auto-update memories_path to new code_path/docs (preserve CODE mode)
         const newDefaultMemoriesPath = path.join(resolvedNewCodePath, "docs");
@@ -530,11 +571,20 @@ export async function handler(args: EditProjectArgs): Promise<CallToolResult> {
         const normalizedCurrent = path.resolve(currentMemoriesPath);
         const normalizedNew = path.resolve(newDefaultMemoriesPath);
 
-        if (normalizedCurrent !== normalizedNew && fs.existsSync(currentMemoriesPath)) {
+        if (
+          normalizedCurrent !== normalizedNew &&
+          fs.existsSync(currentMemoriesPath)
+        ) {
           // Perform migration with copy-verify-delete pattern (C-004)
-          migrationResult = migrateMemories(currentMemoriesPath, newDefaultMemoriesPath);
+          migrationResult = migrateMemories(
+            currentMemoriesPath,
+            newDefaultMemoriesPath,
+          );
 
-          if (!migrationResult.migrated && !migrationResult.error?.includes("Migration complete")) {
+          if (
+            !migrationResult.migrated &&
+            !migrationResult.error?.includes("Migration complete")
+          ) {
             // Migration failed - return error, config not updated
             return {
               content: [
@@ -548,7 +598,7 @@ export async function handler(args: EditProjectArgs): Promise<CallToolResult> {
                       rollback: "Source memories preserved, no changes made",
                     },
                     null,
-                    2
+                    2,
                   ),
                 },
               ],
@@ -557,7 +607,7 @@ export async function handler(args: EditProjectArgs): Promise<CallToolResult> {
           }
 
           updates.push(
-            `Migrated memories: ${migrationResult.files_moved} files from ${currentMemoriesPath} to ${newDefaultMemoriesPath}`
+            `Migrated memories: ${migrationResult.files_moved} files from ${currentMemoriesPath} to ${newDefaultMemoriesPath}`,
           );
           if (migrationResult.error) {
             updates.push(`Warning: ${migrationResult.error}`);
@@ -574,17 +624,30 @@ export async function handler(args: EditProjectArgs): Promise<CallToolResult> {
 
     // If not auto-updated, default to 'DEFAULT' mode
     if (!autoUpdated) {
-      finalMemoriesPath = resolveMemoriesPathOption("DEFAULT", name, resolvedNewCodePath);
+      finalMemoriesPath = resolveMemoriesPathOption(
+        "DEFAULT",
+        name,
+        resolvedNewCodePath,
+      );
 
       // Check if migration is needed for DEFAULT mode
       const normalizedCurrent = path.resolve(currentMemoriesPath);
       const normalizedNew = path.resolve(finalMemoriesPath);
 
-      if (normalizedCurrent !== normalizedNew && fs.existsSync(currentMemoriesPath)) {
+      if (
+        normalizedCurrent !== normalizedNew &&
+        fs.existsSync(currentMemoriesPath)
+      ) {
         // Perform migration with copy-verify-delete pattern (C-004)
-        migrationResult = migrateMemories(currentMemoriesPath, finalMemoriesPath);
+        migrationResult = migrateMemories(
+          currentMemoriesPath,
+          finalMemoriesPath,
+        );
 
-        if (!migrationResult.migrated && !migrationResult.error?.includes("Migration complete")) {
+        if (
+          !migrationResult.migrated &&
+          !migrationResult.error?.includes("Migration complete")
+        ) {
           // Migration failed - return error, config not updated
           return {
             content: [
@@ -598,7 +661,7 @@ export async function handler(args: EditProjectArgs): Promise<CallToolResult> {
                     rollback: "Source memories preserved, no changes made",
                   },
                   null,
-                  2
+                  2,
                 ),
               },
             ],
@@ -607,7 +670,7 @@ export async function handler(args: EditProjectArgs): Promise<CallToolResult> {
         }
 
         updates.push(
-          `Migrated memories: ${migrationResult.files_moved} files from ${currentMemoriesPath} to ${finalMemoriesPath}`
+          `Migrated memories: ${migrationResult.files_moved} files from ${currentMemoriesPath} to ${finalMemoriesPath}`,
         );
         if (migrationResult.error) {
           updates.push(`Warning: ${migrationResult.error}`);
@@ -616,7 +679,9 @@ export async function handler(args: EditProjectArgs): Promise<CallToolResult> {
 
       setMemoriesPath(name, finalMemoriesPath);
       memoriesPathMode = "DEFAULT";
-      updates.push(`Set memories path: ${finalMemoriesPath} (${memoriesPathMode})`);
+      updates.push(
+        `Set memories path: ${finalMemoriesPath} (${memoriesPathMode})`,
+      );
     }
   }
 

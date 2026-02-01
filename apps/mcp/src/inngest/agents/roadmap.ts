@@ -8,10 +8,7 @@
  */
 
 import { logger } from "../../utils/internal/logger";
-import {
-  validateFeatureId,
-  wrapAgentExecution,
-} from "../errors";
+import { validateFeatureId, wrapAgentExecution } from "../errors";
 import type { AgentVerdict } from "./types";
 
 const AGENT_NAME = "roadmap";
@@ -29,7 +26,7 @@ const AGENT_NAME = "roadmap";
  */
 export async function runRoadmapAgent(
   featureId: string,
-  context: Record<string, unknown>
+  context: Record<string, unknown>,
 ): Promise<AgentVerdict> {
   // Validate required inputs - throws NonRetriableError if invalid
   validateFeatureId(featureId, AGENT_NAME);
@@ -37,7 +34,7 @@ export async function runRoadmapAgent(
   return wrapAgentExecution(AGENT_NAME, async () => {
     logger.debug(
       { featureId, context, agent: AGENT_NAME },
-      "Running roadmap agent validation"
+      "Running roadmap agent validation",
     );
 
     // Placeholder: actual roadmap validation logic deferred per C-001
@@ -50,7 +47,8 @@ export async function runRoadmapAgent(
     return {
       agent: AGENT_NAME,
       verdict: "PASS",
-      details: "Roadmap validation placeholder - actual implementation deferred",
+      details:
+        "Roadmap validation placeholder - actual implementation deferred",
     };
   });
 }

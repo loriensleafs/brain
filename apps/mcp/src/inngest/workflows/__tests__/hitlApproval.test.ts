@@ -5,11 +5,11 @@
  * requiring the Inngest dev server to be running.
  */
 
-import { describe, test, expect } from "vitest";
+import { describe, expect, test } from "vitest";
 import {
-  hitlApprovalWorkflow,
   type ApprovalStatus,
   type HitlApprovalResult,
+  hitlApprovalWorkflow,
 } from "../hitlApproval";
 
 describe("HITL Approval Workflow", () => {
@@ -20,7 +20,9 @@ describe("HITL Approval Workflow", () => {
 
     test("workflow has id property set to 'hitl-approval'", () => {
       // Access workflow options through the function object
-      const workflowId = (hitlApprovalWorkflow as unknown as { id: () => string }).id();
+      const workflowId = (
+        hitlApprovalWorkflow as unknown as { id: () => string }
+      ).id();
       expect(workflowId).toBe("hitl-approval");
     });
   });

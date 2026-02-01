@@ -3,65 +3,65 @@
  */
 
 export {
-  inngest,
   checkInngestAvailability,
-  isInngestAvailable,
   getInngestDevServerUrl,
+  inngest,
+  isInngestAvailable,
 } from "./client";
 export type {
-  InngestEvents,
-  // Session Protocol Events (ADR-016)
-  SessionProtocolStartEvent,
-  SessionProtocolEndEvent,
-  SessionStateUpdateEvent,
-  SessionStateQueryEvent,
-  SessionModeChangedEvent,
-  // Orchestrator Events (ADR-016)
-  OrchestratorAgentInvokedEvent,
-  OrchestratorAgentCompletedEvent,
   AgentInvocationOutputData,
-  // Feature Completion Events
-  FeatureCompletionRequestedEvent,
+  ApprovalDeniedEvent,
+  ApprovalGrantedEvent,
   // Approval Events (HITL)
   ApprovalRequestedEvent,
-  ApprovalGrantedEvent,
-  ApprovalDeniedEvent,
+  // Feature Completion Events
+  FeatureCompletionRequestedEvent,
+  InngestEvents,
+  OrchestratorAgentCompletedEvent,
+  // Orchestrator Events (ADR-016)
+  OrchestratorAgentInvokedEvent,
+  SessionModeChangedEvent,
+  SessionProtocolEndEvent,
+  // Session Protocol Events (ADR-016)
+  SessionProtocolStartEvent,
+  SessionStateQueryEvent,
+  SessionStateUpdateEvent,
 } from "./events";
 export { featureCompletionWorkflow } from "./workflows/featureCompletion";
 export {
-  hitlApprovalWorkflow,
-  type HitlApprovalResult,
   type ApprovalStatus,
+  type HitlApprovalResult,
+  hitlApprovalWorkflow,
 } from "./workflows/hitlApproval";
 export {
-  sessionStateWorkflow,
-  sessionStateQueryWorkflow,
-  getSessionState,
-  hasSessionState,
-  getActiveSessionIds,
-  clearSessionState,
-} from "./workflows/sessionState";
+  type AgentCompletedResult,
+  getCompactionHistory,
+  getTotalInvocationCount,
+  orchestratorAgentCompletedWorkflow,
+} from "./workflows/orchestratorAgentCompleted";
 export {
-  sessionProtocolEndWorkflow,
-  validateSessionProtocolEnd,
+  type AgentInvokedResult,
+  orchestratorAgentInvokedWorkflow,
+} from "./workflows/orchestratorAgentInvoked";
+export {
   type SessionProtocolEndResult,
   type StepResult,
+  sessionProtocolEndWorkflow,
+  validateSessionProtocolEnd,
 } from "./workflows/sessionProtocolEnd";
 export {
-  sessionProtocolStartWorkflow,
   getSessionProtocolContext,
   isProtocolStartComplete,
   type ProtocolStartEvidence,
   type SessionProtocolContext,
   type SessionProtocolStartResult,
+  sessionProtocolStartWorkflow,
 } from "./workflows/sessionProtocolStart";
 export {
-  orchestratorAgentInvokedWorkflow,
-  type AgentInvokedResult,
-} from "./workflows/orchestratorAgentInvoked";
-export {
-  orchestratorAgentCompletedWorkflow,
-  getCompactionHistory,
-  getTotalInvocationCount,
-  type AgentCompletedResult,
-} from "./workflows/orchestratorAgentCompleted";
+  clearSessionState,
+  getActiveSessionIds,
+  getSessionState,
+  hasSessionState,
+  sessionStateQueryWorkflow,
+  sessionStateWorkflow,
+} from "./workflows/sessionState";
