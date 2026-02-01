@@ -1,23 +1,23 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://brain.dev/schemas/tools/config/set.json",
-  "title": "ConfigSetArgs",
-  "description": "Schema for config_set tool arguments. Sets a Brain configuration value and triggers reconfiguration if the change affects projects.",
-  "type": "object",
-  "properties": {
-    "key": {
-      "type": "string",
-      "description": "Config key to set (e.g., 'logging.level', 'sync.delay_ms'). Use dot notation for nested keys."
-    },
-    "value": {
-      "oneOf": [
-        { "type": "string" },
-        { "type": "number" },
-        { "type": "boolean" }
-      ],
-      "description": "Value to set. Type must match the expected type for the key."
-    }
-  },
-  "required": ["key", "value"],
-  "additionalProperties": false
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "https://brain.dev/schemas/tools/config/set.json",
+	"title": "ConfigSetArgs",
+	"description": "Schema for config_set tool arguments. Sets a Brain configuration value and triggers reconfiguration if the change affects projects.",
+	"type": "object",
+	"properties": {
+		"key": {
+			"type": "string",
+			"description": "Config key to set (e.g., 'logging.level', 'sync.delay_ms'). Use dot notation for nested keys."
+		},
+		"value": {
+			"oneOf": [
+				{ "type": "string" },
+				{ "type": "number" },
+				{ "type": "boolean" }
+			],
+			"description": "Value to set. Type must match the expected type for the key."
+		}
+	},
+	"required": ["key", "value"],
+	"additionalProperties": false
 }

@@ -1,25 +1,25 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://brain.dev/schemas/tools/bootstrap-context.json",
-  "title": "BootstrapContextArgs",
-  "description": "Schema for bootstrap_context tool arguments. Provides semantic context for conversation initialization by querying active features, recent decisions, open bugs, and related notes.",
-  "type": "object",
-  "properties": {
-    "project": {
-      "type": "string",
-      "description": "Project to bootstrap context for. Auto-resolved from CWD if not specified."
-    },
-    "timeframe": {
-      "type": "string",
-      "default": "5d",
-      "description": "Timeframe for recent activity (e.g., '5d', '7d', 'today')"
-    },
-    "include_referenced": {
-      "type": "boolean",
-      "default": true,
-      "description": "Whether to include first-level referenced notes"
-    }
-  },
-  "required": [],
-  "additionalProperties": false
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "https://brain.dev/schemas/tools/bootstrap-context.json",
+	"title": "BootstrapContextArgs",
+	"description": "Schema for bootstrap_context tool arguments. Provides semantic context for conversation initialization by querying active features, recent decisions, open bugs, and related notes.",
+	"type": "object",
+	"properties": {
+		"project": {
+			"type": "string",
+			"description": "Project to bootstrap context for. Auto-resolved from CWD if not specified."
+		},
+		"timeframe": {
+			"type": "string",
+			"default": "5d",
+			"description": "Timeframe for recent activity (e.g., '5d', '7d', 'today')"
+		},
+		"include_referenced": {
+			"type": "boolean",
+			"default": true,
+			"description": "Whether to include first-level referenced notes"
+		}
+	},
+	"required": [],
+	"additionalProperties": false
 }

@@ -1,169 +1,169 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://brain.dev/schemas/session/session-validation.json",
-  "title": "SessionValidation",
-  "description": "Schema for session validation parameters. Validates session state, QA skip eligibility, and memory evidence.",
-  "definitions": {
-    "WorkflowState": {
-      "type": "object",
-      "description": "Simplified workflow state for basic validation",
-      "properties": {
-        "mode": {
-          "type": "string",
-          "enum": [
-            "",
-            "analysis",
-            "planning",
-            "coding",
-            "implementation",
-            "disabled"
-          ],
-          "description": "Current workflow mode"
-        },
-        "task": {
-          "type": "string",
-          "description": "Current task description"
-        },
-        "sessionId": {
-          "type": "string",
-          "description": "Session identifier"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "ISO timestamp of last update"
-        }
-      },
-      "additionalProperties": false
-    },
-    "QASkipType": {
-      "type": "string",
-      "enum": ["", "docs-only", "investigation-only"],
-      "description": "Type of QA skip allowed for a session"
-    },
-    "ChecklistRow": {
-      "type": "object",
-      "description": "Parsed checklist row from session log",
-      "properties": {
-        "requirement": {
-          "type": "string",
-          "enum": ["MUST", "SHOULD", "MAY"],
-          "description": "RFC 2119 requirement level"
-        },
-        "step": {
-          "type": "string",
-          "minLength": 1,
-          "description": "Step description"
-        },
-        "status": {
-          "type": "string",
-          "pattern": "^\\[[ xX]\\]$",
-          "description": "Checkbox status: [ ] or [x] or [X]"
-        },
-        "evidence": {
-          "type": "string",
-          "description": "Evidence text for the step"
-        }
-      },
-      "required": ["requirement", "step", "status"],
-      "additionalProperties": true
-    },
-    "InvestigationAllowlistPattern": {
-      "type": "string",
-      "description": "Regex pattern for investigation-only allowlist paths",
-      "examples": [
-        "^\\.agents/sessions/",
-        "^\\.agents/analysis/",
-        "^\\.agents/retrospective/",
-        "^\\.serena/memories($|/)",
-        "^\\.agents/security/"
-      ]
-    },
-    "AuditArtifactPattern": {
-      "type": "string",
-      "description": "Regex pattern for audit artifact paths",
-      "examples": [
-        "^\\.agents/sessions/",
-        "^\\.agents/analysis/",
-        "^\\.serena/memories($|/)"
-      ]
-    },
-    "MemoryEvidenceValidation": {
-      "type": "object",
-      "description": "Result of memory evidence validation",
-      "properties": {
-        "valid": {
-          "type": "boolean"
-        },
-        "memoriesFound": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)+$",
-            "description": "Kebab-case memory name with at least 2 segments"
-          }
-        },
-        "missingMemories": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "errorMessage": {
-          "type": "string"
-        }
-      },
-      "required": ["valid"]
-    },
-    "SessionLogPathValidation": {
-      "type": "object",
-      "description": "Session log path validation parameters",
-      "properties": {
-        "sessionLogPath": {
-          "type": "string",
-          "minLength": 1,
-          "description": "Path to the session log file"
-        },
-        "repoRoot": {
-          "type": "string",
-          "minLength": 1,
-          "description": "Repository root directory"
-        },
-        "expectedDirectory": {
-          "type": "string",
-          "default": ".agents/sessions",
-          "description": "Expected directory for session logs"
-        }
-      },
-      "required": ["sessionLogPath", "repoRoot"]
-    },
-    "CommitSHAPattern": {
-      "type": "string",
-      "pattern": "^[0-9a-f]{7,40}$",
-      "description": "Git commit SHA (7-40 hex characters)"
-    }
-  },
-  "type": "object",
-  "properties": {
-    "workflowState": {
-      "$ref": "#/definitions/WorkflowState"
-    },
-    "qaSkipType": {
-      "$ref": "#/definitions/QASkipType"
-    },
-    "changedFiles": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "List of changed files for QA skip eligibility check"
-    },
-    "checklistRows": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/ChecklistRow"
-      },
-      "description": "Checklist rows to validate"
-    }
-  },
-  "additionalProperties": false
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "https://brain.dev/schemas/session/session-validation.json",
+	"title": "SessionValidation",
+	"description": "Schema for session validation parameters. Validates session state, QA skip eligibility, and memory evidence.",
+	"definitions": {
+		"WorkflowState": {
+			"type": "object",
+			"description": "Simplified workflow state for basic validation",
+			"properties": {
+				"mode": {
+					"type": "string",
+					"enum": [
+						"",
+						"analysis",
+						"planning",
+						"coding",
+						"implementation",
+						"disabled"
+					],
+					"description": "Current workflow mode"
+				},
+				"task": {
+					"type": "string",
+					"description": "Current task description"
+				},
+				"sessionId": {
+					"type": "string",
+					"description": "Session identifier"
+				},
+				"updatedAt": {
+					"type": "string",
+					"description": "ISO timestamp of last update"
+				}
+			},
+			"additionalProperties": false
+		},
+		"QASkipType": {
+			"type": "string",
+			"enum": ["", "docs-only", "investigation-only"],
+			"description": "Type of QA skip allowed for a session"
+		},
+		"ChecklistRow": {
+			"type": "object",
+			"description": "Parsed checklist row from session log",
+			"properties": {
+				"requirement": {
+					"type": "string",
+					"enum": ["MUST", "SHOULD", "MAY"],
+					"description": "RFC 2119 requirement level"
+				},
+				"step": {
+					"type": "string",
+					"minLength": 1,
+					"description": "Step description"
+				},
+				"status": {
+					"type": "string",
+					"pattern": "^\\[[ xX]\\]$",
+					"description": "Checkbox status: [ ] or [x] or [X]"
+				},
+				"evidence": {
+					"type": "string",
+					"description": "Evidence text for the step"
+				}
+			},
+			"required": ["requirement", "step", "status"],
+			"additionalProperties": true
+		},
+		"InvestigationAllowlistPattern": {
+			"type": "string",
+			"description": "Regex pattern for investigation-only allowlist paths",
+			"examples": [
+				"^\\.agents/sessions/",
+				"^\\.agents/analysis/",
+				"^\\.agents/retrospective/",
+				"^\\.serena/memories($|/)",
+				"^\\.agents/security/"
+			]
+		},
+		"AuditArtifactPattern": {
+			"type": "string",
+			"description": "Regex pattern for audit artifact paths",
+			"examples": [
+				"^\\.agents/sessions/",
+				"^\\.agents/analysis/",
+				"^\\.serena/memories($|/)"
+			]
+		},
+		"MemoryEvidenceValidation": {
+			"type": "object",
+			"description": "Result of memory evidence validation",
+			"properties": {
+				"valid": {
+					"type": "boolean"
+				},
+				"memoriesFound": {
+					"type": "array",
+					"items": {
+						"type": "string",
+						"pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)+$",
+						"description": "Kebab-case memory name with at least 2 segments"
+					}
+				},
+				"missingMemories": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					}
+				},
+				"errorMessage": {
+					"type": "string"
+				}
+			},
+			"required": ["valid"]
+		},
+		"SessionLogPathValidation": {
+			"type": "object",
+			"description": "Session log path validation parameters",
+			"properties": {
+				"sessionLogPath": {
+					"type": "string",
+					"minLength": 1,
+					"description": "Path to the session log file"
+				},
+				"repoRoot": {
+					"type": "string",
+					"minLength": 1,
+					"description": "Repository root directory"
+				},
+				"expectedDirectory": {
+					"type": "string",
+					"default": ".agents/sessions",
+					"description": "Expected directory for session logs"
+				}
+			},
+			"required": ["sessionLogPath", "repoRoot"]
+		},
+		"CommitSHAPattern": {
+			"type": "string",
+			"pattern": "^[0-9a-f]{7,40}$",
+			"description": "Git commit SHA (7-40 hex characters)"
+		}
+	},
+	"type": "object",
+	"properties": {
+		"workflowState": {
+			"$ref": "#/definitions/WorkflowState"
+		},
+		"qaSkipType": {
+			"$ref": "#/definitions/QASkipType"
+		},
+		"changedFiles": {
+			"type": "array",
+			"items": {
+				"type": "string"
+			},
+			"description": "List of changed files for QA skip eligibility check"
+		},
+		"checklistRows": {
+			"type": "array",
+			"items": {
+				"$ref": "#/definitions/ChecklistRow"
+			},
+			"description": "Checklist rows to validate"
+		}
+	},
+	"additionalProperties": false
 }

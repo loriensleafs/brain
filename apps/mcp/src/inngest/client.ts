@@ -27,7 +27,7 @@ const AVAILABILITY_CHECK_TIMEOUT = 3000;
  * Inngest dev server URL for health checks.
  */
 const INNGEST_DEV_SERVER_URL =
-  process.env.INNGEST_DEV_SERVER_URL || "http://127.0.0.1:8288";
+	process.env.INNGEST_DEV_SERVER_URL || "http://127.0.0.1:8288";
 
 /**
  * Tracks whether Inngest is currently available.
@@ -54,8 +54,8 @@ let inngestAvailable = false;
  * ```
  */
 export const inngest = new Inngest({
-  id: APP_ID,
-  isDev: true,
+	id: APP_ID,
+	isDev: true,
 });
 
 /**
@@ -68,43 +68,43 @@ export const inngest = new Inngest({
  * @returns Promise<boolean> - true if Inngest is available
  */
 export async function checkInngestAvailability(
-  timeout: number = AVAILABILITY_CHECK_TIMEOUT,
+	timeout: number = AVAILABILITY_CHECK_TIMEOUT,
 ): Promise<boolean> {
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
+	try {
+		const controller = new AbortController();
+		const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-    const response = await fetch(`${INNGEST_DEV_SERVER_URL}/health`, {
-      method: "GET",
-      signal: controller.signal,
-    });
+		const response = await fetch(`${INNGEST_DEV_SERVER_URL}/health`, {
+			method: "GET",
+			signal: controller.signal,
+		});
 
-    clearTimeout(timeoutId);
+		clearTimeout(timeoutId);
 
-    if (response.ok) {
-      inngestAvailable = true;
-      logger.info(
-        { url: INNGEST_DEV_SERVER_URL },
-        "Inngest dev server available",
-      );
-      return true;
-    }
+		if (response.ok) {
+			inngestAvailable = true;
+			logger.info(
+				{ url: INNGEST_DEV_SERVER_URL },
+				"Inngest dev server available",
+			);
+			return true;
+		}
 
-    inngestAvailable = false;
-    logger.warn(
-      { url: INNGEST_DEV_SERVER_URL, status: response.status },
-      "Inngest dev server returned non-OK status",
-    );
-    return false;
-  } catch (error) {
-    inngestAvailable = false;
-    const message = error instanceof Error ? error.message : String(error);
-    logger.warn(
-      { url: INNGEST_DEV_SERVER_URL, error: message },
-      "Inngest dev server unavailable - workflow features disabled",
-    );
-    return false;
-  }
+		inngestAvailable = false;
+		logger.warn(
+			{ url: INNGEST_DEV_SERVER_URL, status: response.status },
+			"Inngest dev server returned non-OK status",
+		);
+		return false;
+	} catch (error) {
+		inngestAvailable = false;
+		const message = error instanceof Error ? error.message : String(error);
+		logger.warn(
+			{ url: INNGEST_DEV_SERVER_URL, error: message },
+			"Inngest dev server unavailable - workflow features disabled",
+		);
+		return false;
+	}
 }
 
 /**
@@ -116,7 +116,7 @@ export async function checkInngestAvailability(
  * @returns boolean - true if Inngest was available at last check
  */
 export function isInngestAvailable(): boolean {
-  return inngestAvailable;
+	return inngestAvailable;
 }
 
 /**
@@ -125,7 +125,7 @@ export function isInngestAvailable(): boolean {
  * @returns string - The Inngest dev server URL
  */
 export function getInngestDevServerUrl(): string {
-  return INNGEST_DEV_SERVER_URL;
+	return INNGEST_DEV_SERVER_URL;
 }
 
 logger.debug({ appId: APP_ID }, "Inngest client initialized (local dev mode)");

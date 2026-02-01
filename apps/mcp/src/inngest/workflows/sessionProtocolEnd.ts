@@ -18,15 +18,14 @@
  * @see ADR-016: Automatic Session Protocol Enforcement
  */
 
-import { exec } from "child_process";
-import * as fs from "fs";
-import { NonRetriableError } from "inngest";
-import * as path from "path";
-import { promisify } from "util";
+import { exec } from "node:child_process";
+import * as fs from "node:fs";
+import * as path from "node:path";
+import { promisify } from "node:util";
 import {
-  getSession,
-  type SessionState,
-  setSession,
+	getSession,
+	type SessionState,
+	setSession,
 } from "../../services/session";
 import { logger } from "../../utils/internal/logger";
 import { inngest } from "../client";
@@ -42,66 +41,66 @@ const execAsync = promisify(exec);
  * Session protocol end workflow result.
  */
 export interface SessionProtocolEndResult {
-  /** Session ID that was validated */
-  sessionId: string;
-  /** Overall verdict: PASS or FAIL */
-  verdict: "PASS" | "FAIL";
-  /** Individual step results */
-  steps: {
-    sessionLogComplete: StepResult;
-    brainMemoryUpdated: StepResult;
-    markdownLintPassed: StepResult;
-    changesCommitted: StepResult;
-    protocolValidationPassed: StepResult;
-    consistencyValidationPassed: StepResult;
-    sessionStateClosed: StepResult;
-  };
-  /** ISO timestamp when validation completed */
-  completedAt: string;
-  /** Blocking issues that prevented completion (if any) */
-  blockers: string[];
+	/** Session ID that was validated */
+	sessionId: string;
+	/** Overall verdict: PASS or FAIL */
+	verdict: "PASS" | "FAIL";
+	/** Individual step results */
+	steps: {
+		sessionLogComplete: StepResult;
+		brainMemoryUpdated: StepResult;
+		markdownLintPassed: StepResult;
+		changesCommitted: StepResult;
+		protocolValidationPassed: StepResult;
+		consistencyValidationPassed: StepResult;
+		sessionStateClosed: StepResult;
+	};
+	/** ISO timestamp when validation completed */
+	completedAt: string;
+	/** Blocking issues that prevented completion (if any) */
+	blockers: string[];
 }
 
 /**
  * Individual step result.
  */
 export interface StepResult {
-  /** Step passed or failed */
-  passed: boolean;
-  /** Human-readable message */
-  message: string;
-  /** Evidence of completion (timestamp, path, etc.) */
-  evidence?: string;
+	/** Step passed or failed */
+	passed: boolean;
+	/** Human-readable message */
+	message: string;
+	/** Evidence of completion (timestamp, path, etc.) */
+	evidence?: string;
 }
 
 /**
  * Session log validation result.
  */
 interface SessionLogValidation {
-  exists: boolean;
-  hasSessionEndChecklist: boolean;
-  allChecklistItemsComplete: boolean;
-  path?: string;
-  issues: string[];
+	exists: boolean;
+	hasSessionEndChecklist: boolean;
+	allChecklistItemsComplete: boolean;
+	path?: string;
+	issues: string[];
 }
 
 /**
  * Git status result.
  */
 interface GitStatusResult {
-  hasUncommittedChanges: boolean;
-  uncommittedFiles: string[];
-  currentBranch: string;
+	hasUncommittedChanges: boolean;
+	uncommittedFiles: string[];
+	currentBranch: string;
 }
 
 /**
  * Protocol validation script result.
  */
 interface ProtocolValidationResult {
-  exitCode: number;
-  passed: boolean;
-  output: string;
-  errors: string[];
+	exitCode: number;
+	passed: boolean;
+	output: string;
+	errors: string[];
 }
 
 // ============================================================================
@@ -118,36 +117,36 @@ interface ProtocolValidationResult {
  * @returns Path to session log or null if not found
  */
 function findSessionLog(
-  workingDirectory: string,
-  sessionId: string,
+	workingDirectory: string,
+	_sessionId: string,
 ): string | null {
-  const sessionsDir = path.join(workingDirectory, ".agents", "sessions");
+	const sessionsDir = path.join(workingDirectory, ".agents", "sessions");
 
-  if (!fs.existsSync(sessionsDir)) {
-    return null;
-  }
+	if (!fs.existsSync(sessionsDir)) {
+		return null;
+	}
 
-  // Get today's date for log naming
-  const today = new Date().toISOString().split("T")[0];
+	// Get today's date for log naming
+	const today = new Date().toISOString().split("T")[0];
 
-  // Look for session logs from today
-  const files = fs.readdirSync(sessionsDir);
-  const todayLogs = files
-    .filter((f) => f.startsWith(today) && f.endsWith(".md"))
-    .sort()
-    .reverse(); // Most recent first
+	// Look for session logs from today
+	const files = fs.readdirSync(sessionsDir);
+	const todayLogs = files
+		.filter((f) => f.startsWith(today) && f.endsWith(".md"))
+		.sort()
+		.reverse(); // Most recent first
 
-  if (todayLogs.length > 0) {
-    return path.join(sessionsDir, todayLogs[0]);
-  }
+	if (todayLogs.length > 0) {
+		return path.join(sessionsDir, todayLogs[0]);
+	}
 
-  // Fall back to most recent log
-  const allLogs = files
-    .filter((f) => f.match(/^\d{4}-\d{2}-\d{2}-session-\d+.*\.md$/))
-    .sort()
-    .reverse();
+	// Fall back to most recent log
+	const allLogs = files
+		.filter((f) => f.match(/^\d{4}-\d{2}-\d{2}-session-\d+.*\.md$/))
+		.sort()
+		.reverse();
 
-  return allLogs.length > 0 ? path.join(sessionsDir, allLogs[0]) : null;
+	return allLogs.length > 0 ? path.join(sessionsDir, allLogs[0]) : null;
 }
 
 /**
@@ -162,54 +161,54 @@ function findSessionLog(
  * @returns Validation result
  */
 function validateSessionLog(
-  sessionLogPath: string | null,
+	sessionLogPath: string | null,
 ): SessionLogValidation {
-  if (!sessionLogPath || !fs.existsSync(sessionLogPath)) {
-    return {
-      exists: false,
-      hasSessionEndChecklist: false,
-      allChecklistItemsComplete: false,
-      issues: ["Session log file not found"],
-    };
-  }
+	if (!sessionLogPath || !fs.existsSync(sessionLogPath)) {
+		return {
+			exists: false,
+			hasSessionEndChecklist: false,
+			allChecklistItemsComplete: false,
+			issues: ["Session log file not found"],
+		};
+	}
 
-  const content = fs.readFileSync(sessionLogPath, "utf-8");
-  const issues: string[] = [];
+	const content = fs.readFileSync(sessionLogPath, "utf-8");
+	const issues: string[] = [];
 
-  // Check for Session End section
-  const hasSessionEndSection = /##\s*Session\s*End/i.test(content);
-  if (!hasSessionEndSection) {
-    issues.push("Session log missing 'Session End' section");
-  }
+	// Check for Session End section
+	const hasSessionEndSection = /##\s*Session\s*End/i.test(content);
+	if (!hasSessionEndSection) {
+		issues.push("Session log missing 'Session End' section");
+	}
 
-  // Find checklist items in Session End section
-  const sessionEndMatch = content.match(/##\s*Session\s*End[\s\S]*?(?=##|$)/i);
-  let allComplete = false;
+	// Find checklist items in Session End section
+	const sessionEndMatch = content.match(/##\s*Session\s*End[\s\S]*?(?=##|$)/i);
+	let allComplete = false;
 
-  if (sessionEndMatch) {
-    const sessionEndContent = sessionEndMatch[0];
-    // Match checklist items: - [ ] or - [x]
-    const checklistItems = sessionEndContent.match(/- \[[ x]\]/g) || [];
-    const incompleteItems = sessionEndContent.match(/- \[ \]/g) || [];
+	if (sessionEndMatch) {
+		const sessionEndContent = sessionEndMatch[0];
+		// Match checklist items: - [ ] or - [x]
+		const checklistItems = sessionEndContent.match(/- \[[ x]\]/g) || [];
+		const incompleteItems = sessionEndContent.match(/- \[ \]/g) || [];
 
-    if (checklistItems.length === 0) {
-      issues.push("No checklist items found in Session End section");
-    } else if (incompleteItems.length > 0) {
-      issues.push(
-        `${incompleteItems.length} incomplete checklist items in Session End section`,
-      );
-    } else {
-      allComplete = true;
-    }
-  }
+		if (checklistItems.length === 0) {
+			issues.push("No checklist items found in Session End section");
+		} else if (incompleteItems.length > 0) {
+			issues.push(
+				`${incompleteItems.length} incomplete checklist items in Session End section`,
+			);
+		} else {
+			allComplete = true;
+		}
+	}
 
-  return {
-    exists: true,
-    hasSessionEndChecklist: hasSessionEndSection,
-    allChecklistItemsComplete: allComplete,
-    path: sessionLogPath,
-    issues,
-  };
+	return {
+		exists: true,
+		hasSessionEndChecklist: hasSessionEndSection,
+		allChecklistItemsComplete: allComplete,
+		path: sessionLogPath,
+		issues,
+	};
 }
 
 /**
@@ -219,41 +218,41 @@ function validateSessionLog(
  * @returns Git status result
  */
 async function checkGitStatus(
-  workingDirectory: string,
+	workingDirectory: string,
 ): Promise<GitStatusResult> {
-  try {
-    // Get current branch
-    const { stdout: branchOutput } = await execAsync(
-      "git branch --show-current",
-      {
-        cwd: workingDirectory,
-      },
-    );
-    const currentBranch = branchOutput.trim();
+	try {
+		// Get current branch
+		const { stdout: branchOutput } = await execAsync(
+			"git branch --show-current",
+			{
+				cwd: workingDirectory,
+			},
+		);
+		const currentBranch = branchOutput.trim();
 
-    // Check for uncommitted changes (staged and unstaged)
-    const { stdout: statusOutput } = await execAsync("git status --porcelain", {
-      cwd: workingDirectory,
-    });
+		// Check for uncommitted changes (staged and unstaged)
+		const { stdout: statusOutput } = await execAsync("git status --porcelain", {
+			cwd: workingDirectory,
+		});
 
-    const uncommittedFiles = statusOutput
-      .split("\n")
-      .filter((line) => line.trim().length > 0)
-      .map((line) => line.substring(3)); // Remove status prefix
+		const uncommittedFiles = statusOutput
+			.split("\n")
+			.filter((line) => line.trim().length > 0)
+			.map((line) => line.substring(3)); // Remove status prefix
 
-    return {
-      hasUncommittedChanges: uncommittedFiles.length > 0,
-      uncommittedFiles,
-      currentBranch,
-    };
-  } catch (error) {
-    logger.warn({ error }, "Failed to check git status");
-    return {
-      hasUncommittedChanges: true, // Assume changes if we can't check
-      uncommittedFiles: [],
-      currentBranch: "unknown",
-    };
-  }
+		return {
+			hasUncommittedChanges: uncommittedFiles.length > 0,
+			uncommittedFiles,
+			currentBranch,
+		};
+	} catch (error) {
+		logger.warn({ error }, "Failed to check git status");
+		return {
+			hasUncommittedChanges: true, // Assume changes if we can't check
+			uncommittedFiles: [],
+			currentBranch: "unknown",
+		};
+	}
 }
 
 /**
@@ -263,55 +262,55 @@ async function checkGitStatus(
  * @returns Object with passed status and any errors
  */
 async function runMarkdownLint(
-  workingDirectory: string,
+	workingDirectory: string,
 ): Promise<{ passed: boolean; errors: string[] }> {
-  try {
-    // Run markdownlint-cli2 with fix flag
-    const { stdout, stderr } = await execAsync(
-      'npx markdownlint-cli2 --fix "**/*.md"',
-      {
-        cwd: workingDirectory,
-        timeout: 60000, // 60 second timeout
-      },
-    );
+	try {
+		// Run markdownlint-cli2 with fix flag
+		const { stdout, stderr } = await execAsync(
+			'npx markdownlint-cli2 --fix "**/*.md"',
+			{
+				cwd: workingDirectory,
+				timeout: 60000, // 60 second timeout
+			},
+		);
 
-    // If command succeeds, lint passed
-    return {
-      passed: true,
-      errors: [],
-    };
-  } catch (error) {
-    const execError = error as {
-      stdout?: string;
-      stderr?: string;
-      code?: number;
-    };
+		// If command succeeds, lint passed
+		return {
+			passed: true,
+			errors: [],
+		};
+	} catch (error) {
+		const execError = error as {
+			stdout?: string;
+			stderr?: string;
+			code?: number;
+		};
 
-    // markdownlint exits with non-zero if there are unfixable issues
-    const errors: string[] = [];
-    if (execError.stderr) {
-      errors.push(...execError.stderr.split("\n").filter((l) => l.trim()));
-    }
-    if (execError.stdout) {
-      errors.push(
-        ...execError.stdout.split("\n").filter((l) => l.includes("MD")),
-      );
-    }
+		// markdownlint exits with non-zero if there are unfixable issues
+		const errors: string[] = [];
+		if (execError.stderr) {
+			errors.push(...execError.stderr.split("\n").filter((l) => l.trim()));
+		}
+		if (execError.stdout) {
+			errors.push(
+				...execError.stdout.split("\n").filter((l) => l.includes("MD")),
+			);
+		}
 
-    return {
-      passed: false,
-      errors: errors.length > 0 ? errors : ["Markdown lint failed"],
-    };
-  }
+		return {
+			passed: false,
+			errors: errors.length > 0 ? errors : ["Markdown lint failed"],
+		};
+	}
 }
 
 /**
  * Session protocol validation result.
  */
 interface SessionProtocolValidationResult {
-  valid: boolean;
-  checks: Array<{ name: string; passed: boolean; message: string }>;
-  message: string;
+	valid: boolean;
+	checks: Array<{ name: string; passed: boolean; message: string }>;
+	message: string;
 }
 
 /**
@@ -323,95 +322,95 @@ interface SessionProtocolValidationResult {
  * @returns Validation result
  */
 function validateSessionProtocolContent(
-  content: string,
-  sessionLogPath?: string,
+	content: string,
+	sessionLogPath?: string,
 ): SessionProtocolValidationResult {
-  const checks: Array<{ name: string; passed: boolean; message: string }> = [];
+	const checks: Array<{ name: string; passed: boolean; message: string }> = [];
 
-  // Check filename format if path provided
-  if (sessionLogPath) {
-    const filename = path.basename(sessionLogPath);
-    const filenameValid = /^\d{4}-\d{2}-\d{2}-session-\d+.*\.md$/.test(
-      filename,
-    );
-    checks.push({
-      name: "filename-format",
-      passed: filenameValid,
-      message: filenameValid
-        ? "Filename follows YYYY-MM-DD-session-NN.md format"
-        : `Invalid filename format: ${filename}`,
-    });
-  }
+	// Check filename format if path provided
+	if (sessionLogPath) {
+		const filename = path.basename(sessionLogPath);
+		const filenameValid = /^\d{4}-\d{2}-\d{2}-session-\d+.*\.md$/.test(
+			filename,
+		);
+		checks.push({
+			name: "filename-format",
+			passed: filenameValid,
+			message: filenameValid
+				? "Filename follows YYYY-MM-DD-session-NN.md format"
+				: `Invalid filename format: ${filename}`,
+		});
+	}
 
-  // Check required sections
-  const hasSessionInfo = /##\s*Session\s*Info/i.test(content);
-  checks.push({
-    name: "session-info-section",
-    passed: hasSessionInfo,
-    message: hasSessionInfo
-      ? "Session Info section present"
-      : "Missing Session Info section",
-  });
+	// Check required sections
+	const hasSessionInfo = /##\s*Session\s*Info/i.test(content);
+	checks.push({
+		name: "session-info-section",
+		passed: hasSessionInfo,
+		message: hasSessionInfo
+			? "Session Info section present"
+			: "Missing Session Info section",
+	});
 
-  const hasSessionStart = /##\s*Session\s*Start/i.test(content);
-  checks.push({
-    name: "session-start-section",
-    passed: hasSessionStart,
-    message: hasSessionStart
-      ? "Session Start section present"
-      : "Missing Session Start section",
-  });
+	const hasSessionStart = /##\s*Session\s*Start/i.test(content);
+	checks.push({
+		name: "session-start-section",
+		passed: hasSessionStart,
+		message: hasSessionStart
+			? "Session Start section present"
+			: "Missing Session Start section",
+	});
 
-  const hasSessionEnd = /##\s*Session\s*End/i.test(content);
-  checks.push({
-    name: "session-end-section",
-    passed: hasSessionEnd,
-    message: hasSessionEnd
-      ? "Session End section present"
-      : "Missing Session End section",
-  });
+	const hasSessionEnd = /##\s*Session\s*End/i.test(content);
+	checks.push({
+		name: "session-end-section",
+		passed: hasSessionEnd,
+		message: hasSessionEnd
+			? "Session End section present"
+			: "Missing Session End section",
+	});
 
-  // Check Brain MCP initialization
-  const hasBrainInit =
-    /mcp__plugin_brain_brain__build_context|Brain MCP.*initializ/i.test(
-      content,
-    );
-  checks.push({
-    name: "brain-initialized",
-    passed: hasBrainInit,
-    message: hasBrainInit
-      ? "Brain MCP initialization evidence found"
-      : "No Brain MCP initialization evidence",
-  });
+	// Check Brain MCP initialization
+	const hasBrainInit =
+		/mcp__plugin_brain_brain__build_context|Brain MCP.*initializ/i.test(
+			content,
+		);
+	checks.push({
+		name: "brain-initialized",
+		passed: hasBrainInit,
+		message: hasBrainInit
+			? "Brain MCP initialization evidence found"
+			: "No Brain MCP initialization evidence",
+	});
 
-  // Check for MUST items completion in Session End
-  if (hasSessionEnd) {
-    const sessionEndMatch = content.match(
-      /##\s*Session\s*End[\s\S]*?(?=##|$)/i,
-    );
-    if (sessionEndMatch) {
-      const sessionEndContent = sessionEndMatch[0];
-      const incompleteItems = (sessionEndContent.match(/- \[ \]/g) || [])
-        .length;
-      const mustItemsComplete = incompleteItems === 0;
-      checks.push({
-        name: "session-end-checklist",
-        passed: mustItemsComplete,
-        message: mustItemsComplete
-          ? "All Session End checklist items complete"
-          : `${incompleteItems} incomplete checklist items`,
-      });
-    }
-  }
+	// Check for MUST items completion in Session End
+	if (hasSessionEnd) {
+		const sessionEndMatch = content.match(
+			/##\s*Session\s*End[\s\S]*?(?=##|$)/i,
+		);
+		if (sessionEndMatch) {
+			const sessionEndContent = sessionEndMatch[0];
+			const incompleteItems = (sessionEndContent.match(/- \[ \]/g) || [])
+				.length;
+			const mustItemsComplete = incompleteItems === 0;
+			checks.push({
+				name: "session-end-checklist",
+				passed: mustItemsComplete,
+				message: mustItemsComplete
+					? "All Session End checklist items complete"
+					: `${incompleteItems} incomplete checklist items`,
+			});
+		}
+	}
 
-  const allPassed = checks.every((c) => c.passed);
-  return {
-    valid: allPassed,
-    checks,
-    message: allPassed
-      ? "Session protocol validation passed"
-      : "Session protocol validation failed",
-  };
+	const allPassed = checks.every((c) => c.passed);
+	return {
+		valid: allPassed,
+		checks,
+		message: allPassed
+			? "Session protocol validation passed"
+			: "Session protocol validation failed",
+	};
 }
 
 /**
@@ -421,49 +420,49 @@ function validateSessionProtocolContent(
  * @returns Validation result
  */
 async function runProtocolValidation(
-  sessionLogPath: string,
+	sessionLogPath: string,
 ): Promise<ProtocolValidationResult> {
-  try {
-    // Read session log content
-    if (!fs.existsSync(sessionLogPath)) {
-      return {
-        exitCode: 1,
-        passed: false,
-        output: "",
-        errors: [`Session log not found: ${sessionLogPath}`],
-      };
-    }
+	try {
+		// Read session log content
+		if (!fs.existsSync(sessionLogPath)) {
+			return {
+				exitCode: 1,
+				passed: false,
+				output: "",
+				errors: [`Session log not found: ${sessionLogPath}`],
+			};
+		}
 
-    const content = fs.readFileSync(sessionLogPath, "utf-8");
+		const content = fs.readFileSync(sessionLogPath, "utf-8");
 
-    // Run TypeScript validation
-    const result = validateSessionProtocolContent(content, sessionLogPath);
+		// Run TypeScript validation
+		const result = validateSessionProtocolContent(content, sessionLogPath);
 
-    // Convert result to ProtocolValidationResult
-    const errors: string[] = [];
-    for (const check of result.checks) {
-      if (!check.passed) {
-        errors.push(check.message);
-      }
-    }
+		// Convert result to ProtocolValidationResult
+		const errors: string[] = [];
+		for (const check of result.checks) {
+			if (!check.passed) {
+				errors.push(check.message);
+			}
+		}
 
-    return {
-      exitCode: result.valid ? 0 : 1,
-      passed: result.valid,
-      output: result.message,
-      errors,
-    };
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error({ error: errorMessage }, "Protocol validation failed");
+		return {
+			exitCode: result.valid ? 0 : 1,
+			passed: result.valid,
+			output: result.message,
+			errors,
+		};
+	} catch (error) {
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		logger.error({ error: errorMessage }, "Protocol validation failed");
 
-    return {
-      exitCode: 1,
-      passed: false,
-      output: "",
-      errors: [`Validation error: ${errorMessage}`],
-    };
-  }
+		return {
+			exitCode: 1,
+			passed: false,
+			output: "",
+			errors: [`Validation error: ${errorMessage}`],
+		};
+	}
 }
 
 /**
@@ -477,53 +476,53 @@ async function runProtocolValidation(
  * @returns Validation result
  */
 function validateConsistencyContent(
-  prdContent: string,
-  tasksContent: string,
-  featureName: string,
-  checkpoint: number,
+	prdContent: string,
+	tasksContent: string,
+	featureName: string,
+	checkpoint: number,
 ): {
-  valid: boolean;
-  checks: Array<{ name: string; passed: boolean; message: string }>;
+	valid: boolean;
+	checks: Array<{ name: string; passed: boolean; message: string }>;
 } {
-  const checks: Array<{ name: string; passed: boolean; message: string }> = [];
+	const checks: Array<{ name: string; passed: boolean; message: string }> = [];
 
-  // Check PRD exists and has content
-  const hasPrd = prdContent.trim().length > 0;
-  checks.push({
-    name: "prd-exists",
-    passed: hasPrd,
-    message: hasPrd
-      ? "PRD document found"
-      : `Missing PRD for feature: ${featureName}`,
-  });
+	// Check PRD exists and has content
+	const hasPrd = prdContent.trim().length > 0;
+	checks.push({
+		name: "prd-exists",
+		passed: hasPrd,
+		message: hasPrd
+			? "PRD document found"
+			: `Missing PRD for feature: ${featureName}`,
+	});
 
-  // Check tasks file exists for checkpoint 2
-  if (checkpoint >= 2) {
-    const hasTasks = tasksContent.trim().length > 0;
-    checks.push({
-      name: "tasks-exists",
-      passed: hasTasks,
-      message: hasTasks
-        ? "Tasks document found"
-        : `Missing tasks for feature: ${featureName}`,
-    });
+	// Check tasks file exists for checkpoint 2
+	if (checkpoint >= 2) {
+		const hasTasks = tasksContent.trim().length > 0;
+		checks.push({
+			name: "tasks-exists",
+			passed: hasTasks,
+			message: hasTasks
+				? "Tasks document found"
+				: `Missing tasks for feature: ${featureName}`,
+		});
 
-    // Check for incomplete P0 tasks
-    if (hasTasks) {
-      const p0Incomplete = (tasksContent.match(/P0.*- \[ \]/gi) || []).length;
-      const p0Complete = p0Incomplete === 0;
-      checks.push({
-        name: "p0-tasks-complete",
-        passed: p0Complete,
-        message: p0Complete
-          ? "All P0 tasks complete"
-          : `${p0Incomplete} incomplete P0 tasks`,
-      });
-    }
-  }
+		// Check for incomplete P0 tasks
+		if (hasTasks) {
+			const p0Incomplete = (tasksContent.match(/P0.*- \[ \]/gi) || []).length;
+			const p0Complete = p0Incomplete === 0;
+			checks.push({
+				name: "p0-tasks-complete",
+				passed: p0Complete,
+				message: p0Complete
+					? "All P0 tasks complete"
+					: `${p0Incomplete} incomplete P0 tasks`,
+			});
+		}
+	}
 
-  const allPassed = checks.every((c) => c.passed);
-  return { valid: allPassed, checks };
+	const allPassed = checks.every((c) => c.passed);
+	return { valid: allPassed, checks };
 }
 
 /**
@@ -538,75 +537,75 @@ function validateConsistencyContent(
  * @returns Validation result
  */
 async function runConsistencyValidation(
-  workingDirectory: string,
-  checkpoint: number = 1,
+	workingDirectory: string,
+	checkpoint: number = 1,
 ): Promise<{ passed: boolean; errors: string[]; features: string[] }> {
-  try {
-    const planningDir = path.join(workingDirectory, ".agents", "planning");
-    if (!fs.existsSync(planningDir)) {
-      // No planning directory - validation passes (nothing to validate)
-      return {
-        passed: true,
-        errors: [],
-        features: [],
-      };
-    }
+	try {
+		const planningDir = path.join(workingDirectory, ".agents", "planning");
+		if (!fs.existsSync(planningDir)) {
+			// No planning directory - validation passes (nothing to validate)
+			return {
+				passed: true,
+				errors: [],
+				features: [],
+			};
+		}
 
-    // Discover features from prd-*.md files
-    const files = fs.readdirSync(planningDir);
-    const prdFiles = files.filter(
-      (f) => f.startsWith("prd-") && f.endsWith(".md"),
-    );
+		// Discover features from prd-*.md files
+		const files = fs.readdirSync(planningDir);
+		const prdFiles = files.filter(
+			(f) => f.startsWith("prd-") && f.endsWith(".md"),
+		);
 
-    const errors: string[] = [];
-    const validatedFeatures: string[] = [];
+		const errors: string[] = [];
+		const validatedFeatures: string[] = [];
 
-    for (const prdFile of prdFiles) {
-      const featureName = prdFile.replace(/^prd-/, "").replace(/\.md$/, "");
-      validatedFeatures.push(featureName);
+		for (const prdFile of prdFiles) {
+			const featureName = prdFile.replace(/^prd-/, "").replace(/\.md$/, "");
+			validatedFeatures.push(featureName);
 
-      // Read artifact contents
-      const prdPath = path.join(planningDir, prdFile);
-      const prdContent = fs.readFileSync(prdPath, "utf-8");
+			// Read artifact contents
+			const prdPath = path.join(planningDir, prdFile);
+			const prdContent = fs.readFileSync(prdPath, "utf-8");
 
-      // Try to find tasks file
-      const tasksPath = path.join(planningDir, `tasks-${featureName}.md`);
-      const tasksContent = fs.existsSync(tasksPath)
-        ? fs.readFileSync(tasksPath, "utf-8")
-        : "";
+			// Try to find tasks file
+			const tasksPath = path.join(planningDir, `tasks-${featureName}.md`);
+			const tasksContent = fs.existsSync(tasksPath)
+				? fs.readFileSync(tasksPath, "utf-8")
+				: "";
 
-      // Run TypeScript validation
-      const result = validateConsistencyContent(
-        prdContent,
-        tasksContent,
-        featureName,
-        checkpoint,
-      );
+			// Run TypeScript validation
+			const result = validateConsistencyContent(
+				prdContent,
+				tasksContent,
+				featureName,
+				checkpoint,
+			);
 
-      if (!result.valid) {
-        for (const check of result.checks) {
-          if (!check.passed) {
-            errors.push(`[${featureName}] ${check.name}: ${check.message}`);
-          }
-        }
-      }
-    }
+			if (!result.valid) {
+				for (const check of result.checks) {
+					if (!check.passed) {
+						errors.push(`[${featureName}] ${check.name}: ${check.message}`);
+					}
+				}
+			}
+		}
 
-    return {
-      passed: errors.length === 0,
-      errors,
-      features: validatedFeatures,
-    };
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error({ error: errorMessage }, "Consistency validation failed");
+		return {
+			passed: errors.length === 0,
+			errors,
+			features: validatedFeatures,
+		};
+	} catch (error) {
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		logger.error({ error: errorMessage }, "Consistency validation failed");
 
-    return {
-      passed: false,
-      errors: [`Consistency validation error: ${errorMessage}`],
-      features: [],
-    };
-  }
+		return {
+			passed: false,
+			errors: [`Consistency validation error: ${errorMessage}`],
+			features: [],
+		};
+	}
 }
 
 /**
@@ -617,23 +616,23 @@ async function runConsistencyValidation(
  * @returns Updated session state or null if failed
  */
 async function updateSessionStateToClosed(
-  sessionId: string,
-  _evidence: Record<string, string>,
+	sessionId: string,
+	_evidence: Record<string, string>,
 ): Promise<SessionState | null> {
-  const state = await getSession();
-  if (!state) {
-    logger.warn({ sessionId }, "Session not found for state update");
-    return null;
-  }
+	const state = await getSession();
+	if (!state) {
+		logger.warn({ sessionId }, "Session not found for state update");
+		return null;
+	}
 
-  // Store evidence in the state metadata via setSession
-  const updated = await setSession({
-    // Clear active task/feature on session close
-    task: undefined,
-    feature: undefined,
-  });
+	// Store evidence in the state metadata via setSession
+	const updated = await setSession({
+		// Clear active task/feature on session close
+		task: undefined,
+		feature: undefined,
+	});
 
-  return updated;
+	return updated;
 }
 
 // ============================================================================
@@ -656,309 +655,309 @@ async function updateSessionStateToClosed(
  * - "update-session-state": Mark session as closed
  */
 export const sessionProtocolEndWorkflow = inngest.createFunction(
-  {
-    id: "session-protocol-end",
-    name: "Session Protocol End Validation",
-    retries: 2, // Allow limited retries for transient failures
-  },
-  { event: "session/protocol.end" },
-  async ({ event, step }) => {
-    const { sessionId, timestamp } = event.data;
+	{
+		id: "session-protocol-end",
+		name: "Session Protocol End Validation",
+		retries: 2, // Allow limited retries for transient failures
+	},
+	{ event: "session/protocol.end" },
+	async ({ event, step }) => {
+		const { sessionId, timestamp } = event.data;
 
-    logger.info(
-      { sessionId, timestamp },
-      "Starting session protocol end validation",
-    );
+		logger.info(
+			{ sessionId, timestamp },
+			"Starting session protocol end validation",
+		);
 
-    // Get session state to find working directory
-    const sessionState = await getSession();
-    if (!sessionState) {
-      throw createNonRetriableError(
-        WorkflowErrorType.VALIDATION_ERROR,
-        "Session not found",
-        { context: { sessionId } },
-      );
-    }
+		// Get session state to find working directory
+		const sessionState = await getSession();
+		if (!sessionState) {
+			throw createNonRetriableError(
+				WorkflowErrorType.VALIDATION_ERROR,
+				"Session not found",
+				{ context: { sessionId } },
+			);
+		}
 
-    // Determine working directory from session or use process.cwd()
-    const workingDirectory = process.cwd();
-    const blockers: string[] = [];
+		// Determine working directory from session or use process.cwd()
+		const workingDirectory = process.cwd();
+		const blockers: string[] = [];
 
-    // Step 1: Validate session log completeness
-    const sessionLogResult = await step.run(
-      "validate-session-log",
-      async (): Promise<StepResult> => {
-        const sessionLogPath = findSessionLog(workingDirectory, sessionId);
-        const validation = validateSessionLog(sessionLogPath);
+		// Step 1: Validate session log completeness
+		const sessionLogResult = await step.run(
+			"validate-session-log",
+			async (): Promise<StepResult> => {
+				const sessionLogPath = findSessionLog(workingDirectory, sessionId);
+				const validation = validateSessionLog(sessionLogPath);
 
-        if (!validation.exists) {
-          return {
-            passed: false,
-            message: "Session log not found",
-          };
-        }
+				if (!validation.exists) {
+					return {
+						passed: false,
+						message: "Session log not found",
+					};
+				}
 
-        if (!validation.allChecklistItemsComplete) {
-          return {
-            passed: false,
-            message: validation.issues.join("; "),
-            evidence: validation.path,
-          };
-        }
+				if (!validation.allChecklistItemsComplete) {
+					return {
+						passed: false,
+						message: validation.issues.join("; "),
+						evidence: validation.path,
+					};
+				}
 
-        return {
-          passed: true,
-          message: "Session log complete with all checklist items marked",
-          evidence: validation.path,
-        };
-      },
-    );
+				return {
+					passed: true,
+					message: "Session log complete with all checklist items marked",
+					evidence: validation.path,
+				};
+			},
+		);
 
-    if (!sessionLogResult.passed) {
-      blockers.push(`Session log: ${sessionLogResult.message}`);
-    }
+		if (!sessionLogResult.passed) {
+			blockers.push(`Session log: ${sessionLogResult.message}`);
+		}
 
-    // Step 2: Update Brain memory (simulated - actual implementation depends on Brain MCP)
-    const brainMemoryResult = await step.run(
-      "update-brain-memory",
-      async (): Promise<StepResult> => {
-        // In a full implementation, this would call Brain MCP tools
-        // For now, we check if the session has evidence of memory updates
-        // This step is marked as passed since Brain memory updates
-        // are typically done during the session, not at end
-        return {
-          passed: true,
-          message: "Brain memory update responsibility acknowledged",
-          evidence: new Date().toISOString(),
-        };
-      },
-    );
+		// Step 2: Update Brain memory (simulated - actual implementation depends on Brain MCP)
+		const brainMemoryResult = await step.run(
+			"update-brain-memory",
+			async (): Promise<StepResult> => {
+				// In a full implementation, this would call Brain MCP tools
+				// For now, we check if the session has evidence of memory updates
+				// This step is marked as passed since Brain memory updates
+				// are typically done during the session, not at end
+				return {
+					passed: true,
+					message: "Brain memory update responsibility acknowledged",
+					evidence: new Date().toISOString(),
+				};
+			},
+		);
 
-    // Step 3: Run markdown lint
-    const markdownLintResult = await step.run(
-      "run-markdown-lint",
-      async (): Promise<StepResult> => {
-        const lintResult = await runMarkdownLint(workingDirectory);
+		// Step 3: Run markdown lint
+		const markdownLintResult = await step.run(
+			"run-markdown-lint",
+			async (): Promise<StepResult> => {
+				const lintResult = await runMarkdownLint(workingDirectory);
 
-        if (!lintResult.passed) {
-          return {
-            passed: false,
-            message: `Markdown lint failed: ${lintResult.errors.slice(0, 3).join("; ")}`,
-          };
-        }
+				if (!lintResult.passed) {
+					return {
+						passed: false,
+						message: `Markdown lint failed: ${lintResult.errors.slice(0, 3).join("; ")}`,
+					};
+				}
 
-        return {
-          passed: true,
-          message: "Markdown lint passed",
-          evidence: new Date().toISOString(),
-        };
-      },
-    );
+				return {
+					passed: true,
+					message: "Markdown lint passed",
+					evidence: new Date().toISOString(),
+				};
+			},
+		);
 
-    if (!markdownLintResult.passed) {
-      blockers.push(`Markdown lint: ${markdownLintResult.message}`);
-    }
+		if (!markdownLintResult.passed) {
+			blockers.push(`Markdown lint: ${markdownLintResult.message}`);
+		}
 
-    // Step 4: Verify all changes committed
-    const changesCommittedResult = await step.run(
-      "verify-changes-committed",
-      async (): Promise<StepResult> => {
-        const gitStatus = await checkGitStatus(workingDirectory);
+		// Step 4: Verify all changes committed
+		const changesCommittedResult = await step.run(
+			"verify-changes-committed",
+			async (): Promise<StepResult> => {
+				const gitStatus = await checkGitStatus(workingDirectory);
 
-        if (gitStatus.hasUncommittedChanges) {
-          const fileList = gitStatus.uncommittedFiles.slice(0, 5).join(", ");
-          const remaining =
-            gitStatus.uncommittedFiles.length > 5
-              ? ` and ${gitStatus.uncommittedFiles.length - 5} more`
-              : "";
+				if (gitStatus.hasUncommittedChanges) {
+					const fileList = gitStatus.uncommittedFiles.slice(0, 5).join(", ");
+					const remaining =
+						gitStatus.uncommittedFiles.length > 5
+							? ` and ${gitStatus.uncommittedFiles.length - 5} more`
+							: "";
 
-          return {
-            passed: false,
-            message: `Uncommitted changes: ${fileList}${remaining}`,
-            evidence: `Branch: ${gitStatus.currentBranch}`,
-          };
-        }
+					return {
+						passed: false,
+						message: `Uncommitted changes: ${fileList}${remaining}`,
+						evidence: `Branch: ${gitStatus.currentBranch}`,
+					};
+				}
 
-        return {
-          passed: true,
-          message: "All changes committed",
-          evidence: `Branch: ${gitStatus.currentBranch}`,
-        };
-      },
-    );
+				return {
+					passed: true,
+					message: "All changes committed",
+					evidence: `Branch: ${gitStatus.currentBranch}`,
+				};
+			},
+		);
 
-    if (!changesCommittedResult.passed) {
-      blockers.push(`Git: ${changesCommittedResult.message}`);
-    }
+		if (!changesCommittedResult.passed) {
+			blockers.push(`Git: ${changesCommittedResult.message}`);
+		}
 
-    // Step 5: Run Go WASM validation
-    const protocolValidationResult = await step.run(
-      "run-protocol-validation",
-      async (): Promise<StepResult> => {
-        const sessionLogPath = findSessionLog(workingDirectory, sessionId);
-        if (!sessionLogPath) {
-          return {
-            passed: false,
-            message: "Cannot run validation: session log not found",
-          };
-        }
+		// Step 5: Run Go WASM validation
+		const protocolValidationResult = await step.run(
+			"run-protocol-validation",
+			async (): Promise<StepResult> => {
+				const sessionLogPath = findSessionLog(workingDirectory, sessionId);
+				if (!sessionLogPath) {
+					return {
+						passed: false,
+						message: "Cannot run validation: session log not found",
+					};
+				}
 
-        const validationResult = await runProtocolValidation(sessionLogPath);
+				const validationResult = await runProtocolValidation(sessionLogPath);
 
-        if (!validationResult.passed) {
-          return {
-            passed: false,
-            message:
-              validationResult.errors.slice(0, 3).join("; ") ||
-              "Validation failed",
-          };
-        }
+				if (!validationResult.passed) {
+					return {
+						passed: false,
+						message:
+							validationResult.errors.slice(0, 3).join("; ") ||
+							"Validation failed",
+					};
+				}
 
-        return {
-          passed: true,
-          message: "Protocol validation passed",
-          evidence: `Exit code: ${validationResult.exitCode}`,
-        };
-      },
-    );
+				return {
+					passed: true,
+					message: "Protocol validation passed",
+					evidence: `Exit code: ${validationResult.exitCode}`,
+				};
+			},
+		);
 
-    if (!protocolValidationResult.passed) {
-      blockers.push(`Protocol validation: ${protocolValidationResult.message}`);
-    }
+		if (!protocolValidationResult.passed) {
+			blockers.push(`Protocol validation: ${protocolValidationResult.message}`);
+		}
 
-    // Step 6: Run consistency validation (Checkpoint 2 - Post-Implementation)
-    const consistencyValidationResult = await step.run(
-      "run-consistency-validation",
-      async (): Promise<StepResult> => {
-        const consistencyResult = await runConsistencyValidation(
-          workingDirectory,
-          2,
-        );
+		// Step 6: Run consistency validation (Checkpoint 2 - Post-Implementation)
+		const consistencyValidationResult = await step.run(
+			"run-consistency-validation",
+			async (): Promise<StepResult> => {
+				const consistencyResult = await runConsistencyValidation(
+					workingDirectory,
+					2,
+				);
 
-        if (!consistencyResult.passed) {
-          return {
-            passed: false,
-            message:
-              consistencyResult.errors.slice(0, 3).join("; ") ||
-              "Consistency validation failed",
-            evidence: `Features validated: ${consistencyResult.features.join(", ") || "none"}`,
-          };
-        }
+				if (!consistencyResult.passed) {
+					return {
+						passed: false,
+						message:
+							consistencyResult.errors.slice(0, 3).join("; ") ||
+							"Consistency validation failed",
+						evidence: `Features validated: ${consistencyResult.features.join(", ") || "none"}`,
+					};
+				}
 
-        return {
-          passed: true,
-          message: `Consistency validation passed for ${consistencyResult.features.length} features`,
-          evidence: `Features: ${consistencyResult.features.join(", ") || "none"}`,
-        };
-      },
-    );
+				return {
+					passed: true,
+					message: `Consistency validation passed for ${consistencyResult.features.length} features`,
+					evidence: `Features: ${consistencyResult.features.join(", ") || "none"}`,
+				};
+			},
+		);
 
-    if (!consistencyValidationResult.passed) {
-      blockers.push(
-        `Consistency validation: ${consistencyValidationResult.message}`,
-      );
-    }
+		if (!consistencyValidationResult.passed) {
+			blockers.push(
+				`Consistency validation: ${consistencyValidationResult.message}`,
+			);
+		}
 
-    // Step 7: Update session state to closed
-    const sessionStateResult = await step.run(
-      "update-session-state",
-      async (): Promise<StepResult> => {
-        // Only close session if all previous steps passed
-        const allPreviousPassed =
-          sessionLogResult.passed &&
-          markdownLintResult.passed &&
-          changesCommittedResult.passed &&
-          protocolValidationResult.passed &&
-          consistencyValidationResult.passed;
+		// Step 7: Update session state to closed
+		const sessionStateResult = await step.run(
+			"update-session-state",
+			async (): Promise<StepResult> => {
+				// Only close session if all previous steps passed
+				const allPreviousPassed =
+					sessionLogResult.passed &&
+					markdownLintResult.passed &&
+					changesCommittedResult.passed &&
+					protocolValidationResult.passed &&
+					consistencyValidationResult.passed;
 
-        if (!allPreviousPassed) {
-          return {
-            passed: false,
-            message: "Cannot close session: previous validations failed",
-          };
-        }
+				if (!allPreviousPassed) {
+					return {
+						passed: false,
+						message: "Cannot close session: previous validations failed",
+					};
+				}
 
-        const evidence = {
-          sessionLogValidated: sessionLogResult.evidence ?? "",
-          markdownLintPassed: markdownLintResult.evidence ?? "",
-          changesCommitted: changesCommittedResult.evidence ?? "",
-          protocolValidationPassed: protocolValidationResult.evidence ?? "",
-          consistencyValidationPassed:
-            consistencyValidationResult.evidence ?? "",
-          closedAt: new Date().toISOString(),
-        };
+				const evidence = {
+					sessionLogValidated: sessionLogResult.evidence ?? "",
+					markdownLintPassed: markdownLintResult.evidence ?? "",
+					changesCommitted: changesCommittedResult.evidence ?? "",
+					protocolValidationPassed: protocolValidationResult.evidence ?? "",
+					consistencyValidationPassed:
+						consistencyValidationResult.evidence ?? "",
+					closedAt: new Date().toISOString(),
+				};
 
-        const updated = updateSessionStateToClosed(sessionId, evidence);
-        if (!updated) {
-          return {
-            passed: false,
-            message: "Failed to update session state",
-          };
-        }
+				const updated = updateSessionStateToClosed(sessionId, evidence);
+				if (!updated) {
+					return {
+						passed: false,
+						message: "Failed to update session state",
+					};
+				}
 
-        return {
-          passed: true,
-          message: "Session state updated to closed",
-          evidence: JSON.stringify(evidence),
-        };
-      },
-    );
+				return {
+					passed: true,
+					message: "Session state updated to closed",
+					evidence: JSON.stringify(evidence),
+				};
+			},
+		);
 
-    if (!sessionStateResult.passed) {
-      blockers.push(`Session state: ${sessionStateResult.message}`);
-    }
+		if (!sessionStateResult.passed) {
+			blockers.push(`Session state: ${sessionStateResult.message}`);
+		}
 
-    // Determine overall verdict
-    const allPassed =
-      sessionLogResult.passed &&
-      brainMemoryResult.passed &&
-      markdownLintResult.passed &&
-      changesCommittedResult.passed &&
-      protocolValidationResult.passed &&
-      consistencyValidationResult.passed &&
-      sessionStateResult.passed;
+		// Determine overall verdict
+		const allPassed =
+			sessionLogResult.passed &&
+			brainMemoryResult.passed &&
+			markdownLintResult.passed &&
+			changesCommittedResult.passed &&
+			protocolValidationResult.passed &&
+			consistencyValidationResult.passed &&
+			sessionStateResult.passed;
 
-    const result: SessionProtocolEndResult = {
-      sessionId,
-      verdict: allPassed ? "PASS" : "FAIL",
-      steps: {
-        sessionLogComplete: sessionLogResult,
-        brainMemoryUpdated: brainMemoryResult,
-        markdownLintPassed: markdownLintResult,
-        changesCommitted: changesCommittedResult,
-        protocolValidationPassed: protocolValidationResult,
-        consistencyValidationPassed: consistencyValidationResult,
-        sessionStateClosed: sessionStateResult,
-      },
-      completedAt: new Date().toISOString(),
-      blockers,
-    };
+		const result: SessionProtocolEndResult = {
+			sessionId,
+			verdict: allPassed ? "PASS" : "FAIL",
+			steps: {
+				sessionLogComplete: sessionLogResult,
+				brainMemoryUpdated: brainMemoryResult,
+				markdownLintPassed: markdownLintResult,
+				changesCommitted: changesCommittedResult,
+				protocolValidationPassed: protocolValidationResult,
+				consistencyValidationPassed: consistencyValidationResult,
+				sessionStateClosed: sessionStateResult,
+			},
+			completedAt: new Date().toISOString(),
+			blockers,
+		};
 
-    logger.info(
-      {
-        sessionId,
-        verdict: result.verdict,
-        blockerCount: blockers.length,
-      },
-      "Session protocol end validation complete",
-    );
+		logger.info(
+			{
+				sessionId,
+				verdict: result.verdict,
+				blockerCount: blockers.length,
+			},
+			"Session protocol end validation complete",
+		);
 
-    // If validation failed, throw a NonRetriableError to block session close
-    if (!allPassed) {
-      throw createNonRetriableError(
-        WorkflowErrorType.VALIDATION_ERROR,
-        `Session protocol end validation failed: ${blockers.join("; ")}`,
-        {
-          context: {
-            sessionId,
-            result,
-          },
-        },
-      );
-    }
+		// If validation failed, throw a NonRetriableError to block session close
+		if (!allPassed) {
+			throw createNonRetriableError(
+				WorkflowErrorType.VALIDATION_ERROR,
+				`Session protocol end validation failed: ${blockers.join("; ")}`,
+				{
+					context: {
+						sessionId,
+						result,
+					},
+				},
+			);
+		}
 
-    return result;
-  },
+		return result;
+	},
 );
 
 /**
@@ -972,142 +971,142 @@ export const sessionProtocolEndWorkflow = inngest.createFunction(
  * @returns Validation result
  */
 export async function validateSessionProtocolEnd(
-  sessionId: string,
-  workingDirectory: string,
+	sessionId: string,
+	workingDirectory: string,
 ): Promise<SessionProtocolEndResult> {
-  const blockers: string[] = [];
+	const blockers: string[] = [];
 
-  // Step 1: Validate session log
-  const sessionLogPath = findSessionLog(workingDirectory, sessionId);
-  const sessionLogValidation = validateSessionLog(sessionLogPath);
-  const sessionLogResult: StepResult = {
-    passed: sessionLogValidation.allChecklistItemsComplete,
-    message:
-      sessionLogValidation.issues.length > 0
-        ? sessionLogValidation.issues.join("; ")
-        : "Session log complete",
-    evidence: sessionLogValidation.path,
-  };
+	// Step 1: Validate session log
+	const sessionLogPath = findSessionLog(workingDirectory, sessionId);
+	const sessionLogValidation = validateSessionLog(sessionLogPath);
+	const sessionLogResult: StepResult = {
+		passed: sessionLogValidation.allChecklistItemsComplete,
+		message:
+			sessionLogValidation.issues.length > 0
+				? sessionLogValidation.issues.join("; ")
+				: "Session log complete",
+		evidence: sessionLogValidation.path,
+	};
 
-  if (!sessionLogResult.passed) {
-    blockers.push(`Session log: ${sessionLogResult.message}`);
-  }
+	if (!sessionLogResult.passed) {
+		blockers.push(`Session log: ${sessionLogResult.message}`);
+	}
 
-  // Step 2: Brain memory (acknowledged)
-  const brainMemoryResult: StepResult = {
-    passed: true,
-    message: "Brain memory update responsibility acknowledged",
-    evidence: new Date().toISOString(),
-  };
+	// Step 2: Brain memory (acknowledged)
+	const brainMemoryResult: StepResult = {
+		passed: true,
+		message: "Brain memory update responsibility acknowledged",
+		evidence: new Date().toISOString(),
+	};
 
-  // Step 3: Markdown lint
-  const lintResult = await runMarkdownLint(workingDirectory);
-  const markdownLintResult: StepResult = {
-    passed: lintResult.passed,
-    message: lintResult.passed
-      ? "Markdown lint passed"
-      : `Markdown lint failed: ${lintResult.errors.slice(0, 3).join("; ")}`,
-    evidence: new Date().toISOString(),
-  };
+	// Step 3: Markdown lint
+	const lintResult = await runMarkdownLint(workingDirectory);
+	const markdownLintResult: StepResult = {
+		passed: lintResult.passed,
+		message: lintResult.passed
+			? "Markdown lint passed"
+			: `Markdown lint failed: ${lintResult.errors.slice(0, 3).join("; ")}`,
+		evidence: new Date().toISOString(),
+	};
 
-  if (!markdownLintResult.passed) {
-    blockers.push(`Markdown lint: ${markdownLintResult.message}`);
-  }
+	if (!markdownLintResult.passed) {
+		blockers.push(`Markdown lint: ${markdownLintResult.message}`);
+	}
 
-  // Step 4: Git status
-  const gitStatus = await checkGitStatus(workingDirectory);
-  const changesCommittedResult: StepResult = {
-    passed: !gitStatus.hasUncommittedChanges,
-    message: gitStatus.hasUncommittedChanges
-      ? `Uncommitted changes: ${gitStatus.uncommittedFiles.slice(0, 5).join(", ")}`
-      : "All changes committed",
-    evidence: `Branch: ${gitStatus.currentBranch}`,
-  };
+	// Step 4: Git status
+	const gitStatus = await checkGitStatus(workingDirectory);
+	const changesCommittedResult: StepResult = {
+		passed: !gitStatus.hasUncommittedChanges,
+		message: gitStatus.hasUncommittedChanges
+			? `Uncommitted changes: ${gitStatus.uncommittedFiles.slice(0, 5).join(", ")}`
+			: "All changes committed",
+		evidence: `Branch: ${gitStatus.currentBranch}`,
+	};
 
-  if (!changesCommittedResult.passed) {
-    blockers.push(`Git: ${changesCommittedResult.message}`);
-  }
+	if (!changesCommittedResult.passed) {
+		blockers.push(`Git: ${changesCommittedResult.message}`);
+	}
 
-  // Step 5: Protocol validation
-  let protocolValidationResult: StepResult;
-  if (sessionLogPath) {
-    const validationResult = await runProtocolValidation(sessionLogPath);
-    protocolValidationResult = {
-      passed: validationResult.passed,
-      message: validationResult.passed
-        ? "Protocol validation passed"
-        : validationResult.errors.slice(0, 3).join("; ") || "Validation failed",
-      evidence: `Exit code: ${validationResult.exitCode}`,
-    };
-  } else {
-    protocolValidationResult = {
-      passed: false,
-      message: "Cannot run validation: session log not found",
-    };
-  }
+	// Step 5: Protocol validation
+	let protocolValidationResult: StepResult;
+	if (sessionLogPath) {
+		const validationResult = await runProtocolValidation(sessionLogPath);
+		protocolValidationResult = {
+			passed: validationResult.passed,
+			message: validationResult.passed
+				? "Protocol validation passed"
+				: validationResult.errors.slice(0, 3).join("; ") || "Validation failed",
+			evidence: `Exit code: ${validationResult.exitCode}`,
+		};
+	} else {
+		protocolValidationResult = {
+			passed: false,
+			message: "Cannot run validation: session log not found",
+		};
+	}
 
-  if (!protocolValidationResult.passed) {
-    blockers.push(`Protocol validation: ${protocolValidationResult.message}`);
-  }
+	if (!protocolValidationResult.passed) {
+		blockers.push(`Protocol validation: ${protocolValidationResult.message}`);
+	}
 
-  // Step 6: Consistency validation (Checkpoint 2)
-  const consistencyResult = await runConsistencyValidation(workingDirectory, 2);
-  const consistencyValidationResult: StepResult = {
-    passed: consistencyResult.passed,
-    message: consistencyResult.passed
-      ? `Consistency validation passed for ${consistencyResult.features.length} features`
-      : consistencyResult.errors.slice(0, 3).join("; ") ||
-        "Consistency validation failed",
-    evidence: `Features: ${consistencyResult.features.join(", ") || "none"}`,
-  };
+	// Step 6: Consistency validation (Checkpoint 2)
+	const consistencyResult = await runConsistencyValidation(workingDirectory, 2);
+	const consistencyValidationResult: StepResult = {
+		passed: consistencyResult.passed,
+		message: consistencyResult.passed
+			? `Consistency validation passed for ${consistencyResult.features.length} features`
+			: consistencyResult.errors.slice(0, 3).join("; ") ||
+				"Consistency validation failed",
+		evidence: `Features: ${consistencyResult.features.join(", ") || "none"}`,
+	};
 
-  if (!consistencyValidationResult.passed) {
-    blockers.push(
-      `Consistency validation: ${consistencyValidationResult.message}`,
-    );
-  }
+	if (!consistencyValidationResult.passed) {
+		blockers.push(
+			`Consistency validation: ${consistencyValidationResult.message}`,
+		);
+	}
 
-  // Step 7: Session state (only if all passed)
-  const allPreviousPassed =
-    sessionLogResult.passed &&
-    markdownLintResult.passed &&
-    changesCommittedResult.passed &&
-    protocolValidationResult.passed &&
-    consistencyValidationResult.passed;
+	// Step 7: Session state (only if all passed)
+	const allPreviousPassed =
+		sessionLogResult.passed &&
+		markdownLintResult.passed &&
+		changesCommittedResult.passed &&
+		protocolValidationResult.passed &&
+		consistencyValidationResult.passed;
 
-  const sessionStateResult: StepResult = {
-    passed: allPreviousPassed,
-    message: allPreviousPassed
-      ? "Session state updated to closed"
-      : "Cannot close session: previous validations failed",
-  };
+	const sessionStateResult: StepResult = {
+		passed: allPreviousPassed,
+		message: allPreviousPassed
+			? "Session state updated to closed"
+			: "Cannot close session: previous validations failed",
+	};
 
-  if (!sessionStateResult.passed) {
-    blockers.push(`Session state: ${sessionStateResult.message}`);
-  }
+	if (!sessionStateResult.passed) {
+		blockers.push(`Session state: ${sessionStateResult.message}`);
+	}
 
-  const allPassed =
-    sessionLogResult.passed &&
-    brainMemoryResult.passed &&
-    markdownLintResult.passed &&
-    changesCommittedResult.passed &&
-    protocolValidationResult.passed &&
-    consistencyValidationResult.passed &&
-    sessionStateResult.passed;
+	const allPassed =
+		sessionLogResult.passed &&
+		brainMemoryResult.passed &&
+		markdownLintResult.passed &&
+		changesCommittedResult.passed &&
+		protocolValidationResult.passed &&
+		consistencyValidationResult.passed &&
+		sessionStateResult.passed;
 
-  return {
-    sessionId,
-    verdict: allPassed ? "PASS" : "FAIL",
-    steps: {
-      sessionLogComplete: sessionLogResult,
-      brainMemoryUpdated: brainMemoryResult,
-      markdownLintPassed: markdownLintResult,
-      changesCommitted: changesCommittedResult,
-      protocolValidationPassed: protocolValidationResult,
-      consistencyValidationPassed: consistencyValidationResult,
-      sessionStateClosed: sessionStateResult,
-    },
-    completedAt: new Date().toISOString(),
-    blockers,
-  };
+	return {
+		sessionId,
+		verdict: allPassed ? "PASS" : "FAIL",
+		steps: {
+			sessionLogComplete: sessionLogResult,
+			brainMemoryUpdated: brainMemoryResult,
+			markdownLintPassed: markdownLintResult,
+			changesCommitted: changesCommittedResult,
+			protocolValidationPassed: protocolValidationResult,
+			consistencyValidationPassed: consistencyValidationResult,
+			sessionStateClosed: sessionStateResult,
+		},
+		completedAt: new Date().toISOString(),
+		blockers,
+	};
 }

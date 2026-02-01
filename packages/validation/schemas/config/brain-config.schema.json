@@ -1,154 +1,154 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://brain.dev/schemas/config/brain-config.json",
-  "title": "BrainConfig",
-  "description": "Brain configuration schema for ~/.config/brain/config.json. Provides user-facing configuration that gets translated to basic-memory's internal config.",
-  "type": "object",
-  "properties": {
-    "$schema": {
-      "type": "string",
-      "description": "JSON Schema URL for editor validation support."
-    },
-    "version": {
-      "type": "string",
-      "const": "2.0.0",
-      "description": "Configuration version. Must be \"2.0.0\" for this schema."
-    },
-    "defaults": {
-      "$ref": "#/$defs/DefaultsConfig",
-      "description": "Global default settings for new projects."
-    },
-    "projects": {
-      "type": "object",
-      "additionalProperties": {
-        "$ref": "#/$defs/ProjectConfig"
-      },
-      "default": {},
-      "description": "Project-specific configurations keyed by project name."
-    },
-    "sync": {
-      "$ref": "#/$defs/SyncConfig",
-      "default": {
-        "enabled": true,
-        "delay_ms": 500
-      },
-      "description": "File synchronization settings."
-    },
-    "logging": {
-      "$ref": "#/$defs/LoggingConfig",
-      "default": {
-        "level": "info"
-      },
-      "description": "Logging configuration."
-    },
-    "watcher": {
-      "$ref": "#/$defs/WatcherConfig",
-      "default": {
-        "enabled": true,
-        "debounce_ms": 2000
-      },
-      "description": "File watcher configuration for detecting manual config edits."
-    }
-  },
-  "required": ["version", "defaults", "projects", "sync", "logging", "watcher"],
-  "additionalProperties": false,
-  "$defs": {
-    "MemoriesMode": {
-      "type": "string",
-      "enum": ["DEFAULT", "CODE", "CUSTOM"],
-      "description": "Memories mode: DEFAULT (${memories_location}/${project_name}), CODE (${code_path}/docs), CUSTOM (explicit memories_path)."
-    },
-    "LogLevel": {
-      "type": "string",
-      "enum": ["trace", "debug", "info", "warn", "error"],
-      "description": "Log level for Brain operations."
-    },
-    "ProjectConfig": {
-      "type": "object",
-      "properties": {
-        "code_path": {
-          "type": "string",
-          "minLength": 1,
-          "description": "Absolute path to project source code."
-        },
-        "memories_path": {
-          "type": "string",
-          "description": "Computed or explicit path to project memories. Optional if using DEFAULT or CODE mode."
-        },
-        "memories_mode": {
-          "$ref": "#/$defs/MemoriesMode",
-          "description": "How to resolve the memories path. Defaults to global memories_mode if not set."
-        }
-      },
-      "required": ["code_path"],
-      "additionalProperties": false,
-      "description": "Project-specific configuration."
-    },
-    "DefaultsConfig": {
-      "type": "object",
-      "properties": {
-        "memories_location": {
-          "type": "string",
-          "minLength": 1,
-          "description": "Base path for DEFAULT mode memories (e.g., ~/memories)."
-        },
-        "memories_mode": {
-          "$ref": "#/$defs/MemoriesMode",
-          "default": "DEFAULT",
-          "description": "Default memories mode for new projects."
-        }
-      },
-      "required": ["memories_location"],
-      "additionalProperties": false,
-      "description": "Global default settings for new projects."
-    },
-    "SyncConfig": {
-      "type": "object",
-      "properties": {
-        "enabled": {
-          "type": "boolean",
-          "default": true,
-          "description": "Enable file sync between code and memories."
-        },
-        "delay_ms": {
-          "type": "integer",
-          "minimum": 0,
-          "default": 500,
-          "description": "Sync delay in milliseconds."
-        }
-      },
-      "additionalProperties": false,
-      "description": "File synchronization settings."
-    },
-    "LoggingConfig": {
-      "type": "object",
-      "properties": {
-        "level": {
-          "$ref": "#/$defs/LogLevel",
-          "default": "info",
-          "description": "Log verbosity level."
-        }
-      },
-      "additionalProperties": false,
-      "description": "Logging configuration."
-    },
-    "WatcherConfig": {
-      "type": "object",
-      "properties": {
-        "enabled": {
-          "type": "boolean",
-          "default": true,
-          "description": "Enable config file watching."
-        },
-        "debounce_ms": {
-          "type": "integer",
-          "minimum": 0,
-          "default": 2000,
-          "description": "Debounce delay in milliseconds to handle editor chunked writes."
-        }
-      },
-      "additionalProperties": false,
-      "description": "File watcher configuration."
-    }
-  }
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "https://brain.dev/schemas/config/brain-config.json",
+	"title": "BrainConfig",
+	"description": "Brain configuration schema for ~/.config/brain/config.json. Provides user-facing configuration that gets translated to basic-memory's internal config.",
+	"type": "object",
+	"properties": {
+		"$schema": {
+			"type": "string",
+			"description": "JSON Schema URL for editor validation support."
+		},
+		"version": {
+			"type": "string",
+			"const": "2.0.0",
+			"description": "Configuration version. Must be \"2.0.0\" for this schema."
+		},
+		"defaults": {
+			"$ref": "#/$defs/DefaultsConfig",
+			"description": "Global default settings for new projects."
+		},
+		"projects": {
+			"type": "object",
+			"additionalProperties": {
+				"$ref": "#/$defs/ProjectConfig"
+			},
+			"default": {},
+			"description": "Project-specific configurations keyed by project name."
+		},
+		"sync": {
+			"$ref": "#/$defs/SyncConfig",
+			"default": {
+				"enabled": true,
+				"delay_ms": 500
+			},
+			"description": "File synchronization settings."
+		},
+		"logging": {
+			"$ref": "#/$defs/LoggingConfig",
+			"default": {
+				"level": "info"
+			},
+			"description": "Logging configuration."
+		},
+		"watcher": {
+			"$ref": "#/$defs/WatcherConfig",
+			"default": {
+				"enabled": true,
+				"debounce_ms": 2000
+			},
+			"description": "File watcher configuration for detecting manual config edits."
+		}
+	},
+	"required": ["version", "defaults", "projects", "sync", "logging", "watcher"],
+	"additionalProperties": false,
+	"$defs": {
+		"MemoriesMode": {
+			"type": "string",
+			"enum": ["DEFAULT", "CODE", "CUSTOM"],
+			"description": "Memories mode: DEFAULT (${memories_location}/${project_name}), CODE (${code_path}/docs), CUSTOM (explicit memories_path)."
+		},
+		"LogLevel": {
+			"type": "string",
+			"enum": ["trace", "debug", "info", "warn", "error"],
+			"description": "Log level for Brain operations."
+		},
+		"ProjectConfig": {
+			"type": "object",
+			"properties": {
+				"code_path": {
+					"type": "string",
+					"minLength": 1,
+					"description": "Absolute path to project source code."
+				},
+				"memories_path": {
+					"type": "string",
+					"description": "Computed or explicit path to project memories. Optional if using DEFAULT or CODE mode."
+				},
+				"memories_mode": {
+					"$ref": "#/$defs/MemoriesMode",
+					"description": "How to resolve the memories path. Defaults to global memories_mode if not set."
+				}
+			},
+			"required": ["code_path"],
+			"additionalProperties": false,
+			"description": "Project-specific configuration."
+		},
+		"DefaultsConfig": {
+			"type": "object",
+			"properties": {
+				"memories_location": {
+					"type": "string",
+					"minLength": 1,
+					"description": "Base path for DEFAULT mode memories (e.g., ~/memories)."
+				},
+				"memories_mode": {
+					"$ref": "#/$defs/MemoriesMode",
+					"default": "DEFAULT",
+					"description": "Default memories mode for new projects."
+				}
+			},
+			"required": ["memories_location"],
+			"additionalProperties": false,
+			"description": "Global default settings for new projects."
+		},
+		"SyncConfig": {
+			"type": "object",
+			"properties": {
+				"enabled": {
+					"type": "boolean",
+					"default": true,
+					"description": "Enable file sync between code and memories."
+				},
+				"delay_ms": {
+					"type": "integer",
+					"minimum": 0,
+					"default": 500,
+					"description": "Sync delay in milliseconds."
+				}
+			},
+			"additionalProperties": false,
+			"description": "File synchronization settings."
+		},
+		"LoggingConfig": {
+			"type": "object",
+			"properties": {
+				"level": {
+					"$ref": "#/$defs/LogLevel",
+					"default": "info",
+					"description": "Log verbosity level."
+				}
+			},
+			"additionalProperties": false,
+			"description": "Logging configuration."
+		},
+		"WatcherConfig": {
+			"type": "object",
+			"properties": {
+				"enabled": {
+					"type": "boolean",
+					"default": true,
+					"description": "Enable config file watching."
+				},
+				"debounce_ms": {
+					"type": "integer",
+					"minimum": 0,
+					"default": 2000,
+					"description": "Debounce delay in milliseconds to handle editor chunked writes."
+				}
+			},
+			"additionalProperties": false,
+			"description": "File watcher configuration."
+		}
+	}
 }

@@ -1,17 +1,17 @@
-import { basename, dirname } from "path";
+import { basename, dirname } from "node:path";
 import { getDefaultProject, readConfig } from "./config";
 
 export class ProjectNotFoundError extends Error {
-  constructor(
-    public readonly project: string,
-    public readonly availableProjects: string[],
-  ) {
-    super(
-      `Project "${project}" not found in basic-memory config. ` +
-        `Available projects: ${availableProjects.join(", ")}`,
-    );
-    this.name = "ProjectNotFoundError";
-  }
+	constructor(
+		public readonly project: string,
+		public readonly availableProjects: string[],
+	) {
+		super(
+			`Project "${project}" not found in basic-memory config. ` +
+				`Available projects: ${availableProjects.join(", ")}`,
+		);
+		this.name = "ProjectNotFoundError";
+	}
 }
 
 /**
@@ -28,14 +28,14 @@ export class ProjectNotFoundError extends Error {
  * ```
  */
 export async function getProjectMemoriesPath(project: string): Promise<string> {
-  const config = await readConfig();
-  const memoriesPath = config.projects[project];
+	const config = await readConfig();
+	const memoriesPath = config.projects[project];
 
-  if (!memoriesPath) {
-    throw new ProjectNotFoundError(project, Object.keys(config.projects));
-  }
+	if (!memoriesPath) {
+		throw new ProjectNotFoundError(project, Object.keys(config.projects));
+	}
 
-  return memoriesPath;
+	return memoriesPath;
 }
 
 /**
@@ -45,30 +45,30 @@ export async function getProjectMemoriesPath(project: string): Promise<string> {
  * @returns Project name if found, undefined otherwise
  */
 export async function detectProjectFromPath(
-  cwd: string,
+	cwd: string,
 ): Promise<string | undefined> {
-  const config = await readConfig();
-  const dirName = basename(cwd);
-  const parentDirName = basename(dirname(cwd));
+	const config = await readConfig();
+	const dirName = basename(cwd);
+	const parentDirName = basename(dirname(cwd));
 
-  // Direct match on directory name
-  if (config.projects[dirName]) {
-    return dirName;
-  }
+	// Direct match on directory name
+	if (config.projects[dirName]) {
+		return dirName;
+	}
 
-  // Try parent directory name
-  if (config.projects[parentDirName]) {
-    return parentDirName;
-  }
+	// Try parent directory name
+	if (config.projects[parentDirName]) {
+		return parentDirName;
+	}
 
-  // Check if cwd is inside any project's memories path
-  for (const [projectName, memoriesPath] of Object.entries(config.projects)) {
-    if (cwd.startsWith(memoriesPath)) {
-      return projectName;
-    }
-  }
+	// Check if cwd is inside any project's memories path
+	for (const [projectName, memoriesPath] of Object.entries(config.projects)) {
+		if (cwd.startsWith(memoriesPath)) {
+			return projectName;
+		}
+	}
 
-  return undefined;
+	return undefined;
 }
 
 /**
@@ -99,28 +99,28 @@ export async function detectProjectFromPath(
  * ```
  */
 export async function resolveProjectMemoriesPath(
-  project?: string,
-  cwd?: string,
+	project?: string,
+	cwd?: string,
 ): Promise<string> {
-  // 1. Explicit project parameter
-  if (project) {
-    return getProjectMemoriesPath(project);
-  }
+	// 1. Explicit project parameter
+	if (project) {
+		return getProjectMemoriesPath(project);
+	}
 
-  // 2. Environment variable
-  const envProject = process.env.BRAIN_PROJECT;
-  if (envProject) {
-    return getProjectMemoriesPath(envProject);
-  }
+	// 2. Environment variable
+	const envProject = process.env.BRAIN_PROJECT;
+	if (envProject) {
+		return getProjectMemoriesPath(envProject);
+	}
 
-  // 3. Detect from cwd
-  const workingDir = cwd ?? process.cwd();
-  const detectedProject = await detectProjectFromPath(workingDir);
-  if (detectedProject) {
-    return getProjectMemoriesPath(detectedProject);
-  }
+	// 3. Detect from cwd
+	const workingDir = cwd ?? process.cwd();
+	const detectedProject = await detectProjectFromPath(workingDir);
+	if (detectedProject) {
+		return getProjectMemoriesPath(detectedProject);
+	}
 
-  // 4. Fall back to default project
-  const defaultProject = await getDefaultProject();
-  return getProjectMemoriesPath(defaultProject);
+	// 4. Fall back to default project
+	const defaultProject = await getDefaultProject();
+	return getProjectMemoriesPath(defaultProject);
 }

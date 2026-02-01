@@ -13,5 +13,5 @@ export let embeddingEnabled = false;
  * @param enabled - true if Ollama is available with nomic-embed-text model
  */
 export function setEmbeddingEnabled(enabled: boolean): void {
-  embeddingEnabled = enabled;
+	embeddingEnabled = enabled;
 }

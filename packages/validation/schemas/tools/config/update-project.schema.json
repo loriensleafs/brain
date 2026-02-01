@@ -1,33 +1,33 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://brain.dev/schemas/tools/config/update-project.json",
-  "title": "ConfigUpdateProjectArgs",
-  "description": "Schema for config_update_project tool arguments. Updates a project's configuration with optional migration of memories to a new location.",
-  "type": "object",
-  "properties": {
-    "project": {
-      "type": "string",
-      "description": "Project name to update."
-    },
-    "code_path": {
-      "type": "string",
-      "description": "New code path for the project. Use ~ for home directory."
-    },
-    "memories_path": {
-      "type": "string",
-      "description": "New memories path. Use 'DEFAULT', 'CODE', or an absolute path."
-    },
-    "memories_mode": {
-      "type": "string",
-      "enum": ["DEFAULT", "CODE", "CUSTOM"],
-      "description": "Memories mode for the project."
-    },
-    "migrate": {
-      "type": "boolean",
-      "default": true,
-      "description": "Whether to migrate memories to new location if path changes. Default: true."
-    }
-  },
-  "required": ["project"],
-  "additionalProperties": false
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "https://brain.dev/schemas/tools/config/update-project.json",
+	"title": "ConfigUpdateProjectArgs",
+	"description": "Schema for config_update_project tool arguments. Updates a project's configuration with optional migration of memories to a new location.",
+	"type": "object",
+	"properties": {
+		"project": {
+			"type": "string",
+			"description": "Project name to update."
+		},
+		"code_path": {
+			"type": "string",
+			"description": "New code path for the project. Use ~ for home directory."
+		},
+		"memories_path": {
+			"type": "string",
+			"description": "New memories path. Use 'DEFAULT', 'CODE', or an absolute path."
+		},
+		"memories_mode": {
+			"type": "string",
+			"enum": ["DEFAULT", "CODE", "CUSTOM"],
+			"description": "Memories mode for the project."
+		},
+		"migrate": {
+			"type": "boolean",
+			"default": true,
+			"description": "Whether to migrate memories to new location if path changes. Default: true."
+		}
+	},
+	"required": ["project"],
+	"additionalProperties": false
 }

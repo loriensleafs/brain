@@ -17,10 +17,10 @@
  * @see TASK-020-26 for implementation requirements
  */
 
-import * as crypto from "crypto";
-import * as fs from "fs";
-import * as os from "os";
-import * as path from "path";
+import * as crypto from "node:crypto";
+import * as fs from "node:fs";
+import * as os from "node:os";
+import * as path from "node:path";
 import { logger } from "../utils/internal/logger";
 
 /**
@@ -42,85 +42,85 @@ export type CopyStatus = "pending" | "copied" | "verified" | "failed";
  * Entry in the copy manifest representing a single file.
  */
 export interface CopyManifestEntry {
-  /** Source file path. */
-  sourcePath: string;
-  /** Target file path. */
-  targetPath: string;
-  /** SHA-256 checksum of source file. */
-  sourceChecksum: string;
-  /** SHA-256 checksum of target file (null if not yet copied). */
-  targetChecksum: string | null;
-  /** Current status of the copy operation. */
-  status: CopyStatus;
-  /** Timestamp when file was copied (null if not yet copied). */
-  copiedAt: Date | null;
-  /** Error message if copy failed. */
-  error: string | null;
+	/** Source file path. */
+	sourcePath: string;
+	/** Target file path. */
+	targetPath: string;
+	/** SHA-256 checksum of source file. */
+	sourceChecksum: string;
+	/** SHA-256 checksum of target file (null if not yet copied). */
+	targetChecksum: string | null;
+	/** Current status of the copy operation. */
+	status: CopyStatus;
+	/** Timestamp when file was copied (null if not yet copied). */
+	copiedAt: Date | null;
+	/** Error message if copy failed. */
+	error: string | null;
 }
 
 /**
  * Complete copy manifest for a migration operation.
  */
 export interface CopyManifest {
-  /** Unique identifier for this migration. */
-  migrationId: string;
-  /** Project being migrated. */
-  project: string;
-  /** Root directory of source files. */
-  sourceRoot: string;
-  /** Root directory of target files. */
-  targetRoot: string;
-  /** Timestamp when migration started. */
-  startedAt: Date;
-  /** Timestamp when migration completed (null if incomplete). */
-  completedAt: Date | null;
-  /** Array of file entries. */
-  entries: CopyManifestEntry[];
+	/** Unique identifier for this migration. */
+	migrationId: string;
+	/** Project being migrated. */
+	project: string;
+	/** Root directory of source files. */
+	sourceRoot: string;
+	/** Root directory of target files. */
+	targetRoot: string;
+	/** Timestamp when migration started. */
+	startedAt: Date;
+	/** Timestamp when migration completed (null if incomplete). */
+	completedAt: Date | null;
+	/** Array of file entries. */
+	entries: CopyManifestEntry[];
 }
 
 /**
  * Result of a rollback operation.
  */
 export interface RollbackResult {
-  /** Whether rollback was successful. */
-  success: boolean;
-  /** Number of files successfully rolled back. */
-  filesRolledBack: number;
-  /** Files that failed to rollback. */
-  failures: Array<{ path: string; error: string }>;
+	/** Whether rollback was successful. */
+	success: boolean;
+	/** Number of files successfully rolled back. */
+	filesRolledBack: number;
+	/** Files that failed to rollback. */
+	failures: Array<{ path: string; error: string }>;
 }
 
 /**
  * Result of an incomplete migration recovery.
  */
 export interface RecoveryResult {
-  /** Number of incomplete migrations found. */
-  found: number;
-  /** Number of migrations successfully recovered (rolled back). */
-  recovered: number;
-  /** Migration IDs that failed recovery. */
-  failures: string[];
+	/** Number of incomplete migrations found. */
+	found: number;
+	/** Number of migrations successfully recovered (rolled back). */
+	recovered: number;
+	/** Migration IDs that failed recovery. */
+	failures: string[];
 }
 
 /**
  * Serializable format for manifest storage.
  */
 interface SerializedManifest {
-  migrationId: string;
-  project: string;
-  sourceRoot: string;
-  targetRoot: string;
-  startedAt: string;
-  completedAt: string | null;
-  entries: Array<{
-    sourcePath: string;
-    targetPath: string;
-    sourceChecksum: string;
-    targetChecksum: string | null;
-    status: CopyStatus;
-    copiedAt: string | null;
-    error: string | null;
-  }>;
+	migrationId: string;
+	project: string;
+	sourceRoot: string;
+	targetRoot: string;
+	startedAt: string;
+	completedAt: string | null;
+	entries: Array<{
+		sourcePath: string;
+		targetPath: string;
+		sourceChecksum: string;
+		targetChecksum: string | null;
+		status: CopyStatus;
+		copiedAt: string | null;
+		error: string | null;
+	}>;
 }
 
 /**
@@ -129,9 +129,9 @@ interface SerializedManifest {
  * @returns Unique migration ID
  */
 function generateMigrationId(): string {
-  const timestamp = Date.now().toString(36);
-  const random = crypto.randomBytes(4).toString("hex");
-  return `migration-${timestamp}-${random}`;
+	const timestamp = Date.now().toString(36);
+	const random = crypto.randomBytes(4).toString("hex");
+	return `migration-${timestamp}-${random}`;
 }
 
 /**
@@ -140,7 +140,7 @@ function generateMigrationId(): string {
  * @returns Path to manifest directory
  */
 export function getManifestDir(): string {
-  return MANIFEST_DIR;
+	return MANIFEST_DIR;
 }
 
 /**
@@ -150,18 +150,18 @@ export function getManifestDir(): string {
  * @returns Path to manifest file
  */
 function getManifestPath(migrationId: string): string {
-  // Sanitize migration ID to prevent path traversal
-  const sanitized = migrationId.replace(/[^a-zA-Z0-9_-]/g, "_");
-  return path.join(MANIFEST_DIR, `${sanitized}${MANIFEST_EXTENSION}`);
+	// Sanitize migration ID to prevent path traversal
+	const sanitized = migrationId.replace(/[^a-zA-Z0-9_-]/g, "_");
+	return path.join(MANIFEST_DIR, `${sanitized}${MANIFEST_EXTENSION}`);
 }
 
 /**
  * Ensure the manifest directory exists.
  */
 function ensureManifestDir(): void {
-  if (!fs.existsSync(MANIFEST_DIR)) {
-    fs.mkdirSync(MANIFEST_DIR, { recursive: true, mode: 0o700 });
-  }
+	if (!fs.existsSync(MANIFEST_DIR)) {
+		fs.mkdirSync(MANIFEST_DIR, { recursive: true, mode: 0o700 });
+	}
 }
 
 /**
@@ -172,14 +172,14 @@ function ensureManifestDir(): void {
  * @throws Error if file cannot be read
  */
 export async function computeFileChecksum(filePath: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const hash = crypto.createHash("sha256");
-    const stream = fs.createReadStream(filePath);
+	return new Promise((resolve, reject) => {
+		const hash = crypto.createHash("sha256");
+		const stream = fs.createReadStream(filePath);
 
-    stream.on("error", reject);
-    stream.on("data", (chunk) => hash.update(chunk));
-    stream.on("end", () => resolve(hash.digest("hex")));
-  });
+		stream.on("error", reject);
+		stream.on("data", (chunk) => hash.update(chunk));
+		stream.on("end", () => resolve(hash.digest("hex")));
+	});
 }
 
 /**
@@ -190,8 +190,8 @@ export async function computeFileChecksum(filePath: string): Promise<string> {
  * @throws Error if file cannot be read
  */
 export function computeFileChecksumSync(filePath: string): string {
-  const content = fs.readFileSync(filePath);
-  return crypto.createHash("sha256").update(content).digest("hex");
+	const content = fs.readFileSync(filePath);
+	return crypto.createHash("sha256").update(content).digest("hex");
 }
 
 /**
@@ -201,23 +201,23 @@ export function computeFileChecksumSync(filePath: string): string {
  * @returns Serialized manifest
  */
 function serializeManifest(manifest: CopyManifest): SerializedManifest {
-  return {
-    migrationId: manifest.migrationId,
-    project: manifest.project,
-    sourceRoot: manifest.sourceRoot,
-    targetRoot: manifest.targetRoot,
-    startedAt: manifest.startedAt.toISOString(),
-    completedAt: manifest.completedAt?.toISOString() ?? null,
-    entries: manifest.entries.map((entry) => ({
-      sourcePath: entry.sourcePath,
-      targetPath: entry.targetPath,
-      sourceChecksum: entry.sourceChecksum,
-      targetChecksum: entry.targetChecksum,
-      status: entry.status,
-      copiedAt: entry.copiedAt?.toISOString() ?? null,
-      error: entry.error,
-    })),
-  };
+	return {
+		migrationId: manifest.migrationId,
+		project: manifest.project,
+		sourceRoot: manifest.sourceRoot,
+		targetRoot: manifest.targetRoot,
+		startedAt: manifest.startedAt.toISOString(),
+		completedAt: manifest.completedAt?.toISOString() ?? null,
+		entries: manifest.entries.map((entry) => ({
+			sourcePath: entry.sourcePath,
+			targetPath: entry.targetPath,
+			sourceChecksum: entry.sourceChecksum,
+			targetChecksum: entry.targetChecksum,
+			status: entry.status,
+			copiedAt: entry.copiedAt?.toISOString() ?? null,
+			error: entry.error,
+		})),
+	};
 }
 
 /**
@@ -227,25 +227,25 @@ function serializeManifest(manifest: CopyManifest): SerializedManifest {
  * @returns Deserialized manifest
  */
 function deserializeManifest(serialized: SerializedManifest): CopyManifest {
-  return {
-    migrationId: serialized.migrationId,
-    project: serialized.project,
-    sourceRoot: serialized.sourceRoot,
-    targetRoot: serialized.targetRoot,
-    startedAt: new Date(serialized.startedAt),
-    completedAt: serialized.completedAt
-      ? new Date(serialized.completedAt)
-      : null,
-    entries: serialized.entries.map((entry) => ({
-      sourcePath: entry.sourcePath,
-      targetPath: entry.targetPath,
-      sourceChecksum: entry.sourceChecksum,
-      targetChecksum: entry.targetChecksum,
-      status: entry.status,
-      copiedAt: entry.copiedAt ? new Date(entry.copiedAt) : null,
-      error: entry.error,
-    })),
-  };
+	return {
+		migrationId: serialized.migrationId,
+		project: serialized.project,
+		sourceRoot: serialized.sourceRoot,
+		targetRoot: serialized.targetRoot,
+		startedAt: new Date(serialized.startedAt),
+		completedAt: serialized.completedAt
+			? new Date(serialized.completedAt)
+			: null,
+		entries: serialized.entries.map((entry) => ({
+			sourcePath: entry.sourcePath,
+			targetPath: entry.targetPath,
+			sourceChecksum: entry.sourceChecksum,
+			targetChecksum: entry.targetChecksum,
+			status: entry.status,
+			copiedAt: entry.copiedAt ? new Date(entry.copiedAt) : null,
+			error: entry.error,
+		})),
+	};
 }
 
 /**
@@ -256,32 +256,32 @@ function deserializeManifest(serialized: SerializedManifest): CopyManifest {
  * @param manifest - Manifest to save
  */
 function saveManifest(manifest: CopyManifest): void {
-  ensureManifestDir();
+	ensureManifestDir();
 
-  const manifestPath = getManifestPath(manifest.migrationId);
-  const tempPath = manifestPath + ".tmp";
+	const manifestPath = getManifestPath(manifest.migrationId);
+	const tempPath = `${manifestPath}.tmp`;
 
-  try {
-    const content = JSON.stringify(serializeManifest(manifest), null, 2);
-    fs.writeFileSync(tempPath, content, { encoding: "utf-8", mode: 0o600 });
+	try {
+		const content = JSON.stringify(serializeManifest(manifest), null, 2);
+		fs.writeFileSync(tempPath, content, { encoding: "utf-8", mode: 0o600 });
 
-    // Verify temp file
-    const verifyContent = fs.readFileSync(tempPath, "utf-8");
-    JSON.parse(verifyContent);
+		// Verify temp file
+		const verifyContent = fs.readFileSync(tempPath, "utf-8");
+		JSON.parse(verifyContent);
 
-    // Atomic rename
-    fs.renameSync(tempPath, manifestPath);
-  } catch (error) {
-    // Clean up temp file
-    try {
-      if (fs.existsSync(tempPath)) {
-        fs.unlinkSync(tempPath);
-      }
-    } catch {
-      // Ignore cleanup errors
-    }
-    throw error;
-  }
+		// Atomic rename
+		fs.renameSync(tempPath, manifestPath);
+	} catch (error) {
+		// Clean up temp file
+		try {
+			if (fs.existsSync(tempPath)) {
+				fs.unlinkSync(tempPath);
+			}
+		} catch {
+			// Ignore cleanup errors
+		}
+		throw error;
+	}
 }
 
 /**
@@ -291,20 +291,20 @@ function saveManifest(manifest: CopyManifest): void {
  * @returns Loaded manifest or null if not found
  */
 function loadManifest(migrationId: string): CopyManifest | null {
-  const manifestPath = getManifestPath(migrationId);
+	const manifestPath = getManifestPath(migrationId);
 
-  try {
-    if (!fs.existsSync(manifestPath)) {
-      return null;
-    }
+	try {
+		if (!fs.existsSync(manifestPath)) {
+			return null;
+		}
 
-    const content = fs.readFileSync(manifestPath, "utf-8");
-    const serialized = JSON.parse(content) as SerializedManifest;
-    return deserializeManifest(serialized);
-  } catch (error) {
-    logger.warn({ migrationId, error }, "Failed to load manifest");
-    return null;
-  }
+		const content = fs.readFileSync(manifestPath, "utf-8");
+		const serialized = JSON.parse(content) as SerializedManifest;
+		return deserializeManifest(serialized);
+	} catch (error) {
+		logger.warn({ migrationId, error }, "Failed to load manifest");
+		return null;
+	}
 }
 
 /**
@@ -313,15 +313,15 @@ function loadManifest(migrationId: string): CopyManifest | null {
  * @param migrationId - Migration identifier
  */
 function deleteManifest(migrationId: string): void {
-  const manifestPath = getManifestPath(migrationId);
+	const manifestPath = getManifestPath(migrationId);
 
-  try {
-    if (fs.existsSync(manifestPath)) {
-      fs.unlinkSync(manifestPath);
-    }
-  } catch (error) {
-    logger.warn({ migrationId, error }, "Failed to delete manifest");
-  }
+	try {
+		if (fs.existsSync(manifestPath)) {
+			fs.unlinkSync(manifestPath);
+		}
+	} catch (error) {
+		logger.warn({ migrationId, error }, "Failed to delete manifest");
+	}
 }
 
 /**
@@ -330,16 +330,16 @@ function deleteManifest(migrationId: string): void {
  * @returns Array of migration IDs
  */
 function listManifests(): string[] {
-  ensureManifestDir();
+	ensureManifestDir();
 
-  try {
-    const files = fs.readdirSync(MANIFEST_DIR);
-    return files
-      .filter((f) => f.endsWith(MANIFEST_EXTENSION))
-      .map((f) => f.slice(0, -MANIFEST_EXTENSION.length));
-  } catch {
-    return [];
-  }
+	try {
+		const files = fs.readdirSync(MANIFEST_DIR);
+		return files
+			.filter((f) => f.endsWith(MANIFEST_EXTENSION))
+			.map((f) => f.slice(0, -MANIFEST_EXTENSION.length));
+	} catch {
+		return [];
+	}
 }
 
 /**
@@ -354,55 +354,55 @@ function listManifests(): string[] {
  * @returns Created manifest
  */
 export async function createCopyManifest(
-  project: string,
-  sourceRoot: string,
-  targetRoot: string,
-  files: string[],
+	project: string,
+	sourceRoot: string,
+	targetRoot: string,
+	files: string[],
 ): Promise<CopyManifest> {
-  const migrationId = generateMigrationId();
-  const entries: CopyManifestEntry[] = [];
+	const migrationId = generateMigrationId();
+	const entries: CopyManifestEntry[] = [];
 
-  for (const file of files) {
-    const sourcePath = path.join(sourceRoot, file);
-    const targetPath = path.join(targetRoot, file);
+	for (const file of files) {
+		const sourcePath = path.join(sourceRoot, file);
+		const targetPath = path.join(targetRoot, file);
 
-    // Compute source checksum
-    let sourceChecksum: string;
-    try {
-      sourceChecksum = await computeFileChecksum(sourcePath);
-    } catch (error) {
-      logger.warn({ file, error }, "Failed to compute source checksum");
-      sourceChecksum = "";
-    }
+		// Compute source checksum
+		let sourceChecksum: string;
+		try {
+			sourceChecksum = await computeFileChecksum(sourcePath);
+		} catch (error) {
+			logger.warn({ file, error }, "Failed to compute source checksum");
+			sourceChecksum = "";
+		}
 
-    entries.push({
-      sourcePath,
-      targetPath,
-      sourceChecksum,
-      targetChecksum: null,
-      status: "pending",
-      copiedAt: null,
-      error: null,
-    });
-  }
+		entries.push({
+			sourcePath,
+			targetPath,
+			sourceChecksum,
+			targetChecksum: null,
+			status: "pending",
+			copiedAt: null,
+			error: null,
+		});
+	}
 
-  const manifest: CopyManifest = {
-    migrationId,
-    project,
-    sourceRoot,
-    targetRoot,
-    startedAt: new Date(),
-    completedAt: null,
-    entries,
-  };
+	const manifest: CopyManifest = {
+		migrationId,
+		project,
+		sourceRoot,
+		targetRoot,
+		startedAt: new Date(),
+		completedAt: null,
+		entries,
+	};
 
-  saveManifest(manifest);
-  logger.info(
-    { migrationId, project, fileCount: files.length },
-    "Copy manifest created",
-  );
+	saveManifest(manifest);
+	logger.info(
+		{ migrationId, project, fileCount: files.length },
+		"Copy manifest created",
+	);
 
-  return manifest;
+	return manifest;
 }
 
 /**
@@ -414,25 +414,25 @@ export async function createCopyManifest(
  * @param entry - Entry to mark as copied
  */
 export async function markEntryCopied(
-  manifest: CopyManifest,
-  entry: CopyManifestEntry,
+	manifest: CopyManifest,
+	entry: CopyManifestEntry,
 ): Promise<void> {
-  // Compute target checksum
-  try {
-    entry.targetChecksum = await computeFileChecksum(entry.targetPath);
-  } catch (error) {
-    entry.status = "failed";
-    entry.error =
-      error instanceof Error ? error.message : "Checksum computation failed";
-    saveManifest(manifest);
-    return;
-  }
+	// Compute target checksum
+	try {
+		entry.targetChecksum = await computeFileChecksum(entry.targetPath);
+	} catch (error) {
+		entry.status = "failed";
+		entry.error =
+			error instanceof Error ? error.message : "Checksum computation failed";
+		saveManifest(manifest);
+		return;
+	}
 
-  entry.status = "copied";
-  entry.copiedAt = new Date();
-  entry.error = null;
+	entry.status = "copied";
+	entry.copiedAt = new Date();
+	entry.error = null;
 
-  saveManifest(manifest);
+	saveManifest(manifest);
 }
 
 /**
@@ -445,34 +445,34 @@ export async function markEntryCopied(
  * @returns true if verification passed
  */
 export async function verifyEntry(
-  manifest: CopyManifest,
-  entry: CopyManifestEntry,
+	manifest: CopyManifest,
+	entry: CopyManifestEntry,
 ): Promise<boolean> {
-  if (entry.status !== "copied") {
-    return false;
-  }
+	if (entry.status !== "copied") {
+		return false;
+	}
 
-  // Recompute target checksum to verify
-  try {
-    const currentChecksum = await computeFileChecksum(entry.targetPath);
+	// Recompute target checksum to verify
+	try {
+		const currentChecksum = await computeFileChecksum(entry.targetPath);
 
-    if (currentChecksum !== entry.sourceChecksum) {
-      entry.status = "failed";
-      entry.error = `Checksum mismatch: expected ${entry.sourceChecksum}, got ${currentChecksum}`;
-      saveManifest(manifest);
-      return false;
-    }
+		if (currentChecksum !== entry.sourceChecksum) {
+			entry.status = "failed";
+			entry.error = `Checksum mismatch: expected ${entry.sourceChecksum}, got ${currentChecksum}`;
+			saveManifest(manifest);
+			return false;
+		}
 
-    entry.status = "verified";
-    saveManifest(manifest);
-    return true;
-  } catch (error) {
-    entry.status = "failed";
-    entry.error =
-      error instanceof Error ? error.message : "Verification failed";
-    saveManifest(manifest);
-    return false;
-  }
+		entry.status = "verified";
+		saveManifest(manifest);
+		return true;
+	} catch (error) {
+		entry.status = "failed";
+		entry.error =
+			error instanceof Error ? error.message : "Verification failed";
+		saveManifest(manifest);
+		return false;
+	}
 }
 
 /**
@@ -483,13 +483,13 @@ export async function verifyEntry(
  * @param error - Error message
  */
 export function markEntryFailed(
-  manifest: CopyManifest,
-  entry: CopyManifestEntry,
-  error: string,
+	manifest: CopyManifest,
+	entry: CopyManifestEntry,
+	error: string,
 ): void {
-  entry.status = "failed";
-  entry.error = error;
-  saveManifest(manifest);
+	entry.status = "failed";
+	entry.error = error;
+	saveManifest(manifest);
 }
 
 /**
@@ -498,9 +498,9 @@ export function markEntryFailed(
  * @param manifest - Manifest to mark as completed
  */
 export function markManifestCompleted(manifest: CopyManifest): void {
-  manifest.completedAt = new Date();
-  saveManifest(manifest);
-  logger.info({ migrationId: manifest.migrationId }, "Migration completed");
+	manifest.completedAt = new Date();
+	saveManifest(manifest);
+	logger.info({ migrationId: manifest.migrationId }, "Migration completed");
 }
 
 /**
@@ -513,62 +513,62 @@ export function markManifestCompleted(manifest: CopyManifest): void {
  * @returns Rollback result
  */
 export async function rollbackPartialCopy(
-  manifest: CopyManifest,
+	manifest: CopyManifest,
 ): Promise<RollbackResult> {
-  const failures: Array<{ path: string; error: string }> = [];
-  let filesRolledBack = 0;
+	const failures: Array<{ path: string; error: string }> = [];
+	let filesRolledBack = 0;
 
-  for (const entry of manifest.entries) {
-    // Only remove files that were copied
-    if (entry.status === "copied" || entry.status === "verified") {
-      try {
-        if (fs.existsSync(entry.targetPath)) {
-          fs.unlinkSync(entry.targetPath);
-          filesRolledBack++;
-          logger.debug({ path: entry.targetPath }, "Rolled back file");
-        }
-      } catch (error) {
-        failures.push({
-          path: entry.targetPath,
-          error: error instanceof Error ? error.message : "Rollback failed",
-        });
-      }
-    }
-  }
+	for (const entry of manifest.entries) {
+		// Only remove files that were copied
+		if (entry.status === "copied" || entry.status === "verified") {
+			try {
+				if (fs.existsSync(entry.targetPath)) {
+					fs.unlinkSync(entry.targetPath);
+					filesRolledBack++;
+					logger.debug({ path: entry.targetPath }, "Rolled back file");
+				}
+			} catch (error) {
+				failures.push({
+					path: entry.targetPath,
+					error: error instanceof Error ? error.message : "Rollback failed",
+				});
+			}
+		}
+	}
 
-  // Clean up empty directories in target
-  try {
-    const targetDir = manifest.targetRoot;
-    if (fs.existsSync(targetDir)) {
-      const files = fs.readdirSync(targetDir);
-      if (files.length === 0) {
-        fs.rmdirSync(targetDir);
-        logger.debug({ path: targetDir }, "Removed empty target directory");
-      }
-    }
-  } catch {
-    // Ignore directory cleanup errors
-  }
+	// Clean up empty directories in target
+	try {
+		const targetDir = manifest.targetRoot;
+		if (fs.existsSync(targetDir)) {
+			const files = fs.readdirSync(targetDir);
+			if (files.length === 0) {
+				fs.rmdirSync(targetDir);
+				logger.debug({ path: targetDir }, "Removed empty target directory");
+			}
+		}
+	} catch {
+		// Ignore directory cleanup errors
+	}
 
-  // Delete the manifest
-  deleteManifest(manifest.migrationId);
+	// Delete the manifest
+	deleteManifest(manifest.migrationId);
 
-  const result: RollbackResult = {
-    success: failures.length === 0,
-    filesRolledBack,
-    failures,
-  };
+	const result: RollbackResult = {
+		success: failures.length === 0,
+		filesRolledBack,
+		failures,
+	};
 
-  logger.info(
-    {
-      migrationId: manifest.migrationId,
-      filesRolledBack,
-      failures: failures.length,
-    },
-    "Rollback completed",
-  );
+	logger.info(
+		{
+			migrationId: manifest.migrationId,
+			filesRolledBack,
+			failures: failures.length,
+		},
+		"Rollback completed",
+	);
 
-  return result;
+	return result;
 }
 
 /**
@@ -582,11 +582,11 @@ export async function rollbackPartialCopy(
  * @returns true if migration is incomplete
  */
 export function isIncomplete(manifest: CopyManifest): boolean {
-  if (!manifest.completedAt) {
-    return true;
-  }
+	if (!manifest.completedAt) {
+		return true;
+	}
 
-  return manifest.entries.some((entry) => entry.status !== "verified");
+	return manifest.entries.some((entry) => entry.status !== "verified");
 }
 
 /**
@@ -597,52 +597,52 @@ export function isIncomplete(manifest: CopyManifest): boolean {
  * @returns Recovery result
  */
 export async function recoverIncompleteMigrations(): Promise<RecoveryResult> {
-  const manifestIds = listManifests();
-  const failures: string[] = [];
-  let found = 0;
-  let recovered = 0;
+	const manifestIds = listManifests();
+	const failures: string[] = [];
+	let found = 0;
+	let recovered = 0;
 
-  for (const migrationId of manifestIds) {
-    const manifest = loadManifest(migrationId);
-    if (!manifest) {
-      continue;
-    }
+	for (const migrationId of manifestIds) {
+		const manifest = loadManifest(migrationId);
+		if (!manifest) {
+			continue;
+		}
 
-    if (isIncomplete(manifest)) {
-      found++;
-      logger.info(
-        { migrationId, project: manifest.project },
-        "Found incomplete migration, rolling back",
-      );
+		if (isIncomplete(manifest)) {
+			found++;
+			logger.info(
+				{ migrationId, project: manifest.project },
+				"Found incomplete migration, rolling back",
+			);
 
-      try {
-        const result = await rollbackPartialCopy(manifest);
-        if (result.success) {
-          recovered++;
-        } else {
-          failures.push(migrationId);
-        }
-      } catch (error) {
-        logger.error({ migrationId, error }, "Failed to recover migration");
-        failures.push(migrationId);
-      }
-    }
-  }
+			try {
+				const result = await rollbackPartialCopy(manifest);
+				if (result.success) {
+					recovered++;
+				} else {
+					failures.push(migrationId);
+				}
+			} catch (error) {
+				logger.error({ migrationId, error }, "Failed to recover migration");
+				failures.push(migrationId);
+			}
+		}
+	}
 
-  const result: RecoveryResult = {
-    found,
-    recovered,
-    failures,
-  };
+	const result: RecoveryResult = {
+		found,
+		recovered,
+		failures,
+	};
 
-  if (found > 0) {
-    logger.info(
-      { found, recovered, failures: failures.length },
-      "Migration recovery completed",
-    );
-  }
+	if (found > 0) {
+		logger.info(
+			{ found, recovered, failures: failures.length },
+			"Migration recovery completed",
+		);
+	}
 
-  return result;
+	return result;
 }
 
 /**
@@ -652,7 +652,7 @@ export async function recoverIncompleteMigrations(): Promise<RecoveryResult> {
  * @returns Manifest or null if not found
  */
 export function getManifest(migrationId: string): CopyManifest | null {
-  return loadManifest(migrationId);
+	return loadManifest(migrationId);
 }
 
 /**
@@ -662,20 +662,20 @@ export function getManifest(migrationId: string): CopyManifest | null {
  * @returns Object with counts by status
  */
 export function getStatusCounts(
-  manifest: CopyManifest,
+	manifest: CopyManifest,
 ): Record<CopyStatus, number> {
-  const counts: Record<CopyStatus, number> = {
-    pending: 0,
-    copied: 0,
-    verified: 0,
-    failed: 0,
-  };
+	const counts: Record<CopyStatus, number> = {
+		pending: 0,
+		copied: 0,
+		verified: 0,
+		failed: 0,
+	};
 
-  for (const entry of manifest.entries) {
-    counts[entry.status]++;
-  }
+	for (const entry of manifest.entries) {
+		counts[entry.status]++;
+	}
 
-  return counts;
+	return counts;
 }
 
 /**
@@ -685,7 +685,7 @@ export function getStatusCounts(
  * @returns Array of failed entries
  */
 export function getFailedEntries(manifest: CopyManifest): CopyManifestEntry[] {
-  return manifest.entries.filter((entry) => entry.status === "failed");
+	return manifest.entries.filter((entry) => entry.status === "failed");
 }
 
 /**
@@ -695,7 +695,7 @@ export function getFailedEntries(manifest: CopyManifest): CopyManifestEntry[] {
  * @returns Array of pending entries
  */
 export function getPendingEntries(manifest: CopyManifest): CopyManifestEntry[] {
-  return manifest.entries.filter((entry) => entry.status === "pending");
+	return manifest.entries.filter((entry) => entry.status === "pending");
 }
 
 /**
@@ -705,18 +705,18 @@ export function getPendingEntries(manifest: CopyManifest): CopyManifestEntry[] {
  * @returns Progress object with counts and percentages
  */
 export function getProgress(manifest: CopyManifest): {
-  total: number;
-  completed: number;
-  pending: number;
-  failed: number;
-  percentComplete: number;
+	total: number;
+	completed: number;
+	pending: number;
+	failed: number;
+	percentComplete: number;
 } {
-  const counts = getStatusCounts(manifest);
-  const total = manifest.entries.length;
-  const completed = counts.verified + counts.copied;
-  const pending = counts.pending;
-  const failed = counts.failed;
-  const percentComplete = total > 0 ? Math.round((completed / total) * 100) : 0;
+	const counts = getStatusCounts(manifest);
+	const total = manifest.entries.length;
+	const completed = counts.verified + counts.copied;
+	const pending = counts.pending;
+	const failed = counts.failed;
+	const percentComplete = total > 0 ? Math.round((completed / total) * 100) : 0;
 
-  return { total, completed, pending, failed, percentComplete };
+	return { total, completed, pending, failed, percentComplete };
 }

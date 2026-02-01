@@ -7,8 +7,8 @@
  */
 
 import {
-  parseSessionArgs as _parseSessionArgs,
-  type SessionArgs,
+	parseSessionArgs as _parseSessionArgs,
+	type SessionArgs,
 } from "@brain/validation";
 import sessionSchema from "@brain/validation/schemas/tools/session.schema.json";
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
@@ -21,26 +21,26 @@ export type { SessionArgs };
  * Uses AJV validation under the hood for 5-18x better performance.
  */
 export const SessionArgsSchema = {
-  parse: _parseSessionArgs,
-  safeParse: (
-    data: unknown,
-  ):
-    | { success: true; data: SessionArgs }
-    | { success: false; error: Error } => {
-    try {
-      return { success: true, data: _parseSessionArgs(data) };
-    } catch (e) {
-      return {
-        success: false,
-        error: e instanceof Error ? e : new Error(String(e)),
-      };
-    }
-  },
+	parse: _parseSessionArgs,
+	safeParse: (
+		data: unknown,
+	):
+		| { success: true; data: SessionArgs }
+		| { success: false; error: Error } => {
+		try {
+			return { success: true, data: _parseSessionArgs(data) };
+		} catch (e) {
+			return {
+				success: false,
+				error: e instanceof Error ? e : new Error(String(e)),
+			};
+		}
+	},
 };
 
 export const toolDefinition: Tool = {
-  name: "session",
-  description: `Manage session state including workflow mode, active task, and feature.
+	name: "session",
+	description: `Manage session state including workflow mode, active task, and feature.
 
 Operations:
 - **get**: Retrieve current session state (mode, task, feature, history)
@@ -53,5 +53,5 @@ Modes control what tools are allowed:
 - **disabled**: Mode enforcement disabled. All tools allowed.
 
 Use 'set' with mode='coding' before starting implementation work.`,
-  inputSchema: sessionSchema as Tool["inputSchema"],
+	inputSchema: sessionSchema as Tool["inputSchema"],
 };

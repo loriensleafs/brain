@@ -1,14 +1,14 @@
 import { Database } from "bun:sqlite";
-import { homedir } from "os";
-import { join } from "path";
+import { homedir } from "node:os";
+import { join } from "node:path";
 
 // On macOS, use Homebrew SQLite for extension support
 if (process.platform === "darwin") {
-  try {
-    Database.setCustomSQLite("/opt/homebrew/opt/sqlite/lib/libsqlite3.dylib");
-  } catch {
-    // SQLite already loaded, ignore
-  }
+	try {
+		Database.setCustomSQLite("/opt/homebrew/opt/sqlite/lib/libsqlite3.dylib");
+	} catch {
+		// SQLite already loaded, ignore
+	}
 }
 
 const dbPath = join(homedir(), ".basic-memory", "memory.db");
@@ -20,10 +20,10 @@ sqliteVec.load(db);
 
 // Drop old table
 try {
-  db.run("DROP TABLE IF EXISTS brain_embeddings");
-  console.log("Dropped old brain_embeddings table");
+	db.run("DROP TABLE IF EXISTS brain_embeddings");
+	console.log("Dropped old brain_embeddings table");
 } catch (e: any) {
-  console.log("Error dropping table:", e.message);
+	console.log("Error dropping table:", e.message);
 }
 
 // Create new table with chunked schema

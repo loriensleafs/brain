@@ -1,16 +1,16 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://brain.dev/schemas/tools/projects/get-project-details.json",
-  "title": "GetProjectDetailsArgs",
-  "description": "Schema for get_project_details tool arguments. Gets detailed information about a specific Brain memory project.",
-  "type": "object",
-  "properties": {
-    "project": {
-      "type": "string",
-      "minLength": 1,
-      "description": "Project name to get details for"
-    }
-  },
-  "required": ["project"],
-  "additionalProperties": false
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "https://brain.dev/schemas/tools/projects/get-project-details.json",
+	"title": "GetProjectDetailsArgs",
+	"description": "Schema for get_project_details tool arguments. Gets detailed information about a specific Brain memory project.",
+	"type": "object",
+	"properties": {
+		"project": {
+			"type": "string",
+			"minLength": 1,
+			"description": "Project name to get details for"
+		}
+	},
+	"required": ["project"],
+	"additionalProperties": false
 }

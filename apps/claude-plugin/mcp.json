@@ -1,11 +1,11 @@
 {
-  "mcpServers": {
-    "brain": {
-      "command": "bun",
-      "args": ["run", "${HOME}/Dev/brain/apps/mcp/src/index.ts"],
-      "env": {
-        "BRAIN_TRANSPORT": "stdio"
-      }
-    }
-  }
+	"mcpServers": {
+		"brain": {
+			"command": "bun",
+			"args": ["run", "${HOME}/Dev/brain/apps/mcp/src/index.ts"],
+			"env": {
+				"BRAIN_TRANSPORT": "stdio"
+			}
+		}
+	}
 }

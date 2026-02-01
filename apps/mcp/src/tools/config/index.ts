@@ -8,6 +8,7 @@
  * - config_rollback: Rollback to previous configuration
  * - config_update_project: Update project configuration with migration
  * - config_update_global: Update global defaults with migration
+ * - migrate_config: Migrate from old config location to new
  *
  * @see ADR-020 for configuration architecture
  * @see TASK-020-19 for implementation requirements
@@ -15,28 +16,29 @@
 
 // Re-export tool modules
 export * as configGet from "./get";
+export * as configMigrate from "./migrate";
 export * as configReset from "./reset";
 export * as configRollback from "./rollback";
 // Re-export all schemas
 export {
-  type ConfigGetArgs,
-  ConfigGetArgsSchema,
-  type ConfigResetArgs,
-  ConfigResetArgsSchema,
-  type ConfigRollbackArgs,
-  ConfigRollbackArgsSchema,
-  type ConfigSetArgs,
-  ConfigSetArgsSchema,
-  type ConfigUpdateGlobalArgs,
-  ConfigUpdateGlobalArgsSchema,
-  type ConfigUpdateProjectArgs,
-  ConfigUpdateProjectArgsSchema,
-  configGetToolDefinition,
-  configResetToolDefinition,
-  configRollbackToolDefinition,
-  configSetToolDefinition,
-  configUpdateGlobalToolDefinition,
-  configUpdateProjectToolDefinition,
+	type ConfigGetArgs,
+	ConfigGetArgsSchema,
+	type ConfigResetArgs,
+	ConfigResetArgsSchema,
+	type ConfigRollbackArgs,
+	ConfigRollbackArgsSchema,
+	type ConfigSetArgs,
+	ConfigSetArgsSchema,
+	type ConfigUpdateGlobalArgs,
+	ConfigUpdateGlobalArgsSchema,
+	type ConfigUpdateProjectArgs,
+	ConfigUpdateProjectArgsSchema,
+	configGetToolDefinition,
+	configResetToolDefinition,
+	configRollbackToolDefinition,
+	configSetToolDefinition,
+	configUpdateGlobalToolDefinition,
+	configUpdateProjectToolDefinition,
 } from "./schema";
 export * as configSet from "./set";
 export * as configUpdateGlobal from "./update-global";

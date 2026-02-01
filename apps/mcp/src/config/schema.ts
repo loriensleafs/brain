@@ -10,26 +10,26 @@
  */
 
 import {
-  parseBrainConfig as ajvParse,
-  validateBrainConfig as ajvValidate,
-  type BrainConfig,
-  type DefaultsConfig,
-  getBrainConfigErrors,
-  type LoggingConfig,
-  type ProjectConfig,
-  type SyncConfig,
-  type ValidationError,
-  type WatcherConfig,
+	parseBrainConfig as ajvParse,
+	validateBrainConfig as ajvValidate,
+	type BrainConfig,
+	type DefaultsConfig,
+	getBrainConfigErrors,
+	type LoggingConfig,
+	type ProjectConfig,
+	type SyncConfig,
+	type ValidationError,
+	type WatcherConfig,
 } from "@brain/validation";
 
 // Re-export types from @brain/validation
 export type {
-  BrainConfig,
-  ProjectConfig,
-  DefaultsConfig,
-  SyncConfig,
-  LoggingConfig,
-  WatcherConfig,
+	BrainConfig,
+	ProjectConfig,
+	DefaultsConfig,
+	SyncConfig,
+	LoggingConfig,
+	WatcherConfig,
 };
 
 /**
@@ -50,9 +50,9 @@ export type LogLevel = "trace" | "debug" | "info" | "warn" | "error";
  * Validation result from validation operations.
  */
 export interface ValidationResult<T> {
-  success: boolean;
-  data?: T;
-  errors?: ValidationError[];
+	success: boolean;
+	data?: T;
+	errors?: ValidationError[];
 }
 
 /**
@@ -75,20 +75,20 @@ export interface ValidationResult<T> {
  * ```
  */
 export function validateBrainConfig(
-  config: unknown,
+	config: unknown,
 ): ValidationResult<BrainConfig> {
-  // Deep clone to avoid mutating input
-  const cloned =
-    typeof config === "object" && config !== null
-      ? JSON.parse(JSON.stringify(config))
-      : config;
+	// Deep clone to avoid mutating input
+	const cloned =
+		typeof config === "object" && config !== null
+			? JSON.parse(JSON.stringify(config))
+			: config;
 
-  if (ajvValidate(cloned)) {
-    return { success: true, data: cloned as BrainConfig };
-  }
+	if (ajvValidate(cloned)) {
+		return { success: true, data: cloned as BrainConfig };
+	}
 
-  const errors = getBrainConfigErrors(config);
-  return { success: false, errors };
+	const errors = getBrainConfigErrors(config);
+	return { success: false, errors };
 }
 
 /**
@@ -98,54 +98,54 @@ export function validateBrainConfig(
  * @returns ValidationResult with success status and data or errors
  */
 export function validateProjectConfig(
-  project: unknown,
+	project: unknown,
 ): ValidationResult<ProjectConfig> {
-  // Project validation is a subset - validate required fields
-  if (typeof project !== "object" || project === null) {
-    return {
-      success: false,
-      errors: [
-        {
-          field: "",
-          constraint: "type",
-          message: "Expected object",
-        },
-      ],
-    };
-  }
+	// Project validation is a subset - validate required fields
+	if (typeof project !== "object" || project === null) {
+		return {
+			success: false,
+			errors: [
+				{
+					field: "",
+					constraint: "type",
+					message: "Expected object",
+				},
+			],
+		};
+	}
 
-  const p = project as Record<string, unknown>;
+	const p = project as Record<string, unknown>;
 
-  if (typeof p.code_path !== "string" || p.code_path.length === 0) {
-    return {
-      success: false,
-      errors: [
-        {
-          field: "/code_path",
-          constraint: "required",
-          message: "code_path is required",
-        },
-      ],
-    };
-  }
+	if (typeof p.code_path !== "string" || p.code_path.length === 0) {
+		return {
+			success: false,
+			errors: [
+				{
+					field: "/code_path",
+					constraint: "required",
+					message: "code_path is required",
+				},
+			],
+		};
+	}
 
-  if (p.memories_mode !== undefined) {
-    const validModes = ["DEFAULT", "CODE", "CUSTOM"];
-    if (!validModes.includes(p.memories_mode as string)) {
-      return {
-        success: false,
-        errors: [
-          {
-            field: "/memories_mode",
-            constraint: "enum",
-            message: `memories_mode must be one of: ${validModes.join(", ")}`,
-          },
-        ],
-      };
-    }
-  }
+	if (p.memories_mode !== undefined) {
+		const validModes = ["DEFAULT", "CODE", "CUSTOM"];
+		if (!validModes.includes(p.memories_mode as string)) {
+			return {
+				success: false,
+				errors: [
+					{
+						field: "/memories_mode",
+						constraint: "enum",
+						message: `memories_mode must be one of: ${validModes.join(", ")}`,
+					},
+				],
+			};
+		}
+	}
 
-  return { success: true, data: project as ProjectConfig };
+	return { success: true, data: project as ProjectConfig };
 }
 
 /**
@@ -157,7 +157,7 @@ export function validateProjectConfig(
  * @throws Error if validation fails
  */
 export function parseBrainConfig(config: unknown): BrainConfig {
-  return ajvParse(config);
+	return ajvParse(config);
 }
 
 /**
@@ -166,22 +166,22 @@ export function parseBrainConfig(config: unknown): BrainConfig {
  * Used when no config file exists or when resetting to defaults.
  */
 export const DEFAULT_BRAIN_CONFIG: BrainConfig = {
-  $schema: "https://brain.dev/schemas/config-v2.json",
-  version: "2.0.0",
-  defaults: {
-    memories_location: "~/memories",
-    memories_mode: "DEFAULT",
-  },
-  projects: {},
-  sync: {
-    enabled: true,
-    delay_ms: 500,
-  },
-  logging: {
-    level: "info",
-  },
-  watcher: {
-    enabled: true,
-    debounce_ms: 2000,
-  },
+	$schema: "https://brain.dev/schemas/config-v2.json",
+	version: "2.0.0",
+	defaults: {
+		memories_location: "~/memories",
+		memories_mode: "DEFAULT",
+	},
+	projects: {},
+	sync: {
+		enabled: true,
+		delay_ms: 500,
+	},
+	logging: {
+		level: "info",
+	},
+	watcher: {
+		enabled: true,
+		debounce_ms: 2000,
+	},
 };

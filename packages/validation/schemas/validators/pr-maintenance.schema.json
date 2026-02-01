@@ -1,473 +1,473 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://brain.dev/schemas/validators/pr-maintenance.json",
-  "title": "PRMaintenanceValidation",
-  "description": "Schema for PR maintenance analysis configuration and results.",
-  "definitions": {
-    "BotCategory": {
-      "type": "string",
-      "enum": [
-        "agent-controlled",
-        "mention-triggered",
-        "review-bot",
-        "human",
-        "human-blocked",
-        "has-derivatives"
-      ],
-      "description": "Classification of PR author or state"
-    },
-    "PRActionReason": {
-      "type": "string",
-      "enum": [
-        "CHANGES_REQUESTED",
-        "HAS_CONFLICTS",
-        "HAS_FAILING_CHECKS",
-        "PENDING_DERIVATIVES",
-        "MENTION"
-      ],
-      "description": "Reason a PR requires action"
-    },
-    "MergeableState": {
-      "type": "string",
-      "enum": ["MERGEABLE", "CONFLICTING", "UNKNOWN"],
-      "description": "GitHub mergeable state"
-    },
-    "ReviewDecision": {
-      "type": "string",
-      "enum": ["APPROVED", "CHANGES_REQUESTED", "REVIEW_REQUIRED", ""],
-      "description": "GitHub review decision"
-    },
-    "CheckState": {
-      "type": "string",
-      "enum": ["SUCCESS", "FAILURE", "ERROR", "PENDING"],
-      "description": "CI check state"
-    },
-    "CheckConclusion": {
-      "type": "string",
-      "enum": ["SUCCESS", "FAILURE", "NEUTRAL", "SKIPPED", ""],
-      "description": "CI check conclusion"
-    },
-    "PRMaintenanceConfig": {
-      "type": "object",
-      "description": "Configuration for PR maintenance analysis",
-      "properties": {
-        "protectedBranches": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "minLength": 1
-          },
-          "default": ["main", "master", "develop"],
-          "description": "Branches considered protected (non-derivative)"
-        },
-        "botCategories": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "description": "Bot usernames grouped by category"
-        },
-        "maxPRs": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 100,
-          "default": 20,
-          "description": "Maximum number of PRs to analyze"
-        }
-      },
-      "additionalProperties": false
-    },
-    "PRAuthor": {
-      "type": "object",
-      "properties": {
-        "login": {
-          "type": "string",
-          "minLength": 1,
-          "description": "GitHub username"
-        }
-      },
-      "required": ["login"],
-      "additionalProperties": false
-    },
-    "ReviewRequest": {
-      "type": "object",
-      "properties": {
-        "requestedReviewer": {
-          "type": "object",
-          "properties": {
-            "login": {
-              "type": "string"
-            },
-            "name": {
-              "type": "string"
-            }
-          },
-          "additionalProperties": false
-        }
-      },
-      "additionalProperties": false
-    },
-    "StatusCheckContext": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "context": {
-          "type": "string"
-        },
-        "conclusion": {
-          "$ref": "#/definitions/CheckConclusion"
-        },
-        "status": {
-          "type": "string"
-        },
-        "state": {
-          "$ref": "#/definitions/CheckState"
-        }
-      },
-      "additionalProperties": false
-    },
-    "StatusCheckRollup": {
-      "type": "object",
-      "properties": {
-        "state": {
-          "$ref": "#/definitions/CheckState"
-        },
-        "contexts": {
-          "type": "object",
-          "properties": {
-            "nodes": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/StatusCheckContext"
-              }
-            }
-          },
-          "additionalProperties": false
-        }
-      },
-      "additionalProperties": false
-    },
-    "PRCommit": {
-      "type": "object",
-      "properties": {
-        "commit": {
-          "type": "object",
-          "properties": {
-            "statusCheckRollup": {
-              "$ref": "#/definitions/StatusCheckRollup"
-            }
-          },
-          "additionalProperties": false
-        }
-      },
-      "additionalProperties": false
-    },
-    "PullRequest": {
-      "type": "object",
-      "description": "GitHub pull request data",
-      "properties": {
-        "number": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "title": {
-          "type": "string"
-        },
-        "author": {
-          "$ref": "#/definitions/PRAuthor"
-        },
-        "headRefName": {
-          "type": "string",
-          "description": "Source branch name"
-        },
-        "baseRefName": {
-          "type": "string",
-          "description": "Target branch name"
-        },
-        "mergeable": {
-          "$ref": "#/definitions/MergeableState"
-        },
-        "reviewDecision": {
-          "$ref": "#/definitions/ReviewDecision"
-        },
-        "reviewRequests": {
-          "type": "object",
-          "properties": {
-            "nodes": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/ReviewRequest"
-              }
-            }
-          },
-          "additionalProperties": false
-        },
-        "commits": {
-          "type": "object",
-          "properties": {
-            "nodes": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/PRCommit"
-              }
-            }
-          },
-          "additionalProperties": false
-        }
-      },
-      "required": ["number", "author"],
-      "additionalProperties": true
-    },
-    "PRActionItem": {
-      "type": "object",
-      "description": "A PR requiring action",
-      "properties": {
-        "number": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "category": {
-          "$ref": "#/definitions/BotCategory"
-        },
-        "hasConflicts": {
-          "type": "boolean"
-        },
-        "hasFailingChecks": {
-          "type": "boolean"
-        },
-        "reason": {
-          "$ref": "#/definitions/PRActionReason"
-        },
-        "author": {
-          "type": "string"
-        },
-        "title": {
-          "type": "string"
-        },
-        "headRefName": {
-          "type": "string"
-        },
-        "baseRefName": {
-          "type": "string"
-        },
-        "requiresSynthesis": {
-          "type": "boolean"
-        },
-        "derivatives": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "minimum": 1
-          }
-        }
-      },
-      "required": [
-        "number",
-        "category",
-        "hasConflicts",
-        "reason",
-        "author",
-        "title"
-      ],
-      "additionalProperties": false
-    },
-    "DerivativePR": {
-      "type": "object",
-      "description": "A PR targeting a non-protected branch",
-      "properties": {
-        "number": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "title": {
-          "type": "string"
-        },
-        "author": {
-          "type": "string"
-        },
-        "targetBranch": {
-          "type": "string"
-        },
-        "sourceBranch": {
-          "type": "string"
-        }
-      },
-      "required": ["number", "title", "author", "targetBranch", "sourceBranch"],
-      "additionalProperties": false
-    },
-    "ParentWithDerivatives": {
-      "type": "object",
-      "description": "A parent PR with pending derivative PRs",
-      "properties": {
-        "parentPR": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "parentTitle": {
-          "type": "string"
-        },
-        "parentBranch": {
-          "type": "string"
-        },
-        "derivatives": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "minimum": 1
-          }
-        }
-      },
-      "required": ["parentPR", "parentTitle", "parentBranch", "derivatives"],
-      "additionalProperties": false
-    },
-    "PRError": {
-      "type": "object",
-      "properties": {
-        "pr": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "error": {
-          "type": "string"
-        }
-      },
-      "required": ["pr", "error"],
-      "additionalProperties": false
-    },
-    "PRMaintenanceResult": {
-      "type": "object",
-      "description": "Result of PR maintenance analysis",
-      "properties": {
-        "totalPRs": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "actionRequired": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/PRActionItem"
-          }
-        },
-        "blocked": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/PRActionItem"
-          }
-        },
-        "derivativePRs": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/DerivativePR"
-          }
-        },
-        "parentsWithDerivatives": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/ParentWithDerivatives"
-          }
-        },
-        "errors": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/PRError"
-          }
-        }
-      },
-      "required": [
-        "totalPRs",
-        "actionRequired",
-        "blocked",
-        "derivativePRs",
-        "parentsWithDerivatives"
-      ],
-      "additionalProperties": false
-    },
-    "PRMaintenanceSummary": {
-      "type": "object",
-      "properties": {
-        "total": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "actionRequired": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "blocked": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "derivatives": {
-          "type": "integer",
-          "minimum": 0
-        }
-      },
-      "required": ["total", "actionRequired", "blocked", "derivatives"],
-      "additionalProperties": false
-    },
-    "PRMaintenanceOutput": {
-      "type": "object",
-      "description": "Final output for workflow consumption",
-      "properties": {
-        "prs": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/PRActionItem"
-          }
-        },
-        "summary": {
-          "$ref": "#/definitions/PRMaintenanceSummary"
-        }
-      },
-      "required": ["prs", "summary"],
-      "additionalProperties": false
-    },
-    "RateLimitInfo": {
-      "type": "object",
-      "description": "GitHub API rate limit information",
-      "properties": {
-        "coreRemaining": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "graphqlRemaining": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "isSafe": {
-          "type": "boolean",
-          "description": "True if rate limits are sufficient (core >= 100, graphql >= 50)"
-        }
-      },
-      "required": ["coreRemaining", "graphqlRemaining", "isSafe"],
-      "additionalProperties": false
-    }
-  },
-  "type": "object",
-  "properties": {
-    "config": {
-      "$ref": "#/definitions/PRMaintenanceConfig"
-    },
-    "pullRequests": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/PullRequest"
-      }
-    },
-    "result": {
-      "$ref": "#/definitions/PRMaintenanceResult"
-    },
-    "output": {
-      "$ref": "#/definitions/PRMaintenanceOutput"
-    },
-    "rateLimit": {
-      "$ref": "#/definitions/RateLimitInfo"
-    }
-  },
-  "additionalProperties": false
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "https://brain.dev/schemas/validators/pr-maintenance.json",
+	"title": "PRMaintenanceValidation",
+	"description": "Schema for PR maintenance analysis configuration and results.",
+	"definitions": {
+		"BotCategory": {
+			"type": "string",
+			"enum": [
+				"agent-controlled",
+				"mention-triggered",
+				"review-bot",
+				"human",
+				"human-blocked",
+				"has-derivatives"
+			],
+			"description": "Classification of PR author or state"
+		},
+		"PRActionReason": {
+			"type": "string",
+			"enum": [
+				"CHANGES_REQUESTED",
+				"HAS_CONFLICTS",
+				"HAS_FAILING_CHECKS",
+				"PENDING_DERIVATIVES",
+				"MENTION"
+			],
+			"description": "Reason a PR requires action"
+		},
+		"MergeableState": {
+			"type": "string",
+			"enum": ["MERGEABLE", "CONFLICTING", "UNKNOWN"],
+			"description": "GitHub mergeable state"
+		},
+		"ReviewDecision": {
+			"type": "string",
+			"enum": ["APPROVED", "CHANGES_REQUESTED", "REVIEW_REQUIRED", ""],
+			"description": "GitHub review decision"
+		},
+		"CheckState": {
+			"type": "string",
+			"enum": ["SUCCESS", "FAILURE", "ERROR", "PENDING"],
+			"description": "CI check state"
+		},
+		"CheckConclusion": {
+			"type": "string",
+			"enum": ["SUCCESS", "FAILURE", "NEUTRAL", "SKIPPED", ""],
+			"description": "CI check conclusion"
+		},
+		"PRMaintenanceConfig": {
+			"type": "object",
+			"description": "Configuration for PR maintenance analysis",
+			"properties": {
+				"protectedBranches": {
+					"type": "array",
+					"items": {
+						"type": "string",
+						"minLength": 1
+					},
+					"default": ["main", "master", "develop"],
+					"description": "Branches considered protected (non-derivative)"
+				},
+				"botCategories": {
+					"type": "object",
+					"additionalProperties": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						}
+					},
+					"description": "Bot usernames grouped by category"
+				},
+				"maxPRs": {
+					"type": "integer",
+					"minimum": 1,
+					"maximum": 100,
+					"default": 20,
+					"description": "Maximum number of PRs to analyze"
+				}
+			},
+			"additionalProperties": false
+		},
+		"PRAuthor": {
+			"type": "object",
+			"properties": {
+				"login": {
+					"type": "string",
+					"minLength": 1,
+					"description": "GitHub username"
+				}
+			},
+			"required": ["login"],
+			"additionalProperties": false
+		},
+		"ReviewRequest": {
+			"type": "object",
+			"properties": {
+				"requestedReviewer": {
+					"type": "object",
+					"properties": {
+						"login": {
+							"type": "string"
+						},
+						"name": {
+							"type": "string"
+						}
+					},
+					"additionalProperties": false
+				}
+			},
+			"additionalProperties": false
+		},
+		"StatusCheckContext": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"context": {
+					"type": "string"
+				},
+				"conclusion": {
+					"$ref": "#/definitions/CheckConclusion"
+				},
+				"status": {
+					"type": "string"
+				},
+				"state": {
+					"$ref": "#/definitions/CheckState"
+				}
+			},
+			"additionalProperties": false
+		},
+		"StatusCheckRollup": {
+			"type": "object",
+			"properties": {
+				"state": {
+					"$ref": "#/definitions/CheckState"
+				},
+				"contexts": {
+					"type": "object",
+					"properties": {
+						"nodes": {
+							"type": "array",
+							"items": {
+								"$ref": "#/definitions/StatusCheckContext"
+							}
+						}
+					},
+					"additionalProperties": false
+				}
+			},
+			"additionalProperties": false
+		},
+		"PRCommit": {
+			"type": "object",
+			"properties": {
+				"commit": {
+					"type": "object",
+					"properties": {
+						"statusCheckRollup": {
+							"$ref": "#/definitions/StatusCheckRollup"
+						}
+					},
+					"additionalProperties": false
+				}
+			},
+			"additionalProperties": false
+		},
+		"PullRequest": {
+			"type": "object",
+			"description": "GitHub pull request data",
+			"properties": {
+				"number": {
+					"type": "integer",
+					"minimum": 1
+				},
+				"title": {
+					"type": "string"
+				},
+				"author": {
+					"$ref": "#/definitions/PRAuthor"
+				},
+				"headRefName": {
+					"type": "string",
+					"description": "Source branch name"
+				},
+				"baseRefName": {
+					"type": "string",
+					"description": "Target branch name"
+				},
+				"mergeable": {
+					"$ref": "#/definitions/MergeableState"
+				},
+				"reviewDecision": {
+					"$ref": "#/definitions/ReviewDecision"
+				},
+				"reviewRequests": {
+					"type": "object",
+					"properties": {
+						"nodes": {
+							"type": "array",
+							"items": {
+								"$ref": "#/definitions/ReviewRequest"
+							}
+						}
+					},
+					"additionalProperties": false
+				},
+				"commits": {
+					"type": "object",
+					"properties": {
+						"nodes": {
+							"type": "array",
+							"items": {
+								"$ref": "#/definitions/PRCommit"
+							}
+						}
+					},
+					"additionalProperties": false
+				}
+			},
+			"required": ["number", "author"],
+			"additionalProperties": true
+		},
+		"PRActionItem": {
+			"type": "object",
+			"description": "A PR requiring action",
+			"properties": {
+				"number": {
+					"type": "integer",
+					"minimum": 1
+				},
+				"category": {
+					"$ref": "#/definitions/BotCategory"
+				},
+				"hasConflicts": {
+					"type": "boolean"
+				},
+				"hasFailingChecks": {
+					"type": "boolean"
+				},
+				"reason": {
+					"$ref": "#/definitions/PRActionReason"
+				},
+				"author": {
+					"type": "string"
+				},
+				"title": {
+					"type": "string"
+				},
+				"headRefName": {
+					"type": "string"
+				},
+				"baseRefName": {
+					"type": "string"
+				},
+				"requiresSynthesis": {
+					"type": "boolean"
+				},
+				"derivatives": {
+					"type": "array",
+					"items": {
+						"type": "integer",
+						"minimum": 1
+					}
+				}
+			},
+			"required": [
+				"number",
+				"category",
+				"hasConflicts",
+				"reason",
+				"author",
+				"title"
+			],
+			"additionalProperties": false
+		},
+		"DerivativePR": {
+			"type": "object",
+			"description": "A PR targeting a non-protected branch",
+			"properties": {
+				"number": {
+					"type": "integer",
+					"minimum": 1
+				},
+				"title": {
+					"type": "string"
+				},
+				"author": {
+					"type": "string"
+				},
+				"targetBranch": {
+					"type": "string"
+				},
+				"sourceBranch": {
+					"type": "string"
+				}
+			},
+			"required": ["number", "title", "author", "targetBranch", "sourceBranch"],
+			"additionalProperties": false
+		},
+		"ParentWithDerivatives": {
+			"type": "object",
+			"description": "A parent PR with pending derivative PRs",
+			"properties": {
+				"parentPR": {
+					"type": "integer",
+					"minimum": 1
+				},
+				"parentTitle": {
+					"type": "string"
+				},
+				"parentBranch": {
+					"type": "string"
+				},
+				"derivatives": {
+					"type": "array",
+					"items": {
+						"type": "integer",
+						"minimum": 1
+					}
+				}
+			},
+			"required": ["parentPR", "parentTitle", "parentBranch", "derivatives"],
+			"additionalProperties": false
+		},
+		"PRError": {
+			"type": "object",
+			"properties": {
+				"pr": {
+					"type": "integer",
+					"minimum": 1
+				},
+				"error": {
+					"type": "string"
+				}
+			},
+			"required": ["pr", "error"],
+			"additionalProperties": false
+		},
+		"PRMaintenanceResult": {
+			"type": "object",
+			"description": "Result of PR maintenance analysis",
+			"properties": {
+				"totalPRs": {
+					"type": "integer",
+					"minimum": 0
+				},
+				"actionRequired": {
+					"type": "array",
+					"items": {
+						"$ref": "#/definitions/PRActionItem"
+					}
+				},
+				"blocked": {
+					"type": "array",
+					"items": {
+						"$ref": "#/definitions/PRActionItem"
+					}
+				},
+				"derivativePRs": {
+					"type": "array",
+					"items": {
+						"$ref": "#/definitions/DerivativePR"
+					}
+				},
+				"parentsWithDerivatives": {
+					"type": "array",
+					"items": {
+						"$ref": "#/definitions/ParentWithDerivatives"
+					}
+				},
+				"errors": {
+					"type": "array",
+					"items": {
+						"$ref": "#/definitions/PRError"
+					}
+				}
+			},
+			"required": [
+				"totalPRs",
+				"actionRequired",
+				"blocked",
+				"derivativePRs",
+				"parentsWithDerivatives"
+			],
+			"additionalProperties": false
+		},
+		"PRMaintenanceSummary": {
+			"type": "object",
+			"properties": {
+				"total": {
+					"type": "integer",
+					"minimum": 0
+				},
+				"actionRequired": {
+					"type": "integer",
+					"minimum": 0
+				},
+				"blocked": {
+					"type": "integer",
+					"minimum": 0
+				},
+				"derivatives": {
+					"type": "integer",
+					"minimum": 0
+				}
+			},
+			"required": ["total", "actionRequired", "blocked", "derivatives"],
+			"additionalProperties": false
+		},
+		"PRMaintenanceOutput": {
+			"type": "object",
+			"description": "Final output for workflow consumption",
+			"properties": {
+				"prs": {
+					"type": "array",
+					"items": {
+						"$ref": "#/definitions/PRActionItem"
+					}
+				},
+				"summary": {
+					"$ref": "#/definitions/PRMaintenanceSummary"
+				}
+			},
+			"required": ["prs", "summary"],
+			"additionalProperties": false
+		},
+		"RateLimitInfo": {
+			"type": "object",
+			"description": "GitHub API rate limit information",
+			"properties": {
+				"coreRemaining": {
+					"type": "integer",
+					"minimum": 0
+				},
+				"graphqlRemaining": {
+					"type": "integer",
+					"minimum": 0
+				},
+				"isSafe": {
+					"type": "boolean",
+					"description": "True if rate limits are sufficient (core >= 100, graphql >= 50)"
+				}
+			},
+			"required": ["coreRemaining", "graphqlRemaining", "isSafe"],
+			"additionalProperties": false
+		}
+	},
+	"type": "object",
+	"properties": {
+		"config": {
+			"$ref": "#/definitions/PRMaintenanceConfig"
+		},
+		"pullRequests": {
+			"type": "array",
+			"items": {
+				"$ref": "#/definitions/PullRequest"
+			}
+		},
+		"result": {
+			"$ref": "#/definitions/PRMaintenanceResult"
+		},
+		"output": {
+			"$ref": "#/definitions/PRMaintenanceOutput"
+		},
+		"rateLimit": {
+			"$ref": "#/definitions/RateLimitInfo"
+		}
+	},
+	"additionalProperties": false
 }

@@ -14,27 +14,27 @@ import { config } from "../../config";
 import { logger } from "../internal/logger";
 
 export interface SearchGuardResult {
-  allowed: boolean;
-  existingMatches?: string[];
-  warning?: string;
+	allowed: boolean;
+	existingMatches?: string[];
+	warning?: string;
 }
 
 interface SearchResult {
-  title: string;
-  permalink: string;
+	title: string;
+	permalink: string;
 }
 
 interface SearchResponse {
-  results?: SearchResult[];
+	results?: SearchResult[];
 }
 
 interface ToolResultContent {
-  type: string;
-  text?: string;
+	type: string;
+	text?: string;
 }
 
 interface ToolResult {
-  content?: ToolResultContent[];
+	content?: ToolResultContent[];
 }
 
 /**
@@ -45,109 +45,109 @@ interface ToolResult {
  * @returns SearchGuardResult indicating if the write should proceed
  */
 export async function checkForDuplicates(
-  client: Client,
-  args: Record<string, unknown>,
+	client: Client,
+	args: Record<string, unknown>,
 ): Promise<SearchGuardResult> {
-  // Only check write_note calls
-  const title = args.title as string;
-  if (!title) {
-    return { allowed: true };
-  }
+	// Only check write_note calls
+	const title = args.title as string;
+	if (!title) {
+		return { allowed: true };
+	}
 
-  try {
-    // Search for existing notes with matching title
-    const result = (await client.callTool({
-      name: "search_notes",
-      arguments: {
-        query: title,
-        search_type: "title",
-        project: args.project,
-        page_size: 5,
-      },
-    })) as ToolResult;
+	try {
+		// Search for existing notes with matching title
+		const result = (await client.callTool({
+			name: "search_notes",
+			arguments: {
+				query: title,
+				search_type: "title",
+				project: args.project,
+				page_size: 5,
+			},
+		})) as ToolResult;
 
-    // Parse the search results
-    const textContent = result.content?.find((c) => c.type === "text")?.text;
-    if (!textContent) {
-      return { allowed: true };
-    }
+		// Parse the search results
+		const textContent = result.content?.find((c) => c.type === "text")?.text;
+		if (!textContent) {
+			return { allowed: true };
+		}
 
-    let searchData: SearchResponse;
-    try {
-      searchData = JSON.parse(textContent);
-    } catch {
-      // If we can't parse, allow the write
-      return { allowed: true };
-    }
+		let searchData: SearchResponse;
+		try {
+			searchData = JSON.parse(textContent);
+		} catch {
+			// If we can't parse, allow the write
+			return { allowed: true };
+		}
 
-    if (!searchData.results || searchData.results.length === 0) {
-      return { allowed: true };
-    }
+		if (!searchData.results || searchData.results.length === 0) {
+			return { allowed: true };
+		}
 
-    // Check for exact or close title matches
-    const matches = searchData.results.filter((r) => {
-      const normalizedExisting = r.title.toLowerCase().trim();
-      const normalizedNew = title.toLowerCase().trim();
-      return (
-        normalizedExisting === normalizedNew ||
-        normalizedExisting.includes(normalizedNew) ||
-        normalizedNew.includes(normalizedExisting)
-      );
-    });
+		// Check for exact or close title matches
+		const matches = searchData.results.filter((r) => {
+			const normalizedExisting = r.title.toLowerCase().trim();
+			const normalizedNew = title.toLowerCase().trim();
+			return (
+				normalizedExisting === normalizedNew ||
+				normalizedExisting.includes(normalizedNew) ||
+				normalizedNew.includes(normalizedExisting)
+			);
+		});
 
-    if (matches.length === 0) {
-      return { allowed: true };
-    }
+		if (matches.length === 0) {
+			return { allowed: true };
+		}
 
-    const matchTitles = matches.map((m) => m.title);
-    const warning = `Potential duplicate: "${title}" matches existing notes: ${matchTitles.join(
-      ", ",
-    )}. Consider using edit_note instead.`;
+		const matchTitles = matches.map((m) => m.title);
+		const warning = `Potential duplicate: "${title}" matches existing notes: ${matchTitles.join(
+			", ",
+		)}. Consider using edit_note instead.`;
 
-    logger.warn(
-      {
-        newTitle: title,
-        matches: matchTitles,
-        project: args.project,
-      },
-      "Search guard: potential duplicate detected",
-    );
+		logger.warn(
+			{
+				newTitle: title,
+				matches: matchTitles,
+				project: args.project,
+			},
+			"Search guard: potential duplicate detected",
+		);
 
-    // In enforce mode, block the write
-    if (config.searchGuardEnforce) {
-      return {
-        allowed: false,
-        existingMatches: matchTitles,
-        warning,
-      };
-    }
+		// In enforce mode, block the write
+		if (config.searchGuardEnforce) {
+			return {
+				allowed: false,
+				existingMatches: matchTitles,
+				warning,
+			};
+		}
 
-    // In warn mode, allow but return warning
-    return {
-      allowed: true,
-      existingMatches: matchTitles,
-      warning,
-    };
-  } catch (error) {
-    // If search fails, log and allow the write
-    logger.error(
-      { error, title },
-      "Search guard: search failed, allowing write",
-    );
-    return { allowed: true };
-  }
+		// In warn mode, allow but return warning
+		return {
+			allowed: true,
+			existingMatches: matchTitles,
+			warning,
+		};
+	} catch (error) {
+		// If search fails, log and allow the write
+		logger.error(
+			{ error, title },
+			"Search guard: search failed, allowing write",
+		);
+		return { allowed: true };
+	}
 }
 
 /**
  * Format the guard result into an error message for the client
  */
 export function formatGuardError(result: SearchGuardResult): string {
-  const matches = result.existingMatches?.join(", ") || "unknown";
-  return (
-    `Duplicate note blocked by search guard.\n\n` +
-    `Existing notes with similar titles: ${matches}\n\n` +
-    `To update an existing note, use edit_note instead:\n` +
-    `  edit_note(identifier="<permalink>", operation="append", content="...")\n\n` +
-    `To disable this check, set BRAIN_SEARCH_GUARD=off`
-  );
+	const matches = result.existingMatches?.join(", ") || "unknown";
+	return (
+		`Duplicate note blocked by search guard.\n\n` +
+		`Existing notes with similar titles: ${matches}\n\n` +
+		`To update an existing note, use edit_note instead:\n` +
+		`  edit_note(identifier="<permalink>", operation="append", content="...")\n\n` +
+		`To disable this check, set BRAIN_SEARCH_GUARD=off`
+	);
 }

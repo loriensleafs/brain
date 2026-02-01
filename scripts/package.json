@@ -1,18 +1,18 @@
 {
-  "name": "@brain/scripts",
-  "version": "1.0.0",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "typecheck": "tsc --noEmit"
-  },
-  "dependencies": {
-    "@brain/utils": "workspace:*"
-  },
-  "devDependencies": {
-    "@types/bun": "latest",
-    "@types/node": "^25.0.8",
-    "bun-types": "^1.3.8",
-    "typescript": "^5.7.0"
-  }
+	"name": "@brain/scripts",
+	"version": "1.0.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"typecheck": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@brain/utils": "workspace:*"
+	},
+	"devDependencies": {
+		"@types/bun": "latest",
+		"@types/node": "^25.0.8",
+		"bun-types": "^1.3.8",
+		"typescript": "^5.7.0"
+	}
 }

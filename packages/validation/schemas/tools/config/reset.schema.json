@@ -1,19 +1,19 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://brain.dev/schemas/tools/config/reset.json",
-  "title": "ConfigResetArgs",
-  "description": "Schema for config_reset tool arguments. Resets Brain configuration to defaults - either a specific field or the entire configuration.",
-  "type": "object",
-  "properties": {
-    "key": {
-      "type": "string",
-      "description": "Specific config key to reset to default. If not provided with all=true, resets entire config."
-    },
-    "all": {
-      "type": "boolean",
-      "description": "Reset entire configuration to defaults. Requires explicit confirmation."
-    }
-  },
-  "required": [],
-  "additionalProperties": false
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "https://brain.dev/schemas/tools/config/reset.json",
+	"title": "ConfigResetArgs",
+	"description": "Schema for config_reset tool arguments. Resets Brain configuration to defaults - either a specific field or the entire configuration.",
+	"type": "object",
+	"properties": {
+		"key": {
+			"type": "string",
+			"description": "Specific config key to reset to default. If not provided with all=true, resets entire config."
+		},
+		"all": {
+			"type": "boolean",
+			"description": "Reset entire configuration to defaults. Requires explicit confirmation."
+		}
+	},
+	"required": [],
+	"additionalProperties": false
 }

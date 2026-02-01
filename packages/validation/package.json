@@ -1,37 +1,37 @@
 {
-  "name": "@brain/validation",
-  "version": "0.1.0",
-  "private": true,
-  "description": "JSON Schema definitions and TypeScript type generation for Brain validation",
-  "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/src/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/src/index.d.ts",
-      "import": "./dist/index.js"
-    },
-    "./schemas/*": "./schemas/*",
-    "./generated/*": "./generated/*"
-  },
-  "scripts": {
-    "generate:types": "bun run scripts/generate-types.ts",
-    "build": "bun run generate:types && bun build src/index.ts --outdir dist --target node && tsc --emitDeclarationOnly",
-    "build:go": "go build -o dist/ ./...",
-    "typecheck": "tsc --noEmit",
-    "test": "bun run --bun vitest run",
-    "test:watch": "bun run --bun vitest",
-    "test:go": "go test -v ./...",
-    "clean": "rm -rf dist generated"
-  },
-  "dependencies": {
-    "ajv": "^8.17.1",
-    "ajv-formats": "^3.0.1"
-  },
-  "devDependencies": {
-    "json-schema-to-typescript": "^15.0.3",
-    "@types/bun": "latest",
-    "typescript": "^5.7.0",
-    "vitest": "^4.0.18"
-  }
+	"name": "@brain/validation",
+	"version": "0.1.0",
+	"private": true,
+	"description": "JSON Schema definitions and TypeScript type generation for Brain validation",
+	"type": "module",
+	"main": "dist/index.js",
+	"types": "dist/src/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/src/index.d.ts",
+			"import": "./dist/index.js"
+		},
+		"./schemas/*": "./schemas/*",
+		"./generated/*": "./generated/*"
+	},
+	"scripts": {
+		"generate:types": "bun run scripts/generate-types.ts",
+		"build": "bun run generate:types && bun build src/index.ts --outdir dist --target node && tsc --emitDeclarationOnly",
+		"build:go": "go build -o dist/ ./...",
+		"typecheck": "tsc --noEmit",
+		"test": "bun run --bun vitest run",
+		"test:watch": "bun run --bun vitest",
+		"test:go": "go test -v ./...",
+		"clean": "rm -rf dist generated"
+	},
+	"dependencies": {
+		"ajv": "^8.17.1",
+		"ajv-formats": "^3.0.1"
+	},
+	"devDependencies": {
+		"json-schema-to-typescript": "^15.0.3",
+		"@types/bun": "latest",
+		"typescript": "^5.7.0",
+		"vitest": "^4.0.18"
+	}
 }

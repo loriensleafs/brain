@@ -14,8 +14,8 @@
  */
 
 import {
-  parseSearchArgs as _parseSearchArgs,
-  type SearchArgs,
+	parseSearchArgs as _parseSearchArgs,
+	type SearchArgs,
 } from "@brain/validation";
 import searchSchema from "@brain/validation/schemas/tools/search.schema.json";
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
@@ -28,22 +28,22 @@ export type { SearchArgs };
  * Uses AJV validation under the hood for 5-18x better performance.
  */
 export const SearchArgsSchema = {
-  parse: _parseSearchArgs,
+	parse: _parseSearchArgs,
 };
 
 export interface SearchResult {
-  permalink: string;
-  title: string;
-  similarity_score: number;
-  snippet: string;
-  source: "semantic" | "keyword" | "related";
-  depth?: number; // 0 = direct match, 1+ = related via wikilinks
-  fullContent?: string; // Full note content when full_context=true (limited to 5000 chars)
+	permalink: string;
+	title: string;
+	similarity_score: number;
+	snippet: string;
+	source: "semantic" | "keyword" | "related";
+	depth?: number; // 0 = direct match, 1+ = related via wikilinks
+	fullContent?: string; // Full note content when full_context=true (limited to 5000 chars)
 }
 
 export const toolDefinition: Tool = {
-  name: "search",
-  description: `Search knowledge base with automatic semantic/keyword fallback.
+	name: "search",
+	description: `Search knowledge base with automatic semantic/keyword fallback.
 
 ## Search Modes
 
@@ -70,5 +70,5 @@ List of results with:
 - \`snippet\`: Content preview
 - \`fullContent\`: Full note content (only when full_context=true, limited to 5000 chars)
 - \`source\`: Which search method was used`,
-  inputSchema: searchSchema as Tool["inputSchema"],
+	inputSchema: searchSchema as Tool["inputSchema"],
 };

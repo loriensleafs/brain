@@ -15,33 +15,33 @@
  */
 
 import {
-  type DeleteProjectArgs,
-  parseDeleteProjectArgs,
-  validateDeleteProjectArgs,
+	type DeleteProjectArgs,
+	parseDeleteProjectArgs,
+	validateDeleteProjectArgs,
 } from "@brain/validation";
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 
 export {
-  validateDeleteProjectArgs,
-  parseDeleteProjectArgs,
-  type DeleteProjectArgs,
+	validateDeleteProjectArgs,
+	parseDeleteProjectArgs,
+	type DeleteProjectArgs,
 };
 
 // Re-export for backward compatibility
 export const DeleteProjectArgsSchema = {
-  parse: parseDeleteProjectArgs,
-  safeParse: (data: unknown) => {
-    try {
-      return { success: true as const, data: parseDeleteProjectArgs(data) };
-    } catch (error) {
-      return { success: false as const, error };
-    }
-  },
+	parse: parseDeleteProjectArgs,
+	safeParse: (data: unknown) => {
+		try {
+			return { success: true as const, data: parseDeleteProjectArgs(data) };
+		} catch (error) {
+			return { success: false as const, error };
+		}
+	},
 };
 
 export const toolDefinition: Tool = {
-  name: "delete_project",
-  description: `Delete a Brain memory project.
+	name: "delete_project",
+	description: `Delete a Brain memory project.
 
 This is a DESTRUCTIVE operation. Review carefully before proceeding.
 
@@ -74,20 +74,20 @@ Recovery:
 Examples:
 - Unregister project (keep notes): delete_project with project="myproject"
 - Full delete: delete_project with project="myproject", delete_notes=true`,
-  inputSchema: {
-    type: "object" as const,
-    properties: {
-      project: {
-        type: "string",
-        description: "Project name to delete",
-      },
-      delete_notes: {
-        type: "boolean",
-        description:
-          "If true, also delete the notes directory. DESTRUCTIVE - defaults to false for safety.",
-        default: false,
-      },
-    },
-    required: ["project"],
-  },
+	inputSchema: {
+		type: "object" as const,
+		properties: {
+			project: {
+				type: "string",
+				description: "Project name to delete",
+			},
+			delete_notes: {
+				type: "boolean",
+				description:
+					"If true, also delete the notes directory. DESTRUCTIVE - defaults to false for safety.",
+				default: false,
+			},
+		},
+		required: ["project"],
+	},
 };

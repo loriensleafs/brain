@@ -1,58 +1,58 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://brain.dev/schemas/pr/pre-pr-config.json",
-  "title": "PrePRConfig",
-  "description": "Configuration for pre-PR validation. Defines paths and options for validating code quality before creating a pull request.",
-  "type": "object",
-  "properties": {
-    "basePath": {
-      "type": "string",
-      "minLength": 1,
-      "description": "Base path for the repository to validate"
-    },
-    "quickMode": {
-      "type": "boolean",
-      "default": false,
-      "description": "Skip slow validations (CI environment checks)"
-    },
-    "skipTests": {
-      "type": "boolean",
-      "default": false,
-      "description": "Skip test-implementation alignment validation"
-    },
-    "sourceDirs": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "default": ["src", "lib", "cmd", "pkg", "internal", "scripts"],
-      "description": "Directories containing source code to validate"
-    },
-    "testDirs": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "default": ["tests", "test", "__tests__"],
-      "description": "Directories containing test files"
-    },
-    "configFiles": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "default": [".env.example", "README.md", "CLAUDE.md", ".agents"],
-      "description": "Configuration files to check for documentation"
-    },
-    "envFiles": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "default": [".env", ".env.example", ".env.local", ".env.development"],
-      "description": "Environment variable files to parse for documented variables"
-    }
-  },
-  "required": ["basePath"],
-  "additionalProperties": false
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "https://brain.dev/schemas/pr/pre-pr-config.json",
+	"title": "PrePRConfig",
+	"description": "Configuration for pre-PR validation. Defines paths and options for validating code quality before creating a pull request.",
+	"type": "object",
+	"properties": {
+		"basePath": {
+			"type": "string",
+			"minLength": 1,
+			"description": "Base path for the repository to validate"
+		},
+		"quickMode": {
+			"type": "boolean",
+			"default": false,
+			"description": "Skip slow validations (CI environment checks)"
+		},
+		"skipTests": {
+			"type": "boolean",
+			"default": false,
+			"description": "Skip test-implementation alignment validation"
+		},
+		"sourceDirs": {
+			"type": "array",
+			"items": {
+				"type": "string"
+			},
+			"default": ["src", "lib", "cmd", "pkg", "internal", "scripts"],
+			"description": "Directories containing source code to validate"
+		},
+		"testDirs": {
+			"type": "array",
+			"items": {
+				"type": "string"
+			},
+			"default": ["tests", "test", "__tests__"],
+			"description": "Directories containing test files"
+		},
+		"configFiles": {
+			"type": "array",
+			"items": {
+				"type": "string"
+			},
+			"default": [".env.example", "README.md", "CLAUDE.md", ".agents"],
+			"description": "Configuration files to check for documentation"
+		},
+		"envFiles": {
+			"type": "array",
+			"items": {
+				"type": "string"
+			},
+			"default": [".env", ".env.example", ".env.local", ".env.development"],
+			"description": "Environment variable files to parse for documented variables"
+		}
+	},
+	"required": ["basePath"],
+	"additionalProperties": false
 }

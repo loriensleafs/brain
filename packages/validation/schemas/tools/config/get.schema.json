@@ -1,15 +1,15 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://brain.dev/schemas/tools/config/get.json",
-  "title": "ConfigGetArgs",
-  "description": "Schema for config_get tool arguments. Retrieves Brain configuration values - either the entire config or a specific field using dot notation.",
-  "type": "object",
-  "properties": {
-    "key": {
-      "type": "string",
-      "description": "Specific config key to retrieve (e.g., 'logging.level', 'defaults.memories_location'). If not provided, returns entire config."
-    }
-  },
-  "required": [],
-  "additionalProperties": false
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "https://brain.dev/schemas/tools/config/get.json",
+	"title": "ConfigGetArgs",
+	"description": "Schema for config_get tool arguments. Retrieves Brain configuration values - either the entire config or a specific field using dot notation.",
+	"type": "object",
+	"properties": {
+		"key": {
+			"type": "string",
+			"description": "Specific config key to retrieve (e.g., 'logging.level', 'defaults.memories_location'). If not provided, returns entire config."
+		}
+	},
+	"required": [],
+	"additionalProperties": false
 }

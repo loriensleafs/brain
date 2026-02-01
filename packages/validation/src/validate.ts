@@ -17,44 +17,44 @@
 import Ajv, { type ErrorObject, type ValidateFunction } from "ajv";
 import addFormats from "ajv-formats";
 import type {
-  ActiveProjectArgs,
-  AgentInvocation,
-  AgentInvocationInput,
-  AgentInvocationOutput,
-  AgentType,
-  BootstrapContextArgs,
-  BrainConfig,
-  CompactionEntry,
-  ConfigGetArgs,
-  ConfigResetArgs,
-  ConfigSetArgs,
-  CreateProjectArgs,
-  Decision,
-  DecisionType,
-  DefaultsConfig,
-  DeleteProjectArgs,
-  EditProjectArgs,
-  GetProjectDetailsArgs,
-  GetWorkflowArgs,
-  Handoff,
-  InvocationStatus,
-  ListFeaturesByPriorityArgs,
-  ListProjectsArgs,
-  ListWorkflowsArgs,
-  LoggingConfig,
-  ModeHistoryEntry,
-  OrchestratorWorkflow,
-  ProjectConfig,
-  SearchArgs,
-  SendWorkflowEventArgs,
-  SessionArgs,
-  SessionState,
-  SyncConfig,
-  Verdict,
-  VerdictDecision,
-  WatcherConfig,
-  WorkflowMode,
-  WorkflowPhase,
+	ActiveProjectArgs,
+	AgentInvocation,
+	AgentInvocationInput,
+	AgentInvocationOutput,
+	AgentType,
+	BootstrapContextArgs,
+	BrainConfig,
+	CompactionEntry,
+	ConfigGetArgs,
+	ConfigResetArgs,
+	ConfigSetArgs,
+	CreateProjectArgs,
+	Decision,
+	DecisionType,
+	DefaultsConfig,
+	DeleteProjectArgs,
+	EditProjectArgs,
+	GetProjectDetailsArgs,
+	GetWorkflowArgs,
+	Handoff,
+	InvocationStatus,
+	ListFeaturesByPriorityArgs,
+	ListProjectsArgs,
+	ListWorkflowsArgs,
+	LoggingConfig,
+	ModeHistoryEntry,
+	OrchestratorWorkflow,
+	ProjectConfig,
+	SearchArgs,
+	SendWorkflowEventArgs,
+	SessionArgs,
+	SessionState,
+	SyncConfig,
+	Verdict,
+	VerdictDecision,
+	WatcherConfig,
+	WorkflowMode,
+	WorkflowPhase,
 } from "../generated/types";
 import brainConfigSchema from "../schemas/config/brain-config.schema.json";
 import sessionStateSchema from "../schemas/session/session-state.schema.json";
@@ -77,44 +77,44 @@ import sessionSchema from "../schemas/tools/session.schema.json";
 
 // Export generated types
 export type {
-  ActiveProjectArgs,
-  AgentInvocation,
-  AgentInvocationInput,
-  AgentInvocationOutput,
-  AgentType,
-  BootstrapContextArgs,
-  BrainConfig,
-  CompactionEntry,
-  ConfigGetArgs,
-  ConfigResetArgs,
-  ConfigSetArgs,
-  CreateProjectArgs,
-  Decision,
-  DecisionType,
-  DefaultsConfig,
-  DeleteProjectArgs,
-  EditProjectArgs,
-  GetProjectDetailsArgs,
-  GetWorkflowArgs,
-  Handoff,
-  InvocationStatus,
-  ListFeaturesByPriorityArgs,
-  ListProjectsArgs,
-  ListWorkflowsArgs,
-  LoggingConfig,
-  ModeHistoryEntry,
-  OrchestratorWorkflow,
-  ProjectConfig,
-  SearchArgs,
-  SendWorkflowEventArgs,
-  SessionArgs,
-  SessionState,
-  SyncConfig,
-  Verdict,
-  VerdictDecision,
-  WatcherConfig,
-  WorkflowMode,
-  WorkflowPhase,
+	ActiveProjectArgs,
+	AgentInvocation,
+	AgentInvocationInput,
+	AgentInvocationOutput,
+	AgentType,
+	BootstrapContextArgs,
+	BrainConfig,
+	CompactionEntry,
+	ConfigGetArgs,
+	ConfigResetArgs,
+	ConfigSetArgs,
+	CreateProjectArgs,
+	Decision,
+	DecisionType,
+	DefaultsConfig,
+	DeleteProjectArgs,
+	EditProjectArgs,
+	GetProjectDetailsArgs,
+	GetWorkflowArgs,
+	Handoff,
+	InvocationStatus,
+	ListFeaturesByPriorityArgs,
+	ListProjectsArgs,
+	ListWorkflowsArgs,
+	LoggingConfig,
+	ModeHistoryEntry,
+	OrchestratorWorkflow,
+	ProjectConfig,
+	SearchArgs,
+	SendWorkflowEventArgs,
+	SessionArgs,
+	SessionState,
+	SyncConfig,
+	Verdict,
+	VerdictDecision,
+	WatcherConfig,
+	WorkflowMode,
+	WorkflowPhase,
 };
 
 /**
@@ -122,9 +122,9 @@ export type {
  * Does not expose raw input values in production.
  */
 export interface ValidationError {
-  field: string;
-  constraint: string;
-  message: string;
+	field: string;
+	constraint: string;
+	message: string;
 }
 
 /**
@@ -135,10 +135,10 @@ export interface ValidationError {
  * - strict: true - Strict mode for better error detection
  */
 const ajv = new Ajv({
-  allErrors: true,
-  useDefaults: true,
-  coerceTypes: false,
-  strict: true,
+	allErrors: true,
+	useDefaults: true,
+	coerceTypes: false,
+	strict: true,
 });
 
 // Add format validators (uri, email, date-time, etc.)
@@ -149,64 +149,64 @@ addFormats(ajv);
  * Sanitizes errors to avoid exposing raw input values.
  */
 function toValidationErrors(
-  errors: ErrorObject[] | null | undefined,
+	errors: ErrorObject[] | null | undefined,
 ): ValidationError[] {
-  if (!errors) return [];
+	if (!errors) return [];
 
-  return errors.map((error) => ({
-    field: error.instancePath || error.schemaPath,
-    constraint: error.keyword,
-    message: error.message || "Validation failed",
-  }));
+	return errors.map((error) => ({
+		field: error.instancePath || error.schemaPath,
+		constraint: error.keyword,
+		message: error.message || "Validation failed",
+	}));
 }
 
 /**
  * Create a validation error message from AJV errors.
  */
 function formatValidationError(
-  errors: ErrorObject[] | null | undefined,
+	errors: ErrorObject[] | null | undefined,
 ): string {
-  const validationErrors = toValidationErrors(errors);
-  if (validationErrors.length === 0) {
-    return "Validation failed";
-  }
+	const validationErrors = toValidationErrors(errors);
+	if (validationErrors.length === 0) {
+		return "Validation failed";
+	}
 
-  return validationErrors
-    .map((e) => `${e.field || "root"}: ${e.message} (${e.constraint})`)
-    .join("; ");
+	return validationErrors
+		.map((e) => `${e.field || "root"}: ${e.message} (${e.constraint})`)
+		.join("; ");
 }
 
 // Compile validators
 const _validateActiveProjectArgs =
-  ajv.compile<ActiveProjectArgs>(activeProjectSchema);
+	ajv.compile<ActiveProjectArgs>(activeProjectSchema);
 const _validateBootstrapContextArgs = ajv.compile<BootstrapContextArgs>(
-  bootstrapContextSchema,
+	bootstrapContextSchema,
 );
 const _validateBrainConfig = ajv.compile<BrainConfig>(brainConfigSchema);
 const _validateConfigGetArgs = ajv.compile<ConfigGetArgs>(configGetSchema);
 const _validateConfigResetArgs =
-  ajv.compile<ConfigResetArgs>(configResetSchema);
+	ajv.compile<ConfigResetArgs>(configResetSchema);
 const _validateConfigSetArgs = ajv.compile<ConfigSetArgs>(configSetSchema);
 const _validateCreateProjectArgs =
-  ajv.compile<CreateProjectArgs>(createProjectSchema);
+	ajv.compile<CreateProjectArgs>(createProjectSchema);
 const _validateDeleteProjectArgs =
-  ajv.compile<DeleteProjectArgs>(deleteProjectSchema);
+	ajv.compile<DeleteProjectArgs>(deleteProjectSchema);
 const _validateEditProjectArgs =
-  ajv.compile<EditProjectArgs>(editProjectSchema);
+	ajv.compile<EditProjectArgs>(editProjectSchema);
 const _validateGetProjectDetailsArgs = ajv.compile<GetProjectDetailsArgs>(
-  getProjectDetailsSchema,
+	getProjectDetailsSchema,
 );
 const _validateGetWorkflowArgs =
-  ajv.compile<GetWorkflowArgs>(getWorkflowSchema);
+	ajv.compile<GetWorkflowArgs>(getWorkflowSchema);
 const _validateListFeaturesByPriorityArgs =
-  ajv.compile<ListFeaturesByPriorityArgs>(listFeaturesByPrioritySchema);
+	ajv.compile<ListFeaturesByPriorityArgs>(listFeaturesByPrioritySchema);
 const _validateListProjectsArgs =
-  ajv.compile<ListProjectsArgs>(listProjectsSchema);
+	ajv.compile<ListProjectsArgs>(listProjectsSchema);
 const _validateListWorkflowsArgs =
-  ajv.compile<ListWorkflowsArgs>(listWorkflowsSchema);
+	ajv.compile<ListWorkflowsArgs>(listWorkflowsSchema);
 const _validateSearchArgs = ajv.compile<SearchArgs>(searchSchema);
 const _validateSendWorkflowEventArgs = ajv.compile<SendWorkflowEventArgs>(
-  sendWorkflowEventSchema,
+	sendWorkflowEventSchema,
 );
 const _validateSessionArgs = ajv.compile<SessionArgs>(sessionSchema);
 const _validateSessionState = ajv.compile<SessionState>(sessionStateSchema);
@@ -217,7 +217,7 @@ const _validateSessionState = ajv.compile<SessionState>(sessionStateSchema);
  * Access errors via validateActiveProjectArgs.errors after validation.
  */
 export const validateActiveProjectArgs: ValidateFunction<ActiveProjectArgs> =
-  _validateActiveProjectArgs;
+	_validateActiveProjectArgs;
 
 /**
  * Validate BootstrapContextArgs.
@@ -225,7 +225,7 @@ export const validateActiveProjectArgs: ValidateFunction<ActiveProjectArgs> =
  * Access errors via validateBootstrapContextArgs.errors after validation.
  */
 export const validateBootstrapContextArgs: ValidateFunction<BootstrapContextArgs> =
-  _validateBootstrapContextArgs;
+	_validateBootstrapContextArgs;
 
 /**
  * Validate BrainConfig.
@@ -233,7 +233,7 @@ export const validateBootstrapContextArgs: ValidateFunction<BootstrapContextArgs
  * Access errors via validateBrainConfig.errors after validation.
  */
 export const validateBrainConfig: ValidateFunction<BrainConfig> =
-  _validateBrainConfig;
+	_validateBrainConfig;
 
 /**
  * Validate ConfigGetArgs.
@@ -241,7 +241,7 @@ export const validateBrainConfig: ValidateFunction<BrainConfig> =
  * Access errors via validateConfigGetArgs.errors after validation.
  */
 export const validateConfigGetArgs: ValidateFunction<ConfigGetArgs> =
-  _validateConfigGetArgs;
+	_validateConfigGetArgs;
 
 /**
  * Validate ConfigResetArgs.
@@ -249,7 +249,7 @@ export const validateConfigGetArgs: ValidateFunction<ConfigGetArgs> =
  * Access errors via validateConfigResetArgs.errors after validation.
  */
 export const validateConfigResetArgs: ValidateFunction<ConfigResetArgs> =
-  _validateConfigResetArgs;
+	_validateConfigResetArgs;
 
 /**
  * Validate ConfigSetArgs.
@@ -257,7 +257,7 @@ export const validateConfigResetArgs: ValidateFunction<ConfigResetArgs> =
  * Access errors via validateConfigSetArgs.errors after validation.
  */
 export const validateConfigSetArgs: ValidateFunction<ConfigSetArgs> =
-  _validateConfigSetArgs;
+	_validateConfigSetArgs;
 
 /**
  * Validate CreateProjectArgs.
@@ -265,7 +265,7 @@ export const validateConfigSetArgs: ValidateFunction<ConfigSetArgs> =
  * Access errors via validateCreateProjectArgs.errors after validation.
  */
 export const validateCreateProjectArgs: ValidateFunction<CreateProjectArgs> =
-  _validateCreateProjectArgs;
+	_validateCreateProjectArgs;
 
 /**
  * Validate DeleteProjectArgs.
@@ -273,7 +273,7 @@ export const validateCreateProjectArgs: ValidateFunction<CreateProjectArgs> =
  * Access errors via validateDeleteProjectArgs.errors after validation.
  */
 export const validateDeleteProjectArgs: ValidateFunction<DeleteProjectArgs> =
-  _validateDeleteProjectArgs;
+	_validateDeleteProjectArgs;
 
 /**
  * Validate EditProjectArgs.
@@ -281,7 +281,7 @@ export const validateDeleteProjectArgs: ValidateFunction<DeleteProjectArgs> =
  * Access errors via validateEditProjectArgs.errors after validation.
  */
 export const validateEditProjectArgs: ValidateFunction<EditProjectArgs> =
-  _validateEditProjectArgs;
+	_validateEditProjectArgs;
 
 /**
  * Validate GetProjectDetailsArgs.
@@ -289,7 +289,7 @@ export const validateEditProjectArgs: ValidateFunction<EditProjectArgs> =
  * Access errors via validateGetProjectDetailsArgs.errors after validation.
  */
 export const validateGetProjectDetailsArgs: ValidateFunction<GetProjectDetailsArgs> =
-  _validateGetProjectDetailsArgs;
+	_validateGetProjectDetailsArgs;
 
 /**
  * Validate GetWorkflowArgs.
@@ -297,7 +297,7 @@ export const validateGetProjectDetailsArgs: ValidateFunction<GetProjectDetailsAr
  * Access errors via validateGetWorkflowArgs.errors after validation.
  */
 export const validateGetWorkflowArgs: ValidateFunction<GetWorkflowArgs> =
-  _validateGetWorkflowArgs;
+	_validateGetWorkflowArgs;
 
 /**
  * Validate ListFeaturesByPriorityArgs.
@@ -305,7 +305,7 @@ export const validateGetWorkflowArgs: ValidateFunction<GetWorkflowArgs> =
  * Access errors via validateListFeaturesByPriorityArgs.errors after validation.
  */
 export const validateListFeaturesByPriorityArgs: ValidateFunction<ListFeaturesByPriorityArgs> =
-  _validateListFeaturesByPriorityArgs;
+	_validateListFeaturesByPriorityArgs;
 
 /**
  * Validate ListProjectsArgs.
@@ -313,7 +313,7 @@ export const validateListFeaturesByPriorityArgs: ValidateFunction<ListFeaturesBy
  * Access errors via validateListProjectsArgs.errors after validation.
  */
 export const validateListProjectsArgs: ValidateFunction<ListProjectsArgs> =
-  _validateListProjectsArgs;
+	_validateListProjectsArgs;
 
 /**
  * Validate ListWorkflowsArgs.
@@ -321,7 +321,7 @@ export const validateListProjectsArgs: ValidateFunction<ListProjectsArgs> =
  * Access errors via validateListWorkflowsArgs.errors after validation.
  */
 export const validateListWorkflowsArgs: ValidateFunction<ListWorkflowsArgs> =
-  _validateListWorkflowsArgs;
+	_validateListWorkflowsArgs;
 
 /**
  * Validate SearchArgs.
@@ -329,7 +329,7 @@ export const validateListWorkflowsArgs: ValidateFunction<ListWorkflowsArgs> =
  * Access errors via validateSearchArgs.errors after validation.
  */
 export const validateSearchArgs: ValidateFunction<SearchArgs> =
-  _validateSearchArgs;
+	_validateSearchArgs;
 
 /**
  * Validate SendWorkflowEventArgs.
@@ -337,7 +337,7 @@ export const validateSearchArgs: ValidateFunction<SearchArgs> =
  * Access errors via validateSendWorkflowEventArgs.errors after validation.
  */
 export const validateSendWorkflowEventArgs: ValidateFunction<SendWorkflowEventArgs> =
-  _validateSendWorkflowEventArgs;
+	_validateSendWorkflowEventArgs;
 
 /**
  * Validate SessionArgs.
@@ -345,7 +345,7 @@ export const validateSendWorkflowEventArgs: ValidateFunction<SendWorkflowEventAr
  * Access errors via validateSessionArgs.errors after validation.
  */
 export const validateSessionArgs: ValidateFunction<SessionArgs> =
-  _validateSessionArgs;
+	_validateSessionArgs;
 
 /**
  * Validate SessionState.
@@ -353,7 +353,7 @@ export const validateSessionArgs: ValidateFunction<SessionArgs> =
  * Access errors via validateSessionState.errors after validation.
  */
 export const validateSessionState: ValidateFunction<SessionState> =
-  _validateSessionState;
+	_validateSessionState;
 
 /**
  * Parse and validate ActiveProjectArgs.
@@ -361,14 +361,14 @@ export const validateSessionState: ValidateFunction<SessionState> =
  * Throws Error with structured message on validation failure.
  */
 export function parseActiveProjectArgs(data: unknown): ActiveProjectArgs {
-  // Clone data to avoid mutating input when applying defaults
-  const cloned = typeof data === "object" && data !== null ? { ...data } : data;
+	// Clone data to avoid mutating input when applying defaults
+	const cloned = typeof data === "object" && data !== null ? { ...data } : data;
 
-  if (_validateActiveProjectArgs(cloned)) {
-    return cloned;
-  }
+	if (_validateActiveProjectArgs(cloned)) {
+		return cloned;
+	}
 
-  throw new Error(formatValidationError(_validateActiveProjectArgs.errors));
+	throw new Error(formatValidationError(_validateActiveProjectArgs.errors));
 }
 
 /**
@@ -377,14 +377,14 @@ export function parseActiveProjectArgs(data: unknown): ActiveProjectArgs {
  * Throws Error with structured message on validation failure.
  */
 export function parseBootstrapContextArgs(data: unknown): BootstrapContextArgs {
-  // Clone data to avoid mutating input when applying defaults
-  const cloned = typeof data === "object" && data !== null ? { ...data } : data;
+	// Clone data to avoid mutating input when applying defaults
+	const cloned = typeof data === "object" && data !== null ? { ...data } : data;
 
-  if (_validateBootstrapContextArgs(cloned)) {
-    return cloned;
-  }
+	if (_validateBootstrapContextArgs(cloned)) {
+		return cloned;
+	}
 
-  throw new Error(formatValidationError(_validateBootstrapContextArgs.errors));
+	throw new Error(formatValidationError(_validateBootstrapContextArgs.errors));
 }
 
 /**
@@ -393,17 +393,17 @@ export function parseBootstrapContextArgs(data: unknown): BootstrapContextArgs {
  * Throws Error with structured message on validation failure.
  */
 export function parseBrainConfig(data: unknown): BrainConfig {
-  // Deep clone data to avoid mutating input when applying defaults
-  const cloned =
-    typeof data === "object" && data !== null
-      ? JSON.parse(JSON.stringify(data))
-      : data;
+	// Deep clone data to avoid mutating input when applying defaults
+	const cloned =
+		typeof data === "object" && data !== null
+			? JSON.parse(JSON.stringify(data))
+			: data;
 
-  if (_validateBrainConfig(cloned)) {
-    return cloned;
-  }
+	if (_validateBrainConfig(cloned)) {
+		return cloned;
+	}
 
-  throw new Error(formatValidationError(_validateBrainConfig.errors));
+	throw new Error(formatValidationError(_validateBrainConfig.errors));
 }
 
 /**
@@ -412,14 +412,14 @@ export function parseBrainConfig(data: unknown): BrainConfig {
  * Throws Error with structured message on validation failure.
  */
 export function parseConfigGetArgs(data: unknown): ConfigGetArgs {
-  // Clone data to avoid mutating input when applying defaults
-  const cloned = typeof data === "object" && data !== null ? { ...data } : data;
+	// Clone data to avoid mutating input when applying defaults
+	const cloned = typeof data === "object" && data !== null ? { ...data } : data;
 
-  if (_validateConfigGetArgs(cloned)) {
-    return cloned;
-  }
+	if (_validateConfigGetArgs(cloned)) {
+		return cloned;
+	}
 
-  throw new Error(formatValidationError(_validateConfigGetArgs.errors));
+	throw new Error(formatValidationError(_validateConfigGetArgs.errors));
 }
 
 /**
@@ -428,14 +428,14 @@ export function parseConfigGetArgs(data: unknown): ConfigGetArgs {
  * Throws Error with structured message on validation failure.
  */
 export function parseConfigResetArgs(data: unknown): ConfigResetArgs {
-  // Clone data to avoid mutating input when applying defaults
-  const cloned = typeof data === "object" && data !== null ? { ...data } : data;
+	// Clone data to avoid mutating input when applying defaults
+	const cloned = typeof data === "object" && data !== null ? { ...data } : data;
 
-  if (_validateConfigResetArgs(cloned)) {
-    return cloned;
-  }
+	if (_validateConfigResetArgs(cloned)) {
+		return cloned;
+	}
 
-  throw new Error(formatValidationError(_validateConfigResetArgs.errors));
+	throw new Error(formatValidationError(_validateConfigResetArgs.errors));
 }
 
 /**
@@ -444,14 +444,14 @@ export function parseConfigResetArgs(data: unknown): ConfigResetArgs {
  * Throws Error with structured message on validation failure.
  */
 export function parseConfigSetArgs(data: unknown): ConfigSetArgs {
-  // Clone data to avoid mutating input when applying defaults
-  const cloned = typeof data === "object" && data !== null ? { ...data } : data;
+	// Clone data to avoid mutating input when applying defaults
+	const cloned = typeof data === "object" && data !== null ? { ...data } : data;
 
-  if (_validateConfigSetArgs(cloned)) {
-    return cloned;
-  }
+	if (_validateConfigSetArgs(cloned)) {
+		return cloned;
+	}
 
-  throw new Error(formatValidationError(_validateConfigSetArgs.errors));
+	throw new Error(formatValidationError(_validateConfigSetArgs.errors));
 }
 
 /**
@@ -460,14 +460,14 @@ export function parseConfigSetArgs(data: unknown): ConfigSetArgs {
  * Throws Error with structured message on validation failure.
  */
 export function parseCreateProjectArgs(data: unknown): CreateProjectArgs {
-  // Clone data to avoid mutating input when applying defaults
-  const cloned = typeof data === "object" && data !== null ? { ...data } : data;
+	// Clone data to avoid mutating input when applying defaults
+	const cloned = typeof data === "object" && data !== null ? { ...data } : data;
 
-  if (_validateCreateProjectArgs(cloned)) {
-    return cloned;
-  }
+	if (_validateCreateProjectArgs(cloned)) {
+		return cloned;
+	}
 
-  throw new Error(formatValidationError(_validateCreateProjectArgs.errors));
+	throw new Error(formatValidationError(_validateCreateProjectArgs.errors));
 }
 
 /**
@@ -476,14 +476,14 @@ export function parseCreateProjectArgs(data: unknown): CreateProjectArgs {
  * Throws Error with structured message on validation failure.
  */
 export function parseDeleteProjectArgs(data: unknown): DeleteProjectArgs {
-  // Clone data to avoid mutating input when applying defaults
-  const cloned = typeof data === "object" && data !== null ? { ...data } : data;
+	// Clone data to avoid mutating input when applying defaults
+	const cloned = typeof data === "object" && data !== null ? { ...data } : data;
 
-  if (_validateDeleteProjectArgs(cloned)) {
-    return cloned;
-  }
+	if (_validateDeleteProjectArgs(cloned)) {
+		return cloned;
+	}
 
-  throw new Error(formatValidationError(_validateDeleteProjectArgs.errors));
+	throw new Error(formatValidationError(_validateDeleteProjectArgs.errors));
 }
 
 /**
@@ -492,14 +492,14 @@ export function parseDeleteProjectArgs(data: unknown): DeleteProjectArgs {
  * Throws Error with structured message on validation failure.
  */
 export function parseEditProjectArgs(data: unknown): EditProjectArgs {
-  // Clone data to avoid mutating input when applying defaults
-  const cloned = typeof data === "object" && data !== null ? { ...data } : data;
+	// Clone data to avoid mutating input when applying defaults
+	const cloned = typeof data === "object" && data !== null ? { ...data } : data;
 
-  if (_validateEditProjectArgs(cloned)) {
-    return cloned;
-  }
+	if (_validateEditProjectArgs(cloned)) {
+		return cloned;
+	}
 
-  throw new Error(formatValidationError(_validateEditProjectArgs.errors));
+	throw new Error(formatValidationError(_validateEditProjectArgs.errors));
 }
 
 /**
@@ -508,16 +508,16 @@ export function parseEditProjectArgs(data: unknown): EditProjectArgs {
  * Throws Error with structured message on validation failure.
  */
 export function parseGetProjectDetailsArgs(
-  data: unknown,
+	data: unknown,
 ): GetProjectDetailsArgs {
-  // Clone data to avoid mutating input when applying defaults
-  const cloned = typeof data === "object" && data !== null ? { ...data } : data;
+	// Clone data to avoid mutating input when applying defaults
+	const cloned = typeof data === "object" && data !== null ? { ...data } : data;
 
-  if (_validateGetProjectDetailsArgs(cloned)) {
-    return cloned;
-  }
+	if (_validateGetProjectDetailsArgs(cloned)) {
+		return cloned;
+	}
 
-  throw new Error(formatValidationError(_validateGetProjectDetailsArgs.errors));
+	throw new Error(formatValidationError(_validateGetProjectDetailsArgs.errors));
 }
 
 /**
@@ -526,14 +526,14 @@ export function parseGetProjectDetailsArgs(
  * Throws Error with structured message on validation failure.
  */
 export function parseGetWorkflowArgs(data: unknown): GetWorkflowArgs {
-  // Clone data to avoid mutating input when applying defaults
-  const cloned = typeof data === "object" && data !== null ? { ...data } : data;
+	// Clone data to avoid mutating input when applying defaults
+	const cloned = typeof data === "object" && data !== null ? { ...data } : data;
 
-  if (_validateGetWorkflowArgs(cloned)) {
-    return cloned;
-  }
+	if (_validateGetWorkflowArgs(cloned)) {
+		return cloned;
+	}
 
-  throw new Error(formatValidationError(_validateGetWorkflowArgs.errors));
+	throw new Error(formatValidationError(_validateGetWorkflowArgs.errors));
 }
 
 /**
@@ -542,18 +542,18 @@ export function parseGetWorkflowArgs(data: unknown): GetWorkflowArgs {
  * Throws Error with structured message on validation failure.
  */
 export function parseListFeaturesByPriorityArgs(
-  data: unknown,
+	data: unknown,
 ): ListFeaturesByPriorityArgs {
-  // Clone data to avoid mutating input when applying defaults
-  const cloned = typeof data === "object" && data !== null ? { ...data } : data;
+	// Clone data to avoid mutating input when applying defaults
+	const cloned = typeof data === "object" && data !== null ? { ...data } : data;
 
-  if (_validateListFeaturesByPriorityArgs(cloned)) {
-    return cloned;
-  }
+	if (_validateListFeaturesByPriorityArgs(cloned)) {
+		return cloned;
+	}
 
-  throw new Error(
-    formatValidationError(_validateListFeaturesByPriorityArgs.errors),
-  );
+	throw new Error(
+		formatValidationError(_validateListFeaturesByPriorityArgs.errors),
+	);
 }
 
 /**
@@ -562,14 +562,14 @@ export function parseListFeaturesByPriorityArgs(
  * Throws Error with structured message on validation failure.
  */
 export function parseListProjectsArgs(data: unknown): ListProjectsArgs {
-  // Clone data to avoid mutating input when applying defaults
-  const cloned = typeof data === "object" && data !== null ? { ...data } : data;
+	// Clone data to avoid mutating input when applying defaults
+	const cloned = typeof data === "object" && data !== null ? { ...data } : data;
 
-  if (_validateListProjectsArgs(cloned)) {
-    return cloned;
-  }
+	if (_validateListProjectsArgs(cloned)) {
+		return cloned;
+	}
 
-  throw new Error(formatValidationError(_validateListProjectsArgs.errors));
+	throw new Error(formatValidationError(_validateListProjectsArgs.errors));
 }
 
 /**
@@ -578,14 +578,14 @@ export function parseListProjectsArgs(data: unknown): ListProjectsArgs {
  * Throws Error with structured message on validation failure.
  */
 export function parseListWorkflowsArgs(data: unknown): ListWorkflowsArgs {
-  // Clone data to avoid mutating input when applying defaults
-  const cloned = typeof data === "object" && data !== null ? { ...data } : data;
+	// Clone data to avoid mutating input when applying defaults
+	const cloned = typeof data === "object" && data !== null ? { ...data } : data;
 
-  if (_validateListWorkflowsArgs(cloned)) {
-    return cloned;
-  }
+	if (_validateListWorkflowsArgs(cloned)) {
+		return cloned;
+	}
 
-  throw new Error(formatValidationError(_validateListWorkflowsArgs.errors));
+	throw new Error(formatValidationError(_validateListWorkflowsArgs.errors));
 }
 
 /**
@@ -594,14 +594,14 @@ export function parseListWorkflowsArgs(data: unknown): ListWorkflowsArgs {
  * Throws Error with structured message on validation failure.
  */
 export function parseSearchArgs(data: unknown): SearchArgs {
-  // Clone data to avoid mutating input when applying defaults
-  const cloned = typeof data === "object" && data !== null ? { ...data } : data;
+	// Clone data to avoid mutating input when applying defaults
+	const cloned = typeof data === "object" && data !== null ? { ...data } : data;
 
-  if (_validateSearchArgs(cloned)) {
-    return cloned;
-  }
+	if (_validateSearchArgs(cloned)) {
+		return cloned;
+	}
 
-  throw new Error(formatValidationError(_validateSearchArgs.errors));
+	throw new Error(formatValidationError(_validateSearchArgs.errors));
 }
 
 /**
@@ -610,16 +610,16 @@ export function parseSearchArgs(data: unknown): SearchArgs {
  * Throws Error with structured message on validation failure.
  */
 export function parseSendWorkflowEventArgs(
-  data: unknown,
+	data: unknown,
 ): SendWorkflowEventArgs {
-  // Clone data to avoid mutating input when applying defaults
-  const cloned = typeof data === "object" && data !== null ? { ...data } : data;
+	// Clone data to avoid mutating input when applying defaults
+	const cloned = typeof data === "object" && data !== null ? { ...data } : data;
 
-  if (_validateSendWorkflowEventArgs(cloned)) {
-    return cloned;
-  }
+	if (_validateSendWorkflowEventArgs(cloned)) {
+		return cloned;
+	}
 
-  throw new Error(formatValidationError(_validateSendWorkflowEventArgs.errors));
+	throw new Error(formatValidationError(_validateSendWorkflowEventArgs.errors));
 }
 
 /**
@@ -628,14 +628,14 @@ export function parseSendWorkflowEventArgs(
  * Throws Error with structured message on validation failure.
  */
 export function parseSessionArgs(data: unknown): SessionArgs {
-  // Clone data to avoid mutating input when applying defaults
-  const cloned = typeof data === "object" && data !== null ? { ...data } : data;
+	// Clone data to avoid mutating input when applying defaults
+	const cloned = typeof data === "object" && data !== null ? { ...data } : data;
 
-  if (_validateSessionArgs(cloned)) {
-    return cloned;
-  }
+	if (_validateSessionArgs(cloned)) {
+		return cloned;
+	}
 
-  throw new Error(formatValidationError(_validateSessionArgs.errors));
+	throw new Error(formatValidationError(_validateSessionArgs.errors));
 }
 
 /**
@@ -644,17 +644,17 @@ export function parseSessionArgs(data: unknown): SessionArgs {
  * Throws Error with structured message on validation failure.
  */
 export function parseSessionState(data: unknown): SessionState {
-  // Deep clone data to avoid mutating input when applying defaults
-  const cloned =
-    typeof data === "object" && data !== null
-      ? JSON.parse(JSON.stringify(data))
-      : data;
+	// Deep clone data to avoid mutating input when applying defaults
+	const cloned =
+		typeof data === "object" && data !== null
+			? JSON.parse(JSON.stringify(data))
+			: data;
 
-  if (_validateSessionState(cloned)) {
-    return cloned;
-  }
+	if (_validateSessionState(cloned)) {
+		return cloned;
+	}
 
-  throw new Error(formatValidationError(_validateSessionState.errors));
+	throw new Error(formatValidationError(_validateSessionState.errors));
 }
 
 /**
@@ -664,14 +664,14 @@ export function parseSessionState(data: unknown): SessionState {
  * @returns Validated SessionState or null if invalid
  */
 export function safeParseSessionState(value: unknown): SessionState | null {
-  const cloned =
-    typeof value === "object" && value !== null
-      ? JSON.parse(JSON.stringify(value))
-      : value;
-  if (_validateSessionState(cloned)) {
-    return cloned;
-  }
-  return null;
+	const cloned =
+		typeof value === "object" && value !== null
+			? JSON.parse(JSON.stringify(value))
+			: value;
+	if (_validateSessionState(cloned)) {
+		return cloned;
+	}
+	return null;
 }
 
 /**
@@ -679,9 +679,9 @@ export function safeParseSessionState(value: unknown): SessionState | null {
  * Returns empty array if valid, array of ValidationError otherwise.
  */
 export function getActiveProjectArgsErrors(data: unknown): ValidationError[] {
-  const cloned = typeof data === "object" && data !== null ? { ...data } : data;
-  _validateActiveProjectArgs(cloned);
-  return toValidationErrors(_validateActiveProjectArgs.errors);
+	const cloned = typeof data === "object" && data !== null ? { ...data } : data;
+	_validateActiveProjectArgs(cloned);
+	return toValidationErrors(_validateActiveProjectArgs.errors);
 }
 
 /**
@@ -689,11 +689,11 @@ export function getActiveProjectArgsErrors(data: unknown): ValidationError[] {
  * Returns empty array if valid, array of ValidationError otherwise.
  */
 export function getBootstrapContextArgsErrors(
-  data: unknown,
+	data: unknown,
 ): ValidationError[] {
-  const cloned = typeof data === "object" && data !== null ? { ...data } : data;
-  _validateBootstrapContextArgs(cloned);
-  return toValidationErrors(_validateBootstrapContextArgs.errors);
+	const cloned = typeof data === "object" && data !== null ? { ...data } : data;
+	_validateBootstrapContextArgs(cloned);
+	return toValidationErrors(_validateBootstrapContextArgs.errors);
 }
 
 /**
@@ -701,12 +701,12 @@ export function getBootstrapContextArgsErrors(
  * Returns empty array if valid, array of ValidationError otherwise.
  */
 export function getBrainConfigErrors(data: unknown): ValidationError[] {
-  const cloned =
-    typeof data === "object" && data !== null
-      ? JSON.parse(JSON.stringify(data))
-      : data;
-  _validateBrainConfig(cloned);
-  return toValidationErrors(_validateBrainConfig.errors);
+	const cloned =
+		typeof data === "object" && data !== null
+			? JSON.parse(JSON.stringify(data))
+			: data;
+	_validateBrainConfig(cloned);
+	return toValidationErrors(_validateBrainConfig.errors);
 }
 
 /**
@@ -714,9 +714,9 @@ export function getBrainConfigErrors(data: unknown): ValidationError[] {
  * Returns empty array if valid, array of ValidationError otherwise.
  */
 export function getConfigGetArgsErrors(data: unknown): ValidationError[] {
-  const cloned = typeof data === "object" && data !== null ? { ...data } : data;
-  _validateConfigGetArgs(cloned);
-  return toValidationErrors(_validateConfigGetArgs.errors);
+	const cloned = typeof data === "object" && data !== null ? { ...data } : data;
+	_validateConfigGetArgs(cloned);
+	return toValidationErrors(_validateConfigGetArgs.errors);
 }
 
 /**
@@ -724,9 +724,9 @@ export function getConfigGetArgsErrors(data: unknown): ValidationError[] {
  * Returns empty array if valid, array of ValidationError otherwise.
  */
 export function getConfigResetArgsErrors(data: unknown): ValidationError[] {
-  const cloned = typeof data === "object" && data !== null ? { ...data } : data;
-  _validateConfigResetArgs(cloned);
-  return toValidationErrors(_validateConfigResetArgs.errors);
+	const cloned = typeof data === "object" && data !== null ? { ...data } : data;
+	_validateConfigResetArgs(cloned);
+	return toValidationErrors(_validateConfigResetArgs.errors);
 }
 
 /**
@@ -734,9 +734,9 @@ export function getConfigResetArgsErrors(data: unknown): ValidationError[] {
  * Returns empty array if valid, array of ValidationError otherwise.
  */
 export function getConfigSetArgsErrors(data: unknown): ValidationError[] {
-  const cloned = typeof data === "object" && data !== null ? { ...data } : data;
-  _validateConfigSetArgs(cloned);
-  return toValidationErrors(_validateConfigSetArgs.errors);
+	const cloned = typeof data === "object" && data !== null ? { ...data } : data;
+	_validateConfigSetArgs(cloned);
+	return toValidationErrors(_validateConfigSetArgs.errors);
 }
 
 /**
@@ -744,9 +744,9 @@ export function getConfigSetArgsErrors(data: unknown): ValidationError[] {
  * Returns empty array if valid, array of ValidationError otherwise.
  */
 export function getCreateProjectArgsErrors(data: unknown): ValidationError[] {
-  const cloned = typeof data === "object" && data !== null ? { ...data } : data;
-  _validateCreateProjectArgs(cloned);
-  return toValidationErrors(_validateCreateProjectArgs.errors);
+	const cloned = typeof data === "object" && data !== null ? { ...data } : data;
+	_validateCreateProjectArgs(cloned);
+	return toValidationErrors(_validateCreateProjectArgs.errors);
 }
 
 /**
@@ -754,9 +754,9 @@ export function getCreateProjectArgsErrors(data: unknown): ValidationError[] {
  * Returns empty array if valid, array of ValidationError otherwise.
  */
 export function getDeleteProjectArgsErrors(data: unknown): ValidationError[] {
-  const cloned = typeof data === "object" && data !== null ? { ...data } : data;
-  _validateDeleteProjectArgs(cloned);
-  return toValidationErrors(_validateDeleteProjectArgs.errors);
+	const cloned = typeof data === "object" && data !== null ? { ...data } : data;
+	_validateDeleteProjectArgs(cloned);
+	return toValidationErrors(_validateDeleteProjectArgs.errors);
 }
 
 /**
@@ -764,9 +764,9 @@ export function getDeleteProjectArgsErrors(data: unknown): ValidationError[] {
  * Returns empty array if valid, array of ValidationError otherwise.
  */
 export function getEditProjectArgsErrors(data: unknown): ValidationError[] {
-  const cloned = typeof data === "object" && data !== null ? { ...data } : data;
-  _validateEditProjectArgs(cloned);
-  return toValidationErrors(_validateEditProjectArgs.errors);
+	const cloned = typeof data === "object" && data !== null ? { ...data } : data;
+	_validateEditProjectArgs(cloned);
+	return toValidationErrors(_validateEditProjectArgs.errors);
 }
 
 /**
@@ -774,11 +774,11 @@ export function getEditProjectArgsErrors(data: unknown): ValidationError[] {
  * Returns empty array if valid, array of ValidationError otherwise.
  */
 export function getGetProjectDetailsArgsErrors(
-  data: unknown,
+	data: unknown,
 ): ValidationError[] {
-  const cloned = typeof data === "object" && data !== null ? { ...data } : data;
-  _validateGetProjectDetailsArgs(cloned);
-  return toValidationErrors(_validateGetProjectDetailsArgs.errors);
+	const cloned = typeof data === "object" && data !== null ? { ...data } : data;
+	_validateGetProjectDetailsArgs(cloned);
+	return toValidationErrors(_validateGetProjectDetailsArgs.errors);
 }
 
 /**
@@ -786,9 +786,9 @@ export function getGetProjectDetailsArgsErrors(
  * Returns empty array if valid, array of ValidationError otherwise.
  */
 export function getGetWorkflowArgsErrors(data: unknown): ValidationError[] {
-  const cloned = typeof data === "object" && data !== null ? { ...data } : data;
-  _validateGetWorkflowArgs(cloned);
-  return toValidationErrors(_validateGetWorkflowArgs.errors);
+	const cloned = typeof data === "object" && data !== null ? { ...data } : data;
+	_validateGetWorkflowArgs(cloned);
+	return toValidationErrors(_validateGetWorkflowArgs.errors);
 }
 
 /**
@@ -796,11 +796,11 @@ export function getGetWorkflowArgsErrors(data: unknown): ValidationError[] {
  * Returns empty array if valid, array of ValidationError otherwise.
  */
 export function getListFeaturesByPriorityArgsErrors(
-  data: unknown,
+	data: unknown,
 ): ValidationError[] {
-  const cloned = typeof data === "object" && data !== null ? { ...data } : data;
-  _validateListFeaturesByPriorityArgs(cloned);
-  return toValidationErrors(_validateListFeaturesByPriorityArgs.errors);
+	const cloned = typeof data === "object" && data !== null ? { ...data } : data;
+	_validateListFeaturesByPriorityArgs(cloned);
+	return toValidationErrors(_validateListFeaturesByPriorityArgs.errors);
 }
 
 /**
@@ -808,9 +808,9 @@ export function getListFeaturesByPriorityArgsErrors(
  * Returns empty array if valid, array of ValidationError otherwise.
  */
 export function getListProjectsArgsErrors(data: unknown): ValidationError[] {
-  const cloned = typeof data === "object" && data !== null ? { ...data } : data;
-  _validateListProjectsArgs(cloned);
-  return toValidationErrors(_validateListProjectsArgs.errors);
+	const cloned = typeof data === "object" && data !== null ? { ...data } : data;
+	_validateListProjectsArgs(cloned);
+	return toValidationErrors(_validateListProjectsArgs.errors);
 }
 
 /**
@@ -818,9 +818,9 @@ export function getListProjectsArgsErrors(data: unknown): ValidationError[] {
  * Returns empty array if valid, array of ValidationError otherwise.
  */
 export function getListWorkflowsArgsErrors(data: unknown): ValidationError[] {
-  const cloned = typeof data === "object" && data !== null ? { ...data } : data;
-  _validateListWorkflowsArgs(cloned);
-  return toValidationErrors(_validateListWorkflowsArgs.errors);
+	const cloned = typeof data === "object" && data !== null ? { ...data } : data;
+	_validateListWorkflowsArgs(cloned);
+	return toValidationErrors(_validateListWorkflowsArgs.errors);
 }
 
 /**
@@ -828,9 +828,9 @@ export function getListWorkflowsArgsErrors(data: unknown): ValidationError[] {
  * Returns empty array if valid, array of ValidationError otherwise.
  */
 export function getSearchArgsErrors(data: unknown): ValidationError[] {
-  const cloned = typeof data === "object" && data !== null ? { ...data } : data;
-  _validateSearchArgs(cloned);
-  return toValidationErrors(_validateSearchArgs.errors);
+	const cloned = typeof data === "object" && data !== null ? { ...data } : data;
+	_validateSearchArgs(cloned);
+	return toValidationErrors(_validateSearchArgs.errors);
 }
 
 /**
@@ -838,11 +838,11 @@ export function getSearchArgsErrors(data: unknown): ValidationError[] {
  * Returns empty array if valid, array of ValidationError otherwise.
  */
 export function getSendWorkflowEventArgsErrors(
-  data: unknown,
+	data: unknown,
 ): ValidationError[] {
-  const cloned = typeof data === "object" && data !== null ? { ...data } : data;
-  _validateSendWorkflowEventArgs(cloned);
-  return toValidationErrors(_validateSendWorkflowEventArgs.errors);
+	const cloned = typeof data === "object" && data !== null ? { ...data } : data;
+	_validateSendWorkflowEventArgs(cloned);
+	return toValidationErrors(_validateSendWorkflowEventArgs.errors);
 }
 
 /**
@@ -850,9 +850,9 @@ export function getSendWorkflowEventArgsErrors(
  * Returns empty array if valid, array of ValidationError otherwise.
  */
 export function getSessionArgsErrors(data: unknown): ValidationError[] {
-  const cloned = typeof data === "object" && data !== null ? { ...data } : data;
-  _validateSessionArgs(cloned);
-  return toValidationErrors(_validateSessionArgs.errors);
+	const cloned = typeof data === "object" && data !== null ? { ...data } : data;
+	_validateSessionArgs(cloned);
+	return toValidationErrors(_validateSessionArgs.errors);
 }
 
 /**
@@ -860,12 +860,12 @@ export function getSessionArgsErrors(data: unknown): ValidationError[] {
  * Returns empty array if valid, array of ValidationError otherwise.
  */
 export function getSessionStateErrors(data: unknown): ValidationError[] {
-  const cloned =
-    typeof data === "object" && data !== null
-      ? JSON.parse(JSON.stringify(data))
-      : data;
-  _validateSessionState(cloned);
-  return toValidationErrors(_validateSessionState.errors);
+	const cloned =
+		typeof data === "object" && data !== null
+			? JSON.parse(JSON.stringify(data))
+			: data;
+	_validateSessionState(cloned);
+	return toValidationErrors(_validateSessionState.errors);
 }
 
 // ============================================================================
@@ -876,23 +876,23 @@ export function getSessionStateErrors(data: unknown): ValidationError[] {
  * Valid agent type values for runtime checking.
  */
 const AGENT_TYPES = new Set([
-  "orchestrator",
-  "analyst",
-  "architect",
-  "planner",
-  "implementer",
-  "critic",
-  "qa",
-  "security",
-  "devops",
-  "retrospective",
-  "memory",
-  "skillbook",
-  "independent-thinker",
-  "high-level-advisor",
-  "explainer",
-  "task-generator",
-  "pr-comment-responder",
+	"orchestrator",
+	"analyst",
+	"architect",
+	"planner",
+	"implementer",
+	"critic",
+	"qa",
+	"security",
+	"devops",
+	"retrospective",
+	"memory",
+	"skillbook",
+	"independent-thinker",
+	"high-level-advisor",
+	"explainer",
+	"task-generator",
+	"pr-comment-responder",
 ]);
 
 /**
@@ -907,7 +907,7 @@ const WORKFLOW_MODES = new Set(["analysis", "planning", "coding", "disabled"]);
  * @returns True if value is a valid AgentType
  */
 export function isAgentType(value: unknown): value is AgentType {
-  return typeof value === "string" && AGENT_TYPES.has(value);
+	return typeof value === "string" && AGENT_TYPES.has(value);
 }
 
 /**
@@ -917,7 +917,7 @@ export function isAgentType(value: unknown): value is AgentType {
  * @returns True if value is a valid WorkflowMode
  */
 export function isWorkflowMode(value: unknown): value is WorkflowMode {
-  return typeof value === "string" && WORKFLOW_MODES.has(value);
+	return typeof value === "string" && WORKFLOW_MODES.has(value);
 }
 
 /**
@@ -927,9 +927,9 @@ export function isWorkflowMode(value: unknown): value is WorkflowMode {
  * @returns True if value passes SessionState schema validation
  */
 export function isSessionState(value: unknown): value is SessionState {
-  if (typeof value !== "object" || value === null) {
-    return false;
-  }
-  const cloned = JSON.parse(JSON.stringify(value));
-  return _validateSessionState(cloned);
+	if (typeof value !== "object" || value === null) {
+		return false;
+	}
+	const cloned = JSON.parse(JSON.stringify(value));
+	return _validateSessionState(cloned);
 }

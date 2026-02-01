@@ -14,7 +14,7 @@ import { distance } from "fastest-levenshtein";
  * required to change one string into the other.
  */
 export function levenshteinDistance(str1: string, str2: string): number {
-  return distance(str1, str2);
+	return distance(str1, str2);
 }
 
 /**
@@ -24,12 +24,12 @@ export function levenshteinDistance(str1: string, str2: string): number {
  * Uses Levenshtein distance normalized by the length of the longer string.
  */
 export function similarity(str1: string, str2: string): number {
-  if (str1.length === 0 && str2.length === 0) {
-    return 1; // Both empty strings are identical
-  }
+	if (str1.length === 0 && str2.length === 0) {
+		return 1; // Both empty strings are identical
+	}
 
-  const dist = distance(str1, str2);
-  const maxLength = Math.max(str1.length, str2.length);
+	const dist = distance(str1, str2);
+	const maxLength = Math.max(str1.length, str2.length);
 
-  return 1 - dist / maxLength;
+	return 1 - dist / maxLength;
 }

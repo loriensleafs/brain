@@ -1,90 +1,90 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://brain.dev/schemas/domain/naming-pattern.json",
-  "title": "NamingPatternValidation",
-  "description": "Schema for artifact naming convention validation. Defines expected patterns for various artifact types.",
-  "type": "object",
-  "properties": {
-    "fileName": {
-      "type": "string",
-      "minLength": 1,
-      "description": "File name to validate"
-    },
-    "patternType": {
-      "type": "string",
-      "enum": [
-        "epic",
-        "adr",
-        "prd",
-        "tasks",
-        "plan",
-        "tm",
-        "req",
-        "design",
-        "task",
-        "skill",
-        "retro",
-        "session"
-      ],
-      "description": "Expected pattern type for validation"
-    }
-  },
-  "required": ["fileName"],
-  "additionalProperties": false,
-  "$defs": {
-    "patterns": {
-      "type": "object",
-      "description": "Regex patterns for each artifact type (reference only, actual validation uses Go regex)",
-      "properties": {
-        "epic": {
-          "const": "^EPIC-\\d{3}-[\\w-]+\\.md$",
-          "description": "EPIC-NNN-kebab-case-name.md"
-        },
-        "adr": {
-          "const": "^ADR-\\d{3}-[\\w-]+\\.md$",
-          "description": "ADR-NNN-kebab-case-title.md"
-        },
-        "prd": {
-          "const": "^prd-[\\w-]+\\.md$",
-          "description": "prd-feature-name.md"
-        },
-        "tasks": {
-          "const": "^tasks-[\\w-]+\\.md$",
-          "description": "tasks-feature-name.md"
-        },
-        "plan": {
-          "const": "^\\d{3}-[\\w-]+-plan\\.md$|^(implementation-plan|plan)-[\\w-]+\\.md$",
-          "description": "NNN-feature-plan.md or plan-feature.md"
-        },
-        "tm": {
-          "const": "^TM-\\d{3}-[\\w-]+\\.md$",
-          "description": "TM-NNN-component.md"
-        },
-        "req": {
-          "const": "^REQ-\\d{3}-[\\w-]+\\.md$",
-          "description": "REQ-NNN-title.md"
-        },
-        "design": {
-          "const": "^DESIGN-\\d{3}-[\\w-]+\\.md$",
-          "description": "DESIGN-NNN-title.md"
-        },
-        "task": {
-          "const": "^TASK-\\d{3}-[\\w-]+\\.md$",
-          "description": "TASK-NNN-title.md"
-        },
-        "skill": {
-          "const": "^Skill-[\\w]+-\\d{3}\\.md$",
-          "description": "Skill-Category-NNN.md"
-        },
-        "retro": {
-          "const": "^\\d{4}-\\d{2}-\\d{2}-[\\w-]+\\.md$",
-          "description": "YYYY-MM-DD-topic.md"
-        },
-        "session": {
-          "const": "^\\d{4}-\\d{2}-\\d{2}-session-\\d+\\.md$",
-          "description": "YYYY-MM-DD-session-NN.md"
-        }
-      }
-    }
-  }
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "https://brain.dev/schemas/domain/naming-pattern.json",
+	"title": "NamingPatternValidation",
+	"description": "Schema for artifact naming convention validation. Defines expected patterns for various artifact types.",
+	"type": "object",
+	"properties": {
+		"fileName": {
+			"type": "string",
+			"minLength": 1,
+			"description": "File name to validate"
+		},
+		"patternType": {
+			"type": "string",
+			"enum": [
+				"epic",
+				"adr",
+				"prd",
+				"tasks",
+				"plan",
+				"tm",
+				"req",
+				"design",
+				"task",
+				"skill",
+				"retro",
+				"session"
+			],
+			"description": "Expected pattern type for validation"
+		}
+	},
+	"required": ["fileName"],
+	"additionalProperties": false,
+	"$defs": {
+		"patterns": {
+			"type": "object",
+			"description": "Regex patterns for each artifact type (reference only, actual validation uses Go regex)",
+			"properties": {
+				"epic": {
+					"const": "^EPIC-\\d{3}-[\\w-]+\\.md$",
+					"description": "EPIC-NNN-kebab-case-name.md"
+				},
+				"adr": {
+					"const": "^ADR-\\d{3}-[\\w-]+\\.md$",
+					"description": "ADR-NNN-kebab-case-title.md"
+				},
+				"prd": {
+					"const": "^prd-[\\w-]+\\.md$",
+					"description": "prd-feature-name.md"
+				},
+				"tasks": {
+					"const": "^tasks-[\\w-]+\\.md$",
+					"description": "tasks-feature-name.md"
+				},
+				"plan": {
+					"const": "^\\d{3}-[\\w-]+-plan\\.md$|^(implementation-plan|plan)-[\\w-]+\\.md$",
+					"description": "NNN-feature-plan.md or plan-feature.md"
+				},
+				"tm": {
+					"const": "^TM-\\d{3}-[\\w-]+\\.md$",
+					"description": "TM-NNN-component.md"
+				},
+				"req": {
+					"const": "^REQ-\\d{3}-[\\w-]+\\.md$",
+					"description": "REQ-NNN-title.md"
+				},
+				"design": {
+					"const": "^DESIGN-\\d{3}-[\\w-]+\\.md$",
+					"description": "DESIGN-NNN-title.md"
+				},
+				"task": {
+					"const": "^TASK-\\d{3}-[\\w-]+\\.md$",
+					"description": "TASK-NNN-title.md"
+				},
+				"skill": {
+					"const": "^Skill-[\\w]+-\\d{3}\\.md$",
+					"description": "Skill-Category-NNN.md"
+				},
+				"retro": {
+					"const": "^\\d{4}-\\d{2}-\\d{2}-[\\w-]+\\.md$",
+					"description": "YYYY-MM-DD-topic.md"
+				},
+				"session": {
+					"const": "^\\d{4}-\\d{2}-\\d{2}-session-\\d+\\.md$",
+					"description": "YYYY-MM-DD-session-NN.md"
+				}
+			}
+		}
+	}
 }

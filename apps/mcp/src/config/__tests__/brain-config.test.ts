@@ -10,504 +10,504 @@
  * - Default config generation on first run
  */
 
-import * as os from "os";
-import * as path from "path";
+import * as os from "node:os";
+import * as path from "node:path";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { type BrainConfig, DEFAULT_BRAIN_CONFIG } from "../schema";
 
 // Mock filesystem
 const mockFs = {
-  existsSync: vi.fn(() => false) as ReturnType<
-    typeof mock<(p: string) => boolean>
-  >,
-  readFileSync: vi.fn(() => "") as ReturnType<
-    typeof mock<(p: string, enc: string) => string>
-  >,
-  writeFileSync: vi.fn(() => undefined) as ReturnType<
-    typeof mock<(p: string, content: string, opts: unknown) => void>
-  >,
-  mkdirSync: vi.fn(() => undefined) as ReturnType<
-    typeof mock<(p: string, opts: unknown) => void>
-  >,
-  chmodSync: vi.fn(() => undefined) as ReturnType<
-    typeof mock<(p: string, mode: number) => void>
-  >,
-  renameSync: vi.fn(() => undefined) as ReturnType<
-    typeof mock<(from: string, to: string) => void>
-  >,
-  unlinkSync: vi.fn(() => undefined) as ReturnType<
-    typeof mock<(p: string) => void>
-  >,
-  statSync: vi.fn(() => ({ mode: 0o700 })) as ReturnType<
-    typeof mock<(p: string) => { mode: number }>
-  >,
-  openSync: vi.fn(() => 1) as ReturnType<
-    typeof mock<(p: string, flags: number) => number>
-  >,
-  closeSync: vi.fn(() => undefined) as ReturnType<
-    typeof mock<(fd: number) => void>
-  >,
-  constants: {
-    O_CREAT: 0x0200,
-    O_EXCL: 0x0800,
-    O_WRONLY: 0x0001,
-  },
+	existsSync: vi.fn(() => false) as ReturnType<
+		typeof mock<(p: string) => boolean>
+	>,
+	readFileSync: vi.fn(() => "") as ReturnType<
+		typeof mock<(p: string, enc: string) => string>
+	>,
+	writeFileSync: vi.fn(() => undefined) as ReturnType<
+		typeof mock<(p: string, content: string, opts: unknown) => void>
+	>,
+	mkdirSync: vi.fn(() => undefined) as ReturnType<
+		typeof mock<(p: string, opts: unknown) => void>
+	>,
+	chmodSync: vi.fn(() => undefined) as ReturnType<
+		typeof mock<(p: string, mode: number) => void>
+	>,
+	renameSync: vi.fn(() => undefined) as ReturnType<
+		typeof mock<(from: string, to: string) => void>
+	>,
+	unlinkSync: vi.fn(() => undefined) as ReturnType<
+		typeof mock<(p: string) => void>
+	>,
+	statSync: vi.fn(() => ({ mode: 0o700 })) as ReturnType<
+		typeof mock<(p: string) => { mode: number }>
+	>,
+	openSync: vi.fn(() => 1) as ReturnType<
+		typeof mock<(p: string, flags: number) => number>
+	>,
+	closeSync: vi.fn(() => undefined) as ReturnType<
+		typeof mock<(fd: number) => void>
+	>,
+	constants: {
+		O_CREAT: 0x0200,
+		O_EXCL: 0x0800,
+		O_WRONLY: 0x0001,
+	},
 };
 
 vi.mock("fs", () => mockFs);
 
 // Mock path-validator
 vi.mock("../path-validator", () => ({
-  validatePathOrThrow: (p: string) => p,
-  validatePath: (p: string) => ({ valid: true, normalizedPath: p }),
-  expandTilde: (p: string) => p.replace(/^~/, os.homedir()),
-  normalizePath: (p: string) => path.normalize(p),
+	validatePathOrThrow: (p: string) => p,
+	validatePath: (p: string) => ({ valid: true, normalizedPath: p }),
+	expandTilde: (p: string) => p.replace(/^~/, os.homedir()),
+	normalizePath: (p: string) => path.normalize(p),
 }));
 
 // Mock configLock
 const mockLock = {
-  acquireConfigLock: vi.fn(async () => ({ acquired: true })) as ReturnType<
-    typeof mock<
-      (opts: unknown) => Promise<{ acquired: boolean; error?: string }>
-    >
-  >,
-  releaseConfigLock: vi.fn(() => true) as ReturnType<
-    typeof mock<() => boolean>
-  >,
+	acquireConfigLock: vi.fn(async () => ({ acquired: true })) as ReturnType<
+		typeof mock<
+			(opts: unknown) => Promise<{ acquired: boolean; error?: string }>
+		>
+	>,
+	releaseConfigLock: vi.fn(() => true) as ReturnType<
+		typeof mock<() => boolean>
+	>,
 };
 
 vi.mock("../../utils/security/configLock", () => mockLock);
 
 import {
-  BrainConfigError,
-  brainConfigExists,
-  deleteBrainConfig,
-  getBrainConfigDir,
-  getBrainConfigPath,
-  initBrainConfig,
-  loadBrainConfig,
-  loadBrainConfigSync,
-  saveBrainConfig,
+	BrainConfigError,
+	brainConfigExists,
+	deleteBrainConfig,
+	getBrainConfigDir,
+	getBrainConfigPath,
+	initBrainConfig,
+	loadBrainConfig,
+	loadBrainConfigSync,
+	saveBrainConfig,
 } from "../brain-config";
 
 describe("getBrainConfigPath", () => {
-  test("returns XDG-compliant path", () => {
-    const configPath = getBrainConfigPath();
-    expect(configPath).toContain(".config");
-    expect(configPath).toContain("brain");
-    expect(configPath).toContain("config.json");
-  });
+	test("returns XDG-compliant path", () => {
+		const configPath = getBrainConfigPath();
+		expect(configPath).toContain(".config");
+		expect(configPath).toContain("brain");
+		expect(configPath).toContain("config.json");
+	});
 
-  test("path is within user home directory", () => {
-    const configPath = getBrainConfigPath();
-    expect(configPath.startsWith(os.homedir())).toBe(true);
-  });
+	test("path is within user home directory", () => {
+		const configPath = getBrainConfigPath();
+		expect(configPath.startsWith(os.homedir())).toBe(true);
+	});
 });
 
 describe("getBrainConfigDir", () => {
-  test("returns XDG-compliant directory", () => {
-    const configDir = getBrainConfigDir();
-    expect(configDir).toContain(".config");
-    expect(configDir).toContain("brain");
-    expect(configDir).not.toContain("config.json");
-  });
+	test("returns XDG-compliant directory", () => {
+		const configDir = getBrainConfigDir();
+		expect(configDir).toContain(".config");
+		expect(configDir).toContain("brain");
+		expect(configDir).not.toContain("config.json");
+	});
 });
 
 describe("loadBrainConfig", () => {
-  beforeEach(() => {
-    mockFs.existsSync.mockReset();
-    mockFs.readFileSync.mockReset();
-    mockLock.acquireConfigLock.mockReset();
-    mockLock.releaseConfigLock.mockReset();
+	beforeEach(() => {
+		mockFs.existsSync.mockReset();
+		mockFs.readFileSync.mockReset();
+		mockLock.acquireConfigLock.mockReset();
+		mockLock.releaseConfigLock.mockReset();
 
-    mockLock.acquireConfigLock.mockResolvedValue({ acquired: true });
-    mockLock.releaseConfigLock.mockReturnValue(true);
-  });
+		mockLock.acquireConfigLock.mockResolvedValue({ acquired: true });
+		mockLock.releaseConfigLock.mockReturnValue(true);
+	});
 
-  test("returns defaults when config file does not exist", async () => {
-    mockFs.existsSync.mockReturnValue(false);
+	test("returns defaults when config file does not exist", async () => {
+		mockFs.existsSync.mockReturnValue(false);
 
-    const config = await loadBrainConfig();
+		const config = await loadBrainConfig();
 
-    expect(config.version).toBe("2.0.0");
-    expect(config.defaults.memories_location).toBe("~/memories");
-    expect(config.defaults.memories_mode).toBe("DEFAULT");
-  });
+		expect(config.version).toBe("2.0.0");
+		expect(config.defaults.memories_location).toBe("~/memories");
+		expect(config.defaults.memories_mode).toBe("DEFAULT");
+	});
 
-  test("loads and parses valid config file", async () => {
-    const validConfig: BrainConfig = {
-      ...DEFAULT_BRAIN_CONFIG,
-      logging: { level: "debug" },
-    };
+	test("loads and parses valid config file", async () => {
+		const validConfig: BrainConfig = {
+			...DEFAULT_BRAIN_CONFIG,
+			logging: { level: "debug" },
+		};
 
-    mockFs.existsSync.mockReturnValue(true);
-    mockFs.readFileSync.mockReturnValue(JSON.stringify(validConfig));
+		mockFs.existsSync.mockReturnValue(true);
+		mockFs.readFileSync.mockReturnValue(JSON.stringify(validConfig));
 
-    const config = await loadBrainConfig();
+		const config = await loadBrainConfig();
 
-    expect(config.version).toBe("2.0.0");
-    expect(config.logging.level).toBe("debug");
-  });
+		expect(config.version).toBe("2.0.0");
+		expect(config.logging.level).toBe("debug");
+	});
 
-  test("throws BrainConfigError for invalid JSON", async () => {
-    mockFs.existsSync.mockReturnValue(true);
-    mockFs.readFileSync.mockReturnValue("{ invalid json }");
+	test("throws BrainConfigError for invalid JSON", async () => {
+		mockFs.existsSync.mockReturnValue(true);
+		mockFs.readFileSync.mockReturnValue("{ invalid json }");
 
-    await expect(loadBrainConfig()).rejects.toThrow(BrainConfigError);
-    await expect(loadBrainConfig()).rejects.toMatchObject({
-      code: "PARSE_ERROR",
-    });
-  });
+		await expect(loadBrainConfig()).rejects.toThrow(BrainConfigError);
+		await expect(loadBrainConfig()).rejects.toMatchObject({
+			code: "PARSE_ERROR",
+		});
+	});
 
-  test("throws BrainConfigError for schema validation failure", async () => {
-    const invalidConfig = {
-      version: "1.0.0", // Wrong version
-      defaults: { memories_location: "~/memories" },
-    };
+	test("throws BrainConfigError for schema validation failure", async () => {
+		const invalidConfig = {
+			version: "1.0.0", // Wrong version
+			defaults: { memories_location: "~/memories" },
+		};
 
-    mockFs.existsSync.mockReturnValue(true);
-    mockFs.readFileSync.mockReturnValue(JSON.stringify(invalidConfig));
+		mockFs.existsSync.mockReturnValue(true);
+		mockFs.readFileSync.mockReturnValue(JSON.stringify(invalidConfig));
 
-    await expect(loadBrainConfig()).rejects.toThrow(BrainConfigError);
-    await expect(loadBrainConfig()).rejects.toMatchObject({
-      code: "VALIDATION_ERROR",
-    });
-  });
+		await expect(loadBrainConfig()).rejects.toThrow(BrainConfigError);
+		await expect(loadBrainConfig()).rejects.toMatchObject({
+			code: "VALIDATION_ERROR",
+		});
+	});
 
-  test("acquires and releases lock during read", async () => {
-    mockFs.existsSync.mockReturnValue(false);
+	test("acquires and releases lock during read", async () => {
+		mockFs.existsSync.mockReturnValue(false);
 
-    await loadBrainConfig();
+		await loadBrainConfig();
 
-    expect(mockLock.acquireConfigLock).toHaveBeenCalled();
-    expect(mockLock.releaseConfigLock).toHaveBeenCalled();
-  });
+		expect(mockLock.acquireConfigLock).toHaveBeenCalled();
+		expect(mockLock.releaseConfigLock).toHaveBeenCalled();
+	});
 
-  test("throws BrainConfigError when lock acquisition fails", async () => {
-    mockLock.acquireConfigLock.mockResolvedValue({
-      acquired: false,
-      error: "Lock held by another process",
-    });
+	test("throws BrainConfigError when lock acquisition fails", async () => {
+		mockLock.acquireConfigLock.mockResolvedValue({
+			acquired: false,
+			error: "Lock held by another process",
+		});
 
-    await expect(loadBrainConfig()).rejects.toThrow(BrainConfigError);
-    await expect(loadBrainConfig()).rejects.toMatchObject({
-      code: "LOCK_ERROR",
-    });
-  });
+		await expect(loadBrainConfig()).rejects.toThrow(BrainConfigError);
+		await expect(loadBrainConfig()).rejects.toMatchObject({
+			code: "LOCK_ERROR",
+		});
+	});
 
-  test("respects custom lock timeout", async () => {
-    mockFs.existsSync.mockReturnValue(false);
+	test("respects custom lock timeout", async () => {
+		mockFs.existsSync.mockReturnValue(false);
 
-    await loadBrainConfig({ lockTimeoutMs: 10000 });
+		await loadBrainConfig({ lockTimeoutMs: 10000 });
 
-    expect(mockLock.acquireConfigLock).toHaveBeenCalledWith({
-      timeoutMs: 10000,
-    });
-  });
+		expect(mockLock.acquireConfigLock).toHaveBeenCalledWith({
+			timeoutMs: 10000,
+		});
+	});
 });
 
 describe("loadBrainConfigSync", () => {
-  beforeEach(() => {
-    mockFs.existsSync.mockReset();
-    mockFs.readFileSync.mockReset();
-  });
+	beforeEach(() => {
+		mockFs.existsSync.mockReset();
+		mockFs.readFileSync.mockReset();
+	});
 
-  test("returns defaults when config does not exist", () => {
-    mockFs.existsSync.mockReturnValue(false);
+	test("returns defaults when config does not exist", () => {
+		mockFs.existsSync.mockReturnValue(false);
 
-    const config = loadBrainConfigSync();
+		const config = loadBrainConfigSync();
 
-    expect(config.version).toBe("2.0.0");
-    expect(config.defaults.memories_location).toBe("~/memories");
-  });
+		expect(config.version).toBe("2.0.0");
+		expect(config.defaults.memories_location).toBe("~/memories");
+	});
 
-  test("returns defaults on JSON parse error", () => {
-    mockFs.existsSync.mockReturnValue(true);
-    mockFs.readFileSync.mockReturnValue("invalid json");
+	test("returns defaults on JSON parse error", () => {
+		mockFs.existsSync.mockReturnValue(true);
+		mockFs.readFileSync.mockReturnValue("invalid json");
 
-    const config = loadBrainConfigSync();
+		const config = loadBrainConfigSync();
 
-    expect(config.version).toBe("2.0.0");
-    expect(config.defaults.memories_location).toBe("~/memories");
-  });
+		expect(config.version).toBe("2.0.0");
+		expect(config.defaults.memories_location).toBe("~/memories");
+	});
 
-  test("returns defaults on read error", () => {
-    mockFs.existsSync.mockReturnValue(true);
-    mockFs.readFileSync.mockImplementation(() => {
-      throw new Error("Permission denied");
-    });
+	test("returns defaults on read error", () => {
+		mockFs.existsSync.mockReturnValue(true);
+		mockFs.readFileSync.mockImplementation(() => {
+			throw new Error("Permission denied");
+		});
 
-    const config = loadBrainConfigSync();
+		const config = loadBrainConfigSync();
 
-    expect(config.version).toBe("2.0.0");
-  });
+		expect(config.version).toBe("2.0.0");
+	});
 
-  test("loads valid config file", () => {
-    const validConfig = { ...DEFAULT_BRAIN_CONFIG, logging: { level: "warn" } };
+	test("loads valid config file", () => {
+		const validConfig = { ...DEFAULT_BRAIN_CONFIG, logging: { level: "warn" } };
 
-    mockFs.existsSync.mockReturnValue(true);
-    mockFs.readFileSync.mockReturnValue(JSON.stringify(validConfig));
+		mockFs.existsSync.mockReturnValue(true);
+		mockFs.readFileSync.mockReturnValue(JSON.stringify(validConfig));
 
-    const config = loadBrainConfigSync();
+		const config = loadBrainConfigSync();
 
-    expect(config.logging.level).toBe("warn");
-  });
+		expect(config.logging.level).toBe("warn");
+	});
 });
 
 describe("saveBrainConfig", () => {
-  beforeEach(() => {
-    mockFs.existsSync.mockReset();
-    mockFs.readFileSync.mockReset();
-    mockFs.writeFileSync.mockReset();
-    mockFs.mkdirSync.mockReset();
-    mockFs.chmodSync.mockReset();
-    mockFs.renameSync.mockReset();
-    mockFs.unlinkSync.mockReset();
-    mockFs.statSync.mockReset();
-    mockLock.acquireConfigLock.mockReset();
-    mockLock.releaseConfigLock.mockReset();
+	beforeEach(() => {
+		mockFs.existsSync.mockReset();
+		mockFs.readFileSync.mockReset();
+		mockFs.writeFileSync.mockReset();
+		mockFs.mkdirSync.mockReset();
+		mockFs.chmodSync.mockReset();
+		mockFs.renameSync.mockReset();
+		mockFs.unlinkSync.mockReset();
+		mockFs.statSync.mockReset();
+		mockLock.acquireConfigLock.mockReset();
+		mockLock.releaseConfigLock.mockReset();
 
-    mockLock.acquireConfigLock.mockResolvedValue({ acquired: true });
-    mockLock.releaseConfigLock.mockReturnValue(true);
-    mockFs.statSync.mockReturnValue({ mode: 0o700 });
-  });
+		mockLock.acquireConfigLock.mockResolvedValue({ acquired: true });
+		mockLock.releaseConfigLock.mockReturnValue(true);
+		mockFs.statSync.mockReturnValue({ mode: 0o700 });
+	});
 
-  test("validates config before writing", async () => {
-    const invalidConfig = {
-      version: "1.0.0", // Wrong version
-    } as unknown as BrainConfig;
+	test("validates config before writing", async () => {
+		const invalidConfig = {
+			version: "1.0.0", // Wrong version
+		} as unknown as BrainConfig;
 
-    await expect(saveBrainConfig(invalidConfig)).rejects.toThrow(
-      BrainConfigError,
-    );
-    await expect(saveBrainConfig(invalidConfig)).rejects.toMatchObject({
-      code: "VALIDATION_ERROR",
-    });
-  });
+		await expect(saveBrainConfig(invalidConfig)).rejects.toThrow(
+			BrainConfigError,
+		);
+		await expect(saveBrainConfig(invalidConfig)).rejects.toMatchObject({
+			code: "VALIDATION_ERROR",
+		});
+	});
 
-  test("uses atomic write pattern (temp + rename)", async () => {
-    let tempWritten = false;
-    mockFs.existsSync.mockReturnValue(true);
-    mockFs.writeFileSync.mockImplementation((p: string) => {
-      if (String(p).includes(".tmp")) {
-        tempWritten = true;
-      }
-    });
-    mockFs.readFileSync.mockImplementation((p: string) => {
-      if (String(p).includes(".tmp") && tempWritten) {
-        return JSON.stringify(DEFAULT_BRAIN_CONFIG);
-      }
-      return "";
-    });
+	test("uses atomic write pattern (temp + rename)", async () => {
+		let tempWritten = false;
+		mockFs.existsSync.mockReturnValue(true);
+		mockFs.writeFileSync.mockImplementation((p: string) => {
+			if (String(p).includes(".tmp")) {
+				tempWritten = true;
+			}
+		});
+		mockFs.readFileSync.mockImplementation((p: string) => {
+			if (String(p).includes(".tmp") && tempWritten) {
+				return JSON.stringify(DEFAULT_BRAIN_CONFIG);
+			}
+			return "";
+		});
 
-    await saveBrainConfig(DEFAULT_BRAIN_CONFIG);
+		await saveBrainConfig(DEFAULT_BRAIN_CONFIG);
 
-    expect(mockFs.writeFileSync).toHaveBeenCalled();
-    expect(mockFs.renameSync).toHaveBeenCalled();
+		expect(mockFs.writeFileSync).toHaveBeenCalled();
+		expect(mockFs.renameSync).toHaveBeenCalled();
 
-    // Verify temp file was written before rename
-    const writeCall = mockFs.writeFileSync.mock.calls[0];
-    expect(String(writeCall[0])).toContain(".tmp");
-  });
+		// Verify temp file was written before rename
+		const writeCall = mockFs.writeFileSync.mock.calls[0];
+		expect(String(writeCall[0])).toContain(".tmp");
+	});
 
-  test("creates config directory if it does not exist", async () => {
-    mockFs.existsSync.mockImplementation((p: string) => {
-      // Directory doesn't exist, but temp file read succeeds
-      if (String(p).includes("brain") && !String(p).includes(".json")) {
-        return false;
-      }
-      return true;
-    });
-    mockFs.readFileSync.mockReturnValue(JSON.stringify(DEFAULT_BRAIN_CONFIG));
+	test("creates config directory if it does not exist", async () => {
+		mockFs.existsSync.mockImplementation((p: string) => {
+			// Directory doesn't exist, but temp file read succeeds
+			if (String(p).includes("brain") && !String(p).includes(".json")) {
+				return false;
+			}
+			return true;
+		});
+		mockFs.readFileSync.mockReturnValue(JSON.stringify(DEFAULT_BRAIN_CONFIG));
 
-    await saveBrainConfig(DEFAULT_BRAIN_CONFIG);
+		await saveBrainConfig(DEFAULT_BRAIN_CONFIG);
 
-    expect(mockFs.mkdirSync).toHaveBeenCalled();
-  });
+		expect(mockFs.mkdirSync).toHaveBeenCalled();
+	});
 
-  test("cleans up temp file on write failure", async () => {
-    mockFs.existsSync.mockReturnValue(true);
-    mockFs.writeFileSync.mockImplementation(() => {
-      throw new Error("Disk full");
-    });
+	test("cleans up temp file on write failure", async () => {
+		mockFs.existsSync.mockReturnValue(true);
+		mockFs.writeFileSync.mockImplementation(() => {
+			throw new Error("Disk full");
+		});
 
-    await expect(saveBrainConfig(DEFAULT_BRAIN_CONFIG)).rejects.toThrow(
-      BrainConfigError,
-    );
+		await expect(saveBrainConfig(DEFAULT_BRAIN_CONFIG)).rejects.toThrow(
+			BrainConfigError,
+		);
 
-    // Temp file cleanup attempted (unlinkSync may be called)
-    expect(mockLock.releaseConfigLock).toHaveBeenCalled();
-  });
+		// Temp file cleanup attempted (unlinkSync may be called)
+		expect(mockLock.releaseConfigLock).toHaveBeenCalled();
+	});
 
-  test("cleans up temp file on rename failure", async () => {
-    mockFs.existsSync.mockImplementation((p: string) =>
-      String(p).includes(".tmp"),
-    );
-    mockFs.readFileSync.mockReturnValue(JSON.stringify(DEFAULT_BRAIN_CONFIG));
-    mockFs.renameSync.mockImplementation(() => {
-      throw new Error("Cross-device link");
-    });
+	test("cleans up temp file on rename failure", async () => {
+		mockFs.existsSync.mockImplementation((p: string) =>
+			String(p).includes(".tmp"),
+		);
+		mockFs.readFileSync.mockReturnValue(JSON.stringify(DEFAULT_BRAIN_CONFIG));
+		mockFs.renameSync.mockImplementation(() => {
+			throw new Error("Cross-device link");
+		});
 
-    await expect(saveBrainConfig(DEFAULT_BRAIN_CONFIG)).rejects.toThrow(
-      BrainConfigError,
-    );
-    expect(mockFs.unlinkSync).toHaveBeenCalled();
-  });
+		await expect(saveBrainConfig(DEFAULT_BRAIN_CONFIG)).rejects.toThrow(
+			BrainConfigError,
+		);
+		expect(mockFs.unlinkSync).toHaveBeenCalled();
+	});
 
-  test("acquires and releases lock during write", async () => {
-    mockFs.existsSync.mockReturnValue(true);
-    mockFs.readFileSync.mockReturnValue(JSON.stringify(DEFAULT_BRAIN_CONFIG));
+	test("acquires and releases lock during write", async () => {
+		mockFs.existsSync.mockReturnValue(true);
+		mockFs.readFileSync.mockReturnValue(JSON.stringify(DEFAULT_BRAIN_CONFIG));
 
-    await saveBrainConfig(DEFAULT_BRAIN_CONFIG);
+		await saveBrainConfig(DEFAULT_BRAIN_CONFIG);
 
-    expect(mockLock.acquireConfigLock).toHaveBeenCalled();
-    expect(mockLock.releaseConfigLock).toHaveBeenCalled();
-  });
+		expect(mockLock.acquireConfigLock).toHaveBeenCalled();
+		expect(mockLock.releaseConfigLock).toHaveBeenCalled();
+	});
 
-  test("throws BrainConfigError when lock acquisition fails", async () => {
-    mockLock.acquireConfigLock.mockResolvedValue({
-      acquired: false,
-      error: "Timeout",
-    });
+	test("throws BrainConfigError when lock acquisition fails", async () => {
+		mockLock.acquireConfigLock.mockResolvedValue({
+			acquired: false,
+			error: "Timeout",
+		});
 
-    await expect(saveBrainConfig(DEFAULT_BRAIN_CONFIG)).rejects.toThrow(
-      BrainConfigError,
-    );
-    await expect(saveBrainConfig(DEFAULT_BRAIN_CONFIG)).rejects.toMatchObject({
-      code: "LOCK_ERROR",
-    });
-  });
+		await expect(saveBrainConfig(DEFAULT_BRAIN_CONFIG)).rejects.toThrow(
+			BrainConfigError,
+		);
+		await expect(saveBrainConfig(DEFAULT_BRAIN_CONFIG)).rejects.toMatchObject({
+			code: "LOCK_ERROR",
+		});
+	});
 
-  test("releases lock even on error", async () => {
-    mockFs.existsSync.mockReturnValue(true);
-    mockFs.writeFileSync.mockImplementation(() => {
-      throw new Error("Write failed");
-    });
+	test("releases lock even on error", async () => {
+		mockFs.existsSync.mockReturnValue(true);
+		mockFs.writeFileSync.mockImplementation(() => {
+			throw new Error("Write failed");
+		});
 
-    try {
-      await saveBrainConfig(DEFAULT_BRAIN_CONFIG);
-    } catch {
-      // Expected
-    }
+		try {
+			await saveBrainConfig(DEFAULT_BRAIN_CONFIG);
+		} catch {
+			// Expected
+		}
 
-    expect(mockLock.releaseConfigLock).toHaveBeenCalled();
-  });
+		expect(mockLock.releaseConfigLock).toHaveBeenCalled();
+	});
 });
 
 describe("initBrainConfig", () => {
-  beforeEach(() => {
-    mockFs.existsSync.mockReset();
-    mockFs.readFileSync.mockReset();
-    mockFs.writeFileSync.mockReset();
-    mockFs.mkdirSync.mockReset();
-    mockFs.renameSync.mockReset();
-    mockFs.statSync.mockReset();
-    mockLock.acquireConfigLock.mockReset();
-    mockLock.releaseConfigLock.mockReset();
+	beforeEach(() => {
+		mockFs.existsSync.mockReset();
+		mockFs.readFileSync.mockReset();
+		mockFs.writeFileSync.mockReset();
+		mockFs.mkdirSync.mockReset();
+		mockFs.renameSync.mockReset();
+		mockFs.statSync.mockReset();
+		mockLock.acquireConfigLock.mockReset();
+		mockLock.releaseConfigLock.mockReset();
 
-    mockLock.acquireConfigLock.mockResolvedValue({ acquired: true });
-    mockLock.releaseConfigLock.mockReturnValue(true);
-    mockFs.statSync.mockReturnValue({ mode: 0o700 });
-  });
+		mockLock.acquireConfigLock.mockResolvedValue({ acquired: true });
+		mockLock.releaseConfigLock.mockReturnValue(true);
+		mockFs.statSync.mockReturnValue({ mode: 0o700 });
+	});
 
-  test("creates default config when none exists", async () => {
-    mockFs.existsSync.mockImplementation((p: string) => {
-      // Config file doesn't exist
-      if (String(p).includes("config.json") && !String(p).includes(".tmp")) {
-        return false;
-      }
-      return true;
-    });
-    mockFs.readFileSync.mockReturnValue(JSON.stringify(DEFAULT_BRAIN_CONFIG));
+	test("creates default config when none exists", async () => {
+		mockFs.existsSync.mockImplementation((p: string) => {
+			// Config file doesn't exist
+			if (String(p).includes("config.json") && !String(p).includes(".tmp")) {
+				return false;
+			}
+			return true;
+		});
+		mockFs.readFileSync.mockReturnValue(JSON.stringify(DEFAULT_BRAIN_CONFIG));
 
-    const config = await initBrainConfig();
+		const config = await initBrainConfig();
 
-    expect(config.version).toBe("2.0.0");
-    expect(mockFs.writeFileSync).toHaveBeenCalled();
-  });
+		expect(config.version).toBe("2.0.0");
+		expect(mockFs.writeFileSync).toHaveBeenCalled();
+	});
 
-  test("loads existing config when present", async () => {
-    const existingConfig = {
-      ...DEFAULT_BRAIN_CONFIG,
-      logging: { level: "error" },
-    };
+	test("loads existing config when present", async () => {
+		const existingConfig = {
+			...DEFAULT_BRAIN_CONFIG,
+			logging: { level: "error" },
+		};
 
-    mockFs.existsSync.mockReturnValue(true);
-    mockFs.readFileSync.mockReturnValue(JSON.stringify(existingConfig));
+		mockFs.existsSync.mockReturnValue(true);
+		mockFs.readFileSync.mockReturnValue(JSON.stringify(existingConfig));
 
-    const config = await initBrainConfig();
+		const config = await initBrainConfig();
 
-    expect(config.logging.level).toBe("error");
-  });
+		expect(config.logging.level).toBe("error");
+	});
 });
 
 describe("brainConfigExists", () => {
-  beforeEach(() => {
-    mockFs.existsSync.mockReset();
-  });
+	beforeEach(() => {
+		mockFs.existsSync.mockReset();
+	});
 
-  test("returns true when config file exists", () => {
-    mockFs.existsSync.mockReturnValue(true);
-    expect(brainConfigExists()).toBe(true);
-  });
+	test("returns true when config file exists", () => {
+		mockFs.existsSync.mockReturnValue(true);
+		expect(brainConfigExists()).toBe(true);
+	});
 
-  test("returns false when config file does not exist", () => {
-    mockFs.existsSync.mockReturnValue(false);
-    expect(brainConfigExists()).toBe(false);
-  });
+	test("returns false when config file does not exist", () => {
+		mockFs.existsSync.mockReturnValue(false);
+		expect(brainConfigExists()).toBe(false);
+	});
 });
 
 describe("deleteBrainConfig", () => {
-  beforeEach(() => {
-    mockFs.existsSync.mockReset();
-    mockFs.unlinkSync.mockReset();
-    mockLock.acquireConfigLock.mockReset();
-    mockLock.releaseConfigLock.mockReset();
+	beforeEach(() => {
+		mockFs.existsSync.mockReset();
+		mockFs.unlinkSync.mockReset();
+		mockLock.acquireConfigLock.mockReset();
+		mockLock.releaseConfigLock.mockReset();
 
-    mockLock.acquireConfigLock.mockResolvedValue({ acquired: true });
-    mockLock.releaseConfigLock.mockReturnValue(true);
-  });
+		mockLock.acquireConfigLock.mockResolvedValue({ acquired: true });
+		mockLock.releaseConfigLock.mockReturnValue(true);
+	});
 
-  test("does nothing when config does not exist", async () => {
-    mockFs.existsSync.mockReturnValue(false);
+	test("does nothing when config does not exist", async () => {
+		mockFs.existsSync.mockReturnValue(false);
 
-    await deleteBrainConfig();
+		await deleteBrainConfig();
 
-    expect(mockFs.unlinkSync).not.toHaveBeenCalled();
-  });
+		expect(mockFs.unlinkSync).not.toHaveBeenCalled();
+	});
 
-  test("deletes config file when it exists", async () => {
-    mockFs.existsSync.mockReturnValue(true);
+	test("deletes config file when it exists", async () => {
+		mockFs.existsSync.mockReturnValue(true);
 
-    await deleteBrainConfig();
+		await deleteBrainConfig();
 
-    expect(mockFs.unlinkSync).toHaveBeenCalled();
-  });
+		expect(mockFs.unlinkSync).toHaveBeenCalled();
+	});
 
-  test("acquires lock before deletion", async () => {
-    mockFs.existsSync.mockReturnValue(true);
+	test("acquires lock before deletion", async () => {
+		mockFs.existsSync.mockReturnValue(true);
 
-    await deleteBrainConfig();
+		await deleteBrainConfig();
 
-    expect(mockLock.acquireConfigLock).toHaveBeenCalled();
-    expect(mockLock.releaseConfigLock).toHaveBeenCalled();
-  });
+		expect(mockLock.acquireConfigLock).toHaveBeenCalled();
+		expect(mockLock.releaseConfigLock).toHaveBeenCalled();
+	});
 });
 
 describe("BrainConfigError", () => {
-  test("has correct error name", () => {
-    const error = new BrainConfigError("test", "IO_ERROR");
-    expect(error.name).toBe("BrainConfigError");
-  });
+	test("has correct error name", () => {
+		const error = new BrainConfigError("test", "IO_ERROR");
+		expect(error.name).toBe("BrainConfigError");
+	});
 
-  test("preserves error code", () => {
-    const error = new BrainConfigError("test", "VALIDATION_ERROR");
-    expect(error.code).toBe("VALIDATION_ERROR");
-  });
+	test("preserves error code", () => {
+		const error = new BrainConfigError("test", "VALIDATION_ERROR");
+		expect(error.code).toBe("VALIDATION_ERROR");
+	});
 
-  test("preserves cause", () => {
-    const cause = new Error("original error");
-    const error = new BrainConfigError("test", "IO_ERROR", cause);
-    expect(error.cause).toBe(cause);
-  });
+	test("preserves cause", () => {
+		const cause = new Error("original error");
+		const error = new BrainConfigError("test", "IO_ERROR", cause);
+		expect(error.cause).toBe(cause);
+	});
 });

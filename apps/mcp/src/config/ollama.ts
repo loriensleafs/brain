@@ -16,6 +16,6 @@ import type { OllamaConfig } from "../services/ollama/types";
  * Batch embedding operations complete in <1 second per request with batch API.
  */
 export const ollamaConfig: OllamaConfig = {
-  baseUrl: process.env.OLLAMA_BASE_URL ?? "http://localhost:11434",
-  timeout: parseInt(process.env.OLLAMA_TIMEOUT ?? "60000", 10),
+	baseUrl: process.env.OLLAMA_BASE_URL ?? "http://localhost:11434",
+	timeout: parseInt(process.env.OLLAMA_TIMEOUT ?? "60000", 10),
 };

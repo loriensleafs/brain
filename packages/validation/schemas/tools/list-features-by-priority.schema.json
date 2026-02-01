@@ -1,32 +1,32 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://brain.dev/schemas/tools/list-features-by-priority.json",
-  "title": "ListFeaturesByPriorityArgs",
-  "description": "Schema for list_features_by_priority tool arguments. Lists features ordered by dependency (topological sort) and priority tie-breaking. Returns features sorted by: 1. Dependency order (dependencies first), 2. Priority (lower number = higher priority).",
-  "type": "object",
-  "properties": {
-    "project": {
-      "type": "string",
-      "description": "Project to list features for. Auto-resolved from CWD if not specified."
-    },
-    "entity_type": {
-      "type": "string",
-      "enum": ["feature", "task", "phase"],
-      "default": "feature",
-      "description": "Type of entity to list. Default: feature"
-    },
-    "include_completed": {
-      "type": "boolean",
-      "default": false,
-      "description": "Include completed items. Default: false"
-    },
-    "format": {
-      "type": "string",
-      "enum": ["list", "tree"],
-      "default": "list",
-      "description": "Output format. Default: list"
-    }
-  },
-  "required": [],
-  "additionalProperties": false
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "https://brain.dev/schemas/tools/list-features-by-priority.json",
+	"title": "ListFeaturesByPriorityArgs",
+	"description": "Schema for list_features_by_priority tool arguments. Lists features ordered by dependency (topological sort) and priority tie-breaking. Returns features sorted by: 1. Dependency order (dependencies first), 2. Priority (lower number = higher priority).",
+	"type": "object",
+	"properties": {
+		"project": {
+			"type": "string",
+			"description": "Project to list features for. Auto-resolved from CWD if not specified."
+		},
+		"entity_type": {
+			"type": "string",
+			"enum": ["feature", "task", "phase"],
+			"default": "feature",
+			"description": "Type of entity to list. Default: feature"
+		},
+		"include_completed": {
+			"type": "boolean",
+			"default": false,
+			"description": "Include completed items. Default: false"
+		},
+		"format": {
+			"type": "string",
+			"enum": ["list", "tree"],
+			"default": "list",
+			"description": "Output format. Default: list"
+		}
+	},
+	"required": [],
+	"additionalProperties": false
 }

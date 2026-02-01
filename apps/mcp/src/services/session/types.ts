@@ -14,32 +14,32 @@
 
 // Re-export all types and validators from @brain/validation
 export {
-  type AgentInvocation,
-  type AgentInvocationInput,
-  type AgentInvocationOutput,
-  // Types
-  type AgentType,
-  type CompactionEntry,
-  type Decision,
-  type DecisionType,
-  getSessionStateErrors,
-  type Handoff,
-  type InvocationStatus,
-  // Type guards
-  isAgentType,
-  isSessionState,
-  isWorkflowMode,
-  type ModeHistoryEntry,
-  type OrchestratorWorkflow,
-  parseSessionState,
-  type SessionState,
-  safeParseSessionState,
-  type Verdict,
-  type VerdictDecision,
-  // Validators
-  validateSessionState,
-  type WorkflowMode,
-  type WorkflowPhase,
+	type AgentInvocation,
+	type AgentInvocationInput,
+	type AgentInvocationOutput,
+	// Types
+	type AgentType,
+	type CompactionEntry,
+	type Decision,
+	type DecisionType,
+	getSessionStateErrors,
+	type Handoff,
+	type InvocationStatus,
+	// Type guards
+	isAgentType,
+	isSessionState,
+	isWorkflowMode,
+	type ModeHistoryEntry,
+	type OrchestratorWorkflow,
+	parseSessionState,
+	type SessionState,
+	safeParseSessionState,
+	type Verdict,
+	type VerdictDecision,
+	// Validators
+	validateSessionState,
+	type WorkflowMode,
+	type WorkflowPhase,
 } from "@brain/validation";
 
 // ============================================================================
@@ -54,18 +54,18 @@ import type { OrchestratorWorkflow, SessionState } from "@brain/validation";
  * @returns Default OrchestratorWorkflow with empty collections
  */
 export function createEmptyWorkflow(): OrchestratorWorkflow {
-  const now = new Date().toISOString();
-  return {
-    activeAgent: null,
-    workflowPhase: "planning",
-    agentHistory: [],
-    decisions: [],
-    verdicts: [],
-    pendingHandoffs: [],
-    compactionHistory: [],
-    startedAt: now,
-    lastAgentChange: now,
-  };
+	const now = new Date().toISOString();
+	return {
+		activeAgent: null,
+		workflowPhase: "planning",
+		agentHistory: [],
+		decisions: [],
+		verdicts: [],
+		pendingHandoffs: [],
+		compactionHistory: [],
+		startedAt: now,
+		lastAgentChange: now,
+	};
 }
 
 /**
@@ -74,19 +74,19 @@ export function createEmptyWorkflow(): OrchestratorWorkflow {
  * @returns Default SessionState with analysis mode and version 1
  */
 export function createDefaultSessionState(): SessionState {
-  const now = new Date().toISOString();
-  return {
-    currentMode: "analysis",
-    modeHistory: [{ mode: "analysis", timestamp: now }],
-    protocolStartComplete: false,
-    protocolEndComplete: false,
-    protocolStartEvidence: {},
-    protocolEndEvidence: {},
-    orchestratorWorkflow: null,
-    activeFeature: undefined,
-    activeTask: undefined,
-    version: 1,
-    createdAt: now,
-    updatedAt: now,
-  };
+	const now = new Date().toISOString();
+	return {
+		currentMode: "analysis",
+		modeHistory: [{ mode: "analysis", timestamp: now }],
+		protocolStartComplete: false,
+		protocolEndComplete: false,
+		protocolStartEvidence: {},
+		protocolEndEvidence: {},
+		orchestratorWorkflow: null,
+		activeFeature: undefined,
+		activeTask: undefined,
+		version: 1,
+		createdAt: now,
+		updatedAt: now,
+	};
 }
