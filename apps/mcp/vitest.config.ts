@@ -2,7 +2,7 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   // =============================================================================
-  // Build
+  // Build Configuration
   // =============================================================================
 
   cacheDir: "node_modules/.vite",
@@ -12,7 +12,7 @@ export default defineConfig({
   },
 
   // =============================================================================
-  // Test
+  // Test Configuration
   // =============================================================================
 
   test: {
@@ -20,12 +20,13 @@ export default defineConfig({
     environment: "node",
     globals: false,
 
-    // --- Patterns ---
+    // --- File Patterns ---
     include: ["src/**/*.test.ts"],
     exclude: [
       // Standard exclusions
       "**/dist/**",
       "**/node_modules/**",
+
       // sqlite-vec tests (run via vitest.integration.config.ts with Node.js)
       "**/db/__tests__/performance.test.ts",
       "**/db/__tests__/schema.test.ts",
@@ -33,35 +34,34 @@ export default defineConfig({
       "**/tools/search/__tests__/handler.test.ts",
     ],
 
-    // --- Performance ---
-    // Vitest 4: pool options are now top-level (not nested in poolOptions)
+    // --- Parallelism (Vitest 4: top-level, not poolOptions) ---
     fileParallelism: true,
     isolate: true,
-    pool: "forks",
-    minForks: 2,
     maxForks: 8,
+    minForks: 2,
+    pool: "forks",
 
     // --- Timeouts ---
     hookTimeout: 10000,
     teardownTimeout: 1000,
     testTimeout: 10000,
 
-    // --- Thresholds ---
+    // --- Behavior ---
     passWithNoTests: true,
     slowTestThreshold: 1000,
 
     // --- Reporter ---
     reporter: process.env.CI ? "dot" : "default",
 
-    // --- Watch ---
+    // --- Watch Mode ---
     watch: false,
     watchExclude: ["**/.turbo/**", "**/dist/**", "**/node_modules/**"],
 
     // --- Coverage ---
     coverage: {
       enabled: false,
-      provider: "v8",
       exclude: ["**/*.test.ts", "**/dist/**", "**/node_modules/**"],
+      provider: "v8",
       reporter: ["html", "json", "text"],
     },
   },

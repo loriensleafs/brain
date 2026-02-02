@@ -1,7 +1,10 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.3.13/schema.json",
 
-  // --- Assist ---
+  // =============================================================================
+  // Assist
+  // =============================================================================
+
   "assist": {
     "actions": {
       "source": {
@@ -10,14 +13,17 @@
     }
   },
 
-  // --- Files ---
+  // =============================================================================
+  // Files
+  // =============================================================================
+
   "files": {
     "includes": [
-      // Source
+      // Source directories
       "apps/**",
       "packages/**",
 
-      // Build outputs
+      // Exclude: Build outputs
       "!**/artifacts",
       "!**/build",
       "!**/coverage",
@@ -25,42 +31,45 @@
       "!**/generated",
       "!**/out",
 
-      // Cache
+      // Exclude: Cache
       "!**/.cache",
       "!**/.turbo",
 
-      // Dependencies
+      // Exclude: Dependencies
       "!**/.yarn",
       "!**/node_modules",
       "!**/vendor",
 
-      // IDE
+      // Exclude: IDE
       "!**/.cursor",
       "!**/.vscode",
 
-      // Lock files
+      // Exclude: Lock files
       "!**/*.lock",
       "!**/bun.lock",
 
-      // Minified
+      // Exclude: Minified
       "!**/*.min.css",
       "!**/*.min.js",
 
-      // Other
-      "!**/docs",
-      "!**/tmp",
-
-      // Test artifacts
+      // Exclude: Snapshots
       "!**/__snapshots__",
 
-      // VCS
+      // Exclude: VCS
       "!**/.git",
-      "!**/.github"
+      "!**/.github",
+
+      // Exclude: Other
+      "!**/docs",
+      "!**/tmp"
     ],
     "maxSize": 1048576
   },
 
-  // --- Formatter ---
+  // =============================================================================
+  // Formatter
+  // =============================================================================
+
   "formatter": {
     "enabled": true,
     "indentStyle": "space",
@@ -69,7 +78,10 @@
     "useEditorconfig": true
   },
 
-  // --- JavaScript ---
+  // =============================================================================
+  // JavaScript
+  // =============================================================================
+
   "javascript": {
     "formatter": {
       "arrowParentheses": "always",
@@ -83,7 +95,10 @@
     }
   },
 
-  // --- Linter ---
+  // =============================================================================
+  // Linter
+  // =============================================================================
+
   "linter": {
     "enabled": true,
     "rules": {
@@ -91,7 +106,10 @@
     }
   },
 
-  // --- Overrides ---
+  // =============================================================================
+  // Overrides
+  // =============================================================================
+
   "overrides": [
     {
       // Relax rules for test files - mocks and assertions need flexibility
@@ -111,7 +129,10 @@
     }
   ],
 
-  // --- VCS ---
+  // =============================================================================
+  // VCS
+  // =============================================================================
+
   "vcs": {
     "clientKind": "git",
     "defaultBranch": "main",

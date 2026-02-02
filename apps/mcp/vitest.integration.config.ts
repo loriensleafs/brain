@@ -27,7 +27,7 @@ export default defineConfig({
   },
 
   // =============================================================================
-  // Test
+  // Test Configuration
   // =============================================================================
 
   test: {
@@ -37,7 +37,7 @@ export default defineConfig({
       USE_BETTER_SQLITE3: "true",
     },
 
-    // --- Patterns ---
+    // --- File Patterns ---
     include: [
       "src/db/__tests__/performance.test.ts",
       "src/db/__tests__/schema.test.ts",
@@ -45,13 +45,13 @@ export default defineConfig({
       "src/tools/search/__tests__/handler.test.ts",
     ],
 
-    // --- Performance ---
+    // --- Parallelism (Vitest 4: top-level, not poolOptions) ---
     // Use threads pool for Node.js native module compatibility
-    // Vitest 4: pool options are now top-level (not nested in poolOptions)
-    pool: "threads",
-    minThreads: 1,
+    // Disable isolation to avoid sqlite-vec extension reload overhead
+    isolate: false,
     maxThreads: 4,
-    isolate: false, // Reuse threads to avoid sqlite-vec extension reload overhead
+    minThreads: 1,
+    pool: "threads",
 
     // --- Timeouts ---
     // Performance tests run 100+ query iterations, need longer timeouts

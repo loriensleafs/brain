@@ -2,7 +2,7 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   // =============================================================================
-  // Build
+  // Build Configuration
   // =============================================================================
 
   cacheDir: "node_modules/.vite",
@@ -11,15 +11,8 @@ export default defineConfig({
     target: "esnext",
   },
 
-  server: {
-    deps: {
-      // Inline certain modules to fix SSR import issues with Bun
-      inline: ["zod"],
-    },
-  },
-
   // =============================================================================
-  // Test
+  // Test Configuration
   // =============================================================================
 
   test: {
@@ -27,15 +20,18 @@ export default defineConfig({
     environment: "node",
     globals: false,
 
-    // --- Patterns ---
+    // --- File Patterns ---
     include: [
       "apps/**/src/**/*.test.ts",
       "packages/**/src/**/*.test.ts",
     ],
     exclude: [
+      // Standard exclusions
       "**/dist/**",
       "**/node_modules/**",
-      // Exclude tests that require bun:sqlite (must run with Bun via Turbo)
+
+      // Bun-only tests (require bun:sqlite, must run via Turbo)
+      "apps/mcp/src/config/__tests__/migration-verify.test.ts",
       "apps/mcp/src/db/__tests__/**",
       "apps/mcp/src/services/embedding/__tests__/integration.test.ts",
       "apps/mcp/src/services/embedding/__tests__/queue.test.ts",
@@ -44,30 +40,28 @@ export default defineConfig({
       "apps/mcp/src/tools/__tests__/edit-note-embedding.test.ts",
       "apps/mcp/src/tools/bootstrap-context/__tests__/catchupTrigger.test.ts",
       "apps/mcp/src/tools/search/__tests__/handler.test.ts",
-      "apps/mcp/src/config/__tests__/migration-verify.test.ts",
     ],
 
-    // --- Performance ---
-    // Vitest 4: pool options are now top-level (not nested in poolOptions)
+    // --- Parallelism (Vitest 4: top-level, not poolOptions) ---
     fileParallelism: true,
     isolate: true,
-    pool: "forks",
-    minForks: 2,
     maxForks: 8,
+    minForks: 2,
+    pool: "forks",
 
     // --- Timeouts ---
     hookTimeout: 10000,
     teardownTimeout: 1000,
     testTimeout: 10000,
 
-    // --- Thresholds ---
+    // --- Behavior ---
     passWithNoTests: true,
     slowTestThreshold: 1000,
 
     // --- Reporter ---
     reporter: process.env.CI ? "dot" : "default",
 
-    // --- Watch ---
+    // --- Watch Mode ---
     watch: false,
     watchExclude: [
       "**/.turbo/**",
@@ -78,12 +72,12 @@ export default defineConfig({
     // --- Coverage ---
     coverage: {
       enabled: false,
-      provider: "v8",
       exclude: [
         "**/*.test.ts",
         "**/dist/**",
         "**/node_modules/**",
       ],
+      provider: "v8",
       reporter: ["html", "json", "text"],
     },
   },
