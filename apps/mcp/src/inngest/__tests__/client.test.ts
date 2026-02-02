@@ -55,9 +55,8 @@ describe("Inngest Client", () => {
     test("returns default URL when env not set", async () => {
       delete process.env.INNGEST_DEV_SERVER_URL;
 
-      // Need to clear module cache for fresh import
-      const modulePath = require.resolve("../client");
-      delete require.cache[modulePath];
+      // Reset module cache for fresh import
+      vi.resetModules();
 
       const { getInngestDevServerUrl } = await import("../client");
       const url = getInngestDevServerUrl();
