@@ -59,24 +59,35 @@ function getNotesPath(project: string): string | null {
  */
 function removeNotesPath(project: string): boolean {
   try {
-    if (fs.existsSync(BASIC_MEMORY_CONFIG_PATH)) {
-      const content = fs.readFileSync(BASIC_MEMORY_CONFIG_PATH, "utf-8");
-      const config = JSON.parse(content);
-
-      if (config.projects && typeof config.projects === "object" && project in config.projects) {
-        delete config.projects[project];
-        fs.writeFileSync(BASIC_MEMORY_CONFIG_PATH, JSON.stringify(config, null, 2));
-        logger.info({ project }, "Removed notes path from basic-memory config");
-        return true;
+    // Read config directly (avoids TOCTOU race condition)
+    let content: string;
+    try {
+      content = fs.readFileSync(BASIC_MEMORY_CONFIG_PATH, "utf-8");
+    } catch (error) {
+      const nodeError = error as NodeJS.ErrnoException;
+      if (nodeError.code === "ENOENT") {
+        // Config doesn't exist - nothing to remove
+        return false;
       }
+      throw error;
     }
+
+    const config = JSON.parse(content);
+
+    if (config.projects && typeof config.projects === "object" && project in config.projects) {
+      delete config.projects[project];
+      fs.writeFileSync(BASIC_MEMORY_CONFIG_PATH, JSON.stringify(config, null, 2));
+      logger.info({ project }, "Removed notes path from basic-memory config");
+      return true;
+    }
+
+    return false;
   } catch (error) {
     logger.error({ error, project }, "Failed to remove notes path from config");
     throw new Error(
       `Failed to update config: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
-  return false;
 }
 
 /**

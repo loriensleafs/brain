@@ -363,10 +363,17 @@ async function _getExistingMemoriesPath(project: string): Promise<string | null>
 function setMemoriesPath(project: string, memoriesPath: string): void {
   const configPath = path.join(os.homedir(), ".basic-memory", "config.json");
   try {
+    // Read existing config or start with empty object (avoids TOCTOU race)
     let config: Record<string, unknown> = {};
-    if (fs.existsSync(configPath)) {
+    try {
       const content = fs.readFileSync(configPath, "utf-8");
       config = JSON.parse(content);
+    } catch (error) {
+      const nodeError = error as NodeJS.ErrnoException;
+      if (nodeError.code !== "ENOENT") {
+        throw error;
+      }
+      // File doesn't exist yet - start with empty config
     }
 
     if (!config.projects || typeof config.projects !== "object") {

@@ -50,15 +50,28 @@ const SETTABLE_KEYS: Record<
   },
 };
 
+/** Keys that could pollute Object.prototype if used as property names. */
+const DANGEROUS_KEYS = new Set(["__proto__", "constructor", "prototype"]);
+
 /**
  * Set a nested value in an object using dot notation.
  *
  * @param obj - Object to modify (will be mutated)
  * @param path - Dot-separated path
  * @param value - Value to set
+ *
+ * @throws Error if path contains dangerous prototype-polluting keys
  */
 function setNestedValue(obj: Record<string, unknown>, path: string, value: unknown): void {
   const keys = path.split(".");
+
+  // Guard against prototype pollution
+  for (const key of keys) {
+    if (DANGEROUS_KEYS.has(key)) {
+      throw new Error(`Invalid configuration key: "${path}" contains forbidden property "${key}"`);
+    }
+  }
+
   let current = obj;
 
   for (let i = 0; i < keys.length - 1; i++) {

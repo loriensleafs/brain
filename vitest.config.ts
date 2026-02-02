@@ -26,20 +26,8 @@ export default defineConfig({
       "packages/**/src/**/*.test.ts",
     ],
     exclude: [
-      // Standard exclusions
       "**/dist/**",
       "**/node_modules/**",
-
-      // Bun-only tests (require bun:sqlite, must run via Turbo)
-      "apps/mcp/src/config/__tests__/migration-verify.test.ts",
-      "apps/mcp/src/db/__tests__/**",
-      "apps/mcp/src/services/embedding/__tests__/integration.test.ts",
-      "apps/mcp/src/services/embedding/__tests__/queue.test.ts",
-      "apps/mcp/src/services/embedding/__tests__/retry.test.ts",
-      "apps/mcp/src/services/embedding/__tests__/triggerEmbedding.test.ts",
-      "apps/mcp/src/tools/__tests__/edit-note-embedding.test.ts",
-      "apps/mcp/src/tools/bootstrap-context/__tests__/catchupTrigger.test.ts",
-      "apps/mcp/src/tools/search/__tests__/handler.test.ts",
     ],
 
     // --- Parallelism (Vitest 4: top-level, not poolOptions) ---

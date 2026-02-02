@@ -1,5 +1,3 @@
-import { constants } from "node:fs";
-import { access, readFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
@@ -39,18 +37,25 @@ export function getConfigPath(): string {
  */
 export async function readConfig(): Promise<BasicMemoryConfig> {
   const configPath = getConfigPath();
+  const file = Bun.file(configPath);
 
-  // Check if file exists
-  try {
-    await access(configPath, constants.F_OK);
-  } catch {
+  // Check existence and read atomically (avoids TOCTOU race condition)
+  if (!(await file.exists())) {
     throw new Error(
       `Basic-memory config not found at ${configPath}. Run 'basic-memory init' to create it.`,
     );
   }
 
-  // Read and parse config
-  const content = await readFile(configPath, "utf-8");
+  // Read and parse
+  let content: string;
+  try {
+    content = await file.text();
+  } catch (error) {
+    throw new Error(
+      `Failed to read config file at ${configPath}: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+
   try {
     return JSON.parse(content) as BasicMemoryConfig;
   } catch (error) {
