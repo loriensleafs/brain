@@ -4,35 +4,35 @@ on:
   pull_request:
     branches: [main]
     paths:
+      - "apps/**/*.js"
+      - "apps/**/*.json"
+      - "apps/**/*.jsx"
       - "apps/**/*.ts"
       - "apps/**/*.tsx"
-      - "apps/**/*.js"
-      - "apps/**/*.jsx"
-      - "apps/**/*.json"
+      - "biome.jsonc"
+      - "packages/**/*.js"
+      - "packages/**/*.json"
+      - "packages/**/*.jsx"
       - "packages/**/*.ts"
       - "packages/**/*.tsx"
-      - "packages/**/*.js"
-      - "packages/**/*.jsx"
-      - "packages/**/*.json"
-      - "biome.jsonc"
   push:
     branches: [main]
     paths:
+      - "apps/**/*.js"
+      - "apps/**/*.json"
+      - "apps/**/*.jsx"
       - "apps/**/*.ts"
       - "apps/**/*.tsx"
-      - "apps/**/*.js"
-      - "apps/**/*.jsx"
-      - "apps/**/*.json"
+      - "biome.jsonc"
+      - "packages/**/*.js"
+      - "packages/**/*.json"
+      - "packages/**/*.jsx"
       - "packages/**/*.ts"
       - "packages/**/*.tsx"
-      - "packages/**/*.js"
-      - "packages/**/*.jsx"
-      - "packages/**/*.json"
-      - "biome.jsonc"
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
   check:
@@ -47,6 +47,16 @@ jobs:
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          restore-keys: |
+            ${{ runner.os }}-bun-
 
       - name: Install dependencies
         run: bun install --frozen-lockfile

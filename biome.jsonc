@@ -1,9 +1,17 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.3.13/schema.json",
 
+  // --- Assist ---
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
+
   // --- Files ---
   "files": {
-    "maxSize": 1048576,
     "includes": [
       // Source
       "apps/**",
@@ -17,25 +25,18 @@
       "!**/generated",
       "!**/out",
 
-      // Dependencies
-      "!**/node_modules",
-      "!**/vendor",
-      "!**/.yarn",
-
       // Cache
       "!**/.cache",
       "!**/.turbo",
 
+      // Dependencies
+      "!**/.yarn",
+      "!**/node_modules",
+      "!**/vendor",
+
       // IDE
       "!**/.cursor",
       "!**/.vscode",
-
-      // VCS
-      "!**/.git",
-      "!**/.github",
-
-      // Test artifacts
-      "!**/__snapshots__",
 
       // Lock files
       "!**/*.lock",
@@ -47,24 +48,16 @@
 
       // Other
       "!**/docs",
-      "!**/tmp"
-    ]
-  },
+      "!**/tmp",
 
-  // --- VCS ---
-  "vcs": {
-    "enabled": true,
-    "clientKind": "git",
-    "defaultBranch": "main",
-    "useIgnoreFile": true
-  },
+      // Test artifacts
+      "!**/__snapshots__",
 
-  // --- Linter ---
-  "linter": {
-    "enabled": true,
-    "rules": {
-      "recommended": true
-    }
+      // VCS
+      "!**/.git",
+      "!**/.github"
+    ],
+    "maxSize": 1048576
   },
 
   // --- Formatter ---
@@ -90,12 +83,19 @@
     }
   },
 
-  // --- Assist ---
-  "assist": {
-    "actions": {
-      "source": {
-        "organizeImports": "on"
-      }
+  // --- Linter ---
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true
     }
+  },
+
+  // --- VCS ---
+  "vcs": {
+    "clientKind": "git",
+    "defaultBranch": "main",
+    "enabled": true,
+    "useIgnoreFile": true
   }
 }

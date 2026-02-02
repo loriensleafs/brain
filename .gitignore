@@ -1,32 +1,10 @@
 # ==============================
-# Dependencies
-# ==============================
-node_modules/
-.pnp/
-.pnp.js
-
-# ==============================
-# Lockfiles (standardize on Bun)
-# ==============================
-package-lock.json
-yarn.lock
-.yarn/
-.yarnrc.yml
-
-# ==============================
 # Build Outputs
 # ==============================
-build/
-dist/
 *.tsbuildinfo
 *.wasm
-
-# ==============================
-# Generated
-# ==============================
-generated/
-coverage/
-.nyc_output/
+build/
+dist/
 
 # ==============================
 # Cache
@@ -36,17 +14,31 @@ coverage/
 .turbo/
 
 # ==============================
+# Dependencies
+# ==============================
+.pnp.js
+.pnp/
+node_modules/
+
+# ==============================
 # Environment
 # ==============================
 .env
-.env.local
 .env.*.local
+.env.local
 
 # ==============================
-# IDE - VS Code
+# Generated
 # ==============================
-!.vscode/extensions.json
-!.vscode/settings.json
+.nyc_output/
+coverage/
+generated/
+
+# ==============================
+# Git Hooks
+# ==============================
+.lefthook-local/
+.lefthook/
 
 # ==============================
 # IDE - Cursor
@@ -57,21 +49,23 @@ coverage/
 # ==============================
 # IDE - Other
 # ==============================
-.idea/
 *.swo
 *.swp
+.idea/
 
 # ==============================
-# Git Hooks
+# IDE - VS Code
 # ==============================
-.lefthook/
-.lefthook-local/
+!.vscode/extensions.json
+!.vscode/settings.json
 
 # ==============================
-# OS
+# Lockfiles (standardize on Bun)
 # ==============================
-.DS_Store
-Thumbs.db
+.yarn/
+.yarnrc.yml
+package-lock.json
+yarn.lock
 
 # ==============================
 # Logs
@@ -82,11 +76,17 @@ yarn-debug.log*
 yarn-error.log*
 
 # ==============================
+# OS
+# ==============================
+.DS_Store
+Thumbs.db
+
+# ==============================
 # Python
 # ==============================
-__pycache__/
 *.py[cod]
 .venv/
+__pycache__/
 venv/
 
 # ==============================

@@ -3,58 +3,19 @@ name: Validate Agent Artifacts
 on:
   pull_request:
     paths:
-      - '.agents/**'
-      - 'packages/validation/**'
+      - ".agents/**"
+      - "packages/validation/**"
   push:
-    branches:
-      - main
+    branches: [main]
     paths:
-      - '.agents/**'
-      - 'packages/validation/**'
+      - ".agents/**"
+      - "packages/validation/**"
+
+concurrency:
+  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
-  validate-consistency:
-    name: Validate Consistency
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.21'
-
-      - name: Run Go tests
-        working-directory: packages/validation
-        run: go test -v ./tests/...
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Install TinyGo
-        run: |
-          wget https://github.com/tinygo-org/tinygo/releases/download/v0.33.0/tinygo_0.33.0_amd64.deb
-          sudo dpkg -i tinygo_0.33.0_amd64.deb
-
-      - name: Install dependencies
-        working-directory: packages/validation/wasm
-        run: yarn install --frozen-lockfile
-
-      - name: Build WASM
-        working-directory: packages/validation/wasm
-        run: yarn build
-
-      - name: Run TypeScript tests
-        working-directory: packages/validation/wasm
-        run: yarn test
-
   naming-conventions:
     name: Check Naming Conventions
     runs-on: ubuntu-latest
@@ -66,11 +27,66 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          cache: true
+          cache-dependency-path: packages/validation/go.sum
+          go-version: "1.21"
 
       - name: Validate artifact naming
-        working-directory: packages/validation
         run: |
-          # Run naming convention tests specifically
           go test -v -run "TestValidateNamingConvention" ./tests/...
           go test -v -run "TestValidateArtifactNaming" ./tests/...
+        working-directory: packages/validation
+
+  validate-consistency:
+    name: Validate Consistency
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          cache: true
+          cache-dependency-path: packages/validation/go.sum
+          go-version: "1.21"
+
+      - name: Run Go tests
+        run: go test -v ./tests/...
+        working-directory: packages/validation
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          cache: yarn
+          cache-dependency-path: packages/validation/wasm/yarn.lock
+          node-version: "20"
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Cache TinyGo
+        uses: actions/cache@v4
+        with:
+          key: ${{ runner.os }}-tinygo-0.33.0
+          path: /usr/local/lib/tinygo
+
+      - name: Install TinyGo
+        run: |
+          if [ ! -f /usr/local/lib/tinygo/bin/tinygo ]; then
+            wget https://github.com/tinygo-org/tinygo/releases/download/v0.33.0/tinygo_0.33.0_amd64.deb
+            sudo dpkg -i tinygo_0.33.0_amd64.deb
+          fi
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+        working-directory: packages/validation/wasm
+
+      - name: Build WASM
+        run: yarn build
+        working-directory: packages/validation/wasm
+
+      - name: Run TypeScript tests
+        run: yarn test
+        working-directory: packages/validation/wasm
