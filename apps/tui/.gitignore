@@ -1,9 +1,10 @@
-# Go binaries
-tui
-brain-tui
+# Go binaries (root only)
+/brain
+/brain-tui
+/tui
 
 # Build artifacts
-*.exe
 *.dll
-*.so
 *.dylib
+*.exe
+*.so
