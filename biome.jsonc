@@ -1,0 +1,105 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.3.13/schema.json",
+
+  // --- Files ---
+  "files": {
+    "maxSize": 1048576, // 1MB - skip large files
+    "includes": [
+      // Source directories
+      "apps/**",
+      "packages/**",
+
+      // IDE and editor
+      "!**/.cursor",
+      "!**/.vscode",
+
+      // Version control and CI
+      "!**/.git",
+      "!**/.github",
+
+      // Package managers
+      "!**/node_modules",
+      "!**/.yarn",
+
+      // Build tools
+      "!**/.cache",
+      "!**/.turbo",
+
+      // Build outputs
+      "!**/artifacts",
+      "!**/build",
+      "!**/coverage",
+      "!**/dist",
+      "!**/out",
+
+      // Generated and temporary
+      "!**/generated",
+      "!**/tmp",
+
+      // Test artifacts
+      "!**/__snapshots__",
+
+      // Vendored dependencies
+      "!**/vendor",
+
+      // Lock files
+      "!**/*.lock",
+      "!**/bun.lock",
+
+      // Minified files
+      "!**/*.min.css",
+      "!**/*.min.js",
+
+      // Documentation
+      "!**/docs"
+    ]
+  },
+
+  // --- VCS ---
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true,
+    "defaultBranch": "main"
+  },
+
+  // --- Linter ---
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true
+    }
+  },
+
+  // --- Formatter ---
+  "formatter": {
+    "enabled": true,
+    "useEditorconfig": true,
+    "lineWidth": 100,
+    "indentStyle": "space",
+    "indentWidth": 2
+  },
+
+  // --- JavaScript ---
+  "javascript": {
+    "formatter": {
+      "semicolons": "always",
+      "quoteStyle": "double",
+      "quoteProperties": "asNeeded",
+      "trailingCommas": "all",
+      "arrowParentheses": "always",
+      "bracketSpacing": true,
+      "bracketSameLine": false,
+      "jsxQuoteStyle": "double"
+    }
+  },
+
+  // --- Assist ---
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  }
+}

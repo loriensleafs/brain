@@ -1,0 +1,8 @@
+# Lefthook - https://github.com/evilmartians/lefthook
+
+pre-commit:
+  commands:
+    biome:
+      glob: "*.{js,ts,jsx,tsx,json,jsonc}"
+      stage_fixed: true
+      run: bunx biome check --write --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
