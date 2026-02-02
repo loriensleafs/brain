@@ -27,6 +27,7 @@
     "test:changed": "turbo run test --filter='[HEAD^1]'",
     "test:coverage": "turbo run test -- --coverage",
     "test:fast": "vitest run --no-coverage --reporter=dot",
+    "test:ui": "vitest --ui",
     "test:watch": "vitest --watch",
 
     "check": "biome check --max-diagnostics=none .",

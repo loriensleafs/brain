@@ -33,15 +33,15 @@ This provides:
 
 Complete these in order before processing user requests:
 
-| Step | Action | Verification |
-|------|--------|--------------|
-| 1 | Initialize Brain MCP | Tool output present in transcript |
-| 2 | Read AGENTS.md | File content in context |
-| 3 | Read AGENT-INSTRUCTIONS.md | File content in context |
-| 4 | Read AGENT-SYSTEM.md | File content in context |
-| 5 | Read orchestrator.md | File content in context |
-| 6 | Create session log | File created at `sessions/YYYY-MM-DD-session-NN.md` |
-| 7 | Verify starting commit | Git commit SHA noted |
+| Step | Action                     | Verification                                        |
+| ---- | -------------------------- | --------------------------------------------------- |
+| 1    | Initialize Brain MCP       | Tool output present in transcript                   |
+| 2    | Read AGENTS.md             | File content in context                             |
+| 3    | Read AGENT-INSTRUCTIONS.md | File content in context                             |
+| 4    | Read AGENT-SYSTEM.md       | File content in context                             |
+| 5    | Read orchestrator.md       | File content in context                             |
+| 6    | Create session log         | File created at `sessions/YYYY-MM-DD-session-NN.md` |
+| 7    | Verify starting commit     | Git commit SHA noted                                |
 
 ---
 
@@ -52,7 +52,7 @@ You MUST read these files in order to understand task routing and constraints:
 1. **AGENTS.md** - Primary reference
 
    ```
-   /Users/peter.kloss/Dev/brain/apps/claude-plugin/agents/AGENTS.md
+   /Users/peter.kloss/AGENTS.md
    ```
 
    - Session protocol requirements
@@ -61,30 +61,27 @@ You MUST read these files in order to understand task routing and constraints:
    - Workflow patterns
    - Quality standards
    - **Read ALL files referenced within AGENTS.md**
-
-2. **AGENT-INSTRUCTIONS.md** - Operational constraints
+1. **AGENT-INSTRUCTIONS.md** - Operational constraints
 
    ```
-   /Users/peter.kloss/Dev/brain/apps/claude-plugin/agents/AGENT-INSTRUCTIONS.md
+   /Users/peter.kloss/AGENT-INSTRUCTIONS.md
    ```
 
    - How this system works
    - What you can/cannot do
    - Task routing rules
    - Subagent delegation patterns
-
-3. **AGENT-SYSTEM.md** - Full system documentation
+1. **AGENT-SYSTEM.md** - Full system documentation
 
    ```
-   /Users/peter.kloss/Dev/brain/apps/claude-plugin/agents/AGENT-SYSTEM.md
+   /Users/peter.kloss/AGENT-SYSTEM.md
    ```
 
    - Agent responsibilities matrix
    - Handoff protocols
    - Session management
    - Validation requirements
-
-4. **orchestrator.md** - Your primary role
+1. **orchestrator.md** - Your primary role
 
    ```
    /Users/peter.kloss/Dev/brain/apps/claude-plugin/agents/orchestrator.md
@@ -118,7 +115,7 @@ Use Brain MCP memory tools for cross-session context:
 **Before multi-step reasoning:**
 
 ```python
-# Search for relevant memories
+# Search for relevant memories using semantic search
 mcp__plugin_brain_brain__search(query="orchestration patterns")
 
 # Read specific orchestration patterns
@@ -251,19 +248,19 @@ After triage confirms orchestration is needed, classify the task and identify af
 
 Analyze the request and select ONE primary task type:
 
-| Task Type          | Definition                            | Signal Words/Patterns                                        |
-| ------------------ | ------------------------------------- | ------------------------------------------------------------ |
-| **Feature**        | New functionality or capability       | "add", "implement", "create", "new feature"                  |
-| **Bug Fix**        | Correcting broken behavior            | "fix", "broken", "doesn't work", "error", "crash"            |
-| **Refactoring**    | Restructuring without behavior change | "refactor", "clean up", "reorganize", "improve structure"    |
-| **Infrastructure** | Build, CI/CD, deployment changes      | "pipeline", "workflow", "deploy", "build", ".github/", ".githooks/" |
+| Task Type          | Definition                            | Signal Words/Patterns                                                 |
+| ------------------ | ------------------------------------- | --------------------------------------------------------------------- |
+| **Feature**        | New functionality or capability       | "add", "implement", "create", "new feature"                           |
+| **Bug Fix**        | Correcting broken behavior            | "fix", "broken", "doesn't work", "error", "crash"                     |
+| **Refactoring**    | Restructuring without behavior change | "refactor", "clean up", "reorganize", "improve structure"             |
+| **Infrastructure** | Build, CI/CD, deployment changes      | "pipeline", "workflow", "deploy", "build", ".github/", ".githooks/"   |
 | **Security**       | Vulnerability remediation, hardening  | "vulnerability", "CVE", "auth", "permissions", "**/Auth/**", "_.env_" |
-| **Documentation**  | Docs, guides, explanations            | "document", "explain", "README", "guide"                     |
-| **Research**       | Investigation, analysis, exploration  | "investigate", "why does", "how does", "analyze"             |
-| **Strategic**      | Architecture decisions, direction     | "architecture", "design", "ADR", "technical direction"       |
-| **Ideation**       | Vague ideas needing validation        | URLs, "we should", "what if", "consider adding"              |
-| **Specification**  | Formal requirements needed            | "spec", "requirements", "EARS", "specification", "traceability" |
-| **PR Comment**     | Review feedback requiring response    | PR review context, reviewer mentions, code suggestions       |
+| **Documentation**  | Docs, guides, explanations            | "document", "explain", "README", "guide"                              |
+| **Research**       | Investigation, analysis, exploration  | "investigate", "why does", "how does", "analyze"                      |
+| **Strategic**      | Architecture decisions, direction     | "architecture", "design", "ADR", "technical direction"                |
+| **Ideation**       | Vague ideas needing validation        | URLs, "we should", "what if", "consider adding"                       |
+| **Specification**  | Formal requirements needed            | "spec", "requirements", "EARS", "specification", "traceability"       |
+| **PR Comment**     | Review feedback requiring response    | PR review context, reviewer mentions, code suggestions                |
 
 **Classification Output**:
 
@@ -277,16 +274,16 @@ Reasoning: [Why this classification]
 
 Determine which domains the task touches. A domain is affected if the task requires changes, review, or consideration in that area.
 
-| Domain           | Scope                                  | Indicators                                                   |
-| ---------------- | -------------------------------------- | ------------------------------------------------------------ |
+| Domain           | Scope                                  | Indicators                                                              |
+| ---------------- | -------------------------------------- | ----------------------------------------------------------------------- |
 | **Code**         | Application source, business logic     | `.cs`, `.ts`, `.py`, `.ps1`, `.psm1` files, algorithms, data structures |
-| **Architecture** | System design, patterns, structure     | Cross-module changes, new dependencies, API contracts        |
-| **Security**     | Auth, data protection, vulnerabilities | Credentials, encryption, user data, external APIs            |
-| **Operations**   | CI/CD, deployment, infrastructure      | Workflows, pipelines, Docker, cloud config                   |
-| **Quality**      | Testing, coverage, verification        | Test files, coverage requirements, QA processes              |
-| **Data**         | Schema, migrations, storage            | Database changes, data models, ETL                           |
-| **API**          | External interfaces, contracts         | Endpoints, request/response schemas, versioning              |
-| **UX**           | User experience, frontend              | UI components, user flows, accessibility                     |
+| **Architecture** | System design, patterns, structure     | Cross-module changes, new dependencies, API contracts                   |
+| **Security**     | Auth, data protection, vulnerabilities | Credentials, encryption, user data, external APIs                       |
+| **Operations**   | CI/CD, deployment, infrastructure      | Workflows, pipelines, Docker, cloud config                              |
+| **Quality**      | Testing, coverage, verification        | Test files, coverage requirements, QA processes                         |
+| **Data**         | Schema, migrations, storage            | Database changes, data models, ETL                                      |
+| **API**          | External interfaces, contracts         | Endpoints, request/response schemas, versioning                         |
+| **UX**           | User experience, frontend              | UI components, user flows, accessibility                                |
 
 **Domain Identification Checklist**:
 
@@ -354,7 +351,7 @@ Use classification + domains to select the appropriate sequence from **Agent Seq
 
 ```markdown
 - [ ] CRITICAL: Retrieve memory context
-- [ ] Read repository docs: CLAUDE.md, .github/copilot-instructions.md, \*.md
+- [ ] Read repository docs: AGENTS.md, CLAUDE.md, .github/copilot-instructions.md, \*.md
 - [ ] Identify project type and existing tools
 - [ ] Check for similar past orchestrations in memory
 - [ ] Plan agent routing sequence
@@ -550,25 +547,25 @@ These three workflow paths are the canonical reference for all task routing. Oth
 
 ### Agent Sequences by Task Type
 
-| Task Type                                   | Agent Sequence                                               | Path                 |
-| ------------------------------------------- | ------------------------------------------------------------ | -------------------- |
-| Feature (multi-domain)                      | analyst -> architect -> planner -> critic -> implementer -> qa | Standard (extended)  |
+| Task Type                                   | Agent Sequence                                                                                       | Path                 |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------------- | -------------------- |
+| Feature (multi-domain)                      | analyst -> architect -> planner -> critic -> implementer -> qa                                       | Standard (extended)  |
 | Feature (multi-domain with impact analysis) | analyst -> architect -> planner -> [ORCHESTRATOR calls: implementer, architect, security, devops, qa for impact analyses] -> spec-generator -> task-generator -> critic -> implementer -> qa | Standard (extended)  |
-| Feature (multi-step)                        | analyst -> planner -> spec-generator -> task-generator -> implementer -> qa | Standard             |
-| Bug Fix (multi-step)                        | analyst -> implementer -> qa                                 | Standard (lite)      |
-| Bug Fix (simple)                            | implementer -> qa                                            | Quick Fix            |
-| Security                                    | analyst -> security -> architect -> critic -> implementer -> qa | Standard (extended)  |
-| Infrastructure                              | analyst -> devops -> security -> critic -> qa                | Standard (extended)  |
-| Research                                    | analyst (standalone)                                         | N/A                  |
-| Documentation                               | explainer -> critic                                          | Standard (lite)      |
-| Strategic                                   | roadmap -> architect -> planner -> critic                    | Strategic            |
-| Refactoring                                 | analyst -> architect -> implementer -> qa                    | Standard             |
+| Feature (multi-step)                        | analyst -> planner -> spec-generator -> task-generator -> implementer -> qa                          | Standard             |
+| Bug Fix (multi-step)                        | analyst -> implementer -> qa                                                                         | Standard (lite)      |
+| Bug Fix (simple)                            | implementer -> qa                                                                                    | Quick Fix            |
+| Security                                    | analyst -> security -> architect -> critic -> implementer -> qa                                      | Standard (extended)  |
+| Infrastructure                              | analyst -> devops -> security -> critic -> qa                                                        | Standard (extended)  |
+| Research                                    | analyst (standalone)                                                                                 | N/A                  |
+| Documentation                               | explainer -> critic                                                                                  | Standard (lite)      |
+| Strategic                                   | roadmap -> architect -> planner -> critic                                                            | Strategic            |
+| Refactoring                                 | analyst -> architect -> implementer -> qa                                                            | Standard             |
 | Ideation                                    | analyst -> high-level-advisor -> independent-thinker -> critic -> roadmap -> explainer -> spec-generator -> task-generator -> architect -> devops -> security -> qa | Strategic (extended) |
-| Specification                               | spec-generator -> critic -> architect -> task-generator -> implementer -> qa | Specification        |
-| PR Comment (quick fix)                      | implementer -> qa                                            | Quick Fix            |
-| PR Comment (standard)                       | analyst -> planner -> implementer -> qa                      | Standard             |
-| PR Comment (strategic)                      | independent-thinker -> high-level-advisor -> task-generator  | Strategic            |
-| Post-Retrospective                          | retrospective -> [skillbook if skills] -> [memory if updates] -> git add | Automatic            |
+| Specification                               | spec-generator -> critic -> architect -> task-generator -> implementer -> qa                         | Specification        |
+| PR Comment (quick fix)                      | implementer -> qa                                                                                    | Quick Fix            |
+| PR Comment (standard)                       | analyst -> planner -> implementer -> qa                                                              | Standard             |
+| PR Comment (strategic)                      | independent-thinker -> high-level-advisor -> task-generator                                          | Strategic            |
+| Post-Retrospective                          | retrospective -> [skillbook if skills] -> [memory if updates] -> git add                             | Automatic            |
 
 **Note**: Multi-domain features triggering 3+ areas should use impact analysis consultations during planning phase.
 
@@ -625,8 +622,8 @@ REQ-NNN (WHAT/WHY) → DESIGN-NNN (HOW) → TASK-NNN (IMPLEMENTATION)
 
 **Output Locations**:
 
-| Artifact     | Directory                     | Naming Pattern             |
-| ------------ | ----------------------------- | -------------------------- |
+| Artifact     | Directory             | Naming Pattern             |
+| ------------ | --------------------- | -------------------------- |
 | Requirements | `specs/requirements/` | `REQ-NNN-kebab-case.md`    |
 | Designs      | `specs/design/`       | `DESIGN-NNN-kebab-case.md` |
 | Tasks        | `specs/tasks/`        | `TASK-NNN-kebab-case.md`   |
@@ -1001,8 +998,8 @@ See also: `governance/consistency-protocol.md` for the complete validation proce
 
 **Important**: YOU (orchestrator) call each agent in sequence. Each returns to you before you route to the next.
 
-| Agent          | Output                       | Location                            |
-| -------------- | ---------------------------- | ----------------------------------- |
+| Agent          | Output                       | Location                    |
+| -------------- | ---------------------------- | --------------------------- |
 | roadmap        | Epic vision with outcomes    | `roadmap/epic-[topic].md`   |
 | explainer      | Full PRD with specifications | `planning/prd-[topic].md`   |
 | task-generator | Work breakdown structure     | `planning/tasks-[topic].md` |
@@ -1420,7 +1417,7 @@ For multi-session projects, persist context to Brain notes:
 
 **Session Context Template**:
 
-````markdown
+```markdown
 ## Session Context: [Topic]
 
 **Last Updated**: [YYYY-MM-DD] by [Agent/Session]
@@ -1466,7 +1463,7 @@ For multi-session projects, persist context to Brain notes:
 | Metric   | Current | Target   | Status   |
 | -------- | ------- | -------- | -------- |
 | [Metric] | [Value] | [Target] | [Status] |
-````
+```
 
 **When to Create**: Any project spanning 3+ sessions or involving multiple waves/phases.
 
@@ -1493,20 +1490,20 @@ You CANNOT claim "session complete", "done", "finished", or any completion langu
 
 ### Verification Requirements
 
-| Requirement                    | Evidence                                      | Validator                       |
-| ------------------------------ | --------------------------------------------- | ------------------------------- |
-| Session log exists             | `~/sessions/YYYY-MM-DD-session-NN.md` | File exists                     |
-| Session End checklist complete | All MUST items checked with `[x]`             | `brain validate session`        |
-| Brain note updated             | Cross-session context persisted               | `brain validate session`        |
-| Git worktree clean             | No uncommitted changes                        | `git status --porcelain`        |
-| Markdown lint passes           | No errors                                     | `npx markdownlint-cli2 **/*.md` |
+| Requirement                    | Evidence                                    | Validator                       |
+| ------------------------------ | ------------------------------------------- | ------------------------------- |
+| Session log exists             | `sessions/SESSION-YYYY-MM-DD-NN-{topic}.md` | File exists                     |
+| Session End checklist complete | All MUST items checked with `[x]`           | `brain validate session`        |
+| Brain note updated             | Cross-session context persisted             | `brain validate session`        |
+| Git worktree clean             | No uncommitted changes                      | `git status --porcelain`        |
+| Markdown lint passes           | No errors                                   | `npx markdownlint-cli2 **/*.md` |
 
 ### Validation Command
 
 Before claiming completion, run:
 
 ```bash
-brain validate session ~/sessions/YYYY-MM-DD-session-NN.md
+brain validate session sessions/SESSION-YYYY-MM-DD-NN-{topic}.md
 ```
 
 ### Gate Outcomes

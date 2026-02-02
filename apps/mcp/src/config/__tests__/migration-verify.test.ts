@@ -8,13 +8,13 @@
  * - Return list of missing/mismatched memories
  */
 
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
+// Mock SearchService.prototype.search to avoid replacing the entire class
+// This prevents mock leakage to other test files that test SearchService directly
+import { SearchService } from "../../services/search";
 import type { SearchResponse } from "../../services/search/types";
 
-// Mock SearchService
-const mockSearch = vi.fn<
-  (query: string, opts: unknown) => Promise<SearchResponse>
->(
+const mockSearch = vi.fn<(query: string, opts: unknown) => Promise<SearchResponse>>(
   async (): Promise<SearchResponse> => ({
     results: [],
     total: 0,
@@ -25,13 +25,8 @@ const mockSearch = vi.fn<
   }),
 );
 
-const MockSearchService = vi.fn(() => ({
-  search: mockSearch,
-}));
-
-vi.mock("../../services/search", () => ({
-  SearchService: MockSearchService,
-}));
+// Spy on the prototype method instead of mocking the entire class
+vi.spyOn(SearchService.prototype, "search").mockImplementation(mockSearch);
 
 // Mock proxy client
 const mockCallTool = vi.fn<
@@ -68,7 +63,7 @@ describe("verifyMemoryIndexing", () => {
   beforeEach(() => {
     mockSearch.mockReset();
     mockCallTool.mockReset();
-    MockSearchService.mockClear();
+    // SearchService is spied, not mocked - no mockClear needed
 
     // Default: return empty results
     mockSearch.mockResolvedValue({
@@ -351,9 +346,7 @@ describe("verifyMemoryIndexing", () => {
     const summary = await verifyMemoryIndexing(memories);
 
     expect(summary.verifiedAt).toBeInstanceOf(Date);
-    expect(summary.verifiedAt.getTime()).toBeGreaterThanOrEqual(
-      beforeTime.getTime(),
-    );
+    expect(summary.verifiedAt.getTime()).toBeGreaterThanOrEqual(beforeTime.getTime());
   });
 
   test("detects memory at different permalink", async () => {
@@ -394,7 +387,7 @@ describe("verifyMemoryIndexing", () => {
 describe("isMemoryIndexed", () => {
   beforeEach(() => {
     mockSearch.mockReset();
-    MockSearchService.mockClear();
+    // SearchService is spied, not mocked - no mockClear needed
   });
 
   test("returns true when memory is found at expected permalink", async () => {
@@ -524,7 +517,7 @@ describe("content normalization", () => {
   beforeEach(() => {
     mockSearch.mockReset();
     mockCallTool.mockReset();
-    MockSearchService.mockClear();
+    // SearchService is spied, not mocked - no mockClear needed
   });
 
   test("normalizes whitespace in content comparison", async () => {
@@ -636,4 +629,9 @@ describe("content normalization", () => {
     expect(summary.found).toBe(1);
     expect(summary.results[0].status).toBe("found");
   });
+});
+
+// Clean up mocks after all tests in this file
+afterAll(() => {
+  vi.restoreAllMocks();
 });

@@ -44,9 +44,7 @@ const mockCallTool = vi.fn(() =>
   }),
 );
 
-const mockGenerateEmbedding = vi.fn(() =>
-  Promise.resolve(Array.from({ length: 768 }, () => 0.5)),
-);
+const mockGenerateEmbedding = vi.fn(() => Promise.resolve(Array.from({ length: 768 }, () => 0.5)));
 
 const mockDbQuery = vi.fn(() => ({
   all: () => [
@@ -72,6 +70,25 @@ vi.mock("../../../proxy/client", () => ({
 
 vi.mock("../../../db", () => ({
   createVectorConnection: vi.fn(() => mockDb),
+}));
+
+// Mock db/schema - ensureEmbeddingTables is a no-op in tests
+vi.mock("../../../db/schema", () => ({
+  ensureEmbeddingTables: vi.fn(() => {}),
+}));
+
+// Mock hasEmbeddings to use the mockDbQuery's count
+const mockHasEmbeddings = vi.fn(
+  (db: { query: (sql: string) => { get: () => { count: number } } }) => {
+    const result = db.query("").get();
+    return result.count > 0;
+  },
+);
+
+vi.mock("../../../db/vectors", () => ({
+  hasEmbeddings: mockHasEmbeddings,
+  semanticSearchChunked: vi.fn(() => []),
+  deduplicateByEntity: vi.fn((results) => results),
 }));
 
 vi.mock("../../embedding/generateEmbedding", () => ({
@@ -166,8 +183,7 @@ describe("SearchService", () => {
       // Results should only include items from features/ or notes/ folders
       for (const result of response.results) {
         const matchesFolder =
-          result.permalink.startsWith("features/") ||
-          result.permalink.startsWith("notes/");
+          result.permalink.startsWith("features/") || result.permalink.startsWith("notes/");
         expect(matchesFolder).toBe(true);
       }
     });
@@ -181,8 +197,7 @@ describe("SearchService", () => {
       // Should still match features/ items
       for (const result of response.results) {
         expect(
-          result.permalink.startsWith("features/") ||
-            result.permalink.startsWith("features"),
+          result.permalink.startsWith("features/") || result.permalink.startsWith("features"),
         ).toBe(true);
       }
     });
@@ -294,9 +309,7 @@ describe("SearchResult structure", () => {
       expect(typeof result.title).toBe("string");
       expect(typeof result.similarity_score).toBe("number");
       expect(typeof result.snippet).toBe("string");
-      expect(["semantic", "keyword", "related", "hybrid"]).toContain(
-        result.source,
-      );
+      expect(["semantic", "keyword", "related", "hybrid"]).toContain(result.source);
     }
   });
 });
@@ -425,9 +438,7 @@ describe("fullContent option", () => {
     expect(response.results.length).toBeGreaterThan(0);
 
     // Check that fullContent is populated
-    const resultWithContent = response.results.find(
-      (r) => r.permalink === "notes/test-note",
-    );
+    const resultWithContent = response.results.find((r) => r.permalink === "notes/test-note");
     expect(resultWithContent).toBeDefined();
     expect(resultWithContent?.fullContent).toContain("# Test Note");
     expect(resultWithContent?.fullContent).toContain("full content");
@@ -503,8 +514,10 @@ describe("fullContent option", () => {
       return Promise.resolve({ content: [] });
     }) as any);
 
-    const svc = new SearchService();
-    const response = await svc.search("test", {
+    // Use service from beforeEach instead of creating new instance
+    // This avoids mock leakage issues when running with other test files
+    service.clearFullContentCache();
+    const response = await service.search("test", {
       mode: "keyword",
       fullContent: true,
     });
@@ -564,8 +577,10 @@ describe("fullContent option", () => {
   test("fullContent works with project parameter", async () => {
     const projectName = "my-project";
 
-    const svc = new SearchService();
-    const response = await svc.search("test", {
+    // Use service from beforeEach instead of creating new instance
+    // This avoids mock leakage issues when running with other test files
+    service.clearFullContentCache();
+    const response = await service.search("test", {
       mode: "keyword",
       fullContent: true,
       project: projectName,
@@ -573,12 +588,10 @@ describe("fullContent option", () => {
 
     expect(response.results.length).toBeGreaterThan(0);
     // Verify read_note was called with project
-    const readNoteCalls = (mockCallTool.mock.calls as unknown[][]).filter(
-      (c: unknown[]) => {
-        const arg = c[0] as { name: string } | undefined;
-        return arg?.name === "read_note";
-      },
-    );
+    const readNoteCalls = (mockCallTool.mock.calls as unknown[][]).filter((c: unknown[]) => {
+      const arg = c[0] as { name: string } | undefined;
+      return arg?.name === "read_note";
+    });
     expect(readNoteCalls.length).toBeGreaterThan(0);
     for (const call of readNoteCalls) {
       const arg = call[0] as { arguments: Record<string, unknown> };
