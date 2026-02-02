@@ -20,8 +20,9 @@
     "build:go": "go build -o dist/ ./...",
     "typecheck": "tsc --noEmit",
     "test": "bun run --bun vitest run",
-    "test:watch": "bun run --bun vitest",
     "test:go": "go test -v ./...",
+    "test:ui": "bun run --bun vitest --ui",
+    "test:watch": "bun run --bun vitest",
     "clean": "rm -rf dist generated"
   },
   "dependencies": {

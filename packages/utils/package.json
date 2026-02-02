@@ -10,8 +10,9 @@
     "build": "bun build src/index.ts --outdir dist --target node",
     "typecheck": "tsc --noEmit",
     "test": "bun run --bun vitest run",
-    "test:watch": "bun run --bun vitest",
     "test:coverage": "bun run --bun vitest run --coverage",
+    "test:ui": "bun run --bun vitest --ui",
+    "test:watch": "bun run --bun vitest",
     "clean": "rm -rf dist"
   },
   "devDependencies": {
