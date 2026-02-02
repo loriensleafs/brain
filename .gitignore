@@ -1,65 +1,97 @@
+# ==============================
 # Dependencies
+# ==============================
 node_modules/
 .pnp/
 .pnp.js
 
+# ==============================
 # Lockfiles (standardize on Bun)
-yarn.lock
+# ==============================
 package-lock.json
+yarn.lock
 .yarn/
 .yarnrc.yml
 
-# Build outputs
-dist/
+# ==============================
+# Build Outputs
+# ==============================
 build/
+dist/
 *.tsbuildinfo
+*.wasm
 
+# ==============================
+# Generated
+# ==============================
+generated/
+coverage/
+.nyc_output/
+
+# ==============================
+# Cache
+# ==============================
+.cache/
+.parcel-cache/
+.turbo/
+
+# ==============================
 # Environment
+# ==============================
 .env
 .env.local
 .env.*.local
 
+# ==============================
 # IDE - VS Code
-.idea/
-*.swp
-*.swo
-!.vscode/settings.json
+# ==============================
 !.vscode/extensions.json
+!.vscode/settings.json
 
+# ==============================
 # IDE - Cursor
-!.cursor/settings.json
+# ==============================
 !.cursor/extensions.json
+!.cursor/settings.json
 
-# Lefthook
+# ==============================
+# IDE - Other
+# ==============================
+.idea/
+*.swo
+*.swp
+
+# ==============================
+# Git Hooks
+# ==============================
 .lefthook/
 .lefthook-local/
 
+# ==============================
 # OS
+# ==============================
 .DS_Store
 Thumbs.db
 
+# ==============================
 # Logs
+# ==============================
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Test coverage
-coverage/
-.nyc_output/
-
-# Cache
-.cache/
-.parcel-cache/
-.turbo/
-
+# ==============================
 # Python
+# ==============================
 __pycache__/
 *.py[cod]
 .venv/
 venv/
 
+# ==============================
 # Temporary
-tmp/
-temp/
+# ==============================
 *.tmp
+temp/
+tmp/

@@ -2,78 +2,87 @@
   "$schema": "https://turbo.build/schema.json",
 
   // --- Global Settings ---
-  "ui": "tui",
   "globalDependencies": [
-    "tsconfig.json",
     "biome.jsonc",
+    "tsconfig.json",
     "vitest.config.ts"
   ],
   "globalPassThroughEnv": [
     "CI",
     "NODE_ENV"
   ],
+  "ui": "tui",
 
   // --- Tasks ---
   "tasks": {
-    "build": {
-      "dependsOn": ["^build", "generate:types"],
-      "inputs": ["src/**", "tsconfig.json", "package.json"],
-      "outputs": ["dist/**", "build/**", "*.wasm"],
+    // Generation
+    "generate:types": {
+      "cache": true,
+      "inputs": ["schemas/**", "src/**/*.schema.ts"],
       "outputLogs": "new-only",
-      "cache": true
+      "outputs": ["generated/**"]
     },
-    "build:wasm": {
-      "inputs": ["src/**", "*.go"],
-      "outputs": ["dist/**", "*.wasm"],
+
+    // Build
+    "build": {
+      "cache": true,
+      "dependsOn": ["^build", "generate:types"],
+      "inputs": ["package.json", "src/**", "tsconfig.json"],
       "outputLogs": "new-only",
-      "cache": true
+      "outputs": ["*.wasm", "build/**", "dist/**"]
     },
     "build:go": {
+      "cache": true,
       "inputs": ["**/*.go", "go.mod", "go.sum"],
-      "outputs": ["dist/**"],
       "outputLogs": "new-only",
-      "cache": true
+      "outputs": ["dist/**"]
     },
-    "generate:types": {
-      "inputs": ["schemas/**", "src/**/*.schema.ts"],
-      "outputs": ["generated/**"],
+    "build:wasm": {
+      "cache": true,
+      "inputs": ["*.go", "src/**"],
       "outputLogs": "new-only",
-      "cache": true
+      "outputs": ["*.wasm", "dist/**"]
+    },
+
+    // Quality
+    "lint": {
+      "cache": true,
+      "inputs": ["biome.jsonc", "src/**"],
+      "outputLogs": "new-only",
+      "outputs": []
     },
     "typecheck": {
+      "cache": true,
       "dependsOn": ["^build", "generate:types"],
       "inputs": ["src/**", "tsconfig.json"],
-      "outputs": [],
       "outputLogs": "new-only",
-      "cache": true
+      "outputs": []
     },
+
+    // Test
     "test": {
+      "cache": true,
       "dependsOn": ["^build"],
       "inputs": ["src/**", "vitest.config.ts"],
-      "outputs": [],
       "outputLogs": "new-only",
-      "cache": true
-    },
-    "test:go": {
-      "dependsOn": ["build:go"],
-      "inputs": ["**/*.go", "go.mod"],
-      "outputs": [],
-      "outputLogs": "new-only",
-      "cache": true
+      "outputs": []
     },
     "test:coverage": {
+      "cache": false,
       "dependsOn": ["^build"],
       "inputs": ["src/**", "vitest.config.ts"],
-      "outputs": ["coverage/**"],
       "outputLogs": "new-only",
-      "cache": false
+      "outputs": ["coverage/**"]
     },
-    "lint": {
-      "inputs": ["src/**", "biome.jsonc"],
-      "outputs": [],
+    "test:go": {
+      "cache": true,
+      "dependsOn": ["build:go"],
+      "inputs": ["**/*.go", "go.mod"],
       "outputLogs": "new-only",
-      "cache": true
+      "outputs": []
     },
+
+    // Runtime
     "dev": {
       "cache": false,
       "persistent": true
@@ -82,6 +91,8 @@
       "cache": false,
       "persistent": true
     },
+
+    // Cleanup
     "clean": {
       "cache": false
     }

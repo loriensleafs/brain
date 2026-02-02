@@ -1,17 +1,26 @@
 {
   "compilerOptions": {
+    // Target & Module
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "bundler",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
+
+    // Types
     "types": ["bun-types", "node"],
+
+    // Type Checking
     "strict": true,
+    "isolatedModules": true,
     "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+
+    // Interop
     "esModuleInterop": true,
     "resolveJsonModule": true,
-    "forceConsistentCasingInFileNames": true,
     "verbatimModuleSyntax": true,
-    "isolatedModules": true,
+
+    // Emit
     "noEmit": true
   },
   "exclude": ["node_modules", "dist", "**/dist/**"]

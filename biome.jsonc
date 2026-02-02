@@ -3,55 +3,51 @@
 
   // --- Files ---
   "files": {
-    "maxSize": 1048576, // 1MB - skip large files
+    "maxSize": 1048576,
     "includes": [
-      // Source directories
+      // Source
       "apps/**",
       "packages/**",
-
-      // IDE and editor
-      "!**/.cursor",
-      "!**/.vscode",
-
-      // Version control and CI
-      "!**/.git",
-      "!**/.github",
-
-      // Package managers
-      "!**/node_modules",
-      "!**/.yarn",
-
-      // Build tools
-      "!**/.cache",
-      "!**/.turbo",
 
       // Build outputs
       "!**/artifacts",
       "!**/build",
       "!**/coverage",
       "!**/dist",
+      "!**/generated",
       "!**/out",
 
-      // Generated and temporary
-      "!**/generated",
-      "!**/tmp",
+      // Dependencies
+      "!**/node_modules",
+      "!**/vendor",
+      "!**/.yarn",
+
+      // Cache
+      "!**/.cache",
+      "!**/.turbo",
+
+      // IDE
+      "!**/.cursor",
+      "!**/.vscode",
+
+      // VCS
+      "!**/.git",
+      "!**/.github",
 
       // Test artifacts
       "!**/__snapshots__",
-
-      // Vendored dependencies
-      "!**/vendor",
 
       // Lock files
       "!**/*.lock",
       "!**/bun.lock",
 
-      // Minified files
+      // Minified
       "!**/*.min.css",
       "!**/*.min.js",
 
-      // Documentation
-      "!**/docs"
+      // Other
+      "!**/docs",
+      "!**/tmp"
     ]
   },
 
@@ -59,8 +55,8 @@
   "vcs": {
     "enabled": true,
     "clientKind": "git",
-    "useIgnoreFile": true,
-    "defaultBranch": "main"
+    "defaultBranch": "main",
+    "useIgnoreFile": true
   },
 
   // --- Linter ---
@@ -74,23 +70,23 @@
   // --- Formatter ---
   "formatter": {
     "enabled": true,
-    "useEditorconfig": true,
-    "lineWidth": 100,
     "indentStyle": "space",
-    "indentWidth": 2
+    "indentWidth": 2,
+    "lineWidth": 100,
+    "useEditorconfig": true
   },
 
   // --- JavaScript ---
   "javascript": {
     "formatter": {
-      "semicolons": "always",
-      "quoteStyle": "double",
-      "quoteProperties": "asNeeded",
-      "trailingCommas": "all",
       "arrowParentheses": "always",
-      "bracketSpacing": true,
       "bracketSameLine": false,
-      "jsxQuoteStyle": "double"
+      "bracketSpacing": true,
+      "jsxQuoteStyle": "double",
+      "quoteProperties": "asNeeded",
+      "quoteStyle": "double",
+      "semicolons": "always",
+      "trailingCommas": "all"
     }
   },
 

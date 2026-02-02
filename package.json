@@ -14,21 +14,31 @@
   ],
   "scripts": {
     "prepare": "lefthook install",
+
     "dev": "turbo run dev",
+    "start": "turbo run start",
+
     "build": "turbo run build",
     "build:tui": "cd apps/tui && go build -o brain ./main.go",
-    "typecheck": "turbo run typecheck",
+
     "generate:types": "turbo run generate:types",
+    "typecheck": "turbo run typecheck",
+
     "test": "turbo run test",
-    "test:watch": "turbo run test -- --watch",
     "test:changed": "turbo run test --filter='[HEAD^1]'",
-    "test:coverage": "turbo run test:coverage",
+    "test:coverage": "turbo run test -- --coverage",
+    "test:fast": "vitest run --no-coverage --reporter=dot",
+    "test:watch": "vitest --watch",
+
     "lint": "biome lint --max-diagnostics=none .",
     "lint:fix": "biome lint --write --max-diagnostics=none .",
+
     "format": "biome format --max-diagnostics=none .",
     "format:fix": "biome format --write --max-diagnostics=none .",
+
     "check": "biome check --max-diagnostics=none .",
     "check:fix": "biome check --write --max-diagnostics=none .",
+
     "clean": "turbo run clean"
   },
   "dependencies": {
