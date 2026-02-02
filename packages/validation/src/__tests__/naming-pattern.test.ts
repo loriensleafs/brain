@@ -6,6 +6,8 @@
  */
 import { describe, expect, test } from "vitest";
 import {
+  CanonicalDirectories,
+  DeprecatedDirectories,
   DeprecatedPatterns,
   getMatchingPatterns,
   getPatternRegex,
@@ -15,6 +17,7 @@ import {
   NamingPatterns,
   type PatternType,
   parseNamingPattern,
+  validateDirectory,
   validateNamingPattern,
 } from "../naming-pattern";
 
@@ -493,9 +496,6 @@ describe("edge cases", () => {
 
 describe("CanonicalDirectories", () => {
   test("contains single path per entity (not array)", () => {
-    // Import at top level already done
-    const { CanonicalDirectories } = require("../naming-pattern");
-
     // Verify each value is a string, not an array
     for (const [_key, value] of Object.entries(CanonicalDirectories)) {
       expect(typeof value).toBe("string");
@@ -504,7 +504,6 @@ describe("CanonicalDirectories", () => {
   });
 
   test("contains all 13 pattern types", () => {
-    const { CanonicalDirectories } = require("../naming-pattern");
     const keys = Object.keys(CanonicalDirectories);
     expect(keys).toHaveLength(13);
     expect(keys).toContain("decision");
@@ -523,7 +522,6 @@ describe("CanonicalDirectories", () => {
   });
 
   test("has correct canonical paths", () => {
-    const { CanonicalDirectories } = require("../naming-pattern");
     expect(CanonicalDirectories.decision).toBe("decisions");
     expect(CanonicalDirectories.session).toBe("sessions");
     expect(CanonicalDirectories.requirement).toBe("specs/{name}/requirements");
@@ -542,8 +540,6 @@ describe("CanonicalDirectories", () => {
 
 describe("DeprecatedDirectories", () => {
   test("contains all deprecated paths", () => {
-    const { DeprecatedDirectories } = require("../naming-pattern");
-
     // Architecture paths
     expect(DeprecatedDirectories["architecture/decision"]).toBe("decisions");
     expect(DeprecatedDirectories["architecture/decisions"]).toBe("decisions");
@@ -567,8 +563,6 @@ describe("DeprecatedDirectories", () => {
 });
 
 describe("validateDirectory", () => {
-  const { validateDirectory } = require("../naming-pattern");
-
   describe("canonical paths (accepted)", () => {
     test("accepts decisions for decision", () => {
       const result = validateDirectory("decisions", "decision");

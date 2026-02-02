@@ -35,6 +35,16 @@ export default defineConfig({
     exclude: [
       "**/dist/**",
       "**/node_modules/**",
+      // Exclude tests that require bun:sqlite (must run with Bun via Turbo)
+      "apps/mcp/src/db/__tests__/**",
+      "apps/mcp/src/services/embedding/__tests__/integration.test.ts",
+      "apps/mcp/src/services/embedding/__tests__/queue.test.ts",
+      "apps/mcp/src/services/embedding/__tests__/retry.test.ts",
+      "apps/mcp/src/services/embedding/__tests__/triggerEmbedding.test.ts",
+      "apps/mcp/src/tools/__tests__/edit-note-embedding.test.ts",
+      "apps/mcp/src/tools/bootstrap-context/__tests__/catchupTrigger.test.ts",
+      "apps/mcp/src/tools/search/__tests__/handler.test.ts",
+      "apps/mcp/src/config/__tests__/migration-verify.test.ts",
     ],
 
     // --- Performance ---
