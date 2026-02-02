@@ -12,8 +12,8 @@ updates:
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: weekly
       day: monday
+      interval: weekly
     commit-message:
       prefix: "ci"
     labels:
@@ -26,8 +26,8 @@ updates:
   - package-ecosystem: gomod
     directory: /apps/tui
     schedule:
-      interval: weekly
       day: monday
+      interval: weekly
     commit-message:
       prefix: "deps(go)"
     labels:
@@ -40,13 +40,33 @@ updates:
   - package-ecosystem: gomod
     directory: /packages/validation
     schedule:
-      interval: weekly
       day: monday
+      interval: weekly
     commit-message:
       prefix: "deps(go)"
     labels:
       - dependencies
       - go
+    open-pull-requests-limit: 5
+    rebase-strategy: auto
+
+  # --- npm (MCP) ---
+  - package-ecosystem: npm
+    directory: /apps/mcp
+    registries:
+      - npm-registry
+    schedule:
+      day: monday
+      interval: weekly
+    commit-message:
+      prefix: "deps(npm)"
+    groups:
+      all-dependencies:
+        patterns:
+          - "*"
+    labels:
+      - dependencies
+      - npm
     open-pull-requests-limit: 5
     rebase-strategy: auto
 
@@ -56,8 +76,8 @@ updates:
     registries:
       - npm-registry
     schedule:
-      interval: weekly
       day: monday
+      interval: weekly
     commit-message:
       prefix: "deps(npm)"
     groups:
@@ -81,24 +101,4 @@ updates:
       - dependencies
       - npm
     open-pull-requests-limit: 10
-    rebase-strategy: auto
-
-  # --- npm (MCP) ---
-  - package-ecosystem: npm
-    directory: /apps/mcp
-    registries:
-      - npm-registry
-    schedule:
-      interval: weekly
-      day: monday
-    commit-message:
-      prefix: "deps(npm)"
-    groups:
-      all-dependencies:
-        patterns:
-          - "*"
-    labels:
-      - dependencies
-      - npm
-    open-pull-requests-limit: 5
     rebase-strategy: auto
