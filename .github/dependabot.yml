@@ -1,0 +1,104 @@
+# Dependabot - https://docs.github.com/en/code-security/dependabot
+
+version: 2
+
+registries:
+  npm-registry:
+    type: npm-registry
+    url: https://registry.npmjs.org
+
+updates:
+  # --- GitHub Actions ---
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: "ci"
+    labels:
+      - dependencies
+      - github-actions
+    open-pull-requests-limit: 5
+    rebase-strategy: auto
+
+  # --- Go (TUI) ---
+  - package-ecosystem: gomod
+    directory: /apps/tui
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: "deps(go)"
+    labels:
+      - dependencies
+      - go
+    open-pull-requests-limit: 5
+    rebase-strategy: auto
+
+  # --- Go (Validation) ---
+  - package-ecosystem: gomod
+    directory: /packages/validation
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: "deps(go)"
+    labels:
+      - dependencies
+      - go
+    open-pull-requests-limit: 5
+    rebase-strategy: auto
+
+  # --- npm (Root) ---
+  - package-ecosystem: npm
+    directory: /
+    registries:
+      - npm-registry
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: "deps(npm)"
+    groups:
+      dev-dependencies:
+        dependency-type: development
+        patterns:
+          - "*"
+      production-dependencies:
+        dependency-type: production
+        patterns:
+          - "*"
+      types:
+        patterns:
+          - "@types/*"
+    ignore:
+      # Frequently updated, low-risk - batch with other updates
+      - dependency-name: "@types/node"
+        update-types:
+          - version-update:semver-patch
+    labels:
+      - dependencies
+      - npm
+    open-pull-requests-limit: 10
+    rebase-strategy: auto
+
+  # --- npm (MCP) ---
+  - package-ecosystem: npm
+    directory: /apps/mcp
+    registries:
+      - npm-registry
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: "deps(npm)"
+    groups:
+      all-dependencies:
+        patterns:
+          - "*"
+    labels:
+      - dependencies
+      - npm
+    open-pull-requests-limit: 5
+    rebase-strategy: auto
