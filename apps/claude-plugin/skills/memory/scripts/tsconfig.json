@@ -1,6 +1,7 @@
 {
   "extends": "../../../../../tsconfig.json",
   "compilerOptions": {
+    // Relaxed for standalone scripts that may use dynamic patterns
     "strict": false,
     "allowImportingTsExtensions": true,
     "allowJs": true

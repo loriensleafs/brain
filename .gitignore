@@ -3,6 +3,12 @@ node_modules/
 .pnp/
 .pnp.js
 
+# Lockfiles (standardize on Bun)
+yarn.lock
+package-lock.json
+.yarn/
+.yarnrc.yml
+
 # Build outputs
 dist/
 build/
@@ -13,12 +19,20 @@ build/
 .env.local
 .env.*.local
 
-# IDE
+# IDE - VS Code
 .idea/
 *.swp
 *.swo
 !.vscode/settings.json
 !.vscode/extensions.json
+
+# IDE - Cursor
+!.cursor/settings.json
+!.cursor/extensions.json
+
+# Lefthook
+.lefthook/
+.lefthook-local/
 
 # OS
 .DS_Store

@@ -1,45 +1,77 @@
 {
   "$schema": "https://turbo.build/schema.json",
+
+  // --- Global Settings ---
+  "ui": "tui",
+  "globalDependencies": [
+    "tsconfig.json",
+    "biome.jsonc",
+    "vitest.config.ts"
+  ],
+  "globalPassThroughEnv": [
+    "CI",
+    "NODE_ENV"
+  ],
+
+  // --- Tasks ---
   "tasks": {
     "build": {
       "dependsOn": ["^build", "generate:types"],
+      "inputs": ["src/**", "tsconfig.json", "package.json"],
       "outputs": ["dist/**", "build/**", "*.wasm"],
+      "outputLogs": "new-only",
       "cache": true
     },
     "build:wasm": {
+      "inputs": ["src/**", "*.go"],
       "outputs": ["dist/**", "*.wasm"],
+      "outputLogs": "new-only",
       "cache": true
     },
     "build:go": {
+      "inputs": ["**/*.go", "go.mod", "go.sum"],
       "outputs": ["dist/**"],
+      "outputLogs": "new-only",
       "cache": true
     },
     "generate:types": {
+      "inputs": ["schemas/**", "src/**/*.schema.ts"],
       "outputs": ["generated/**"],
+      "outputLogs": "new-only",
       "cache": true
     },
     "typecheck": {
       "dependsOn": ["^build", "generate:types"],
+      "inputs": ["src/**", "tsconfig.json"],
       "outputs": [],
+      "outputLogs": "new-only",
       "cache": true
     },
     "test": {
       "dependsOn": ["^build"],
+      "inputs": ["src/**", "vitest.config.ts"],
       "outputs": [],
-      "cache": false
+      "outputLogs": "new-only",
+      "cache": true
     },
     "test:go": {
       "dependsOn": ["build:go"],
+      "inputs": ["**/*.go", "go.mod"],
       "outputs": [],
-      "cache": false
+      "outputLogs": "new-only",
+      "cache": true
     },
     "test:coverage": {
       "dependsOn": ["^build"],
+      "inputs": ["src/**", "vitest.config.ts"],
       "outputs": ["coverage/**"],
+      "outputLogs": "new-only",
       "cache": false
     },
     "lint": {
+      "inputs": ["src/**", "biome.jsonc"],
       "outputs": [],
+      "outputLogs": "new-only",
       "cache": true
     },
     "dev": {
