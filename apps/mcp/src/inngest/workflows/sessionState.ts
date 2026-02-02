@@ -59,9 +59,7 @@ function validateWorkflow(state: { mode: string; task?: string }): {
     valid: allPassed,
     checks,
     message: allPassed ? "Valid" : "Validation failed",
-    remediation: allPassed
-      ? undefined
-      : "Ensure mode is valid and task is set for coding mode",
+    remediation: allPassed ? undefined : "Ensure mode is valid and task is set for coding mode",
   };
 }
 
@@ -104,76 +102,67 @@ export const sessionStateWorkflow = inngest.createFunction(
   async ({ event, step }) => {
     const { updateType, mode, feature, task } = event.data;
 
-    logger.info(
-      { updateType, mode, feature, task },
-      "Processing session state update",
-    );
+    logger.info({ updateType, mode, feature, task }, "Processing session state update");
 
     // Step 1: Get current state from session service
-    const currentState = await step.run(
-      "get-current-state",
-      async (): Promise<SessionState> => {
-        return getOrCreateState();
-      },
-    );
+    const currentState = await step.run("get-current-state", async (): Promise<SessionState> => {
+      return getOrCreateState();
+    });
 
     // Track previous mode for event emission
     const previousMode = currentState.currentMode;
 
     // Step 2: Apply the update based on type
-    const updatedState = await step.run(
-      "apply-update",
-      async (): Promise<SessionState> => {
-        switch (updateType) {
-          case "init":
-            // Initialize new session (return current/default state)
-            return currentState;
+    const updatedState = await step.run("apply-update", async (): Promise<SessionState> => {
+      switch (updateType) {
+        case "init":
+          // Initialize new session (return current/default state)
+          return currentState;
 
-          case "mode": {
-            if (!mode) {
-              logger.warn("Mode update requested but no mode provided");
-              return currentState;
-            }
-            // Validate the mode before accepting the change
-            const validationResult = validateWorkflow({
-              mode,
-              task: task ?? currentState.activeTask,
-            });
-            if (!validationResult.valid) {
-              const failedChecks = validationResult.checks
-                .filter((c) => !c.passed)
-                .map((c) => c.message)
-                .join("; ");
-              logger.error(
-                {
-                  mode,
-                  checks: failedChecks,
-                  remediation: validationResult.remediation,
-                },
-                "Mode change rejected: validation failed",
-              );
-              throw new Error(
-                `Invalid mode change: ${failedChecks}. ${validationResult.remediation ?? ""}`,
-              );
-            }
-            logger.debug({ mode }, "Mode validated successfully");
-            return withModeChange(currentState, mode as WorkflowMode);
+        case "mode": {
+          if (!mode) {
+            logger.warn("Mode update requested but no mode provided");
+            return currentState;
           }
-
-          case "feature":
-            // Feature can be undefined to clear active feature
-            return withFeatureChange(currentState, feature);
-
-          case "task":
-            // Task can be undefined to clear active task
-            return withTaskChange(currentState, task);
-
-          default:
-            logger.warn({ updateType }, "Unknown update type");
-            return currentState;
+          // Validate the mode before accepting the change
+          const validationResult = validateWorkflow({
+            mode,
+            task: task ?? currentState.activeTask,
+          });
+          if (!validationResult.valid) {
+            const failedChecks = validationResult.checks
+              .filter((c) => !c.passed)
+              .map((c) => c.message)
+              .join("; ");
+            logger.error(
+              {
+                mode,
+                checks: failedChecks,
+                remediation: validationResult.remediation,
+              },
+              "Mode change rejected: validation failed",
+            );
+            throw new Error(
+              `Invalid mode change: ${failedChecks}. ${validationResult.remediation ?? ""}`,
+            );
+          }
+          logger.debug({ mode }, "Mode validated successfully");
+          return withModeChange(currentState, mode as WorkflowMode);
         }
-      },
-    );
+
+        case "feature":
+          // Feature can be undefined to clear active feature
+          return withFeatureChange(currentState, feature);
+
+        case "task":
+          // Task can be undefined to clear active task
+          return withTaskChange(currentState, task);
+
+        default:
+          logger.warn({ updateType }, "Unknown update type");
+          return currentState;
+      }
+    });
 
     // Step 3: Persist the updated state via session service
     await step.run("persist-state", async (): Promise<void> => {
@@ -204,10 +193,7 @@ export const sessionStateWorkflow = inngest.createFunction(
           activeTask: updatedState.activeTask,
         },
       });
-      logger.info(
-        { previousMode, newMode: mode },
-        "Emitted session/mode.changed event",
-      );
+      logger.info({ previousMode, newMode: mode }, "Emitted session/mode.changed event");
     }
 
     logger.info(
@@ -244,12 +230,9 @@ export const sessionStateQueryWorkflow = inngest.createFunction(
   async ({ step }) => {
     logger.debug("Processing session state query");
 
-    const state = await step.run(
-      "get-state",
-      async (): Promise<SessionState> => {
-        return getOrCreateState();
-      },
-    );
+    const state = await step.run("get-state", async (): Promise<SessionState> => {
+      return getOrCreateState();
+    });
 
     return state;
   },

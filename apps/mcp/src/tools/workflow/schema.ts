@@ -35,9 +35,7 @@ export const ListWorkflowsArgsSchema = {
   parse: _parseListWorkflowsArgs,
   safeParse: (
     data: unknown,
-  ):
-    | { success: true; data: ListWorkflowsArgs }
-    | { success: false; error: Error } => {
+  ): { success: true; data: ListWorkflowsArgs } | { success: false; error: Error } => {
     try {
       return { success: true, data: _parseListWorkflowsArgs(data) };
     } catch (e) {
@@ -57,9 +55,7 @@ export const SendWorkflowEventArgsSchema = {
   parse: _parseSendWorkflowEventArgs,
   safeParse: (
     data: unknown,
-  ):
-    | { success: true; data: SendWorkflowEventArgs }
-    | { success: false; error: Error } => {
+  ): { success: true; data: SendWorkflowEventArgs } | { success: false; error: Error } => {
     try {
       return { success: true, data: _parseSendWorkflowEventArgs(data) };
     } catch (e) {
@@ -79,9 +75,7 @@ export const GetWorkflowArgsSchema = {
   parse: _parseGetWorkflowArgs,
   safeParse: (
     data: unknown,
-  ):
-    | { success: true; data: GetWorkflowArgs }
-    | { success: false; error: Error } => {
+  ): { success: true; data: GetWorkflowArgs } | { success: false; error: Error } => {
     try {
       return { success: true, data: _parseGetWorkflowArgs(data) };
     } catch (e) {
@@ -106,14 +100,12 @@ export const listWorkflowsToolDefinition: Tool = {
 
 export const sendWorkflowEventToolDefinition: Tool = {
   name: "send_workflow_event",
-  description:
-    "Triggers a single workflow by sending an event. Returns the run ID(s) created.",
+  description: "Triggers a single workflow by sending an event. Returns the run ID(s) created.",
   inputSchema: sendWorkflowEventSchema as Tool["inputSchema"],
 };
 
 export const getWorkflowToolDefinition: Tool = {
   name: "get_workflow",
-  description:
-    "Gets full workflow run details including status, timing, steps, and output.",
+  description: "Gets full workflow run details including status, timing, steps, and output.",
   inputSchema: getWorkflowSchema as Tool["inputSchema"],
 };

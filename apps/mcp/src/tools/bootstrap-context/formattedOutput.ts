@@ -30,10 +30,7 @@ export interface FormattedOutputInput {
  * @param input - Context data to format
  * @param fullContent - When true, includes full note content instead of wikilinks
  */
-export function buildFormattedOutput(
-  input: FormattedOutputInput,
-  fullContent = false,
-): string {
+export function buildFormattedOutput(input: FormattedOutputInput, fullContent = false): string {
   const {
     project,
     activeFeatures,
@@ -81,13 +78,7 @@ export function buildFormattedOutputWithLimits(
   } = {},
   fullContent = false,
 ): string {
-  const {
-    features = 10,
-    decisions = 5,
-    bugs = 5,
-    activity = 10,
-    referenced = 10,
-  } = limits;
+  const { features = 10, decisions = 5, bugs = 5, activity = 10, referenced = 10 } = limits;
 
   return buildFormattedOutput(
     {

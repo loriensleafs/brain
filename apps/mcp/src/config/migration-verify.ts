@@ -132,10 +132,7 @@ export async function verifyMemoryIndexing(
   const searchService = new SearchService(project);
   const results: MemoryVerificationResult[] = [];
 
-  logger.info(
-    { count: memories.length, project },
-    "Starting memory indexing verification",
-  );
+  logger.info({ count: memories.length, project }, "Starting memory indexing verification");
 
   for (const memory of memories) {
     const result = await verifySingleMemory(memory, searchService, project);
@@ -196,19 +193,15 @@ async function verifySingleMemory(
 
     // Look for exact permalink match in results
     const exactMatch = searchResponse.results.find(
-      (r) =>
-        normalizePermalink(r.permalink) ===
-        normalizePermalink(memory.permalink),
+      (r) => normalizePermalink(r.permalink) === normalizePermalink(memory.permalink),
     );
 
     if (exactMatch) {
       // Found by permalink, verify content
       const actualContent = await fetchMemoryContent(memory.permalink, project);
-      const actualPrefix =
-        actualContent?.slice(0, CONTENT_PREFIX_LENGTH).trim() ?? "";
+      const actualPrefix = actualContent?.slice(0, CONTENT_PREFIX_LENGTH).trim() ?? "";
 
-      const contentMatches =
-        normalizeContent(actualPrefix) === normalizeContent(expectedPrefix);
+      const contentMatches = normalizeContent(actualPrefix) === normalizeContent(expectedPrefix);
 
       if (contentMatches) {
         return {
@@ -239,12 +232,8 @@ async function verifySingleMemory(
 
     if (titleMatch) {
       // Found by title but different permalink
-      const actualContent = await fetchMemoryContent(
-        titleMatch.permalink,
-        project,
-      );
-      const actualPrefix =
-        actualContent?.slice(0, CONTENT_PREFIX_LENGTH).trim() ?? "";
+      const actualContent = await fetchMemoryContent(titleMatch.permalink, project);
+      const actualPrefix = actualContent?.slice(0, CONTENT_PREFIX_LENGTH).trim() ?? "";
 
       return {
         title: memory.title,
@@ -288,10 +277,7 @@ async function verifySingleMemory(
  * @param project - Optional project context
  * @returns Content string or null if not found
  */
-async function fetchMemoryContent(
-  permalink: string,
-  project?: string,
-): Promise<string | null> {
+async function fetchMemoryContent(permalink: string, project?: string): Promise<string | null> {
   try {
     const client = await getBasicMemoryClient();
 
@@ -309,9 +295,7 @@ async function fetchMemoryContent(
     });
 
     if (result.content && Array.isArray(result.content)) {
-      const textContent = result.content.find(
-        (c: { type: string }) => c.type === "text",
-      );
+      const textContent = result.content.find((c: { type: string }) => c.type === "text");
       if (textContent && "text" in textContent) {
         return textContent.text as string;
       }
@@ -345,11 +329,7 @@ function normalizeTitle(title: string): string {
  * Removes extra whitespace and normalizes line endings.
  */
 function normalizeContent(content: string): string {
-  return content
-    .replace(/\r\n/g, "\n")
-    .replace(/\s+/g, " ")
-    .trim()
-    .toLowerCase();
+  return content.replace(/\r\n/g, "\n").replace(/\s+/g, " ").trim().toLowerCase();
 }
 
 /**
@@ -378,9 +358,7 @@ export async function isMemoryIndexed(
     });
 
     return response.results.some(
-      (r) =>
-        normalizePermalink(r.permalink) ===
-        normalizePermalink(expectedPermalink),
+      (r) => normalizePermalink(r.permalink) === normalizePermalink(expectedPermalink),
     );
   } catch {
     return false;
@@ -393,10 +371,6 @@ export async function isMemoryIndexed(
  * @param summary - Verification summary
  * @returns Array of problem memories with details
  */
-export function getProblematicMemories(
-  summary: VerificationSummary,
-): MemoryVerificationResult[] {
-  return summary.results.filter(
-    (r) => r.status === "missing" || r.status === "mismatched",
-  );
+export function getProblematicMemories(summary: VerificationSummary): MemoryVerificationResult[] {
+  return summary.results.filter((r) => r.status === "missing" || r.status === "mismatched");
 }

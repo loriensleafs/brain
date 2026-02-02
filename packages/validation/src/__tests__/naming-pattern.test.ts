@@ -11,11 +11,33 @@ import {
   getPatternRegex,
   getPatternTypes,
   isValidNamingPattern,
+  type NamingPatternResult,
   NamingPatterns,
-  parseNamingPattern,
   type PatternType,
+  parseNamingPattern,
   validateNamingPattern,
 } from "../naming-pattern";
+
+/**
+ * Type guard to assert validation result is valid.
+ * Narrows type to allow safe access to patternType.
+ */
+function expectValid(
+  result: NamingPatternResult,
+): asserts result is Extract<NamingPatternResult, { valid: true }> {
+  expect(result.valid).toBe(true);
+}
+
+/**
+ * Type guard to assert validation result is invalid.
+ * Narrows type to allow safe access to error.
+ * Note: Prefixed with _ because tests use inline type narrowing instead.
+ */
+function _expectInvalid(
+  result: NamingPatternResult,
+): asserts result is Extract<NamingPatternResult, { valid: false }> {
+  expect(result.valid).toBe(false);
+}
 
 describe("NamingPatterns", () => {
   test("contains all 13 pattern types", () => {
@@ -49,7 +71,7 @@ describe("validateNamingPattern", () => {
 
       for (const fileName of validNames) {
         const result = validateNamingPattern({ fileName });
-        expect(result.valid, `Expected ${fileName} to be valid`).toBe(true);
+        expectValid(result);
         expect(result.patternType).toBe("decision");
       }
     });
@@ -80,7 +102,7 @@ describe("validateNamingPattern", () => {
 
       for (const fileName of validNames) {
         const result = validateNamingPattern({ fileName });
-        expect(result.valid, `Expected ${fileName} to be valid`).toBe(true);
+        expectValid(result);
         expect(result.patternType).toBe("session");
       }
     });
@@ -105,7 +127,7 @@ describe("validateNamingPattern", () => {
 
       for (const fileName of validNames) {
         const result = validateNamingPattern({ fileName });
-        expect(result.valid, `Expected ${fileName} to be valid`).toBe(true);
+        expectValid(result);
         expect(result.patternType).toBe("requirement");
       }
     });
@@ -113,14 +135,11 @@ describe("validateNamingPattern", () => {
 
   describe("design pattern", () => {
     test("accepts valid design file names", () => {
-      const validNames = [
-        "DESIGN-001-api-architecture.md",
-        "DESIGN-050-database-schema.md",
-      ];
+      const validNames = ["DESIGN-001-api-architecture.md", "DESIGN-050-database-schema.md"];
 
       for (const fileName of validNames) {
         const result = validateNamingPattern({ fileName });
-        expect(result.valid, `Expected ${fileName} to be valid`).toBe(true);
+        expectValid(result);
         expect(result.patternType).toBe("design");
       }
     });
@@ -128,14 +147,11 @@ describe("validateNamingPattern", () => {
 
   describe("task pattern", () => {
     test("accepts valid task file names", () => {
-      const validNames = [
-        "TASK-001-implement-auth.md",
-        "TASK-042-fix-bug.md",
-      ];
+      const validNames = ["TASK-001-implement-auth.md", "TASK-042-fix-bug.md"];
 
       for (const fileName of validNames) {
         const result = validateNamingPattern({ fileName });
-        expect(result.valid, `Expected ${fileName} to be valid`).toBe(true);
+        expectValid(result);
         expect(result.patternType).toBe("task");
       }
     });
@@ -143,14 +159,11 @@ describe("validateNamingPattern", () => {
 
   describe("analysis pattern", () => {
     test("accepts valid analysis file names", () => {
-      const validNames = [
-        "ANALYSIS-001-copilot-cli.md",
-        "ANALYSIS-015-performance-review.md",
-      ];
+      const validNames = ["ANALYSIS-001-copilot-cli.md", "ANALYSIS-015-performance-review.md"];
 
       for (const fileName of validNames) {
         const result = validateNamingPattern({ fileName });
-        expect(result.valid, `Expected ${fileName} to be valid`).toBe(true);
+        expectValid(result);
         expect(result.patternType).toBe("analysis");
       }
     });
@@ -158,14 +171,11 @@ describe("validateNamingPattern", () => {
 
   describe("feature pattern", () => {
     test("accepts valid feature file names", () => {
-      const validNames = [
-        "FEATURE-001-oauth-integration.md",
-        "FEATURE-003-dashboard.md",
-      ];
+      const validNames = ["FEATURE-001-oauth-integration.md", "FEATURE-003-dashboard.md"];
 
       for (const fileName of validNames) {
         const result = validateNamingPattern({ fileName });
-        expect(result.valid, `Expected ${fileName} to be valid`).toBe(true);
+        expectValid(result);
         expect(result.patternType).toBe("feature");
       }
     });
@@ -173,14 +183,11 @@ describe("validateNamingPattern", () => {
 
   describe("epic pattern", () => {
     test("accepts valid epic file names", () => {
-      const validNames = [
-        "EPIC-001-user-authentication.md",
-        "EPIC-005-reporting-system.md",
-      ];
+      const validNames = ["EPIC-001-user-authentication.md", "EPIC-005-reporting-system.md"];
 
       for (const fileName of validNames) {
         const result = validateNamingPattern({ fileName });
-        expect(result.valid, `Expected ${fileName} to be valid`).toBe(true);
+        expectValid(result);
         expect(result.patternType).toBe("epic");
       }
     });
@@ -188,14 +195,11 @@ describe("validateNamingPattern", () => {
 
   describe("critique pattern", () => {
     test("accepts valid critique file names", () => {
-      const validNames = [
-        "CRIT-001-auth-plan-critique.md",
-        "CRIT-010-api-design-review.md",
-      ];
+      const validNames = ["CRIT-001-auth-plan-critique.md", "CRIT-010-api-design-review.md"];
 
       for (const fileName of validNames) {
         const result = validateNamingPattern({ fileName });
-        expect(result.valid, `Expected ${fileName} to be valid`).toBe(true);
+        expectValid(result);
         expect(result.patternType).toBe("critique");
       }
     });
@@ -203,14 +207,11 @@ describe("validateNamingPattern", () => {
 
   describe("test-report (QA) pattern", () => {
     test("accepts valid test report file names", () => {
-      const validNames = [
-        "QA-001-auth-test-report.md",
-        "QA-050-integration-tests.md",
-      ];
+      const validNames = ["QA-001-auth-test-report.md", "QA-050-integration-tests.md"];
 
       for (const fileName of validNames) {
         const result = validateNamingPattern({ fileName });
-        expect(result.valid, `Expected ${fileName} to be valid`).toBe(true);
+        expectValid(result);
         expect(result.patternType).toBe("test-report");
       }
     });
@@ -218,14 +219,11 @@ describe("validateNamingPattern", () => {
 
   describe("security (SEC) pattern", () => {
     test("accepts valid security file names", () => {
-      const validNames = [
-        "SEC-001-auth-flow.md",
-        "SEC-025-data-encryption.md",
-      ];
+      const validNames = ["SEC-001-auth-flow.md", "SEC-025-data-encryption.md"];
 
       for (const fileName of validNames) {
         const result = validateNamingPattern({ fileName });
-        expect(result.valid, `Expected ${fileName} to be valid`).toBe(true);
+        expectValid(result);
         expect(result.patternType).toBe("security");
       }
     });
@@ -240,14 +238,11 @@ describe("validateNamingPattern", () => {
 
   describe("retrospective pattern", () => {
     test("accepts valid retrospective file names", () => {
-      const validNames = [
-        "RETRO-2026-01-15-sprint-review.md",
-        "RETRO-2024-12-31-year-end.md",
-      ];
+      const validNames = ["RETRO-2026-01-15-sprint-review.md", "RETRO-2024-12-31-year-end.md"];
 
       for (const fileName of validNames) {
         const result = validateNamingPattern({ fileName });
-        expect(result.valid, `Expected ${fileName} to be valid`).toBe(true);
+        expectValid(result);
         expect(result.patternType).toBe("retrospective");
       }
     });
@@ -255,14 +250,11 @@ describe("validateNamingPattern", () => {
 
   describe("skill pattern", () => {
     test("accepts valid skill file names", () => {
-      const validNames = [
-        "SKILL-001-memory-ops.md",
-        "SKILL-015-git-workflow.md",
-      ];
+      const validNames = ["SKILL-001-memory-ops.md", "SKILL-015-git-workflow.md"];
 
       for (const fileName of validNames) {
         const result = validateNamingPattern({ fileName });
-        expect(result.valid, `Expected ${fileName} to be valid`).toBe(true);
+        expectValid(result);
         expect(result.patternType).toBe("skill");
       }
     });
@@ -283,7 +275,7 @@ describe("validateNamingPattern", () => {
         fileName: "ADR-001-test.md",
         patternType: "decision",
       });
-      expect(result.valid).toBe(true);
+      expectValid(result);
       expect(result.patternType).toBe("decision");
     });
 
@@ -293,7 +285,9 @@ describe("validateNamingPattern", () => {
         patternType: "session",
       });
       expect(result.valid).toBe(false);
-      expect(result.error).toContain("session pattern");
+      if (!result.valid) {
+        expect(result.error).toContain("session pattern");
+      }
     });
 
     test("rejects unknown pattern type", () => {
@@ -302,7 +296,9 @@ describe("validateNamingPattern", () => {
         patternType: "unknown" as PatternType,
       });
       expect(result.valid).toBe(false);
-      expect(result.error).toContain("Unknown pattern type");
+      if (!result.valid) {
+        expect(result.error).toContain("Unknown pattern type");
+      }
     });
   });
 
@@ -310,7 +306,9 @@ describe("validateNamingPattern", () => {
     test("rejects file names with ..", () => {
       const result = validateNamingPattern({ fileName: "../etc/passwd" });
       expect(result.valid).toBe(false);
-      expect(result.error).toContain("Path traversal detected");
+      if (!result.valid) {
+        expect(result.error).toContain("Path traversal detected");
+      }
     });
 
     test("rejects file names with forward slash", () => {
@@ -318,7 +316,9 @@ describe("validateNamingPattern", () => {
         fileName: "path/to/ADR-001-test.md",
       });
       expect(result.valid).toBe(false);
-      expect(result.error).toContain("Path traversal detected");
+      if (!result.valid) {
+        expect(result.error).toContain("Path traversal detected");
+      }
     });
 
     test("rejects file names with backslash", () => {
@@ -326,7 +326,9 @@ describe("validateNamingPattern", () => {
         fileName: "path\\to\\ADR-001-test.md",
       });
       expect(result.valid).toBe(false);
-      expect(result.error).toContain("Path traversal detected");
+      if (!result.valid) {
+        expect(result.error).toContain("Path traversal detected");
+      }
     });
   });
 
@@ -334,7 +336,9 @@ describe("validateNamingPattern", () => {
     test("rejects empty fileName", () => {
       const result = validateNamingPattern({ fileName: "" });
       expect(result.valid).toBe(false);
-      expect(result.error).toContain("fileName is required");
+      if (!result.valid) {
+        expect(result.error).toContain("fileName is required");
+      }
     });
 
     test("rejects undefined fileName", () => {
@@ -342,7 +346,9 @@ describe("validateNamingPattern", () => {
         fileName: undefined as unknown as string,
       });
       expect(result.valid).toBe(false);
-      expect(result.error).toContain("fileName is required");
+      if (!result.valid) {
+        expect(result.error).toContain("fileName is required");
+      }
     });
   });
 
@@ -350,7 +356,9 @@ describe("validateNamingPattern", () => {
     test("returns error for unrecognized file name", () => {
       const result = validateNamingPattern({ fileName: "random-file.md" });
       expect(result.valid).toBe(false);
-      expect(result.error).toContain("does not match any known naming pattern");
+      if (!result.valid) {
+        expect(result.error).toContain("does not match any known naming pattern");
+      }
     });
   });
 });
@@ -369,21 +377,17 @@ describe("parseNamingPattern", () => {
   });
 
   test("throws on empty file name", () => {
-    expect(() => parseNamingPattern({ fileName: "" })).toThrow(
-      "fileName is required",
-    );
+    expect(() => parseNamingPattern({ fileName: "" })).toThrow("fileName is required");
   });
 
   test("throws on path traversal", () => {
-    expect(() => parseNamingPattern({ fileName: "../test.md" })).toThrow(
-      "Path traversal detected",
-    );
+    expect(() => parseNamingPattern({ fileName: "../test.md" })).toThrow("Path traversal detected");
   });
 
   test("throws on deprecated format", () => {
-    expect(() =>
-      parseNamingPattern({ fileName: "Skill-Memory-001.md" }),
-    ).toThrow("deprecated pattern");
+    expect(() => parseNamingPattern({ fileName: "Skill-Memory-001.md" })).toThrow(
+      "deprecated pattern",
+    );
   });
 });
 
@@ -439,23 +443,15 @@ describe("getPatternTypes", () => {
 
 describe("DeprecatedPatterns", () => {
   test("contains expected deprecated patterns", () => {
-    expect(DeprecatedPatterns.oldSkill.test("Skill-Category-001.md")).toBe(
-      true,
-    );
-    expect(DeprecatedPatterns.oldSession.test("2026-01-15-session-01.md")).toBe(
-      true,
-    );
+    expect(DeprecatedPatterns.oldSkill.test("Skill-Category-001.md")).toBe(true);
+    expect(DeprecatedPatterns.oldSession.test("2026-01-15-session-01.md")).toBe(true);
     expect(DeprecatedPatterns.oldThreatModel.test("TM-001-auth.md")).toBe(true);
   });
 
   test("old patterns do not match new formats", () => {
     expect(DeprecatedPatterns.oldSkill.test("SKILL-001-test.md")).toBe(false);
-    expect(
-      DeprecatedPatterns.oldSession.test("SESSION-2026-01-15-01-audit.md"),
-    ).toBe(false);
-    expect(DeprecatedPatterns.oldThreatModel.test("SEC-001-auth.md")).toBe(
-      false,
-    );
+    expect(DeprecatedPatterns.oldSession.test("SESSION-2026-01-15-01-audit.md")).toBe(false);
+    expect(DeprecatedPatterns.oldThreatModel.test("SEC-001-auth.md")).toBe(false);
   });
 });
 
@@ -501,7 +497,7 @@ describe("CanonicalDirectories", () => {
     const { CanonicalDirectories } = require("../naming-pattern");
 
     // Verify each value is a string, not an array
-    for (const [key, value] of Object.entries(CanonicalDirectories)) {
+    for (const [_key, value] of Object.entries(CanonicalDirectories)) {
       expect(typeof value).toBe("string");
       expect(Array.isArray(value)).toBe(false);
     }
@@ -551,26 +547,22 @@ describe("DeprecatedDirectories", () => {
     // Architecture paths
     expect(DeprecatedDirectories["architecture/decision"]).toBe("decisions");
     expect(DeprecatedDirectories["architecture/decisions"]).toBe("decisions");
-    expect(DeprecatedDirectories["architecture"]).toBe("decisions");
+    expect(DeprecatedDirectories.architecture).toBe("decisions");
 
     // Old requirement/design/task paths
-    expect(DeprecatedDirectories["requirements"]).toBe(
-      "specs/{name}/requirements",
-    );
-    expect(DeprecatedDirectories["specs/requirements"]).toBe(
-      "specs/{name}/requirements",
-    );
-    expect(DeprecatedDirectories["design"]).toBe("specs/{name}/design");
+    expect(DeprecatedDirectories.requirements).toBe("specs/{name}/requirements");
+    expect(DeprecatedDirectories["specs/requirements"]).toBe("specs/{name}/requirements");
+    expect(DeprecatedDirectories.design).toBe("specs/{name}/design");
     expect(DeprecatedDirectories["specs/design"]).toBe("specs/{name}/design");
-    expect(DeprecatedDirectories["tasks"]).toBe("specs/{name}/tasks");
+    expect(DeprecatedDirectories.tasks).toBe("specs/{name}/tasks");
     expect(DeprecatedDirectories["specs/tasks"]).toBe("specs/{name}/tasks");
 
     // Other deprecated paths
-    expect(DeprecatedDirectories["features"]).toBe("planning");
-    expect(DeprecatedDirectories["epics"]).toBe("roadmap");
-    expect(DeprecatedDirectories["reviews"]).toBe("critique");
+    expect(DeprecatedDirectories.features).toBe("planning");
+    expect(DeprecatedDirectories.epics).toBe("roadmap");
+    expect(DeprecatedDirectories.reviews).toBe("critique");
     expect(DeprecatedDirectories["test-reports"]).toBe("qa");
-    expect(DeprecatedDirectories["retrospective"]).toBe("retrospectives");
+    expect(DeprecatedDirectories.retrospective).toBe("retrospectives");
   });
 });
 
@@ -589,10 +581,7 @@ describe("validateDirectory", () => {
     });
 
     test("accepts specs/myproject/requirements for requirement", () => {
-      const result = validateDirectory(
-        "specs/myproject/requirements",
-        "requirement",
-      );
+      const result = validateDirectory("specs/myproject/requirements", "requirement");
       expect(result.valid).toBe(true);
     });
 
@@ -684,14 +673,18 @@ describe("validateDirectory", () => {
     test("rejects qa for decision", () => {
       const result = validateDirectory("qa", "decision");
       expect(result.valid).toBe(false);
-      expect(result.error).toContain("not valid for decision");
+      if (!result.valid) {
+        expect(result.error).toContain("not valid for decision");
+      }
       expect(result.canonicalDirectory).toBe("decisions");
     });
 
     test("rejects decisions for session", () => {
       const result = validateDirectory("decisions", "session");
       expect(result.valid).toBe(false);
-      expect(result.error).toContain("not valid for session");
+      if (!result.valid) {
+        expect(result.error).toContain("not valid for session");
+      }
       expect(result.canonicalDirectory).toBe("sessions");
     });
   });

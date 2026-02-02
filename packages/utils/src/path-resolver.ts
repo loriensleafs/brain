@@ -44,9 +44,7 @@ export async function getProjectMemoriesPath(project: string): Promise<string> {
  * @param cwd - Directory path to analyze
  * @returns Project name if found, undefined otherwise
  */
-export async function detectProjectFromPath(
-  cwd: string,
-): Promise<string | undefined> {
+export async function detectProjectFromPath(cwd: string): Promise<string | undefined> {
   const config = await readConfig();
   const dirName = basename(cwd);
   const parentDirName = basename(dirname(cwd));
@@ -98,10 +96,7 @@ export async function detectProjectFromPath(
  * const path3 = await resolveProjectMemoriesPath(undefined, "/path/to/brain");
  * ```
  */
-export async function resolveProjectMemoriesPath(
-  project?: string,
-  cwd?: string,
-): Promise<string> {
+export async function resolveProjectMemoriesPath(project?: string, cwd?: string): Promise<string> {
   // 1. Explicit project parameter
   if (project) {
     return getProjectMemoriesPath(project);

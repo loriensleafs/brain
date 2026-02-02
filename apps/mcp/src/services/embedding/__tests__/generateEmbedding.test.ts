@@ -11,12 +11,13 @@ describe("generateEmbedding", () => {
   const originalFetch = globalThis.fetch;
 
   // Helper to create mock fetch response
+  // Uses embeddings array format (batch API endpoint)
   const mockFetchSuccess = (embedding: number[]) => {
     globalThis.fetch = vi.fn(() =>
       Promise.resolve({
         ok: true,
         status: 200,
-        json: () => Promise.resolve({ embedding }),
+        json: () => Promise.resolve({ embeddings: [embedding] }),
       } as Response),
     ) as unknown as typeof fetch;
   };
@@ -77,7 +78,7 @@ describe("generateEmbedding", () => {
         Promise.resolve({
           ok: true,
           status: 200,
-          json: () => Promise.resolve({ embedding: mockEmbedding }),
+          json: () => Promise.resolve({ embeddings: [mockEmbedding] }),
         } as Response),
       );
       globalThis.fetch = mockFetch as unknown as typeof fetch;
@@ -85,10 +86,7 @@ describe("generateEmbedding", () => {
       await generateEmbedding("test text");
 
       expect(mockFetch).toHaveBeenCalledTimes(1);
-      const callArgs = mockFetch.mock.calls[0] as unknown as [
-        string,
-        RequestInit,
-      ];
+      const callArgs = mockFetch.mock.calls[0] as unknown as [string, RequestInit];
       const body = JSON.parse(callArgs[1].body as string);
       expect(body.model).toBe("nomic-embed-text");
     });
@@ -105,20 +103,18 @@ describe("generateEmbedding", () => {
         Promise.resolve({
           ok: true,
           status: 200,
-          json: () => Promise.resolve({ embedding: [0.1] }),
+          json: () => Promise.resolve({ embeddings: [[0.1]] }),
         } as Response),
       );
       globalThis.fetch = mockFetch as unknown as typeof fetch;
 
       await generateEmbedding(longText);
 
-      const callArgs = mockFetch.mock.calls[0] as unknown as [
-        string,
-        RequestInit,
-      ];
+      const callArgs = mockFetch.mock.calls[0] as unknown as [string, RequestInit];
       const body = JSON.parse(callArgs[1].body as string);
       // Text is passed through without truncation - caller is responsible for chunking
-      expect(body.prompt.length).toBe(35000);
+      // Batch API uses input array, text is prefixed with task type
+      expect(body.input[0]).toContain(longText);
     });
 
     test("passes short text directly to Ollama", async () => {
@@ -127,19 +123,16 @@ describe("generateEmbedding", () => {
         Promise.resolve({
           ok: true,
           status: 200,
-          json: () => Promise.resolve({ embedding: [0.1] }),
+          json: () => Promise.resolve({ embeddings: [[0.1]] }),
         } as Response),
       );
       globalThis.fetch = mockFetch as unknown as typeof fetch;
 
       await generateEmbedding(shortText);
 
-      const callArgs = mockFetch.mock.calls[0] as unknown as [
-        string,
-        RequestInit,
-      ];
+      const callArgs = mockFetch.mock.calls[0] as unknown as [string, RequestInit];
       const body = JSON.parse(callArgs[1].body as string);
-      expect(body.prompt.length).toBe(1000);
+      expect(body.input[0]).toContain(shortText);
     });
 
     test("handles arbitrary length text", async () => {
@@ -148,19 +141,16 @@ describe("generateEmbedding", () => {
         Promise.resolve({
           ok: true,
           status: 200,
-          json: () => Promise.resolve({ embedding: [0.1] }),
+          json: () => Promise.resolve({ embeddings: [[0.1]] }),
         } as Response),
       );
       globalThis.fetch = mockFetch as unknown as typeof fetch;
 
       await generateEmbedding(exactText);
 
-      const callArgs = mockFetch.mock.calls[0] as unknown as [
-        string,
-        RequestInit,
-      ];
+      const callArgs = mockFetch.mock.calls[0] as unknown as [string, RequestInit];
       const body = JSON.parse(callArgs[1].body as string);
-      expect(body.prompt.length).toBe(32000);
+      expect(body.input[0]).toContain(exactText);
     });
   });
 
@@ -175,8 +165,9 @@ describe("generateEmbedding", () => {
         } as Response);
       }) as unknown as typeof fetch;
 
-      expect(generateEmbedding("test")).rejects.toThrow(OllamaError);
-      // Should have retried 3 times (MAX_RETRIES)
+      // Await the rejection and verify error
+      await expect(generateEmbedding("test")).rejects.toThrow(OllamaError);
+      // Should have retried 3 times (MAX_RETRIES = 3)
       expect(callCount).toBe(3);
     }, 15000); // Increase timeout for retry delays
 
@@ -194,13 +185,14 @@ describe("generateEmbedding", () => {
         return Promise.resolve({
           ok: true,
           status: 200,
-          json: () => Promise.resolve({ embedding: mockEmbedding }),
+          json: () => Promise.resolve({ embeddings: [mockEmbedding] }),
         } as Response);
       }) as unknown as typeof fetch;
 
       const result = await generateEmbedding("test");
       expect(result).toEqual(mockEmbedding);
-      expect(callCount).toBe(2); // First failed, second succeeded
+      // First fails with 500, second succeeds
+      expect(callCount).toBe(2);
     }, 10000);
 
     test("does not retry on 4xx client errors", async () => {
@@ -230,7 +222,7 @@ describe("generateEmbedding", () => {
         throw new Error("Network error");
       }) as unknown as typeof fetch;
 
-      expect(generateEmbedding("test")).rejects.toThrow("Network error");
+      await expect(generateEmbedding("test")).rejects.toThrow("Network error");
       expect(callCount).toBe(1); // Network errors are not OllamaError, not retried
     });
   });

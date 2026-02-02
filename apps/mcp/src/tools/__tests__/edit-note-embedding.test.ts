@@ -14,9 +14,7 @@ describe("edit_note embedding trigger integration", () => {
 
   beforeEach(() => {
     // Spy on triggerEmbedding
-    triggerEmbeddingSpy = vi
-      .spyOn(triggerModule, "triggerEmbedding")
-      .mockImplementation(() => {});
+    triggerEmbeddingSpy = vi.spyOn(triggerModule, "triggerEmbedding").mockImplementation(() => {});
 
     // Spy on logger methods
     loggerDebugSpy = vi.spyOn(logger, "debug").mockImplementation(() => {});
@@ -57,16 +55,14 @@ describe("edit_note embedding trigger integration", () => {
       };
 
       // Simulate the edit_note flow
-      const editNotePromise = mockClient
-        .callTool()
-        .then((readResult: MockCallToolResult) => {
-          const firstContent = readResult.content?.[0];
-          if (firstContent?.type === "text") {
-            const fetchedContent = firstContent.text;
-            triggerModule.triggerEmbedding(identifier, fetchedContent);
-            logger.debug({ identifier }, "Triggered embedding for edited note");
-          }
-        });
+      const editNotePromise = mockClient.callTool().then((readResult: MockCallToolResult) => {
+        const firstContent = readResult.content?.[0];
+        if (firstContent?.type === "text") {
+          const fetchedContent = firstContent.text;
+          triggerModule.triggerEmbedding(identifier, fetchedContent);
+          logger.debug({ identifier }, "Triggered embedding for edited note");
+        }
+      });
 
       // Wait for async flow
       await editNotePromise;
@@ -127,17 +123,12 @@ describe("edit_note embedding trigger integration", () => {
       const identifier = "failing-note";
 
       const mockClient = {
-        callTool: vi.fn(
-          (): Promise<never> => Promise.reject(new Error("Read failed")),
-        ),
+        callTool: vi.fn((): Promise<never> => Promise.reject(new Error("Read failed"))),
       };
 
       // Simulate the error path
       await mockClient.callTool().catch((error: Error) => {
-        logger.warn(
-          { identifier, error },
-          "Failed to fetch content for embedding",
-        );
+        logger.warn({ identifier, error }, "Failed to fetch content for embedding");
       });
 
       await waitForAsync();

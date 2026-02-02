@@ -91,10 +91,7 @@
         "status": { "$ref": "#/definitions/InvocationStatus" },
         "input": { "$ref": "#/definitions/AgentInvocationInput" },
         "output": {
-          "oneOf": [
-            { "$ref": "#/definitions/AgentInvocationOutput" },
-            { "type": "null" }
-          ]
+          "oneOf": [{ "$ref": "#/definitions/AgentInvocationOutput" }, { "type": "null" }]
         },
         "handoffFrom": {
           "oneOf": [{ "$ref": "#/definitions/AgentType" }, { "type": "null" }]
@@ -172,14 +169,7 @@
         "preservedContext": { "type": "object", "additionalProperties": true },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": [
-        "fromAgent",
-        "toAgent",
-        "reason",
-        "context",
-        "artifacts",
-        "createdAt"
-      ],
+      "required": ["fromAgent", "toAgent", "reason", "context", "artifacts", "createdAt"],
       "additionalProperties": false
     },
     "CompactionEntry": {
@@ -254,10 +244,7 @@
       "additionalProperties": { "type": "string" }
     },
     "orchestratorWorkflow": {
-      "oneOf": [
-        { "$ref": "#/definitions/OrchestratorWorkflow" },
-        { "type": "null" }
-      ]
+      "oneOf": [{ "$ref": "#/definitions/OrchestratorWorkflow" }, { "type": "null" }]
     },
     "activeFeature": { "type": "string" },
     "activeTask": { "type": "string" },

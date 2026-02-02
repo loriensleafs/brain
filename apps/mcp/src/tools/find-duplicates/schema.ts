@@ -36,8 +36,7 @@ export const toolDefinition: Tool = {
       fulltext_threshold: {
         type: "number",
         default: 0.7,
-        description:
-          "Minimum fulltext similarity score to confirm duplicates (0-1). Default: 0.7",
+        description: "Minimum fulltext similarity score to confirm duplicates (0-1). Default: 0.7",
       },
     },
   },

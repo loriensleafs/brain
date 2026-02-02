@@ -28,9 +28,7 @@ describe("Session Protocol Start Workflow", () => {
     });
 
     test("workflow has id property set to 'session-protocol-start'", () => {
-      const workflowId = (
-        sessionProtocolStartWorkflow as unknown as { id: () => string }
-      ).id();
+      const workflowId = (sessionProtocolStartWorkflow as unknown as { id: () => string }).id();
       expect(workflowId).toBe("session-protocol-start");
     });
   });
@@ -58,9 +56,7 @@ describe("Session Protocol Start Workflow", () => {
 
       expect(evidence.brainMcpInitialized).toBe("2026-01-18T10:00:00Z");
       expect(evidence.handoffRead).toBe("yes");
-      expect(evidence.sessionLogPath).toBe(
-        ".agents/sessions/2026-01-18-session-01.md",
-      );
+      expect(evidence.sessionLogPath).toBe(".agents/sessions/2026-01-18-session-01.md");
       expect(evidence.skillScriptsCount).toBe("5");
       expect(evidence.gitBranch).toBe("main");
       expect(evidence.usageMandatoryRead).toBe("yes");
@@ -100,9 +96,7 @@ describe("Session Protocol Start Workflow", () => {
         gitBranch: "main",
         usageMandatory: "Mandatory usage note content",
         projectConstraints: "# Constraints\n\nRules here...",
-        memoryIndexNotes: [
-          { identifier: "session-context", content: "Context note" },
-        ],
+        memoryIndexNotes: [{ identifier: "session-context", content: "Context note" }],
         evidence: {
           brainMcpInitialized: "2026-01-18T10:00:00Z",
           handoffRead: "yes",

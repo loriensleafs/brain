@@ -24,16 +24,12 @@ const WIKILINK_PATTERN = /\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g;
 export function extractWikiLinks(content: string): string[] {
   const links: Set<string> = new Set();
 
-  let match;
-  while ((match = WIKILINK_PATTERN.exec(content)) !== null) {
+  for (const match of content.matchAll(WIKILINK_PATTERN)) {
     const linkTarget = match[1].trim();
     if (linkTarget) {
       links.add(linkTarget);
     }
   }
-
-  // Reset regex lastIndex for reuse
-  WIKILINK_PATTERN.lastIndex = 0;
 
   return Array.from(links);
 }
@@ -56,7 +52,9 @@ export async function followRelations(
   for (const note of notes) {
     if (note.content) {
       const links = extractWikiLinks(note.content);
-      links.forEach((link) => allLinks.add(link));
+      for (const link of links) {
+        allLinks.add(link);
+      }
     }
   }
 
@@ -93,10 +91,7 @@ export async function followRelations(
  * @param project - Project to search in
  * @returns Array of resolved notes (broken links are skipped)
  */
-async function resolveLinks(
-  links: string[],
-  project: string,
-): Promise<ContextNote[]> {
+async function resolveLinks(links: string[], project: string): Promise<ContextNote[]> {
   const client = await getBasicMemoryClient();
   const resolved: ContextNote[] = [];
 
@@ -129,10 +124,7 @@ async function resolveLinks(
 /**
  * Parse result from read_note tool call
  */
-function parseReadNoteResult(
-  result: unknown,
-  originalLink: string,
-): ContextNote | null {
+function parseReadNoteResult(result: unknown, originalLink: string): ContextNote | null {
   // Handle various response formats
   const typedResult = result as {
     result?: string;
@@ -190,9 +182,7 @@ function parseReadNoteResult(
  */
 export function extractRelationsSection(content: string): string[] {
   // Match ## Relations section
-  const sectionMatch = content.match(
-    /^##\s+Relations\s*\n+([\s\S]*?)(?=\n##\s|\n---|\n\n\n|$)/im,
-  );
+  const sectionMatch = content.match(/^##\s+Relations\s*\n+([\s\S]*?)(?=\n##\s|\n---|\n\n\n|$)/im);
 
   if (!sectionMatch) {
     return [];

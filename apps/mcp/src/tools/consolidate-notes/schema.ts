@@ -37,14 +37,12 @@ export const toolDefinition: Tool = {
       min_note_size: {
         type: "number",
         default: 10,
-        description:
-          "Minimum line count for notes to be considered for merging.",
+        description: "Minimum line count for notes to be considered for merging.",
       },
       max_note_size: {
         type: "number",
         default: 200,
-        description:
-          "Maximum line count before a note is flagged for splitting.",
+        description: "Maximum line count before a note is flagged for splitting.",
       },
     },
   },

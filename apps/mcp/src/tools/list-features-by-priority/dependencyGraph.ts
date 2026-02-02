@@ -108,9 +108,7 @@ export async function buildDependencyGraph(
 
   try {
     const parsed = JSON.parse(content[0].text);
-    features =
-      parsed.results?.filter((r: { type: string }) => r.type === "entity") ||
-      [];
+    features = parsed.results?.filter((r: { type: string }) => r.type === "entity") || [];
   } catch {
     warnings.push("Failed to parse feature search results");
     return { nodes, warnings };
@@ -160,9 +158,7 @@ function extractDependencies(content: string): string[] {
   for (const line of lines) {
     const trimmed = line.trim();
     for (const rel of DEPENDENCY_RELATIONS) {
-      const match = trimmed.match(
-        new RegExp(`^-\\s*${rel}\\s+\\[\\[([^\\]]+)\\]\\]`),
-      );
+      const match = trimmed.match(new RegExp(`^-\\s*${rel}\\s+\\[\\[([^\\]]+)\\]\\]`));
       if (match) {
         deps.push(match[1]);
       }

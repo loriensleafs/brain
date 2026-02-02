@@ -4,10 +4,11 @@
  *
  * Note: generateEmbedding now has retry logic with exponential backoff.
  * Tests simulating failures use 4xx errors (non-retryable) for immediate failure.
+ *
+ * Queue tests mock createVectorConnection to avoid sqlite-vec dependency.
  */
 
 import { Database } from "bun:sqlite";
-import * as sqliteVec from "sqlite-vec";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import * as connectionModule from "../../../db/connection";
 import { batchGenerate } from "../batchGenerate";
@@ -23,53 +24,29 @@ import {
 /** Mock 768-dim embedding for deterministic tests */
 const MOCK_EMBEDDING = Array.from({ length: 768 }, (_, i) => i * 0.001);
 
-/** Helper to create mock fetch */
-const createFetchMock = (impl: () => unknown) =>
-  vi.fn(impl) as unknown as typeof fetch;
+/** Helper to create mock fetch (batch API format) */
+const createFetchMock = (impl: () => unknown) => vi.fn(impl) as unknown as typeof fetch;
 
 describe("Embedding Integration Tests", () => {
   const originalFetch = globalThis.fetch;
-  let db: Database;
-  let createVectorConnectionSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     // Reset singleton client before each test
     resetOllamaClient();
 
-    // Create fresh in-memory database for each test
-    db = new Database(":memory:");
-    sqliteVec.load(db);
-
-    // Spy on createVectorConnection to return our test database
-    createVectorConnectionSpy = vi
-      .spyOn(connectionModule, "createVectorConnection")
-      .mockImplementation(() => {
-        return {
-          run: (...args: Parameters<Database["run"]>) => db.run(...args),
-          query: (...args: Parameters<Database["query"]>) => db.query(...args),
-          prepare: (...args: Parameters<Database["prepare"]>) =>
-            db.prepare(...args),
-          close: () => {
-            /* no-op for tests */
-          },
-        } as unknown as Database;
-      });
-
-    // Default: Ollama available with mock embedding
+    // Default: Ollama available with mock embedding (batch API format)
     globalThis.fetch = createFetchMock(() =>
       Promise.resolve({
         ok: true,
         status: 200,
-        json: () => Promise.resolve({ embedding: MOCK_EMBEDDING }),
+        json: () => Promise.resolve({ embeddings: [MOCK_EMBEDDING] }),
       } as Response),
     );
   });
 
   afterEach(() => {
     globalThis.fetch = originalFetch;
-    createVectorConnectionSpy.mockRestore();
     resetOllamaClient();
-    db.close();
   });
 
   describe("generateEmbedding integration", () => {
@@ -90,13 +67,13 @@ describe("Embedding Integration Tests", () => {
       expect(result).toBeNull();
     });
 
-    test("handles long text by truncating", async () => {
+    test("handles long text by passing through to Ollama", async () => {
       const longText = "a".repeat(35000);
       const mockFetch = vi.fn(() =>
         Promise.resolve({
           ok: true,
           status: 200,
-          json: () => Promise.resolve({ embedding: MOCK_EMBEDDING }),
+          json: () => Promise.resolve({ embeddings: [MOCK_EMBEDDING] }),
         } as Response),
       );
       globalThis.fetch = mockFetch as unknown as typeof fetch;
@@ -104,13 +81,10 @@ describe("Embedding Integration Tests", () => {
       const result = await generateEmbedding(longText);
 
       expect(result).toHaveLength(768);
-      // Verify truncation occurred by checking the request body
-      const callArgs = mockFetch.mock.calls[0] as unknown as [
-        string,
-        RequestInit,
-      ];
+      // Verify text is passed through (batch API uses input array)
+      const callArgs = mockFetch.mock.calls[0] as unknown as [string, RequestInit];
       const body = JSON.parse(callArgs[1].body as string);
-      expect(body.prompt.length).toBe(32000);
+      expect(body.input[0]).toContain(longText);
     });
   });
 
@@ -137,7 +111,7 @@ describe("Embedding Integration Tests", () => {
         return Promise.resolve({
           ok: true,
           status: 200,
-          json: () => Promise.resolve({ embedding: MOCK_EMBEDDING }),
+          json: () => Promise.resolve({ embeddings: [MOCK_EMBEDDING] }),
         } as Response);
       });
 
@@ -182,6 +156,35 @@ describe("Embedding Integration Tests", () => {
   });
 
   describe("queue integration", () => {
+    let db: Database;
+    let createVectorConnectionSpy: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(() => {
+      // Create in-memory database WITHOUT sqlite-vec for queue tests
+      db = new Database(":memory:");
+
+      // Mock createVectorConnection to return a wrapper that doesn't actually close
+      // (since queue functions close after each operation)
+      createVectorConnectionSpy = vi
+        .spyOn(connectionModule, "createVectorConnection")
+        .mockImplementation(
+          () =>
+            ({
+              run: (...args: Parameters<Database["run"]>) => db.run(...args),
+              query: (...args: Parameters<Database["query"]>) => db.query(...args),
+              prepare: (...args: Parameters<Database["prepare"]>) => db.prepare(...args),
+              close: () => {
+                /* no-op - keep db open for subsequent calls */
+              },
+            }) as unknown as Database,
+        );
+    });
+
+    afterEach(() => {
+      createVectorConnectionSpy.mockRestore();
+      db.close();
+    });
+
     test("enqueue and dequeue work correctly", () => {
       createEmbeddingQueueTable();
 
@@ -198,14 +201,14 @@ describe("Embedding Integration Tests", () => {
       createEmbeddingQueueTable();
 
       // Add items with explicit timestamps to control order
-      db.run(
-        "INSERT INTO embedding_queue (note_id, created_at) VALUES (?, ?)",
-        ["note-2", "2024-01-02T00:00:00Z"],
-      );
-      db.run(
-        "INSERT INTO embedding_queue (note_id, created_at) VALUES (?, ?)",
-        ["note-1", "2024-01-01T00:00:00Z"],
-      );
+      db.run("INSERT INTO embedding_queue (note_id, created_at) VALUES (?, ?)", [
+        "note-2",
+        "2024-01-02T00:00:00Z",
+      ]);
+      db.run("INSERT INTO embedding_queue (note_id, created_at) VALUES (?, ?)", [
+        "note-1",
+        "2024-01-01T00:00:00Z",
+      ]);
 
       const item = dequeueEmbedding();
       expect(item?.noteId).toBe("note-1");
@@ -217,9 +220,7 @@ describe("Embedding Integration Tests", () => {
       enqueueEmbedding("note-1");
 
       // Manually increment attempts
-      db.run("UPDATE embedding_queue SET attempts = 5 WHERE note_id = ?", [
-        "note-1",
-      ]);
+      db.run("UPDATE embedding_queue SET attempts = 5 WHERE note_id = ?", ["note-1"]);
 
       // Re-enqueue should reset
       enqueueEmbedding("note-1");
@@ -237,14 +238,51 @@ describe("Embedding Integration Tests", () => {
       const item = dequeueEmbedding();
       expect(item).not.toBeNull();
 
-      expect(item).not.toBeNull();
-      markEmbeddingProcessed(item!.id);
+      markEmbeddingProcessed(item?.id);
 
       expect(getQueueLength()).toBe(0);
+    });
+
+    test("queue handles concurrent enqueues", () => {
+      createEmbeddingQueueTable();
+
+      // Enqueue same note multiple times
+      enqueueEmbedding("note-1");
+      enqueueEmbedding("note-1");
+      enqueueEmbedding("note-1");
+
+      // Should only have one entry due to UNIQUE constraint
+      expect(getQueueLength()).toBe(1);
     });
   });
 
   describe("end-to-end flow", () => {
+    let db: Database;
+    let createVectorConnectionSpy: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(() => {
+      db = new Database(":memory:");
+      // Mock createVectorConnection to return a wrapper that doesn't actually close
+      createVectorConnectionSpy = vi
+        .spyOn(connectionModule, "createVectorConnection")
+        .mockImplementation(
+          () =>
+            ({
+              run: (...args: Parameters<Database["run"]>) => db.run(...args),
+              query: (...args: Parameters<Database["query"]>) => db.query(...args),
+              prepare: (...args: Parameters<Database["prepare"]>) => db.prepare(...args),
+              close: () => {
+                /* no-op */
+              },
+            }) as unknown as Database,
+        );
+    });
+
+    afterEach(() => {
+      createVectorConnectionSpy.mockRestore();
+      db.close();
+    });
+
     test("full embedding pipeline works", async () => {
       // 1. Generate embedding
       const embedding = await generateEmbedding("Hello world");
@@ -276,7 +314,7 @@ describe("Embedding Integration Tests", () => {
         return Promise.resolve({
           ok: true,
           status: 200,
-          json: () => Promise.resolve({ embedding: MOCK_EMBEDDING }),
+          json: () => Promise.resolve({ embeddings: [MOCK_EMBEDDING] }),
         } as Response);
       });
 
@@ -308,18 +346,13 @@ describe("Embedding Integration Tests", () => {
       expect(item?.noteId).toBe("failed-note-1");
 
       // Mark as processed to remove from queue
-      expect(item).not.toBeNull();
-      markEmbeddingProcessed(item!.id);
+      markEmbeddingProcessed(item?.id);
       expect(getQueueLength()).toBe(1);
     });
 
     test("embedding dimensions are consistent", async () => {
       // Generate multiple embeddings and verify dimensions
-      const texts = [
-        "short",
-        "a longer text with more words",
-        "x".repeat(1000),
-      ];
+      const texts = ["short", "a longer text with more words", "x".repeat(1000)];
       const result = await batchGenerate(texts, 10);
 
       result.embeddings.forEach((emb) => {
@@ -343,7 +376,7 @@ describe("Embedding Integration Tests", () => {
         return Promise.resolve({
           ok: true,
           status: 200,
-          json: () => Promise.resolve({ embedding: MOCK_EMBEDDING }),
+          json: () => Promise.resolve({ embeddings: [MOCK_EMBEDDING] }),
         } as Response);
       });
 
@@ -355,18 +388,6 @@ describe("Embedding Integration Tests", () => {
       expect(result.embeddings[1]).toBeNull();
       expect(result.embeddings[2]).toHaveLength(768);
       expect(result.failed).toContain(1);
-    });
-
-    test("queue handles concurrent enqueues", () => {
-      createEmbeddingQueueTable();
-
-      // Enqueue same note multiple times
-      enqueueEmbedding("note-1");
-      enqueueEmbedding("note-1");
-      enqueueEmbedding("note-1");
-
-      // Should only have one entry due to UNIQUE constraint
-      expect(getQueueLength()).toBe(1);
     });
   });
 
@@ -381,7 +402,7 @@ describe("Embedding Integration Tests", () => {
         return Promise.resolve({
           ok: true,
           status: 200,
-          json: () => Promise.resolve({ embedding: MOCK_EMBEDDING }),
+          json: () => Promise.resolve({ embeddings: [MOCK_EMBEDDING] }),
         } as Response);
       });
 
@@ -405,7 +426,7 @@ describe("Embedding Integration Tests", () => {
         return Promise.resolve({
           ok: true,
           status: 200,
-          json: () => Promise.resolve({ embedding: MOCK_EMBEDDING }),
+          json: () => Promise.resolve({ embeddings: [MOCK_EMBEDDING] }),
         } as Response);
       });
 
@@ -425,7 +446,7 @@ describe("Embedding Integration Tests", () => {
         return Promise.resolve({
           ok: true,
           status: 200,
-          json: () => Promise.resolve({ embedding: MOCK_EMBEDDING }),
+          json: () => Promise.resolve({ embeddings: [MOCK_EMBEDDING] }),
         } as Response);
       });
 
@@ -452,7 +473,7 @@ describe("Embedding Integration Tests", () => {
         return Promise.resolve({
           ok: true,
           status: 200,
-          json: () => Promise.resolve({ embedding: MOCK_EMBEDDING }),
+          json: () => Promise.resolve({ embeddings: [MOCK_EMBEDDING] }),
         } as Response);
       });
 
@@ -469,9 +490,7 @@ describe("Embedding Integration Tests", () => {
       // With batching: should be significantly faster
       // Log performance for monitoring
       if (elapsed > 2000) {
-        console.warn(
-          `Performance warning: 100 items took ${elapsed}ms (expected <2000ms)`,
-        );
+        console.warn(`Performance warning: 100 items took ${elapsed}ms (expected <2000ms)`);
       }
 
       // Reasonable upper bound

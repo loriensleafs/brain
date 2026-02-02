@@ -19,11 +19,7 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import { logger } from "../utils/internal/logger";
-import {
-  getBrainConfigPath,
-  loadBrainConfig,
-  saveBrainConfig,
-} from "./brain-config";
+import { getBrainConfigPath, loadBrainConfig, saveBrainConfig } from "./brain-config";
 import type { ConfigRollbackManager } from "./rollback";
 import {
   type BrainConfig,
@@ -257,12 +253,8 @@ export function transformOldToNew(oldConfig: OldBrainConfig): BrainConfig {
     },
     logging: {
       level:
-        (oldConfig.log_level as
-          | "trace"
-          | "debug"
-          | "info"
-          | "warn"
-          | "error") || defaultLogging.level,
+        (oldConfig.log_level as "trace" | "debug" | "info" | "warn" | "error") ||
+        defaultLogging.level,
     },
     watcher: { ...defaultWatcher },
   };
@@ -295,8 +287,7 @@ export function transformOldToNew(oldConfig: OldBrainConfig): BrainConfig {
           CODE: "CODE",
           CUSTOM: "CUSTOM",
         };
-        newConfig.projects[name].memories_mode =
-          modeMap[oldProject.mode] || "DEFAULT";
+        newConfig.projects[name].memories_mode = modeMap[oldProject.mode] || "DEFAULT";
       }
     }
   }
@@ -306,10 +297,7 @@ export function transformOldToNew(oldConfig: OldBrainConfig): BrainConfig {
     for (const [name, codePath] of Object.entries(oldConfig.code_paths)) {
       // Skip if already defined from Format A
       if (newConfig.projects[name]) {
-        logger.debug(
-          { project: name },
-          "Project already defined from Format A, skipping Format B",
-        );
+        logger.debug({ project: name }, "Project already defined from Format A, skipping Format B");
         continue;
       }
 
@@ -392,11 +380,7 @@ function removeOldConfig(): void {
 export async function migrateToNewConfigLocation(
   options: MigrationOptions = {},
 ): Promise<MigrationResult> {
-  const {
-    removeOldConfig: shouldRemoveOld = true,
-    force = false,
-    dryRun = false,
-  } = options;
+  const { removeOldConfig: shouldRemoveOld = true, force = false, dryRun = false } = options;
   const steps: MigrationStep[] = [];
 
   logger.info({ options }, "Starting config migration");
@@ -673,16 +657,9 @@ export async function migrateWithRollback(
   const result = await migrateToNewConfigLocation(options);
 
   // On success, mark as good
-  if (
-    result.success &&
-    result.migratedConfig &&
-    rollbackManager.isInitialized()
-  ) {
+  if (result.success && result.migratedConfig && rollbackManager.isInitialized()) {
     try {
-      await rollbackManager.markAsGood(
-        result.migratedConfig,
-        "After successful migration",
-      );
+      await rollbackManager.markAsGood(result.migratedConfig, "After successful migration");
     } catch (error) {
       logger.debug({ error }, "Could not mark config as good after migration");
     }

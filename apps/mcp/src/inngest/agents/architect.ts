@@ -32,10 +32,7 @@ export async function runArchitectAgent(
   validateFeatureId(featureId, AGENT_NAME);
 
   return wrapAgentExecution(AGENT_NAME, async () => {
-    logger.debug(
-      { featureId, context, agent: AGENT_NAME },
-      "Running architect agent validation",
-    );
+    logger.debug({ featureId, context, agent: AGENT_NAME }, "Running architect agent validation");
 
     // Placeholder: actual architect validation logic deferred per C-001
     // Future implementation will:
@@ -47,8 +44,7 @@ export async function runArchitectAgent(
     return {
       agent: AGENT_NAME,
       verdict: "PASS",
-      details:
-        "Architect validation placeholder - actual implementation deferred",
+      details: "Architect validation placeholder - actual implementation deferred",
     };
   });
 }

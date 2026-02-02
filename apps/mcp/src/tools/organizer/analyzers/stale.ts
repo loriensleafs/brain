@@ -59,10 +59,14 @@ export async function findStaleNotes(
   return issues;
 }
 
+interface McpToolResult {
+  content?: Array<{ type: string; text?: string }>;
+}
+
 /**
  * Parse list_directory output to extract file paths
  */
-function parseListDirectoryResult(result: any): string[] {
+function parseListDirectoryResult(result: McpToolResult): string[] {
   const text = result.content?.[0]?.text || "";
   const files: string[] = [];
   const lines = text.split("\n");
@@ -80,15 +84,14 @@ function parseListDirectoryResult(result: any): string[] {
 /**
  * Extract modification date from note frontmatter or metadata
  */
-function extractModifiedDate(result: any): Date | null {
+function extractModifiedDate(result: McpToolResult): Date | null {
   const text = result.content?.[0]?.text || "";
 
   // Extract frontmatter using shared utility
   const frontmatter = extractFrontmatter(text);
 
   // Try date fields in order of preference
-  const dateStr =
-    frontmatter.updated || frontmatter.modified || frontmatter.date;
+  const dateStr = frontmatter.updated || frontmatter.modified || frontmatter.date;
 
   if (dateStr) {
     const date = new Date(String(dateStr));

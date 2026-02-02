@@ -20,13 +20,7 @@ import { createDefaultSessionState } from "../types";
 function createMockClient(noteStore: Map<string, string> = new Map()): Client {
   return {
     callTool: vi.fn(
-      async ({
-        name,
-        arguments: args,
-      }: {
-        name: string;
-        arguments: Record<string, unknown>;
-      }) => {
+      async ({ name, arguments: args }: { name: string; arguments: Record<string, unknown> }) => {
         if (name === "write_note") {
           const path = args.path as string;
           const content = args.content as string;
@@ -366,11 +360,9 @@ describe("BrainSessionPersistence", () => {
       expect(mockClient.callTool).toHaveBeenCalled();
 
       // Check the arguments passed to callTool
-      const calls = (mockClient.callTool as ReturnType<typeof vi.fn>).mock
-        .calls;
+      const calls = (mockClient.callTool as ReturnType<typeof vi.fn>).mock.calls;
       const writeCall = calls.find(
-        (c: { name: string; arguments: Record<string, unknown> }[]) =>
-          c[0].name === "write_note",
+        (c: { name: string; arguments: Record<string, unknown> }[]) => c[0].name === "write_note",
       );
       expect(writeCall).toBeDefined();
       expect(writeCall?.[0].arguments.project).toBe(process.cwd());
@@ -391,11 +383,9 @@ describe("BrainSessionPersistence", () => {
       await persistence.saveSession(session);
 
       // Check the arguments passed to callTool
-      const calls = (mockClient.callTool as ReturnType<typeof vi.fn>).mock
-        .calls;
+      const calls = (mockClient.callTool as ReturnType<typeof vi.fn>).mock.calls;
       const writeCall = calls.find(
-        (c: { name: string; arguments: Record<string, unknown> }[]) =>
-          c[0].name === "write_note",
+        (c: { name: string; arguments: Record<string, unknown> }[]) => c[0].name === "write_note",
       );
       expect(writeCall).toBeDefined();
       expect(writeCall?.[0].arguments.project).toBe(customPath);

@@ -24,10 +24,7 @@ const QUALITY_WEIGHTS = {
 /**
  * Find notes below the quality threshold
  */
-export async function findWeakNotes(
-  project: string,
-  threshold: number,
-): Promise<QualityIssue[]> {
+export async function findWeakNotes(project: string, threshold: number): Promise<QualityIssue[]> {
   const client = await getBasicMemoryClient();
   const issues: QualityIssue[] = [];
 
@@ -65,10 +62,14 @@ export async function findWeakNotes(
   return issues;
 }
 
+interface McpToolResult {
+  content?: Array<{ type: string; text?: string }>;
+}
+
 /**
  * Calculate quality score for a note
  */
-function calculateQualityScore(result: any): number {
+function calculateQualityScore(result: McpToolResult): number {
   const text = result.content?.[0]?.text || "";
   let score = 0;
 
@@ -98,7 +99,7 @@ function calculateQualityScore(result: any): number {
 /**
  * Generate recommendations for improving note quality
  */
-function generateRecommendations(result: any, _currentScore: number): string {
+function generateRecommendations(result: McpToolResult, _currentScore: number): string {
   const text = result.content?.[0]?.text || "";
   const recommendations: string[] = [];
 
@@ -131,8 +132,7 @@ function hasObservations(content: string, minCount: number): boolean {
   const bulletPoints = content.match(/^[\s]*[-*+]\s+/gm);
   const numberedItems = content.match(/^[\s]*\d+\.\s+/gm);
 
-  const totalObservations =
-    (bulletPoints?.length || 0) + (numberedItems?.length || 0);
+  const totalObservations = (bulletPoints?.length || 0) + (numberedItems?.length || 0);
 
   return totalObservations >= minCount;
 }
@@ -155,7 +155,7 @@ function hasSections(content: string): boolean {
 /**
  * Parse list_directory output to extract file paths
  */
-function parseListDirectoryResult(result: any): string[] {
+function parseListDirectoryResult(result: McpToolResult): string[] {
   const text = result.content?.[0]?.text || "";
   const files: string[] = [];
   const lines = text.split("\n");

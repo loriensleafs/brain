@@ -15,33 +15,33 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 import type { BrainConfig } from "../schema";
 import { DEFAULT_BRAIN_CONFIG } from "../schema";
 
-// Mock filesystem
-const mockFs = {
-  existsSync: vi.fn<(p: string) => boolean>(() => false),
-  readFileSync: vi.fn<(p: string, enc: string) => string>(() => ""),
-  writeFileSync: vi.fn<(p: string, content: string, opts: unknown) => void>(
-    () => undefined,
-  ),
-  mkdirSync: vi.fn<(p: string, opts: unknown) => void>(() => undefined),
-  unlinkSync: vi.fn<(p: string) => void>(() => undefined),
-};
+// Use vi.hoisted() to ensure mocks are available before vi.mock() hoisting
+const { mockFs, mockBrainConfig, mockTranslationLayer } = vi.hoisted(() => ({
+  mockFs: {
+    existsSync: vi.fn<(p: string) => boolean>(() => false),
+    readFileSync: vi.fn<(p: string, enc: string) => string>(() => ""),
+    writeFileSync: vi.fn<(p: string, content: string, opts: unknown) => void>(() => undefined),
+    mkdirSync: vi.fn<(p: string, opts: unknown) => void>(() => undefined),
+    unlinkSync: vi.fn<(p: string) => void>(() => undefined),
+  },
+  mockBrainConfig: {
+    getBrainConfigDir: vi.fn(() => ""),
+    loadBrainConfig: vi.fn(async () => ({})),
+    saveBrainConfig: vi.fn(async () => undefined),
+  },
+  mockTranslationLayer: {
+    syncConfigToBasicMemory: vi.fn(async () => undefined),
+  },
+}));
+
+// Configure implementations that need runtime values
+function setupMockImplementations() {
+  mockBrainConfig.getBrainConfigDir.mockReturnValue(path.join(os.homedir(), ".config", "brain"));
+  mockBrainConfig.loadBrainConfig.mockResolvedValue({ ...DEFAULT_BRAIN_CONFIG });
+}
 
 vi.mock("fs", () => mockFs);
-
-// Mock brain-config module
-const mockBrainConfig = {
-  getBrainConfigDir: vi.fn(() => path.join(os.homedir(), ".config", "brain")),
-  loadBrainConfig: vi.fn(async () => ({ ...DEFAULT_BRAIN_CONFIG })),
-  saveBrainConfig: vi.fn(async () => undefined),
-};
-
 vi.mock("../brain-config", () => mockBrainConfig);
-
-// Mock translation-layer module
-const mockTranslationLayer = {
-  syncConfigToBasicMemory: vi.fn(async () => undefined),
-};
-
 vi.mock("../translation-layer", () => mockTranslationLayer);
 
 import { ConfigRollbackManager, type RollbackSnapshot } from "../rollback";
@@ -74,6 +74,9 @@ describe("ConfigRollbackManager", () => {
     mockBrainConfig.loadBrainConfig.mockReset();
     mockBrainConfig.saveBrainConfig.mockReset();
     mockTranslationLayer.syncConfigToBasicMemory.mockReset();
+
+    // Set up mock implementations
+    setupMockImplementations();
 
     // Default mock behaviors
     mockFs.existsSync.mockReturnValue(false);
@@ -129,15 +132,9 @@ describe("ConfigRollbackManager", () => {
 
       // Compute correct checksum using the same stable serialization as rollback.ts
       const sortedReplacer = (_key: string, value: unknown): unknown => {
-        if (
-          value !== null &&
-          typeof value === "object" &&
-          !Array.isArray(value)
-        ) {
+        if (value !== null && typeof value === "object" && !Array.isArray(value)) {
           const sorted: Record<string, unknown> = {};
-          for (const k of Object.keys(
-            value as Record<string, unknown>,
-          ).sort()) {
+          for (const k of Object.keys(value as Record<string, unknown>).sort()) {
             sorted[k] = (value as Record<string, unknown>)[k];
           }
           return sorted;
@@ -146,10 +143,7 @@ describe("ConfigRollbackManager", () => {
       };
       const json = JSON.stringify(savedSnapshot.config, sortedReplacer);
       const crypto = await import("node:crypto");
-      savedSnapshot.checksum = crypto
-        .createHash("sha256")
-        .update(json)
-        .digest("hex");
+      savedSnapshot.checksum = crypto.createHash("sha256").update(json).digest("hex");
 
       mockFs.existsSync.mockImplementation((p: string) => {
         return String(p).includes("last-known-good.json");
@@ -218,9 +212,7 @@ describe("ConfigRollbackManager", () => {
 
       const snapshot = manager.snapshot(config, "Test snapshot reason");
 
-      expect(snapshot.createdAt.getTime()).toBeGreaterThanOrEqual(
-        before.getTime(),
-      );
+      expect(snapshot.createdAt.getTime()).toBeGreaterThanOrEqual(before.getTime());
       expect(snapshot.reason).toBe("Test snapshot reason");
     });
 
@@ -241,11 +233,14 @@ describe("ConfigRollbackManager", () => {
 
       // Mutate original
       expect(config.projects.test).toBeDefined();
-      config.projects.test!.code_path = "/dev/mutated";
+      const testProject = config.projects.test;
+      if (testProject) {
+        testProject.code_path = "/dev/mutated";
+      }
 
       // Snapshot should be unchanged
       expect(snapshot.config.projects.test).toBeDefined();
-      expect(snapshot.config.projects.test!.code_path).toBe("/dev/test");
+      expect(snapshot.config.projects.test?.code_path).toBe("/dev/test");
     });
 
     test("adds to rollback history", () => {
@@ -392,9 +387,9 @@ describe("ConfigRollbackManager", () => {
     test("fails on checksum mismatch", async () => {
       // Corrupt the snapshot checksum
       const corruptSnapshot = { ...testSnapshot, checksum: "corrupted" };
-      (
-        manager as unknown as { rollbackHistory: RollbackSnapshot[] }
-      ).rollbackHistory = [corruptSnapshot];
+      (manager as unknown as { rollbackHistory: RollbackSnapshot[] }).rollbackHistory = [
+        corruptSnapshot,
+      ];
 
       const result = await manager.rollback("previous");
 

@@ -10,11 +10,7 @@
       "description": "Config key to set (e.g., 'logging.level', 'sync.delay_ms'). Use dot notation for nested keys."
     },
     "value": {
-      "oneOf": [
-        { "type": "string" },
-        { "type": "number" },
-        { "type": "boolean" }
-      ],
+      "oneOf": [{ "type": "string" }, { "type": "number" }, { "type": "boolean" }],
       "description": "Value to set. Type must match the expected type for the key."
     }
   },

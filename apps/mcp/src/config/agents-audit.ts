@@ -210,14 +210,13 @@ export const ENTITY_PATTERNS: EntityPattern[] = [
 /**
  * Pattern lookup by type for backward compatibility.
  */
-export const ENTITY_PATTERNS_BY_TYPE: Record<string, EntityPattern> =
-  ENTITY_PATTERNS.reduce(
-    (acc, pattern) => {
-      acc[pattern.type] = pattern;
-      return acc;
-    },
-    {} as Record<string, EntityPattern>,
-  );
+export const ENTITY_PATTERNS_BY_TYPE: Record<string, EntityPattern> = ENTITY_PATTERNS.reduce(
+  (acc, pattern) => {
+    acc[pattern.type] = pattern;
+    return acc;
+  },
+  {} as Record<string, EntityPattern>,
+);
 
 /**
  * Audited file information.
@@ -369,9 +368,7 @@ export function generateSuggestedTitle(
   const baseName = filename.replace(/\.md(\.bak)?$/i, "");
 
   // Session logs: YYYY-MM-DD-session-NN-topic -> session-YYYY-MM-DD-NN-topic
-  const sessionMatch = baseName.match(
-    /^(\d{4}-\d{2}-\d{2})-session-(\d+)(.*)$/,
-  );
+  const sessionMatch = baseName.match(/^(\d{4}-\d{2}-\d{2})-session-(\d+)(.*)$/);
   if (sessionMatch) {
     const [, date, num, rest] = sessionMatch;
     return `session-${date}-${num}${rest}`;
@@ -465,13 +462,8 @@ function auditFile(filePath: string, rootPath: string): AuditedFile {
   const entityType = getEntityType(filename);
   const matched = entityType !== "UNKNOWN" && entityType !== "GENERIC_MD";
 
-  const suggestedTitle = generateSuggestedTitle(
-    relativePath,
-    filename,
-    category,
-  );
-  const suggestedFolder =
-    category === AgentEntityCategory.UNKNOWN ? "uncategorized" : category;
+  const suggestedTitle = generateSuggestedTitle(relativePath, filename, category);
+  const suggestedFolder = category === AgentEntityCategory.UNKNOWN ? "uncategorized" : category;
 
   return {
     path: filePath,
@@ -660,9 +652,7 @@ export function formatAuditReport(report: AgentsAuditReport): string {
   for (const cat of sortedCategories) {
     const sourceDir = `.agents/${cat.category}/`;
     const brainCategory =
-      cat.category === AgentEntityCategory.UNKNOWN
-        ? "uncategorized"
-        : cat.category;
+      cat.category === AgentEntityCategory.UNKNOWN ? "uncategorized" : cat.category;
     lines.push(
       `| ${sourceDir.padEnd(18)} | ${brainCategory.padEnd(20)} | ${cat.fileCount.toString().padStart(10)} |`,
     );

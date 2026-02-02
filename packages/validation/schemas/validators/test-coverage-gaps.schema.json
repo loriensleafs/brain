@@ -6,14 +6,7 @@
   "definitions": {
     "SupportedLanguage": {
       "type": "string",
-      "enum": [
-        "go",
-        "powershell",
-        "typescript",
-        "javascript",
-        "python",
-        "csharp"
-      ],
+      "enum": ["go", "powershell", "typescript", "javascript", "python", "csharp"],
       "description": "Programming language supported for test coverage detection"
     },
     "TestCoverageGapOptions": {

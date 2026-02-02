@@ -17,11 +17,7 @@
  */
 
 import { type FSWatcher, watch } from "chokidar";
-import {
-  getBrainConfigPath,
-  loadBrainConfig,
-  loadBrainConfigSync,
-} from "./brain-config";
+import { getBrainConfigPath, loadBrainConfig, loadBrainConfigSync } from "./brain-config";
 import { type ConfigDiff, detectConfigDiff, summarizeConfigDiff } from "./diff";
 import { type RollbackResult, rollbackManager } from "./rollback";
 import type { BrainConfig } from "./schema";
@@ -46,12 +42,7 @@ const AWAIT_WRITE_FINISH = {
 /**
  * Event types emitted by the watcher.
  */
-export type WatcherEventType =
-  | "change"
-  | "error"
-  | "validation_error"
-  | "rollback"
-  | "reconfigure";
+export type WatcherEventType = "change" | "error" | "validation_error" | "rollback" | "reconfigure";
 
 /**
  * Event payload for watcher callbacks.
@@ -317,21 +308,15 @@ export class ConfigFileWatcher {
       // Use sync load to avoid lock contention during rapid changes
       newConfig = loadBrainConfigSync();
     } catch (error) {
-      await this.handleInvalidConfig(
-        error instanceof Error ? error : new Error(String(error)),
-      );
+      await this.handleInvalidConfig(error instanceof Error ? error : new Error(String(error)));
       return;
     }
 
     // Validate the config
     const validation = validateBrainConfig(newConfig);
     if (!validation.success) {
-      const errorMsg =
-        validation.errors?.map((e) => e.message).join("; ") ||
-        "Validation failed";
-      await this.handleInvalidConfig(
-        new Error(`Validation failed: ${errorMsg}`),
-      );
+      const errorMsg = validation.errors?.map((e) => e.message).join("; ") || "Validation failed";
+      await this.handleInvalidConfig(new Error(`Validation failed: ${errorMsg}`));
       return;
     }
 
@@ -352,7 +337,9 @@ export class ConfigFileWatcher {
     });
 
     // Create snapshot before applying changes
-    rollbackManager.snapshot(this.lastConfig!, "Before manual config edit");
+    if (this.lastConfig) {
+      rollbackManager.snapshot(this.lastConfig, "Before manual config edit");
+    }
 
     // Sync to basic-memory if enabled
     if (this.autoSync) {
@@ -373,10 +360,7 @@ export class ConfigFileWatcher {
     this.lastConfig = newConfig;
 
     // Mark as good after successful processing
-    await rollbackManager.markAsGood(
-      newConfig,
-      "After successful config change",
-    );
+    await rollbackManager.markAsGood(newConfig, "After successful config change");
 
     this.emitEvent({
       type: "reconfigure",

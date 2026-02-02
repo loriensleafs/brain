@@ -19,10 +19,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { beforeAll, describe, expect, it } from "vitest";
 
-import {
-  type PatternType,
-  validateNamingPattern,
-} from "../../naming-pattern";
+import { type PatternType, validateNamingPattern } from "../../naming-pattern";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const packageRoot = join(__dirname, "..", "..", "..");
@@ -101,16 +98,46 @@ const validTestCases: NamingPatternTestCase[] = [
  */
 const invalidDeprecatedTestCases: NamingPatternTestCase[] = [
   // Old skill format: Skill-Category-001.md
-  { fileName: "Skill-Category-001.md", patternType: "skill", expected: false, description: "old skill format" },
-  { fileName: "Skill-Memory-015.md", patternType: "skill", expected: false, description: "old skill format" },
+  {
+    fileName: "Skill-Category-001.md",
+    patternType: "skill",
+    expected: false,
+    description: "old skill format",
+  },
+  {
+    fileName: "Skill-Memory-015.md",
+    patternType: "skill",
+    expected: false,
+    description: "old skill format",
+  },
 
   // Old session format: YYYY-MM-DD-session-NN.md
-  { fileName: "2026-02-01-session-01.md", patternType: "session", expected: false, description: "old session format" },
-  { fileName: "2024-12-31-session-99.md", patternType: "session", expected: false, description: "old session format" },
+  {
+    fileName: "2026-02-01-session-01.md",
+    patternType: "session",
+    expected: false,
+    description: "old session format",
+  },
+  {
+    fileName: "2024-12-31-session-99.md",
+    patternType: "session",
+    expected: false,
+    description: "old session format",
+  },
 
   // Old threat model format: TM-NNN-*.md
-  { fileName: "TM-001-auth.md", patternType: "security", expected: false, description: "old threat model format" },
-  { fileName: "TM-025-data-encryption.md", patternType: "security", expected: false, description: "old threat model format" },
+  {
+    fileName: "TM-001-auth.md",
+    patternType: "security",
+    expected: false,
+    description: "old threat model format",
+  },
+  {
+    fileName: "TM-025-data-encryption.md",
+    patternType: "security",
+    expected: false,
+    description: "old threat model format",
+  },
 ];
 
 /**
@@ -138,9 +165,24 @@ const edgeCases: NamingPatternTestCase[] = [
  * Pattern type mismatch cases - valid file but wrong pattern type specified.
  */
 const patternMismatchCases: NamingPatternTestCase[] = [
-  { fileName: "ADR-001-test.md", patternType: "session", expected: false, description: "ADR file with session type" },
-  { fileName: "SESSION-2026-01-01-01-test.md", patternType: "decision", expected: false, description: "SESSION file with decision type" },
-  { fileName: "SKILL-001-test.md", patternType: "epic", expected: false, description: "SKILL file with epic type" },
+  {
+    fileName: "ADR-001-test.md",
+    patternType: "session",
+    expected: false,
+    description: "ADR file with session type",
+  },
+  {
+    fileName: "SESSION-2026-01-01-01-test.md",
+    patternType: "decision",
+    expected: false,
+    description: "SESSION file with decision type",
+  },
+  {
+    fileName: "SKILL-001-test.md",
+    patternType: "epic",
+    expected: false,
+    description: "SKILL file with epic type",
+  },
 ];
 
 /**
@@ -160,16 +202,13 @@ interface GoValidationResult {
 function runGoValidator(fileName: string, patternType?: string): GoValidationResult | null {
   try {
     const args = patternType ? `"${fileName}" "${patternType}"` : `"${fileName}"`;
-    const result = execSync(
-      `go run ./cmd/validate-naming/main.go ${args}`,
-      {
-        cwd: packageRoot,
-        encoding: "utf-8",
-        stdio: ["pipe", "pipe", "pipe"],
-      }
-    );
+    const result = execSync(`go run ./cmd/validate-naming/main.go ${args}`, {
+      cwd: packageRoot,
+      encoding: "utf-8",
+      stdio: ["pipe", "pipe", "pipe"],
+    });
     return JSON.parse(result.trim());
-  } catch (error) {
+  } catch {
     // Go command may fail if Go is not available
     return null;
   }
@@ -198,7 +237,9 @@ describe("Naming Pattern Cross-Language Parity", () => {
         // TypeScript validation
         const tsResult = validateNamingPattern({ fileName, patternType });
         expect(tsResult.valid, `TS: Expected ${fileName} to be valid`).toBe(expected);
-        expect(tsResult.patternType).toBe(patternType);
+        if (tsResult.valid) {
+          expect(tsResult.patternType).toBe(patternType);
+        }
 
         // Go parity check (if available)
         if (goAvailable) {
@@ -298,7 +339,7 @@ describe("Naming Pattern Cross-Language Parity", () => {
             expect(goResult.valid).toBe(expected);
             // Parity assertion
             expect(tsResult.valid).toBe(goResult.valid);
-            if (expected && tsResult.patternType) {
+            if (expected && tsResult.valid && goResult.valid) {
               expect(tsResult.patternType).toBe(goResult.patternType);
             }
           }
@@ -324,7 +365,10 @@ describe("Naming Pattern Cross-Language Parity", () => {
       let parityMismatches = 0;
 
       for (const tc of allCases) {
-        const tsResult = validateNamingPattern({ fileName: tc.fileName, patternType: tc.patternType });
+        const tsResult = validateNamingPattern({
+          fileName: tc.fileName,
+          patternType: tc.patternType,
+        });
         if (tsResult.valid) tsValid++;
         else tsInvalid++;
 
@@ -338,7 +382,9 @@ describe("Naming Pattern Cross-Language Parity", () => {
               parityMatches++;
             } else {
               parityMismatches++;
-              console.warn(`Parity mismatch: ${tc.fileName} - TS: ${tsResult.valid}, Go: ${goResult.valid}`);
+              console.warn(
+                `Parity mismatch: ${tc.fileName} - TS: ${tsResult.valid}, Go: ${goResult.valid}`,
+              );
             }
           }
         }
@@ -355,7 +401,9 @@ describe("Naming Pattern Cross-Language Parity", () => {
 
       // Verify expected distribution
       expect(tsValid).toBe(validTestCases.length);
-      expect(tsInvalid).toBe(invalidDeprecatedTestCases.length + edgeCases.length + patternMismatchCases.length);
+      expect(tsInvalid).toBe(
+        invalidDeprecatedTestCases.length + edgeCases.length + patternMismatchCases.length,
+      );
     });
   });
 });

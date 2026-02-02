@@ -53,50 +53,58 @@ interface MockDirEntry {
   isFile: () => boolean;
 }
 
-// Mock filesystem operations before any imports
-const mockFs = {
-  existsSync: vi.fn<(p: unknown) => boolean>(() => false),
-  readFileSync: vi.fn<(p: unknown) => string>(() => "{}"),
-  writeFileSync: vi.fn<(p: unknown, data: unknown) => void>(() => undefined),
-  readdirSync: vi.fn<(p: unknown, opts?: unknown) => MockDirEntry[]>(
-    () => [] as MockDirEntry[],
-  ),
-  statSync: vi.fn<(p: unknown) => { size: number }>(() => ({ size: 0 })),
-  cpSync: vi.fn<(src: unknown, dest: unknown, opts?: unknown) => void>(() => {
-    // Track copy operation
-  }),
-  rmSync: vi.fn<(p: unknown, opts?: unknown) => void>(() => {
-    // Track delete operation
-  }),
-  realpathSync: vi.fn<(p: unknown) => string>((p: unknown) => String(p)),
-};
+// Use vi.hoisted() to ensure mocks are available before vi.mock() hoisting
+const { mockFs, mockState, MockProjectNotFoundError } = vi.hoisted(() => {
+  // Mutable state for test control
+  const mockState = {
+    projects: {} as Record<string, string>,
+  };
+
+  class MockProjectNotFoundError extends Error {
+    constructor(
+      public readonly project: string,
+      public readonly availableProjects: string[],
+    ) {
+      super(`Project "${project}" not found`);
+      this.name = "ProjectNotFoundError";
+    }
+  }
+
+  return {
+    mockState,
+    MockProjectNotFoundError,
+    mockFs: {
+      existsSync: vi.fn<(p: unknown) => boolean>(() => false),
+      readFileSync: vi.fn<(p: unknown) => string>(() => "{}"),
+      writeFileSync: vi.fn<(p: unknown, data: unknown) => void>(() => undefined),
+      mkdirSync: vi.fn<(p: unknown, opts?: unknown) => void>(() => undefined),
+      readdirSync: vi.fn<(p: unknown, opts?: unknown) => MockDirEntry[]>(
+        () => [] as MockDirEntry[],
+      ),
+      statSync: vi.fn<(p: unknown) => { size: number }>(() => ({ size: 0 })),
+      cpSync: vi.fn<(src: unknown, dest: unknown, opts?: unknown) => void>(() => {
+        // Track copy operation
+      }),
+      rmSync: vi.fn<(p: unknown, opts?: unknown) => void>(() => {
+        // Track delete operation
+      }),
+      realpathSync: vi.fn<(p: unknown) => string>((p: unknown) => String(p)),
+    },
+  };
+});
 
 vi.mock("fs", () => mockFs);
-
-// Mock @brain/utils to use our mocked fs
-// The actual module uses Bun.file() which can't be mocked
-class MockProjectNotFoundError extends Error {
-  constructor(
-    public readonly project: string,
-    public readonly availableProjects: string[],
-  ) {
-    super(`Project "${project}" not found`);
-    this.name = "ProjectNotFoundError";
-  }
-}
-
-// Stores project configs for @brain/utils mock
-let mockProjects: Record<string, string> = {};
+vi.mock("node:fs", () => mockFs);
 
 vi.mock("@brain/utils", () => ({
   getProjectMemoriesPath: async (project: string) => {
-    const path = mockProjects[project];
+    const path = mockState.projects[project];
     if (!path) {
-      throw new MockProjectNotFoundError(project, Object.keys(mockProjects));
+      throw new MockProjectNotFoundError(project, Object.keys(mockState.projects));
     }
     return path;
   },
-  getAvailableProjects: async () => Object.keys(mockProjects),
+  getAvailableProjects: async () => Object.keys(mockState.projects),
   ProjectNotFoundError: MockProjectNotFoundError,
 }));
 
@@ -104,8 +112,7 @@ vi.mock("@brain/utils", () => ({
 vi.mock("../../../proxy/client", () => ({
   getBasicMemoryClient: () =>
     Promise.resolve({
-      callTool: () =>
-        Promise.resolve({ content: [{ type: "text", text: "[]" }] }),
+      callTool: () => Promise.resolve({ content: [{ type: "text", text: "[]" }] }),
     }),
 }));
 
@@ -128,7 +135,7 @@ describe("edit_project tool", () => {
     mockFs.realpathSync.mockReset();
 
     // Reset @brain/utils mock state
-    mockProjects = {};
+    mockState.projects = {};
 
     // Default realpathSync behavior - return path as-is
     mockFs.realpathSync.mockImplementation((p: unknown) => String(p));
@@ -141,13 +148,9 @@ describe("edit_project tool", () => {
   /**
    * Helper to set up an existing project in config
    */
-  function setupExistingProject(
-    projectName: string,
-    notesPath: string,
-    codePath?: string,
-  ) {
+  function setupExistingProject(projectName: string, notesPath: string, codePath?: string) {
     // Set up @brain/utils mock
-    mockProjects[projectName] = notesPath;
+    mockState.projects[projectName] = notesPath;
 
     mockFs.existsSync.mockImplementation((p: unknown) => {
       const pStr = String(p);
@@ -185,9 +188,7 @@ describe("edit_project tool", () => {
       const result = await handler(args);
 
       expect(result.isError).toBeUndefined();
-      const response = JSON.parse(
-        getResponseText(result.content as ToolResultContent[]),
-      );
+      const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
 
       // Verify DEFAULT mode is applied
       expect(response.memories_path_mode).toBe("DEFAULT");
@@ -199,7 +200,7 @@ describe("edit_project tool", () => {
     test("uses ~/memories fallback when no brain-config.json exists", async () => {
       // Project exists but no brain-config.json
       // Set up @brain/utils mock
-      mockProjects["fallback-project"] = "/some/old/path";
+      mockState.projects["fallback-project"] = "/some/old/path";
 
       mockFs.existsSync.mockImplementation((p: unknown) => {
         const pStr = String(p);
@@ -222,13 +223,9 @@ describe("edit_project tool", () => {
       };
 
       const result = await handler(args);
-      const response = JSON.parse(
-        getResponseText(result.content as ToolResultContent[]),
-      );
+      const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
 
-      expect(response.memories_path).toBe(
-        path.join(homeDir, "memories", "fallback-project"),
-      );
+      expect(response.memories_path).toBe(path.join(homeDir, "memories", "fallback-project"));
       expect(response.memories_path_mode).toBe("DEFAULT");
     });
   });
@@ -244,13 +241,9 @@ describe("edit_project tool", () => {
       };
 
       const result = await handler(args);
-      const response = JSON.parse(
-        getResponseText(result.content as ToolResultContent[]),
-      );
+      const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
 
-      expect(response.memories_path).toBe(
-        path.join(homeDir, "memories", "explicit-default"),
-      );
+      expect(response.memories_path).toBe(path.join(homeDir, "memories", "explicit-default"));
       expect(response.memories_path_mode).toBe("DEFAULT");
     });
   });
@@ -307,15 +300,11 @@ describe("edit_project tool", () => {
       };
 
       const result = await handler(args);
-      const response = JSON.parse(
-        getResponseText(result.content as ToolResultContent[]),
-      );
+      const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
 
       // Should fall back to DEFAULT mode since no old code_path
       expect(response.memories_path_mode).toBe("DEFAULT");
-      expect(response.memories_path).toBe(
-        path.join(homeDir, "memories", "no-code-path-project"),
-      );
+      expect(response.memories_path).toBe(path.join(homeDir, "memories", "no-code-path-project"));
     });
   });
 
@@ -325,7 +314,7 @@ describe("edit_project tool", () => {
       const oldNotesPath = path.join(oldCodePath, "docs");
 
       // Set up @brain/utils mock
-      mockProjects["override-project"] = oldNotesPath;
+      mockState.projects["override-project"] = oldNotesPath;
 
       mockFs.existsSync.mockImplementation((p: unknown) => {
         const pStr = String(p);
@@ -356,9 +345,7 @@ describe("edit_project tool", () => {
       };
 
       const result = await handler(args);
-      const response = JSON.parse(
-        getResponseText(result.content as ToolResultContent[]),
-      );
+      const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
 
       // Should use explicit path, not auto-update
       expect(response.memories_path).toBe("/custom/notes/path");
@@ -370,7 +357,7 @@ describe("edit_project tool", () => {
       const oldNotesPath = path.join(oldCodePath, "docs");
 
       // Set up @brain/utils mock
-      mockProjects["force-default"] = oldNotesPath;
+      mockState.projects["force-default"] = oldNotesPath;
 
       mockFs.existsSync.mockImplementation((p: unknown) => {
         const pStr = String(p);
@@ -401,14 +388,10 @@ describe("edit_project tool", () => {
       };
 
       const result = await handler(args);
-      const response = JSON.parse(
-        getResponseText(result.content as ToolResultContent[]),
-      );
+      const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
 
       // Should use DEFAULT, not auto-update to code/docs
-      expect(response.memories_path).toBe(
-        path.join(homeDir, "memories", "force-default"),
-      );
+      expect(response.memories_path).toBe(path.join(homeDir, "memories", "force-default"));
       expect(response.memories_path_mode).toBe("DEFAULT");
     });
   });
@@ -424,13 +407,9 @@ describe("edit_project tool", () => {
       };
 
       const result = await handler(args);
-      const response = JSON.parse(
-        getResponseText(result.content as ToolResultContent[]),
-      );
+      const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
 
-      expect(response.memories_path).toBe(
-        path.join(homeDir, "Dev", "code-mode-project", "docs"),
-      );
+      expect(response.memories_path).toBe(path.join(homeDir, "Dev", "code-mode-project", "docs"));
       expect(response.memories_path_mode).toBe("CODE");
     });
   });
@@ -446,9 +425,7 @@ describe("edit_project tool", () => {
       };
 
       const result = await handler(args);
-      const response = JSON.parse(
-        getResponseText(result.content as ToolResultContent[]),
-      );
+      const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
 
       expect(response.memories_path).toBe("/var/custom/notes");
       expect(response.memories_path_mode).toBe("CUSTOM");
@@ -464,13 +441,9 @@ describe("edit_project tool", () => {
       };
 
       const result = await handler(args);
-      const response = JSON.parse(
-        getResponseText(result.content as ToolResultContent[]),
-      );
+      const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
 
-      expect(response.memories_path).toBe(
-        path.join(homeDir, "my-notes", "special"),
-      );
+      expect(response.memories_path).toBe(path.join(homeDir, "my-notes", "special"));
       expect(response.memories_path_mode).toBe("CUSTOM");
     });
   });
@@ -488,9 +461,7 @@ describe("edit_project tool", () => {
       const result = await handler(args);
 
       expect(result.isError).toBe(true);
-      const response = JSON.parse(
-        getResponseText(result.content as ToolResultContent[]),
-      );
+      const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
       expect(response.error).toContain("does not exist");
       expect(response).toHaveProperty("available_projects");
     });
@@ -507,9 +478,7 @@ describe("edit_project tool", () => {
       };
 
       const result = await handler(args);
-      const response = JSON.parse(
-        getResponseText(result.content as ToolResultContent[]),
-      );
+      const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
 
       expect(response).toHaveProperty("project", "response-test");
       expect(response).toHaveProperty("updates");
@@ -529,19 +498,13 @@ describe("edit_project tool", () => {
       };
 
       const result = await handler(args);
-      const response = JSON.parse(
-        getResponseText(result.content as ToolResultContent[]),
-      );
+      const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
 
       expect(response.updates.length).toBeGreaterThan(0);
       // Should include code path update
-      expect(
-        response.updates.some((u: string) => u.includes("code path")),
-      ).toBe(true);
+      expect(response.updates.some((u: string) => u.includes("code path"))).toBe(true);
       // Should include memories path update
-      expect(
-        response.updates.some((u: string) => u.includes("memories path")),
-      ).toBe(true);
+      expect(response.updates.some((u: string) => u.includes("memories path"))).toBe(true);
     });
   });
 
@@ -555,19 +518,13 @@ describe("edit_project tool", () => {
       };
 
       const result = await handler(args);
-      const response = JSON.parse(
-        getResponseText(result.content as ToolResultContent[]),
-      );
+      const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
 
       // Note: response.code_path comes from getCodePath() which uses the
       // config module that has its own fs import. We verify path expansion
       // through the updates array which uses the local resolvePath function.
-      const codePathUpdate = response.updates.find((u: string) =>
-        u.includes("code path"),
-      );
-      expect(codePathUpdate).toContain(
-        path.join(homeDir, "Projects", "tilde-code"),
-      );
+      const codePathUpdate = response.updates.find((u: string) => u.includes("code path"));
+      expect(codePathUpdate).toContain(path.join(homeDir, "Projects", "tilde-code"));
     });
 
     test("resolves absolute code_path correctly (verified via updates array)", async () => {
@@ -579,14 +536,10 @@ describe("edit_project tool", () => {
       };
 
       const result = await handler(args);
-      const response = JSON.parse(
-        getResponseText(result.content as ToolResultContent[]),
-      );
+      const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
 
       // Verify through updates array since code_path field comes from getCodePath
-      const codePathUpdate = response.updates.find((u: string) =>
-        u.includes("code path"),
-      );
+      const codePathUpdate = response.updates.find((u: string) => u.includes("code path"));
       expect(codePathUpdate).toContain("/var/projects/absolute-code");
     });
   });
@@ -628,7 +581,7 @@ describe("edit_project tool", () => {
       } = options;
 
       // Set up @brain/utils mock
-      mockProjects["migration-project"] = oldPath;
+      mockState.projects["migration-project"] = oldPath;
 
       // Track what paths "exist" after copy
       let copiedToNew = false;
@@ -660,14 +613,11 @@ describe("edit_project tool", () => {
       });
 
       // Mock directory listing to simulate file count
-      const mockFiles: MockDirEntry[] = Array.from(
-        { length: fileCount },
-        (_, i) => ({
-          name: `file${i}.md`,
-          isDirectory: () => false,
-          isFile: () => true,
-        }),
-      );
+      const mockFiles: MockDirEntry[] = Array.from({ length: fileCount }, (_, i) => ({
+        name: `file${i}.md`,
+        isDirectory: () => false,
+        isFile: () => true,
+      }));
 
       mockFs.readdirSync.mockImplementation((p: unknown) => {
         const pStr = String(p);
@@ -750,9 +700,7 @@ describe("edit_project tool", () => {
         const result = await handler(args);
 
         expect(result.isError).toBeUndefined();
-        const response = JSON.parse(
-          getResponseText(result.content as ToolResultContent[]),
-        );
+        const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
 
         // Verify migration occurred
         expect(response.migration).toBeDefined();
@@ -762,9 +710,7 @@ describe("edit_project tool", () => {
         expect(response.migration.new_path).toBe(newNotesPath);
 
         // Verify updates array includes migration info
-        expect(
-          response.updates.some((u: string) => u.includes("Migrated memories")),
-        ).toBe(true);
+        expect(response.updates.some((u: string) => u.includes("Migrated memories"))).toBe(true);
       });
 
       test("includes file count in migration response", async () => {
@@ -783,9 +729,7 @@ describe("edit_project tool", () => {
         };
 
         const result = await handler(args);
-        const response = JSON.parse(
-          getResponseText(result.content as ToolResultContent[]),
-        );
+        const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
 
         expect(response.migration.files_moved).toBe(10);
       });
@@ -819,9 +763,7 @@ describe("edit_project tool", () => {
         };
 
         const result = await handler(args);
-        const response = JSON.parse(
-          getResponseText(result.content as ToolResultContent[]),
-        );
+        const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
 
         // No migration should occur
         expect(response.migration).toBeUndefined();
@@ -860,9 +802,7 @@ describe("edit_project tool", () => {
         };
 
         const result = await handler(args);
-        const response = JSON.parse(
-          getResponseText(result.content as ToolResultContent[]),
-        );
+        const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
 
         // No migration should occur (old path doesn't exist)
         expect(response.migration).toBeUndefined();
@@ -892,9 +832,7 @@ describe("edit_project tool", () => {
         const result = await handler(args);
 
         expect(result.isError).toBe(true);
-        const response = JSON.parse(
-          getResponseText(result.content as ToolResultContent[]),
-        );
+        const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
 
         expect(response.error).toContain("migration failed");
         expect(response.error).toContain("Copy failed");
@@ -922,9 +860,7 @@ describe("edit_project tool", () => {
         const result = await handler(args);
 
         expect(result.isError).toBe(true);
-        const response = JSON.parse(
-          getResponseText(result.content as ToolResultContent[]),
-        );
+        const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
 
         expect(response.error).toContain("migration failed");
         expect(response.error).toContain("file count mismatch");
@@ -949,9 +885,7 @@ describe("edit_project tool", () => {
         const result = await handler(args);
 
         expect(result.isError).toBe(true);
-        const response = JSON.parse(
-          getResponseText(result.content as ToolResultContent[]),
-        );
+        const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
 
         expect(response.error).toContain("migration failed");
         expect(response.error).toContain("size mismatch");
@@ -979,17 +913,13 @@ describe("edit_project tool", () => {
 
         // Should still succeed (data is safe in new location)
         expect(result.isError).toBeUndefined();
-        const response = JSON.parse(
-          getResponseText(result.content as ToolResultContent[]),
-        );
+        const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
 
         expect(response.migration).toBeDefined();
         expect(response.migration.migrated).toBe(true);
 
         // Warning should be in updates
-        expect(
-          response.updates.some((u: string) => u.includes("Warning")),
-        ).toBe(true);
+        expect(response.updates.some((u: string) => u.includes("Warning"))).toBe(true);
       });
     });
 
@@ -1012,9 +942,7 @@ describe("edit_project tool", () => {
         const result = await handler(args);
 
         expect(result.isError).toBeUndefined();
-        const response = JSON.parse(
-          getResponseText(result.content as ToolResultContent[]),
-        );
+        const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
 
         expect(response.migration).toBeDefined();
         expect(response.migration.migrated).toBe(true);
@@ -1044,9 +972,7 @@ describe("edit_project tool", () => {
         const result = await handler(args);
 
         expect(result.isError).toBe(true);
-        const response = JSON.parse(
-          getResponseText(result.content as ToolResultContent[]),
-        );
+        const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
 
         expect(response.error).toContain("protected path");
       });
@@ -1072,9 +998,7 @@ describe("edit_project tool", () => {
         const result = await handler(args);
 
         expect(result.isError).toBe(true);
-        const response = JSON.parse(
-          getResponseText(result.content as ToolResultContent[]),
-        );
+        const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
 
         expect(response.error).toContain("system path");
       });
@@ -1106,12 +1030,7 @@ describe("edit_project tool", () => {
       });
 
       test("rejects when parent directory does not exist", async () => {
-        const noParentPath = path.join(
-          homeDir,
-          "missing-parent",
-          "subdir",
-          "notes",
-        );
+        const noParentPath = path.join(homeDir, "missing-parent", "subdir", "notes");
 
         setupMigrationTest({
           oldPath: oldNotesPath,
@@ -1131,9 +1050,7 @@ describe("edit_project tool", () => {
         const result = await handler(args);
 
         expect(result.isError).toBe(true);
-        const response = JSON.parse(
-          getResponseText(result.content as ToolResultContent[]),
-        );
+        const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
 
         expect(response.error).toContain("Parent directory does not exist");
       });

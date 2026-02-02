@@ -26,8 +26,7 @@ const AVAILABILITY_CHECK_TIMEOUT = 3000;
 /**
  * Inngest dev server URL for health checks.
  */
-const INNGEST_DEV_SERVER_URL =
-  process.env.INNGEST_DEV_SERVER_URL || "http://127.0.0.1:8288";
+const INNGEST_DEV_SERVER_URL = process.env.INNGEST_DEV_SERVER_URL || "http://127.0.0.1:8288";
 
 /**
  * Tracks whether Inngest is currently available.
@@ -83,10 +82,7 @@ export async function checkInngestAvailability(
 
     if (response.ok) {
       inngestAvailable = true;
-      logger.info(
-        { url: INNGEST_DEV_SERVER_URL },
-        "Inngest dev server available",
-      );
+      logger.info({ url: INNGEST_DEV_SERVER_URL }, "Inngest dev server available");
       return true;
     }
 

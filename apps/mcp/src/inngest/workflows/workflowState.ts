@@ -94,10 +94,7 @@ export function registerWorkflowRun(
     featureWorkflowIndex.set(featureId, runs);
   }
 
-  logger.debug(
-    { runId, eventName, functionId, featureId },
-    "Registered workflow run for tracking",
-  );
+  logger.debug({ runId, eventName, functionId, featureId }, "Registered workflow run for tracking");
 }
 
 /**
@@ -107,11 +104,7 @@ export function registerWorkflowRun(
  * @param status - New status
  * @param error - Optional error message if failed
  */
-export function updateWorkflowStatus(
-  runId: string,
-  status: WorkflowStatus,
-  error?: string,
-): void {
+export function updateWorkflowStatus(runId: string, status: WorkflowStatus, error?: string): void {
   const state = workflowStates.get(runId);
   if (!state) {
     logger.warn({ runId }, "Attempted to update unknown workflow run");
@@ -138,9 +131,7 @@ export function updateWorkflowStatus(
  * @param runId - Inngest run ID
  * @returns Workflow state or undefined if not found
  */
-export async function getWorkflowStateByRunId(
-  runId: string,
-): Promise<WorkflowState | undefined> {
+export async function getWorkflowStateByRunId(runId: string): Promise<WorkflowState | undefined> {
   // Check local cache first
   let state = workflowStates.get(runId);
 
@@ -164,9 +155,7 @@ export async function getWorkflowStateByRunId(
  * @param featureId - Feature ID
  * @returns Array of workflow states
  */
-export async function getWorkflowStatesByFeatureId(
-  featureId: string,
-): Promise<WorkflowState[]> {
+export async function getWorkflowStatesByFeatureId(featureId: string): Promise<WorkflowState[]> {
   const runIds = featureWorkflowIndex.get(featureId) || [];
   const states: WorkflowState[] = [];
 
@@ -241,9 +230,7 @@ export function clearAllWorkflowStates(): void {
  * Check if a status is terminal (workflow has completed).
  */
 function isTerminalStatus(status: WorkflowStatus): boolean {
-  return (
-    status === "completed" || status === "failed" || status === "cancelled"
-  );
+  return status === "completed" || status === "failed" || status === "cancelled";
 }
 
 /**
@@ -279,10 +266,7 @@ async function fetchRunStateFromInngest(
         logger.debug({ runId }, "Run not found in Inngest dev server");
         return undefined;
       }
-      logger.warn(
-        { runId, status: response.status },
-        "Failed to fetch run state from Inngest",
-      );
+      logger.warn({ runId, status: response.status }, "Failed to fetch run state from Inngest");
       return undefined;
     }
 
@@ -290,10 +274,7 @@ async function fetchRunStateFromInngest(
     return mapInngestRunToState(data);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    logger.debug(
-      { runId, error: message },
-      "Error fetching run state from Inngest",
-    );
+    logger.debug({ runId, error: message }, "Error fetching run state from Inngest");
     return undefined;
   }
 }
@@ -304,9 +285,7 @@ async function fetchRunStateFromInngest(
  * @param run - Inngest run data
  * @returns Partial workflow state
  */
-function mapInngestRunToState(
-  run: Record<string, unknown>,
-): Partial<WorkflowState> {
+function mapInngestRunToState(run: Record<string, unknown>): Partial<WorkflowState> {
   const status = mapInngestStatus(run.status as string);
   const result: Partial<WorkflowState> = { status };
 

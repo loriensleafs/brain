@@ -61,9 +61,7 @@ function isRetryableError(error: unknown): boolean {
  * @returns Embedding vector or null if text is empty
  * @throws OllamaError on non-retryable errors or after max retries exceeded
  */
-export async function generateEmbedding(
-  text: string,
-): Promise<number[] | null> {
+export async function generateEmbedding(text: string): Promise<number[] | null> {
   if (!text || text.trim().length === 0) {
     return null;
   }
@@ -73,11 +71,7 @@ export async function generateEmbedding(
 
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     try {
-      return await client.generateEmbedding(
-        text,
-        "search_document",
-        "nomic-embed-text",
-      );
+      return await client.generateEmbedding(text, "search_document", "nomic-embed-text");
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
 
@@ -88,8 +82,7 @@ export async function generateEmbedding(
 
       // Calculate exponential backoff delay
       const delay = BASE_DELAY_MS * 2 ** attempt;
-      const statusCode =
-        error instanceof OllamaError ? error.statusCode : "unknown";
+      const statusCode = error instanceof OllamaError ? error.statusCode : "unknown";
 
       logger.warn(
         {

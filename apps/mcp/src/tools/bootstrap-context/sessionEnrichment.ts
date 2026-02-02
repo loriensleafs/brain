@@ -11,10 +11,7 @@
  * @see ADR-001: Search Service Abstraction
  */
 
-import {
-  getSearchService,
-  type SearchResult as ServiceSearchResult,
-} from "../../services/search";
+import { getSearchService, type SearchResult as ServiceSearchResult } from "../../services/search";
 import type { SessionState } from "../../services/session/types";
 import { detectNoteType } from "./noteType";
 import type { ContextNote } from "./sectionQueries";
@@ -131,10 +128,7 @@ async function queryFeatureNotes(
 /**
  * Extract recent agent history from orchestrator workflow
  */
-function extractAgentHistory(
-  sessionState: SessionState,
-  limit: number = 5,
-): AgentHistorySummary[] {
+function extractAgentHistory(sessionState: SessionState, limit: number = 5): AgentHistorySummary[] {
   const workflow = sessionState.orchestratorWorkflow;
   if (!workflow) {
     return [];
@@ -170,9 +164,8 @@ export function extractTaskWikilinks(content: string | undefined): string[] {
   // Match wikilinks containing task identifiers
   // Pattern: [[...TASK-...]] or [[tasks/...]]
   const wikilinkRegex = /\[\[([^\]]+)\]\]/g;
-  let match;
 
-  while ((match = wikilinkRegex.exec(content)) !== null) {
+  for (const match of content.matchAll(wikilinkRegex)) {
     const linkContent = match[1];
 
     // Check if it looks like a task reference
@@ -200,10 +193,7 @@ export function extractTaskWikilinks(content: string | undefined): string[] {
  * @param taskId - Task identifier to search for
  * @returns Task note with full content, or null if not found
  */
-async function queryTaskNote(
-  project: string,
-  taskId: string,
-): Promise<EnrichedTaskNote | null> {
+async function queryTaskNote(project: string, taskId: string): Promise<EnrichedTaskNote | null> {
   const search = getSearch();
 
   try {
@@ -262,16 +252,12 @@ async function enrichFeaturesWithTasks(
     const limitedTaskIds = taskIds.slice(0, maxTasksPerFeature);
 
     // Query all task notes in parallel
-    const taskPromises = limitedTaskIds.map((taskId) =>
-      queryTaskNote(project, taskId),
-    );
+    const taskPromises = limitedTaskIds.map((taskId) => queryTaskNote(project, taskId));
 
     const taskResults = await Promise.all(taskPromises);
 
     // Filter out null results (missing tasks)
-    const tasks = taskResults.filter(
-      (task): task is EnrichedTaskNote => task !== null,
-    );
+    const tasks = taskResults.filter((task): task is EnrichedTaskNote => task !== null);
 
     results.push({
       feature,
@@ -304,11 +290,7 @@ export async function buildSessionEnrichment(
 
   // Query feature-related notes if activeFeature is set
   const featureNotes: ContextNote[] = sessionState.activeFeature
-    ? await queryFeatureNotes(
-        project,
-        sessionState.activeFeature,
-        maxFeatureNotes,
-      )
+    ? await queryFeatureNotes(project, sessionState.activeFeature, maxFeatureNotes)
     : [];
 
   // Enrich feature notes with their task notes (query tasks with fullContent)
@@ -333,9 +315,7 @@ export async function buildSessionEnrichment(
  * Convert SearchService results to ContextNote format with type/status enrichment.
  * Uses fullContent when available, falling back to snippet.
  */
-function convertSearchResultsToContextNotes(
-  results: ServiceSearchResult[],
-): ContextNote[] {
+function convertSearchResultsToContextNotes(results: ServiceSearchResult[]): ContextNote[] {
   return results
     .filter((result) => result.title && result.permalink)
     .map((result) => {

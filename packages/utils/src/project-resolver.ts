@@ -49,8 +49,7 @@ export interface ResolveOptions {
  * @returns Absolute path to ~/.config/brain/config.json
  */
 export function getBrainConfigPath(): string {
-  const xdgConfigHome =
-    process.env.XDG_CONFIG_HOME || join(homedir(), ".config");
+  const xdgConfigHome = process.env.XDG_CONFIG_HOME || join(homedir(), ".config");
   return join(xdgConfigHome, "brain", "config.json");
 }
 
@@ -102,10 +101,7 @@ function getBrainCliActiveProject(): string | null {
  * @param config - Brain configuration with projects
  * @returns Project name if found, null otherwise
  */
-function matchCwdToProject(
-  cwd: string,
-  config: BrainConfig | null,
-): string | null {
+function matchCwdToProject(cwd: string, config: BrainConfig | null): string | null {
   if (!config || !config.projects) {
     return null;
   }
@@ -123,10 +119,7 @@ function matchCwdToProject(
     const projectPath = normalize(project.code_path);
 
     // Check exact match or subdirectory match
-    if (
-      currentDir === projectPath ||
-      currentDir.startsWith(projectPath + sep)
-    ) {
+    if (currentDir === projectPath || currentDir.startsWith(projectPath + sep)) {
       // Track the deepest match (longest path wins)
       if (projectPath.length > bestMatchLen) {
         bestMatch = name;
@@ -167,9 +160,7 @@ function matchCwdToProject(
  * resolveProject("/Users/dev/brain/apps/mcp") // => "brain"
  * ```
  */
-export function resolveProject(
-  optionsOrCwd?: ResolveOptions | string,
-): string | null {
+export function resolveProject(optionsOrCwd?: ResolveOptions | string): string | null {
   // Normalize input: string becomes { cwd: string }
   const options: ResolveOptions | undefined =
     typeof optionsOrCwd === "string" ? { cwd: optionsOrCwd } : optionsOrCwd;
@@ -247,7 +238,7 @@ export function getProjectCodePaths(): Map<string, string> {
   }
 
   for (const [name, project] of Object.entries(config.projects)) {
-    if (project && project.code_path) {
+    if (project?.code_path) {
       result.set(name, project.code_path);
     }
   }

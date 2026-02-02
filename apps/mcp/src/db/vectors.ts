@@ -44,9 +44,7 @@ export function storeChunkedEmbeddings(
   // Validate all embeddings have correct dimensions
   for (const chunk of chunks) {
     const arr =
-      chunk.embedding instanceof Float32Array
-        ? chunk.embedding
-        : new Float32Array(chunk.embedding);
+      chunk.embedding instanceof Float32Array ? chunk.embedding : new Float32Array(chunk.embedding);
     if (arr.length !== VECTOR_DIM) {
       throw new Error(
         `Chunk ${chunk.chunkIndex}: Expected ${VECTOR_DIM} dimensions, got ${arr.length}`,
@@ -97,23 +95,15 @@ export function storeChunkedEmbeddings(
 /**
  * Delete all chunked embeddings for an entity.
  */
-export function deleteChunkedEmbeddings(
-  db: Database,
-  entityId: string,
-): boolean {
-  const result = db.run("DELETE FROM brain_embeddings WHERE entity_id = ?", [
-    entityId,
-  ]);
+export function deleteChunkedEmbeddings(db: Database, entityId: string): boolean {
+  const result = db.run("DELETE FROM brain_embeddings WHERE entity_id = ?", [entityId]);
   return result.changes > 0;
 }
 
 /**
  * Get all chunk embeddings for an entity.
  */
-export function getChunkedEmbeddings(
-  db: Database,
-  entityId: string,
-): ChunkedEmbedding[] {
+export function getChunkedEmbeddings(db: Database, entityId: string): ChunkedEmbedding[] {
   const rows = db
     .query(
       `SELECT chunk_id, entity_id, chunk_index, embedding,
@@ -150,9 +140,9 @@ export function getChunkedEmbeddings(
  */
 export function hasEmbeddings(db: Database): boolean {
   try {
-    const row = db
-      .query("SELECT COUNT(*) as count FROM brain_embeddings")
-      .get() as { count: number } | null;
+    const row = db.query("SELECT COUNT(*) as count FROM brain_embeddings").get() as {
+      count: number;
+    } | null;
     return row ? row.count > 0 : false;
   } catch {
     return false;
@@ -199,9 +189,7 @@ export function semanticSearchChunked(
   threshold: number,
 ): SemanticSearchResult[] {
   const embeddingArr =
-    queryEmbedding instanceof Float32Array
-      ? queryEmbedding
-      : new Float32Array(queryEmbedding);
+    queryEmbedding instanceof Float32Array ? queryEmbedding : new Float32Array(queryEmbedding);
 
   // Convert threshold to distance (cosine distance = 1 - similarity)
   const maxDistance = 1 - threshold;
@@ -251,9 +239,7 @@ export function semanticSearchChunked(
  * @param results - Raw search results (may have multiple chunks per entity)
  * @returns Deduplicated results with one entry per entity
  */
-export function deduplicateByEntity(
-  results: SemanticSearchResult[],
-): SemanticSearchResult[] {
+export function deduplicateByEntity(results: SemanticSearchResult[]): SemanticSearchResult[] {
   const bestByEntity = new Map<string, SemanticSearchResult>();
 
   for (const result of results) {
@@ -264,7 +250,5 @@ export function deduplicateByEntity(
   }
 
   // Return sorted by similarity (highest first)
-  return Array.from(bestByEntity.values()).sort(
-    (a, b) => b.similarity - a.similarity,
-  );
+  return Array.from(bestByEntity.values()).sort((a, b) => b.similarity - a.similarity);
 }

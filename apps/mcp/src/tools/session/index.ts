@@ -12,9 +12,7 @@ import {
 } from "../../services/session";
 import { SessionArgsSchema } from "./schema";
 
-export async function handler(
-  rawArgs: Record<string, unknown>,
-): Promise<CallToolResult> {
+export async function handler(rawArgs: Record<string, unknown>): Promise<CallToolResult> {
   // Validate and parse input
   const args = SessionArgsSchema.parse(rawArgs);
   if (args.operation === "get") {
@@ -56,8 +54,7 @@ export async function handler(
   // operation === "set"
 
   // Build updates from provided args
-  const updates: { mode?: typeof args.mode; task?: string; feature?: string } =
-    {};
+  const updates: { mode?: typeof args.mode; task?: string; feature?: string } = {};
 
   if (args.mode !== undefined) {
     updates.mode = args.mode;
@@ -107,9 +104,7 @@ export async function handler(
     parts.push(updates.task ? `Task: ${state.activeTask}` : "Task cleared");
   }
   if (updates.feature !== undefined) {
-    parts.push(
-      updates.feature ? `Feature: ${state.activeFeature}` : "Feature cleared",
-    );
+    parts.push(updates.feature ? `Feature: ${state.activeFeature}` : "Feature cleared");
   }
 
   return {

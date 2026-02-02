@@ -48,7 +48,8 @@ export async function addDependency(
       arguments: { identifier: source, project },
     });
 
-    const content = (readResult.content as any)?.[0]?.text || "";
+    const content =
+      (readResult.content as Array<{ type: string; text?: string }> | undefined)?.[0]?.text || "";
 
     // Add dependency relation
     const updatedContent = addDependencyToContent(content, target);
@@ -97,7 +98,8 @@ export async function removeDependency(
       arguments: { identifier: source, project },
     });
 
-    const content = (readResult.content as any)?.[0]?.text || "";
+    const content =
+      (readResult.content as Array<{ type: string; text?: string }> | undefined)?.[0]?.text || "";
 
     // Remove dependency relation
     const updatedContent = removeDependencyFromContent(content, target);
@@ -148,7 +150,8 @@ async function detectCycleIfAdded(
       name: "read_note",
       arguments: { identifier: source, project },
     });
-    const sourceContent = (sourceResult.content as any)?.[0]?.text || "";
+    const sourceContent =
+      (sourceResult.content as Array<{ type: string; text?: string }> | undefined)?.[0]?.text || "";
     dependencies.set(source, extractDependencies(sourceContent));
 
     // Read target note to get its dependencies
@@ -156,11 +159,13 @@ async function detectCycleIfAdded(
       name: "read_note",
       arguments: { identifier: target, project },
     });
-    const targetContent = (targetResult.content as any)?.[0]?.text || "";
+    const targetContent =
+      (targetResult.content as Array<{ type: string; text?: string }> | undefined)?.[0]?.text || "";
     dependencies.set(target, extractDependencies(targetContent));
 
     // Simulate adding the new dependency
-    const simulatedDeps = [...dependencies.get(source)!, target];
+    const sourceDeps = dependencies.get(source) ?? [];
+    const simulatedDeps = [...sourceDeps, target];
     dependencies.set(source, simulatedDeps);
 
     // DFS to check if target can reach source (which would create a cycle)
@@ -241,8 +246,7 @@ function addDependencyToContent(content: string, target: string): string {
 
     if (!existingDep) {
       // Insert after Relations heading
-      const insertIndex =
-        nextSectionIndex !== -1 ? nextSectionIndex : lines.length;
+      const insertIndex = nextSectionIndex !== -1 ? nextSectionIndex : lines.length;
 
       // Find first non-empty line after Relations heading
       let insertPos = relationsIndex + 1;
@@ -262,9 +266,7 @@ function addDependencyToContent(content: string, target: string): string {
  */
 function removeDependencyFromContent(content: string, target: string): string {
   const lines = content.split("\n");
-  const filteredLines = lines.filter(
-    (line) => !line.includes(`depends_on [[${target}]]`),
-  );
+  const filteredLines = lines.filter((line) => !line.includes(`depends_on [[${target}]]`));
   return filteredLines.join("\n");
 }
 
@@ -274,19 +276,12 @@ function removeDependencyFromContent(content: string, target: string): string {
 function extractDependencies(content: string): string[] {
   const deps: string[] = [];
   const lines = content.split("\n");
-  const dependencyRelations = [
-    "requires",
-    "builds_on",
-    "blocked_by",
-    "depends_on",
-  ];
+  const dependencyRelations = ["requires", "builds_on", "blocked_by", "depends_on"];
 
   for (const line of lines) {
     const trimmed = line.trim();
     for (const rel of dependencyRelations) {
-      const match = trimmed.match(
-        new RegExp(`^-\\s*${rel}\\s+\\[\\[([^\\]]+)\\]\\]`),
-      );
+      const match = trimmed.match(new RegExp(`^-\\s*${rel}\\s+\\[\\[([^\\]]+)\\]\\]`));
       if (match) {
         deps.push(match[1]);
       }

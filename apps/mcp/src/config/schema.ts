@@ -48,12 +48,14 @@ export type LogLevel = "trace" | "debug" | "info" | "warn" | "error";
 
 /**
  * Validation result from validation operations.
+ *
+ * Uses discriminated union for proper TypeScript narrowing:
+ * - When `success: true`, `data` is guaranteed to exist
+ * - When `success: false`, `errors` is guaranteed to exist
  */
-export interface ValidationResult<T> {
-  success: boolean;
-  data?: T;
-  errors?: ValidationError[];
-}
+export type ValidationResult<T> =
+  | { success: true; data: T }
+  | { success: false; errors: ValidationError[] };
 
 /**
  * Validate a Brain configuration object using JSON Schema + AJV.
@@ -74,14 +76,10 @@ export interface ValidationResult<T> {
  * }
  * ```
  */
-export function validateBrainConfig(
-  config: unknown,
-): ValidationResult<BrainConfig> {
+export function validateBrainConfig(config: unknown): ValidationResult<BrainConfig> {
   // Deep clone to avoid mutating input
   const cloned =
-    typeof config === "object" && config !== null
-      ? JSON.parse(JSON.stringify(config))
-      : config;
+    typeof config === "object" && config !== null ? JSON.parse(JSON.stringify(config)) : config;
 
   if (ajvValidate(cloned)) {
     return { success: true, data: cloned as BrainConfig };
@@ -97,9 +95,7 @@ export function validateBrainConfig(
  * @param project - The project configuration to validate
  * @returns ValidationResult with success status and data or errors
  */
-export function validateProjectConfig(
-  project: unknown,
-): ValidationResult<ProjectConfig> {
+export function validateProjectConfig(project: unknown): ValidationResult<ProjectConfig> {
   // Project validation is a subset - validate required fields
   if (typeof project !== "object" || project === null) {
     return {

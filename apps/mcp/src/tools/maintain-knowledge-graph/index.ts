@@ -14,9 +14,7 @@ import type { MaintainKnowledgeGraphArgs } from "./schema";
 /**
  * Main handler for the maintain_knowledge_graph tool
  */
-export async function handler(
-  args: MaintainKnowledgeGraphArgs,
-): Promise<CallToolResult> {
+export async function handler(args: MaintainKnowledgeGraphArgs): Promise<CallToolResult> {
   const project = args.project || resolveProject();
 
   if (!project) {
@@ -70,9 +68,7 @@ export async function handler(
   // Stale notes section
   if (result.stale.length > 0) {
     lines.push(`### Stale Notes (${result.stale.length})`);
-    lines.push(
-      `Notes not updated within ${config.staleThresholdDays || 90} days:`,
-    );
+    lines.push(`Notes not updated within ${config.staleThresholdDays || 90} days:`);
     for (const issue of result.stale.slice(0, 10)) {
       const lastModified = issue.lastModified
         ? new Date(issue.lastModified).toLocaleDateString()
@@ -103,12 +99,9 @@ export async function handler(
   // Weak notes section
   if (result.weak.length > 0) {
     lines.push(`### Weak Notes (${result.weak.length})`);
-    lines.push(
-      `Notes below quality threshold (${config.qualityThreshold || 0.5}):`,
-    );
+    lines.push(`Notes below quality threshold (${config.qualityThreshold || 0.5}):`);
     for (const issue of result.weak.slice(0, 10)) {
-      const scoreText =
-        issue.score !== undefined ? issue.score.toFixed(2) : "N/A";
+      const scoreText = issue.score !== undefined ? issue.score.toFixed(2) : "N/A";
       lines.push(`- **${issue.note}** (score: ${scoreText})`);
       lines.push(`  ${issue.recommendation}`);
     }

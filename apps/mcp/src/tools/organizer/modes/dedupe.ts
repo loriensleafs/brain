@@ -18,24 +18,15 @@ import {
   extractWikilinks,
   type NoteContent,
 } from "../similarity/contentSimilarity";
-import {
-  findSimilarPairs,
-  type NoteMetadata,
-} from "../similarity/titleSimilarity";
+import { findSimilarPairs, type NoteMetadata } from "../similarity/titleSimilarity";
 import type { DedupeConfig, DedupeResult } from "../types";
 import { extractTitle } from "../utils/markdown";
 
 /**
  * Find duplicate notes in a project
  */
-export async function findDuplicates(
-  config: DedupeConfig,
-): Promise<DedupeResult> {
-  const {
-    project,
-    embeddingThreshold = 0.85,
-    fulltextThreshold = 0.7,
-  } = config;
+export async function findDuplicates(config: DedupeConfig): Promise<DedupeResult> {
+  const { project, embeddingThreshold = 0.85, fulltextThreshold = 0.7 } = config;
 
   const client = await getBasicMemoryClient();
 
@@ -58,7 +49,8 @@ export async function findDuplicates(
         arguments: { identifier: permalink, project },
       });
 
-      const content = (readResult.content as any)?.[0]?.text || "";
+      const content =
+        (readResult.content as Array<{ type: string; text?: string }> | undefined)?.[0]?.text || "";
       const metadata = extractNoteMetadata(permalink, content);
       const noteContent = extractNoteContent(permalink, content);
 
@@ -71,15 +63,10 @@ export async function findDuplicates(
   const candidates = await findSimilarPairs(noteMetadata, embeddingThreshold);
 
   // Step 2: Refine with content similarity
-  const withContentSim = await calculateContentSimilarity(
-    candidates,
-    noteContentMap,
-  );
+  const withContentSim = await calculateContentSimilarity(candidates, noteContentMap);
 
   // Step 3: Filter to confirmed duplicates
-  const confirmed = withContentSim.filter(
-    (pair) => pair.fulltextSimilarity >= fulltextThreshold,
-  );
+  const confirmed = withContentSim.filter((pair) => pair.fulltextSimilarity >= fulltextThreshold);
 
   return {
     candidates: withContentSim,
@@ -130,15 +117,17 @@ function extractNoteContent(permalink: string, content: string): NoteContent {
  * Extract folder from permalink
  */
 function extractFolder(permalink: string): string {
-  return permalink.includes("/")
-    ? permalink.substring(0, permalink.lastIndexOf("/"))
-    : "";
+  return permalink.includes("/") ? permalink.substring(0, permalink.lastIndexOf("/")) : "";
+}
+
+interface McpToolResult {
+  content?: Array<{ type: string; text?: string }>;
 }
 
 /**
  * Parse list_directory output to extract file paths
  */
-function parseListDirectoryResult(result: any): string[] {
+function parseListDirectoryResult(result: McpToolResult): string[] {
   const text = result.content?.[0]?.text || "";
   const files: string[] = [];
   const lines = text.split("\n");

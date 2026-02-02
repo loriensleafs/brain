@@ -4,8 +4,7 @@
  * Defines the input schemas for config_get, config_set, config_reset,
  * config_rollback, config_update_project, and config_update_global tools.
  *
- * Validation: config_get, config_set, config_reset use JSON Schema via AJV from @brain/validation
- *             config_rollback, config_update_project, config_update_global still use Zod (pending migration)
+ * All schemas use AJV for validation via @brain/validation.
  *
  * @see ADR-020 for configuration architecture
  * @see ADR-022 for schema-driven validation architecture
@@ -22,19 +21,31 @@ import {
 } from "@brain/validation";
 import configGetSchema from "@brain/validation/schemas/tools/config/get.schema.json";
 import configResetSchema from "@brain/validation/schemas/tools/config/reset.schema.json";
+import configRollbackSchema from "@brain/validation/schemas/tools/config/rollback.schema.json";
 import configSetSchema from "@brain/validation/schemas/tools/config/set.schema.json";
+import configUpdateGlobalSchema from "@brain/validation/schemas/tools/config/update-global.schema.json";
+import configUpdateProjectSchema from "@brain/validation/schemas/tools/config/update-project.schema.json";
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
-import { z } from "zod";
+import Ajv from "ajv";
+
+// --- AJV Setup ---
+
+const ajv = new Ajv({
+  allErrors: true,
+  useDefaults: true,
+  coerceTypes: false,
+  strict: true,
+});
 
 // ============================================================================
-// config_get (migrated to AJV)
+// config_get (uses @brain/validation)
 // ============================================================================
 
 // Re-export type for backward compatibility
 export type { ConfigGetArgs };
 
 /**
- * ConfigGetArgsSchema provides Zod-compatible interface.
+ * ConfigGetArgsSchema provides parse interface.
  * Uses AJV validation under the hood for 5-18x better performance.
  */
 export const ConfigGetArgsSchema = {
@@ -66,14 +77,14 @@ Config structure:
 };
 
 // ============================================================================
-// config_set (migrated to AJV)
+// config_set (uses @brain/validation)
 // ============================================================================
 
 // Re-export type for backward compatibility
 export type { ConfigSetArgs };
 
 /**
- * ConfigSetArgsSchema provides Zod-compatible interface.
+ * ConfigSetArgsSchema provides parse interface.
  * Uses AJV validation under the hood for 5-18x better performance.
  */
 export const ConfigSetArgsSchema = {
@@ -105,14 +116,14 @@ Examples:
 };
 
 // ============================================================================
-// config_reset (migrated to AJV)
+// config_reset (uses @brain/validation)
 // ============================================================================
 
 // Re-export type for backward compatibility
 export type { ConfigResetArgs };
 
 /**
- * ConfigResetArgsSchema provides Zod-compatible interface.
+ * ConfigResetArgsSchema provides parse interface.
  * Uses AJV validation under the hood for 5-18x better performance.
  */
 export const ConfigResetArgsSchema = {
@@ -141,18 +152,39 @@ Examples:
 };
 
 // ============================================================================
-// config_rollback (still using Zod - pending migration)
+// config_rollback (AJV)
 // ============================================================================
 
-export const ConfigRollbackArgsSchema = z.object({
-  target: z
-    .enum(["lastKnownGood", "previous"])
-    .describe(
-      "Rollback target: 'lastKnownGood' (baseline from startup) or 'previous' (most recent snapshot).",
-    ),
-});
+/**
+ * ConfigRollbackArgs type definition.
+ */
+export interface ConfigRollbackArgs {
+  /** Rollback target: 'lastKnownGood' (baseline from startup) or 'previous' (most recent snapshot). */
+  target: "lastKnownGood" | "previous";
+}
 
-export type ConfigRollbackArgs = z.infer<typeof ConfigRollbackArgsSchema>;
+const _validateConfigRollbackArgs = ajv.compile<ConfigRollbackArgs>(configRollbackSchema);
+
+/**
+ * Parse and validate ConfigRollbackArgs.
+ * Throws on validation failure.
+ */
+export function parseConfigRollbackArgs(data: unknown): ConfigRollbackArgs {
+  const cloned = typeof data === "object" && data !== null ? { ...data } : data;
+  if (_validateConfigRollbackArgs(cloned)) {
+    return cloned;
+  }
+  const errors = _validateConfigRollbackArgs.errors ?? [];
+  const message = errors.map((e) => `${e.instancePath || "root"}: ${e.message}`).join("; ");
+  throw new Error(`Validation failed: ${message}`);
+}
+
+/**
+ * ConfigRollbackArgsSchema provides parse interface.
+ */
+export const ConfigRollbackArgsSchema = {
+  parse: parseConfigRollbackArgs,
+};
 
 export const configRollbackToolDefinition: Tool = {
   name: "config_rollback",
@@ -172,49 +204,52 @@ Use this to recover from:
 Examples:
 - Restore baseline: config_rollback with target="lastKnownGood"
 - Restore previous: config_rollback with target="previous"`,
-  inputSchema: {
-    type: "object" as const,
-    properties: {
-      target: {
-        type: "string",
-        enum: ["lastKnownGood", "previous"],
-        description: "Rollback target.",
-      },
-    },
-    required: ["target"],
-  },
+  inputSchema: configRollbackSchema as Tool["inputSchema"],
 };
 
 // ============================================================================
-// config_update_project (still using Zod - pending migration)
+// config_update_project (AJV)
 // ============================================================================
 
-export const ConfigUpdateProjectArgsSchema = z.object({
-  project: z.string().describe("Project name to update."),
-  code_path: z
-    .string()
-    .optional()
-    .describe("New code path for the project. Use ~ for home directory."),
-  memories_path: z
-    .string()
-    .optional()
-    .describe("New memories path. Use 'DEFAULT', 'CODE', or an absolute path."),
-  memories_mode: z
-    .enum(["DEFAULT", "CODE", "CUSTOM"])
-    .optional()
-    .describe("Memories mode for the project."),
-  migrate: z
-    .boolean()
-    .optional()
-    .default(true)
-    .describe(
-      "Whether to migrate memories to new location if path changes. Default: true.",
-    ),
-});
+/**
+ * ConfigUpdateProjectArgs type definition.
+ */
+export interface ConfigUpdateProjectArgs {
+  /** Project name to update. */
+  project: string;
+  /** New code path for the project. Use ~ for home directory. */
+  code_path?: string;
+  /** New memories path. Use 'DEFAULT', 'CODE', or an absolute path. */
+  memories_path?: string;
+  /** Memories mode for the project. */
+  memories_mode?: "DEFAULT" | "CODE" | "CUSTOM";
+  /** Whether to migrate memories to new location if path changes. Default: true. */
+  migrate?: boolean;
+}
 
-export type ConfigUpdateProjectArgs = z.infer<
-  typeof ConfigUpdateProjectArgsSchema
->;
+const _validateConfigUpdateProjectArgs =
+  ajv.compile<ConfigUpdateProjectArgs>(configUpdateProjectSchema);
+
+/**
+ * Parse and validate ConfigUpdateProjectArgs.
+ * Throws on validation failure.
+ */
+export function parseConfigUpdateProjectArgs(data: unknown): ConfigUpdateProjectArgs {
+  const cloned = typeof data === "object" && data !== null ? { ...data } : data;
+  if (_validateConfigUpdateProjectArgs(cloned)) {
+    return cloned;
+  }
+  const errors = _validateConfigUpdateProjectArgs.errors ?? [];
+  const message = errors.map((e) => `${e.instancePath || "root"}: ${e.message}`).join("; ");
+  throw new Error(`Validation failed: ${message}`);
+}
+
+/**
+ * ConfigUpdateProjectArgsSchema provides parse interface.
+ */
+export const ConfigUpdateProjectArgsSchema = {
+  parse: parseConfigUpdateProjectArgs,
+};
 
 export const configUpdateProjectToolDefinition: Tool = {
   name: "config_update_project",
@@ -242,62 +277,48 @@ Examples:
 - Change to CODE mode: config_update_project with project="brain", memories_mode="CODE"
 - Change to DEFAULT: config_update_project with project="brain", memories_mode="DEFAULT"
 - Change code path: config_update_project with project="brain", code_path="~/Dev/new-path"`,
-  inputSchema: {
-    type: "object" as const,
-    properties: {
-      project: {
-        type: "string",
-        description: "Project name to update.",
-      },
-      code_path: {
-        type: "string",
-        description: "New code path for the project.",
-      },
-      memories_path: {
-        type: "string",
-        description:
-          "New memories path. Use 'DEFAULT', 'CODE', or absolute path.",
-      },
-      memories_mode: {
-        type: "string",
-        enum: ["DEFAULT", "CODE", "CUSTOM"],
-        description: "Memories mode for the project.",
-      },
-      migrate: {
-        type: "boolean",
-        description: "Whether to migrate memories on path change.",
-        default: true,
-      },
-    },
-    required: ["project"],
-  },
+  inputSchema: configUpdateProjectSchema as Tool["inputSchema"],
 };
 
 // ============================================================================
-// config_update_global (still using Zod - pending migration)
+// config_update_global (AJV)
 // ============================================================================
 
-export const ConfigUpdateGlobalArgsSchema = z.object({
-  memories_location: z
-    .string()
-    .optional()
-    .describe("New default memories location. Use ~ for home directory."),
-  memories_mode: z
-    .enum(["DEFAULT", "CODE", "CUSTOM"])
-    .optional()
-    .describe("New default memories mode for new projects."),
-  migrate_affected: z
-    .boolean()
-    .optional()
-    .default(true)
-    .describe(
-      "Whether to migrate memories for all affected projects when default location changes. Default: true.",
-    ),
-});
+/**
+ * ConfigUpdateGlobalArgs type definition.
+ */
+export interface ConfigUpdateGlobalArgs {
+  /** New default memories location. Use ~ for home directory. */
+  memories_location?: string;
+  /** New default memories mode for new projects. */
+  memories_mode?: "DEFAULT" | "CODE" | "CUSTOM";
+  /** Whether to migrate memories for all affected projects when default location changes. Default: true. */
+  migrate_affected?: boolean;
+}
 
-export type ConfigUpdateGlobalArgs = z.infer<
-  typeof ConfigUpdateGlobalArgsSchema
->;
+const _validateConfigUpdateGlobalArgs =
+  ajv.compile<ConfigUpdateGlobalArgs>(configUpdateGlobalSchema);
+
+/**
+ * Parse and validate ConfigUpdateGlobalArgs.
+ * Throws on validation failure.
+ */
+export function parseConfigUpdateGlobalArgs(data: unknown): ConfigUpdateGlobalArgs {
+  const cloned = typeof data === "object" && data !== null ? { ...data } : data;
+  if (_validateConfigUpdateGlobalArgs(cloned)) {
+    return cloned;
+  }
+  const errors = _validateConfigUpdateGlobalArgs.errors ?? [];
+  const message = errors.map((e) => `${e.instancePath || "root"}: ${e.message}`).join("; ");
+  throw new Error(`Validation failed: ${message}`);
+}
+
+/**
+ * ConfigUpdateGlobalArgsSchema provides parse interface.
+ */
+export const ConfigUpdateGlobalArgsSchema = {
+  parse: parseConfigUpdateGlobalArgs,
+};
 
 export const configUpdateGlobalToolDefinition: Tool = {
   name: "config_update_global",
@@ -323,24 +344,5 @@ Parameters:
 Examples:
 - Change default location: config_update_global with memories_location="~/brain-memories"
 - Change without migration: config_update_global with memories_location="~/new-path", migrate_affected=false`,
-  inputSchema: {
-    type: "object" as const,
-    properties: {
-      memories_location: {
-        type: "string",
-        description: "New default memories location.",
-      },
-      memories_mode: {
-        type: "string",
-        enum: ["DEFAULT", "CODE", "CUSTOM"],
-        description: "New default memories mode.",
-      },
-      migrate_affected: {
-        type: "boolean",
-        description: "Whether to migrate affected projects.",
-        default: true,
-      },
-    },
-    required: [],
-  },
+  inputSchema: configUpdateGlobalSchema as Tool["inputSchema"],
 };

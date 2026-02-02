@@ -35,9 +35,7 @@ describe("p-limit concurrency control", () => {
       return item * 2;
     };
 
-    const results = await Promise.all(
-      items.map((item) => limit(() => processItem(item))),
-    );
+    const results = await Promise.all(items.map((item) => limit(() => processItem(item))));
 
     expect(results).toEqual([0, 2, 4, 6, 8, 10, 12, 14, 16, 18]);
     expect(tracker.max).toBeLessThanOrEqual(4);
@@ -56,9 +54,7 @@ describe("p-limit concurrency control", () => {
       return item;
     };
 
-    const results = await Promise.allSettled(
-      items.map((item) => limit(() => processItem(item))),
-    );
+    const results = await Promise.allSettled(items.map((item) => limit(() => processItem(item))));
 
     const fulfilled = results.filter((r) => r.status === "fulfilled");
     const rejected = results.filter((r) => r.status === "rejected");
@@ -81,9 +77,7 @@ describe("p-limit concurrency control", () => {
       return item;
     };
 
-    await Promise.allSettled(
-      items.map((item) => limit(() => processItem(item))),
-    );
+    await Promise.allSettled(items.map((item) => limit(() => processItem(item))));
 
     expect(processedCount).toBe(20); // All items attempted
   });
@@ -184,9 +178,7 @@ describe("concurrent note processing patterns", () => {
       return { note, success: true };
     };
 
-    const results = await Promise.allSettled(
-      notes.map((note) => limit(() => processNote(note))),
-    );
+    const results = await Promise.allSettled(notes.map((note) => limit(() => processNote(note))));
 
     expect(results).toHaveLength(1);
     expect(results[0].status).toBe("fulfilled");
@@ -241,15 +233,11 @@ describe("error handling and resilience", () => {
       return item;
     };
 
-    await Promise.allSettled(
-      items.map((item) => limit(() => processItem(item))),
-    );
+    await Promise.allSettled(items.map((item) => limit(() => processItem(item))));
 
     expect(successfulItems).toHaveLength(6);
     expect(failedItems).toHaveLength(4);
-    expect(successfulItems.concat(failedItems).sort((a, b) => a - b)).toEqual(
-      items,
-    );
+    expect(successfulItems.concat(failedItems).sort((a, b) => a - b)).toEqual(items);
   });
 
   test("collects error messages for failed operations", async () => {
@@ -319,9 +307,7 @@ describe("resource management", () => {
       return item;
     };
 
-    const results = await Promise.all(
-      items.map((item) => limit(() => processItem(item))),
-    );
+    const results = await Promise.all(items.map((item) => limit(() => processItem(item))));
 
     expect(results).toEqual([0, 1, 2, 3, 4]);
     expect(tracker.max).toBe(5); // All ran concurrently

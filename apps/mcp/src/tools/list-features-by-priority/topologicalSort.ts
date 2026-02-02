@@ -70,18 +70,24 @@ export function topologicalSort(graph: DependencyGraph): TopologicalSortResult {
   while (queue.length > 0) {
     // Sort queue by priority (ascending - lower number first)
     queue.sort((a, b) => {
-      const nodeA = nodes.get(a)!;
-      const nodeB = nodes.get(b)!;
+      const nodeA = nodes.get(a);
+      const nodeB = nodes.get(b);
+      if (!nodeA || !nodeB) return 0;
       return getEffectivePriority(nodeA) - getEffectivePriority(nodeB);
     });
 
-    const current = queue.shift()!;
-    const node = nodes.get(current)!;
+    const current = queue.shift();
+    if (!current) break;
+
+    const node = nodes.get(current);
+    if (!node) continue;
     sorted.push(node);
 
     // Reduce in-degree for all dependents
-    for (const dependent of dependents.get(current)!) {
-      const newDegree = inDegree.get(dependent)! - 1;
+    const deps = dependents.get(current) ?? [];
+    for (const dependent of deps) {
+      const currentDegree = inDegree.get(dependent) ?? 0;
+      const newDegree = currentDegree - 1;
       inDegree.set(dependent, newDegree);
 
       if (newDegree === 0) {
@@ -110,10 +116,7 @@ export function topologicalSort(graph: DependencyGraph): TopologicalSortResult {
 /**
  * Detect cycles in a subset of nodes using DFS
  */
-function detectCycles(
-  nodes: Map<string, FeatureNode>,
-  remaining: Set<string>,
-): string[][] {
+function detectCycles(nodes: Map<string, FeatureNode>, remaining: Set<string>): string[][] {
   const cycles: string[][] = [];
   const visited = new Set<string>();
   const inStack = new Set<string>();

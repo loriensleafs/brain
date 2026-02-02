@@ -10,14 +10,7 @@
       "properties": {
         "mode": {
           "type": "string",
-          "enum": [
-            "",
-            "analysis",
-            "planning",
-            "coding",
-            "implementation",
-            "disabled"
-          ],
+          "enum": ["", "analysis", "planning", "coding", "implementation", "disabled"],
           "description": "Current workflow mode"
         },
         "task": {
@@ -81,11 +74,7 @@
     "AuditArtifactPattern": {
       "type": "string",
       "description": "Regex pattern for audit artifact paths",
-      "examples": [
-        "^\\.agents/sessions/",
-        "^\\.agents/analysis/",
-        "^\\.serena/memories($|/)"
-      ]
+      "examples": ["^\\.agents/sessions/", "^\\.agents/analysis/", "^\\.serena/memories($|/)"]
     },
     "MemoryEvidenceValidation": {
       "type": "object",

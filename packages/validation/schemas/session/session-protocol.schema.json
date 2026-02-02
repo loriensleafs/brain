@@ -45,12 +45,7 @@
       "type": "array",
       "items": {
         "type": "string",
-        "enum": [
-          "Session Info",
-          "Protocol Compliance",
-          "Session Start",
-          "Session End"
-        ]
+        "enum": ["Session Info", "Protocol Compliance", "Session Start", "Session End"]
       },
       "uniqueItems": true,
       "description": "Required sections in a session log"
@@ -187,12 +182,7 @@
     },
     "requiredSections": {
       "$ref": "#/definitions/RequiredSections",
-      "default": [
-        "Session Info",
-        "Protocol Compliance",
-        "Session Start",
-        "Session End"
-      ]
+      "default": ["Session Info", "Protocol Compliance", "Session Start", "Session End"]
     },
     "brainInitializationPatterns": {
       "$ref": "#/definitions/BrainInitializationPatterns"

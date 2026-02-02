@@ -12,17 +12,11 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { loadBrainConfig, saveBrainConfig } from "../../config/brain-config";
-import {
-  detectConfigDiff,
-  getDefaultModeAffectedProjects,
-} from "../../config/diff";
+import { detectConfigDiff, getDefaultModeAffectedProjects } from "../../config/diff";
 import { expandTilde, normalizePath } from "../../config/path-validator";
 import { rollbackManager } from "../../config/rollback";
 import type { BrainConfig } from "../../config/schema";
-import {
-  resolveMemoriesPath,
-  syncConfigToBasicMemory,
-} from "../../config/translation-layer";
+import { resolveMemoriesPath, syncConfigToBasicMemory } from "../../config/translation-layer";
 import type { ConfigUpdateGlobalArgs } from "./schema";
 
 export {
@@ -211,9 +205,7 @@ function resolvePath(inputPath: string): string {
 /**
  * Handler for config_update_global tool.
  */
-export async function handler(
-  args: ConfigUpdateGlobalArgs,
-): Promise<CallToolResult> {
+export async function handler(args: ConfigUpdateGlobalArgs): Promise<CallToolResult> {
   const { memories_location, memories_mode, migrate_affected = true } = args;
 
   // Validate at least one update is provided
@@ -224,8 +216,7 @@ export async function handler(
           type: "text" as const,
           text: JSON.stringify(
             {
-              error:
-                "At least one of memories_location or memories_mode must be provided",
+              error: "At least one of memories_location or memories_mode must be provided",
               usage: [
                 "config_update_global with memories_location='~/brain-memories'",
                 "config_update_global with memories_mode='CODE'",
@@ -264,11 +255,7 @@ export async function handler(
     const diff = detectConfigDiff(oldConfig, newConfig);
 
     // Get affected projects (those using DEFAULT mode)
-    const affectedProjects = getDefaultModeAffectedProjects(
-      diff,
-      oldConfig,
-      newConfig,
-    );
+    const affectedProjects = getDefaultModeAffectedProjects(diff, oldConfig, newConfig);
 
     // Perform migrations if needed
     const migrationResults: ProjectMigrationResult[] = [];
@@ -292,16 +279,8 @@ export async function handler(
           newConfig.defaults.memories_location,
         );
 
-        if (
-          oldResolved.path &&
-          newResolved.path &&
-          oldResolved.path !== newResolved.path
-        ) {
-          const result = migrateMemories(
-            projectName,
-            oldResolved.path,
-            newResolved.path,
-          );
+        if (oldResolved.path && newResolved.path && oldResolved.path !== newResolved.path) {
+          const result = migrateMemories(projectName, oldResolved.path, newResolved.path);
           migrationResults.push(result);
 
           // Check for failure (ignore cleanup failures)
@@ -381,10 +360,7 @@ export async function handler(
         total_affected: affectedProjects.length,
         migrated: successful.length,
         skipped: skipped.length,
-        total_files_moved: successful.reduce(
-          (sum, r) => sum + r.files_moved,
-          0,
-        ),
+        total_files_moved: successful.reduce((sum, r) => sum + r.files_moved, 0),
         details: migrationResults.map((r) => ({
           project: r.project,
           status: r.migrated ? "migrated" : "skipped",
@@ -399,8 +375,7 @@ export async function handler(
         performed: false,
         reason: "Migration disabled (migrate_affected=false)",
         affected_projects: affectedProjects,
-        warning:
-          "Projects using DEFAULT mode may have broken paths. Migrate manually if needed.",
+        warning: "Projects using DEFAULT mode may have broken paths. Migrate manually if needed.",
       };
     }
 

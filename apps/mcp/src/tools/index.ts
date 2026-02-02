@@ -18,10 +18,7 @@ import { resolveProject, setActiveProject } from "../project/resolve";
 import { getBasicMemoryClient } from "../proxy/client";
 import { triggerEmbedding } from "../services/embedding/triggerEmbedding";
 import { logger } from "../utils/internal/logger";
-import {
-  checkForDuplicates,
-  formatGuardError,
-} from "../utils/security/searchGuard";
+import { checkForDuplicates, formatGuardError } from "../utils/security/searchGuard";
 import * as analyzeProject from "./analyze-project";
 import * as bootstrapContext from "./bootstrap-context";
 import { invalidateCache as invalidateBootstrapCache } from "./bootstrap-context/sessionCache";
@@ -53,9 +50,7 @@ const WRAPPER_TOOLS: Map<string, WrapperTool> = new Map([
     "session",
     {
       definition: session.toolDefinition,
-      handler: session.handler as (
-        args: Record<string, unknown>,
-      ) => Promise<CallToolResult>,
+      handler: session.handler as (args: Record<string, unknown>) => Promise<CallToolResult>,
     },
   ],
   [
@@ -80,18 +75,14 @@ const WRAPPER_TOOLS: Map<string, WrapperTool> = new Map([
     "analyze_project",
     {
       definition: analyzeProject.toolDefinition,
-      handler: analyzeProject.handler as (
-        args: Record<string, unknown>,
-      ) => Promise<CallToolResult>,
+      handler: analyzeProject.handler as (args: Record<string, unknown>) => Promise<CallToolResult>,
     },
   ],
   [
     "validate_import",
     {
       definition: validateImport.toolDefinition,
-      handler: validateImport.handler as (
-        args: Record<string, unknown>,
-      ) => Promise<CallToolResult>,
+      handler: validateImport.handler as (args: Record<string, unknown>) => Promise<CallToolResult>,
     },
   ],
   [
@@ -116,36 +107,28 @@ const WRAPPER_TOOLS: Map<string, WrapperTool> = new Map([
     "find_duplicates",
     {
       definition: findDuplicates.toolDefinition,
-      handler: findDuplicates.handler as (
-        args: Record<string, unknown>,
-      ) => Promise<CallToolResult>,
+      handler: findDuplicates.handler as (args: Record<string, unknown>) => Promise<CallToolResult>,
     },
   ],
   [
     "manage_backlog",
     {
       definition: manageBacklog.toolDefinition,
-      handler: manageBacklog.handler as (
-        args: Record<string, unknown>,
-      ) => Promise<CallToolResult>,
+      handler: manageBacklog.handler as (args: Record<string, unknown>) => Promise<CallToolResult>,
     },
   ],
   [
     "search",
     {
       definition: search.toolDefinition,
-      handler: search.handler as (
-        args: Record<string, unknown>,
-      ) => Promise<CallToolResult>,
+      handler: search.handler as (args: Record<string, unknown>) => Promise<CallToolResult>,
     },
   ],
   [
     "generate_embeddings",
     {
       definition: embed.toolDefinition,
-      handler: embed.handler as (
-        args: Record<string, unknown>,
-      ) => Promise<CallToolResult>,
+      handler: embed.handler as (args: Record<string, unknown>) => Promise<CallToolResult>,
     },
   ],
   // Workflow tools
@@ -368,9 +351,7 @@ let discoveredTools: Tool[] = [];
  * Discover all tools from basic-memory and register handlers on our server.
  * Uses low-level handlers for ALL tools (wrapper + proxied).
  */
-export async function discoverAndRegisterTools(
-  server: McpServer,
-): Promise<void> {
+export async function discoverAndRegisterTools(server: McpServer): Promise<void> {
   const client = await getBasicMemoryClient();
   const { tools } = await client.listTools();
 
@@ -389,18 +370,14 @@ export async function discoverAndRegisterTools(
       if (ENHANCED_DESCRIPTIONS[tool.name]) {
         return {
           ...tool,
-          description: `${ENHANCED_DESCRIPTIONS[tool.name]}\n\n---\n\n${
-            tool.description
-          }`,
+          description: `${ENHANCED_DESCRIPTIONS[tool.name]}\n\n---\n\n${tool.description}`,
         };
       }
       return tool;
     });
 
     // Get wrapper tool definitions
-    const wrapperDefinitions = Array.from(WRAPPER_TOOLS.values()).map(
-      (t) => t.definition,
-    );
+    const wrapperDefinitions = Array.from(WRAPPER_TOOLS.values()).map((t) => t.definition);
 
     return {
       tools: [...wrapperDefinitions, ...enhancedTools],
@@ -438,9 +415,7 @@ async function callProxiedTool(
 
   try {
     // Inject resolved project if this tool needs it
-    const resolvedArgs = PROJECT_TOOLS.has(name)
-      ? await injectProject(args)
-      : args;
+    const resolvedArgs = PROJECT_TOOLS.has(name) ? await injectProject(args) : args;
 
     // Naming pattern validation for write_note (ADR-023 Phase 3)
     if (name === "write_note") {
@@ -479,10 +454,7 @@ async function callProxiedTool(
             };
           }
 
-          logger.debug(
-            { title, folder, patternType },
-            "Naming pattern validation passed",
-          );
+          logger.debug({ title, folder, patternType }, "Naming pattern validation passed");
         }
       }
     }
@@ -557,17 +529,11 @@ async function callProxiedTool(
               const firstContent = result.content?.[0];
               if (firstContent?.type === "text" && firstContent.text) {
                 triggerEmbedding(identifier, firstContent.text);
-                logger.debug(
-                  { identifier },
-                  "Triggered embedding for edited note",
-                );
+                logger.debug({ identifier }, "Triggered embedding for edited note");
               }
             })
             .catch((error: Error) => {
-              logger.warn(
-                { identifier, error },
-                "Failed to fetch content for embedding",
-              );
+              logger.warn({ identifier, error }, "Failed to fetch content for embedding");
             });
         }
       }
@@ -624,9 +590,7 @@ async function callProxiedTool(
  * @param folder - Folder path from write_note args
  * @returns Pattern type for validation, or undefined if no validation applies
  */
-function folderToPatternType(
-  folder: string | undefined,
-): PatternType | undefined {
+function folderToPatternType(folder: string | undefined): PatternType | undefined {
   if (!folder) {
     return undefined;
   }
@@ -670,9 +634,7 @@ function folderToPatternType(
 /**
  * Inject resolved project into tool arguments if not already specified
  */
-async function injectProject(
-  args: Record<string, unknown>,
-): Promise<Record<string, unknown>> {
+async function injectProject(args: Record<string, unknown>): Promise<Record<string, unknown>> {
   if (args.project) {
     return args;
   }

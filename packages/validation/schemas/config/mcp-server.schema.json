@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://brain.dev/schemas/config/mcp-server.json",
+  "title": "McpServerConfig",
+  "description": "Configuration schema for Brain MCP server. Loaded from environment variables.",
+  "type": "object",
+  "properties": {
+    "transport": {
+      "type": "string",
+      "enum": ["stdio", "http"],
+      "default": "stdio",
+      "description": "Transport mode: stdio for Claude/Cursor, http for TUI."
+    },
+    "httpPort": {
+      "type": "integer",
+      "default": 8765,
+      "description": "HTTP server port (only used when transport=http)."
+    },
+    "httpHost": {
+      "type": "string",
+      "default": "127.0.0.1",
+      "description": "HTTP server host (only used when transport=http)."
+    },
+    "logFile": {
+      "type": "string",
+      "default": "~/.basic-memory/brain.log",
+      "description": "Log file path - NEVER log to stdout in MCP!"
+    },
+    "basicMemoryCmd": {
+      "type": "string",
+      "default": "basic-memory",
+      "description": "Command to spawn basic-memory MCP server."
+    },
+    "logLevel": {
+      "type": "string",
+      "enum": ["trace", "debug", "info", "warn", "error"],
+      "default": "info",
+      "description": "Log level."
+    },
+    "searchGuard": {
+      "type": "string",
+      "enum": ["warn", "enforce", "off"],
+      "default": "warn",
+      "description": "Search guard mode: 'warn' (log only), 'enforce' (block duplicates), 'off' (disabled)."
+    },
+    "searchGuardEnabled": {
+      "type": "boolean",
+      "description": "Computed: whether search guard is enabled."
+    },
+    "searchGuardEnforce": {
+      "type": "boolean",
+      "description": "Computed: whether search guard should enforce (block duplicates)."
+    }
+  },
+  "additionalProperties": false
+}

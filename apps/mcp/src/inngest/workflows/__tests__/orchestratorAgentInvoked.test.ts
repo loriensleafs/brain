@@ -27,9 +27,7 @@ describe("Orchestrator Agent Invoked Workflow", () => {
     });
 
     test("workflow has id property set to 'orchestrator-agent-invoked'", () => {
-      const workflowId = (
-        orchestratorAgentInvokedWorkflow as unknown as { id: () => string }
-      ).id();
+      const workflowId = (orchestratorAgentInvokedWorkflow as unknown as { id: () => string }).id();
       expect(workflowId).toBe("orchestrator-agent-invoked");
     });
   });
@@ -113,9 +111,7 @@ describe("Orchestrator Agent Invoked Workflow", () => {
       };
 
       expect(invocation.handoffFrom).toBe("planner");
-      expect(invocation.input.artifacts).toContain(
-        ".agents/planning/oauth-plan.md",
-      );
+      expect(invocation.input.artifacts).toContain(".agents/planning/oauth-plan.md");
     });
 
     test("invocation input contains prompt, context, and artifacts", () => {

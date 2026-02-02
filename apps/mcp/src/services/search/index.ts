@@ -13,21 +13,12 @@
 import { ollamaConfig } from "../../config/ollama";
 import { createVectorConnection } from "../../db";
 import { ensureEmbeddingTables } from "../../db/schema";
-import {
-  deduplicateByEntity,
-  hasEmbeddings,
-  semanticSearchChunked,
-} from "../../db/vectors";
+import { deduplicateByEntity, hasEmbeddings, semanticSearchChunked } from "../../db/vectors";
 import { resolveProject } from "../../project/resolve";
 import { getBasicMemoryClient } from "../../proxy/client";
 import { logger } from "../../utils/internal/logger";
 import { OllamaClient } from "../ollama/client";
-import type {
-  SearchOptions,
-  SearchResponse,
-  SearchResult,
-  SearchSource,
-} from "./types";
+import type { SearchOptions, SearchResponse, SearchResult, SearchSource } from "./types";
 
 // Re-export types for consumers
 export type {
@@ -123,10 +114,7 @@ export class SearchService {
    * @param options - Search configuration options
    * @returns Search response with results and metadata
    */
-  async search(
-    query: string,
-    options?: SearchOptions,
-  ): Promise<SearchResponse> {
+  async search(query: string, options?: SearchOptions): Promise<SearchResponse> {
     const opts = {
       ...DEFAULT_OPTIONS,
       ...options,
@@ -137,30 +125,19 @@ export class SearchService {
 
     const resolvedProject = this.resolveProjectContext(opts.project);
 
-    logger.debug(
-      { query, ...opts, resolvedProject },
-      "SearchService executing search",
-    );
+    logger.debug({ query, ...opts, resolvedProject }, "SearchService executing search");
 
     let results: SearchResult[] = [];
     let actualSource: SearchSource = "keyword";
 
     switch (opts.mode) {
       case "keyword":
-        results = await this.executeKeywordSearch(
-          query,
-          opts.limit,
-          resolvedProject,
-        );
+        results = await this.executeKeywordSearch(query, opts.limit, resolvedProject);
         actualSource = "keyword";
         break;
 
       case "semantic":
-        results = await this.executeSemanticSearch(
-          query,
-          opts.limit,
-          opts.threshold,
-        );
+        results = await this.executeSemanticSearch(query, opts.limit, opts.threshold);
         actualSource = "semantic";
         break;
 
@@ -193,11 +170,7 @@ export class SearchService {
 
     // Expand with related notes if depth > 0
     if (opts.depth > 0) {
-      results = await this.expandWithRelations(
-        results,
-        opts.depth,
-        resolvedProject,
-      );
+      results = await this.expandWithRelations(results, opts.depth, resolvedProject);
     }
 
     // Fetch full content if requested
@@ -218,17 +191,11 @@ export class SearchService {
   /**
    * Filter results to only include notes in specified folders.
    */
-  private filterByFolders(
-    results: SearchResult[],
-    folders: string[],
-  ): SearchResult[] {
+  private filterByFolders(results: SearchResult[], folders: string[]): SearchResult[] {
     return results.filter((result) => {
       return folders.some((folder) => {
         const normalizedFolder = folder.endsWith("/") ? folder : `${folder}/`;
-        return (
-          result.permalink.startsWith(normalizedFolder) ||
-          result.permalink.startsWith(folder)
-        );
+        return result.permalink.startsWith(normalizedFolder) || result.permalink.startsWith(folder);
       });
     });
   }
@@ -262,9 +229,7 @@ export class SearchService {
     limit: number = DEFAULT_OPTIONS.limit,
     project?: string,
   ): Promise<SearchResult[]> {
-    const resolvedProject = this.resolveProjectContext(
-      project ?? this.defaultProject,
-    );
+    const resolvedProject = this.resolveProjectContext(project ?? this.defaultProject);
     return this.executeKeywordSearch(query, limit, resolvedProject);
   }
 
@@ -310,14 +275,12 @@ export class SearchService {
    * @param project - Optional project context
    * @returns Full content string, limited to FULL_CONTENT_CHAR_LIMIT characters
    */
-  private async fetchFullContent(
-    permalink: string,
-    project?: string,
-  ): Promise<string> {
+  private async fetchFullContent(permalink: string, project?: string): Promise<string> {
     // Check cache first
     const cacheKey = project ? `${project}:${permalink}` : permalink;
-    if (this.fullContentCache.has(cacheKey)) {
-      return this.fullContentCache.get(cacheKey)!;
+    const cached = this.fullContentCache.get(cacheKey);
+    if (cached !== undefined) {
+      return cached;
     }
 
     try {
@@ -337,9 +300,7 @@ export class SearchService {
       });
 
       if (result.content && Array.isArray(result.content)) {
-        const textContent = result.content.find(
-          (c: { type: string }) => c.type === "text",
-        );
+        const textContent = result.content.find((c: { type: string }) => c.type === "text");
         if (textContent && "text" in textContent) {
           let content = textContent.text as string;
 
@@ -361,16 +322,10 @@ export class SearchService {
         }
       }
 
-      logger.debug(
-        { permalink },
-        "No text content found in read_note response",
-      );
+      logger.debug({ permalink }, "No text content found in read_note response");
       return "";
     } catch (error) {
-      logger.debug(
-        { error, permalink },
-        "Failed to fetch full content for note",
-      );
+      logger.debug({ error, permalink }, "Failed to fetch full content for note");
       return "";
     }
   }
@@ -389,10 +344,7 @@ export class SearchService {
   ): Promise<SearchResult[]> {
     const enriched = await Promise.all(
       results.map(async (result) => {
-        const fullContent = await this.fetchFullContent(
-          result.permalink,
-          project,
-        );
+        const fullContent = await this.fetchFullContent(result.permalink, project);
         return {
           ...result,
           fullContent: fullContent || undefined,
@@ -424,10 +376,7 @@ export class SearchService {
     try {
       // Generate query embedding using OllamaClient directly to specify search_query task type
       const client = new OllamaClient(ollamaConfig);
-      const queryEmbedding = await client.generateEmbedding(
-        query,
-        "search_query",
-      );
+      const queryEmbedding = await client.generateEmbedding(query, "search_query");
       if (!queryEmbedding) {
         logger.debug("Failed to generate query embedding");
         return [];
@@ -452,9 +401,7 @@ export class SearchService {
       return deduplicated.slice(0, limit).map((r) => {
         const parts = r.entityId.split("/");
         const titleSlug = parts[parts.length - 1] || r.entityId;
-        const title = titleSlug
-          .replace(/-/g, " ")
-          .replace(/\b\w/g, (c) => c.toUpperCase());
+        const title = titleSlug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
         return {
           permalink: r.entityId,
@@ -494,14 +441,10 @@ export class SearchService {
       });
 
       if (result.content && Array.isArray(result.content)) {
-        const textContent = result.content.find(
-          (c: { type: string }) => c.type === "text",
-        );
+        const textContent = result.content.find((c: { type: string }) => c.type === "text");
         if (textContent && "text" in textContent) {
           try {
-            const parsed = JSON.parse(
-              textContent.text as string,
-            ) as BasicMemorySearchResponse;
+            const parsed = JSON.parse(textContent.text as string) as BasicMemorySearchResponse;
             return parsed.results.map((r) => ({
               permalink: r.permalink || "",
               title: r.title || "",
@@ -510,10 +453,7 @@ export class SearchService {
               source: "keyword" as const,
             }));
           } catch (parseError) {
-            logger.debug(
-              { error: parseError },
-              "Failed to parse search response",
-            );
+            logger.debug({ error: parseError }, "Failed to parse search response");
           }
         }
       }
@@ -578,29 +518,16 @@ export class SearchService {
     }
 
     try {
-      const semanticResults = await this.executeSemanticSearch(
-        query,
-        limit,
-        threshold,
-      );
+      const semanticResults = await this.executeSemanticSearch(query, limit, threshold);
       if (semanticResults.length > 0) {
         return { results: semanticResults, source: "semantic" };
       }
 
-      logger.debug(
-        "Semantic search returned no results, falling back to keyword",
-      );
-      const keywordResults = await this.executeKeywordSearch(
-        query,
-        limit,
-        project,
-      );
+      logger.debug("Semantic search returned no results, falling back to keyword");
+      const keywordResults = await this.executeKeywordSearch(query, limit, project);
       return { results: keywordResults, source: "keyword" };
     } catch (error) {
-      logger.error(
-        { error },
-        "Semantic search failed, falling back to keyword",
-      );
+      logger.error({ error }, "Semantic search failed, falling back to keyword");
       const results = await this.executeKeywordSearch(query, limit, project);
       return { results, source: "keyword" };
     }
@@ -651,10 +578,7 @@ export class SearchService {
     return allResults;
   }
 
-  private async getRelatedNotes(
-    permalink: string,
-    project?: string,
-  ): Promise<SearchResult[]> {
+  private async getRelatedNotes(permalink: string, project?: string): Promise<SearchResult[]> {
     const client = await getBasicMemoryClient();
 
     try {
@@ -672,19 +596,14 @@ export class SearchService {
       });
 
       if (result.content && Array.isArray(result.content)) {
-        const textContent = result.content.find(
-          (c: { type: string }) => c.type === "text",
-        );
+        const textContent = result.content.find((c: { type: string }) => c.type === "text");
         if (textContent && "text" in textContent) {
           const content = textContent.text as string;
           const wikilinks = this.extractWikilinks(content);
 
           const relatedNotes: SearchResult[] = [];
           for (const title of wikilinks.slice(0, 5)) {
-            const resolvedPermalink = await this.resolveWikilinkToPermalink(
-              title,
-              project,
-            );
+            const resolvedPermalink = await this.resolveWikilinkToPermalink(title, project);
             relatedNotes.push({
               permalink: resolvedPermalink || "",
               title,
@@ -708,9 +627,8 @@ export class SearchService {
   private extractWikilinks(content: string): string[] {
     const wikilinks: string[] = [];
     const regex = /\[\[([^\]]+)\]\]/g;
-    let match;
 
-    while ((match = regex.exec(content)) !== null) {
+    for (const match of content.matchAll(regex)) {
       wikilinks.push(match[1]);
     }
 

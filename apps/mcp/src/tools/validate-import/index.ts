@@ -12,11 +12,7 @@ import { getBasicMemoryClient } from "../../proxy/client";
 import { logger } from "../../utils/internal/logger";
 import { checkConformance } from "../analyze-project/conformanceChecker";
 import { brainTargetSchema } from "../analyze-project/schema";
-import type {
-  MigrationResultInput,
-  ValidateImportArgs,
-  ValidateImportOutput,
-} from "./schema";
+import type { MigrationResultInput, ValidateImportArgs, ValidateImportOutput } from "./schema";
 
 /**
  * Parsed note structure for conformance checking
@@ -32,9 +28,7 @@ interface ParsedNote {
 /**
  * Validates a single migration result input has required fields
  */
-function isValidMigrationResult(
-  result: unknown,
-): result is MigrationResultInput {
+function isValidMigrationResult(result: unknown): result is MigrationResultInput {
   if (typeof result !== "object" || result === null) return false;
   const obj = result as Record<string, unknown>;
   return (
@@ -47,9 +41,7 @@ function isValidMigrationResult(
 /**
  * Main handler for the validate_import tool
  */
-export async function handler(
-  args: ValidateImportArgs,
-): Promise<CallToolResult> {
+export async function handler(args: ValidateImportArgs): Promise<CallToolResult> {
   const project = args.project || resolveProject();
   const migrationResults = args.migration_results || [];
 
@@ -118,9 +110,7 @@ export async function handler(
         arguments: { identifier: migration.target, project },
       });
 
-      const content = readResult.content as
-        | Array<{ text?: string }>
-        | undefined;
+      const content = readResult.content as Array<{ text?: string }> | undefined;
       const text = content?.[0]?.text || "";
       if (!text || text.includes("not found") || text.includes("Error")) {
         missingContent.push(migration.target);
@@ -135,9 +125,7 @@ export async function handler(
 
   const contentPreserved = missingContent.length === 0;
   const contentCoverage =
-    successfulMigrations.length > 0
-      ? existingTargets.length / successfulMigrations.length
-      : 0;
+    successfulMigrations.length > 0 ? existingTargets.length / successfulMigrations.length : 0;
 
   // Re-run conformance checks on existing targets
   const stillNonConforming: string[] = [];
@@ -165,16 +153,14 @@ export async function handler(
     }
   }
 
-  const allConform =
-    stillNonConforming.length === 0 && existingTargets.length > 0;
+  const allConform = stillNonConforming.length === 0 && existingTargets.length > 0;
 
   // Calculate quality score (0-100)
   // Weight factors: content preservation (40%), conformance (60%)
   const contentScore = contentCoverage * 40;
   const conformanceRate =
     existingTargets.length > 0
-      ? (existingTargets.length - stillNonConforming.length) /
-        existingTargets.length
+      ? (existingTargets.length - stillNonConforming.length) / existingTargets.length
       : 0;
   const conformanceScore = conformanceRate * 60;
   const qualityScore = Math.round(contentScore + conformanceScore);
@@ -182,19 +168,13 @@ export async function handler(
   // Build summary
   const summaryParts: string[] = [];
   if (contentPreserved && allConform) {
-    summaryParts.push(
-      "Migration successful - all files preserved and conform to conventions.",
-    );
+    summaryParts.push("Migration successful - all files preserved and conform to conventions.");
   } else {
     if (!contentPreserved) {
-      summaryParts.push(
-        `${missingContent.length} file(s) missing or unreadable.`,
-      );
+      summaryParts.push(`${missingContent.length} file(s) missing or unreadable.`);
     }
     if (!allConform) {
-      summaryParts.push(
-        `${stillNonConforming.length} file(s) still have conformance issues.`,
-      );
+      summaryParts.push(`${stillNonConforming.length} file(s) still have conformance issues.`);
     }
   }
   if (failedMigrations.length > 0) {
@@ -301,24 +281,17 @@ function buildResultText(
 
   // Conformance check section
   lines.push(`### Conformance Check`);
-  lines.push(
-    `- **All Conform:** ${output.conformance_check.all_conform ? "Yes" : "No"}`,
-  );
+  lines.push(`- **All Conform:** ${output.conformance_check.all_conform ? "Yes" : "No"}`);
   lines.push(`- **Issues Fixed:** ${output.conformance_check.issues_fixed}`);
   if (output.conformance_check.still_non_conforming.length > 0) {
     lines.push(
       `- **Still Non-Conforming (${output.conformance_check.still_non_conforming.length}):**`,
     );
-    for (const path of output.conformance_check.still_non_conforming.slice(
-      0,
-      10,
-    )) {
+    for (const path of output.conformance_check.still_non_conforming.slice(0, 10)) {
       lines.push(`  - ${path}`);
     }
     if (output.conformance_check.still_non_conforming.length > 10) {
-      lines.push(
-        `  - ... and ${output.conformance_check.still_non_conforming.length - 10} more`,
-      );
+      lines.push(`  - ... and ${output.conformance_check.still_non_conforming.length - 10} more`);
     }
   }
   lines.push(``);
@@ -329,9 +302,7 @@ function buildResultText(
 
   if (skippedCount > 0) {
     lines.push(``);
-    lines.push(
-      `*Note: ${skippedCount} failed migration(s) were not validated.*`,
-    );
+    lines.push(`*Note: ${skippedCount} failed migration(s) were not validated.*`);
   }
 
   return lines;

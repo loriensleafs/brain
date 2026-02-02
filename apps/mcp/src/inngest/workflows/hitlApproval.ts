@@ -66,10 +66,7 @@ export const hitlApprovalWorkflow = inngest.createFunction(
 
     // If approval received, return APPROVED status
     if (approval) {
-      logger.info(
-        { approvalId, approvedBy: approval.data.approvedBy },
-        "HITL approval granted",
-      );
+      logger.info({ approvalId, approvedBy: approval.data.approvedBy }, "HITL approval granted");
 
       return {
         status: "APPROVED",

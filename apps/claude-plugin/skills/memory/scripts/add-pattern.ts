@@ -28,13 +28,7 @@
  *     --project brain
  */
 
-import {
-  existsSync,
-  mkdirSync,
-  readdirSync,
-  readFileSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
 import { getProjectMemoriesPath } from "@brain/utils";
@@ -52,7 +46,7 @@ interface Pattern {
   evidence: string[];
 }
 
-interface PatternFrontmatter {
+interface _PatternFrontmatter {
   title: string;
   type: string;
   tags: string[];
@@ -89,12 +83,7 @@ function readNote(identifier: string, projectPath: string): string | null {
  * @param content - Markdown content to write
  * @param projectPath - Absolute path to the project directory
  */
-function writeNote(
-  title: string,
-  folder: string,
-  content: string,
-  projectPath: string,
-): void {
+function writeNote(title: string, folder: string, content: string, projectPath: string): void {
   const folderPath = join(projectPath, folder);
 
   // Ensure folder exists
@@ -125,10 +114,7 @@ function searchPatterns(query: string, projectPath: string): string[] {
 
   return files
     .filter(
-      (f) =>
-        /^pattern-p/i.test(f) &&
-        f.endsWith(".md") &&
-        f.toLowerCase().includes(queryLower),
+      (f) => /^pattern-p/i.test(f) && f.endsWith(".md") && f.toLowerCase().includes(queryLower),
     )
     .map((f) => `patterns/${f.replace(".md", "")}`);
 }
@@ -147,9 +133,7 @@ function getNextPatternId(projectPath: string): string {
   }
 
   const files = readdirSync(patternsDir);
-  const patternFiles = files.filter(
-    (f) => /^pattern-p/i.test(f) && f.endsWith(".md"),
-  );
+  const patternFiles = files.filter((f) => /^pattern-p/i.test(f) && f.endsWith(".md"));
 
   if (patternFiles.length === 0) {
     return "p001";
@@ -263,10 +247,7 @@ function parsePatternFromContent(content: string): Pattern | null {
         .replace(/^PATTERN-p\d+-/, "")
         .trim(),
       category: getFrontmatterValue("tags").includes("causal")
-        ? categorizePattern(
-            getFrontmatterValue("trigger"),
-            getFrontmatterValue("action"),
-          )
+        ? categorizePattern(getFrontmatterValue("trigger"), getFrontmatterValue("action"))
         : "general",
       trigger: getFrontmatterValue("trigger"),
       action: getFrontmatterValue("action"),
@@ -311,12 +292,7 @@ function findExistingPattern(
 }
 
 function loadTemplate(): string {
-  const templatePath = join(
-    import.meta.dir,
-    "..",
-    "templates",
-    "pattern-template.md",
-  );
+  const templatePath = join(import.meta.dir, "..", "templates", "pattern-template.md");
   try {
     return readFileSync(templatePath, "utf-8");
   } catch {
@@ -397,9 +373,7 @@ function generateObservations(pattern: Pattern): string {
   ];
 
   if (pattern.occurrences > 1) {
-    observations.push(
-      `- [insight] Pattern validated ${pattern.occurrences} times #recurring`,
-    );
+    observations.push(`- [insight] Pattern validated ${pattern.occurrences} times #recurring`);
   }
 
   return observations.join("\n");
@@ -521,16 +495,12 @@ pattern files directly to the filesystem.
   const project = args.values.project ?? "brain";
 
   if (!name || !trigger || !action || !evidence) {
-    console.error(
-      "Error: --name, --trigger, --action, and --evidence are required",
-    );
+    console.error("Error: --name, --trigger, --action, and --evidence are required");
     console.error("Use --help for usage information");
     process.exit(1);
   }
 
-  const successRate = args.values["success-rate"]
-    ? parseFloat(args.values["success-rate"])
-    : 1.0;
+  const successRate = args.values["success-rate"] ? parseFloat(args.values["success-rate"]) : 1.0;
 
   if (Number.isNaN(successRate) || successRate < 0 || successRate > 1) {
     console.error("Error: --success-rate must be between 0 and 1");
@@ -543,9 +513,7 @@ pattern files directly to the filesystem.
     projectPath = await getProjectMemoriesPath(project);
     console.log(`Project '${project}' resolved to: ${projectPath}`);
   } catch (error) {
-    console.error(
-      `Error: ${error instanceof Error ? error.message : String(error)}`,
-    );
+    console.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
     process.exit(1);
   }
 
@@ -575,9 +543,7 @@ pattern files directly to the filesystem.
     };
 
     // Extract title from identifier (patterns/PATTERN-p001-name -> PATTERN-p001-name)
-    noteTitle =
-      existing.identifier.split("/").pop() ||
-      `PATTERN-${pattern.id}-${slugify(name)}`;
+    noteTitle = existing.identifier.split("/").pop() || `PATTERN-${pattern.id}-${slugify(name)}`;
   } else {
     // Create new pattern
     const id = getNextPatternId(projectPath);

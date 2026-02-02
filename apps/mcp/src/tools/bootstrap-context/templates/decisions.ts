@@ -21,9 +21,7 @@ export function renderDecisionsSection(decisions: DecisionData[]): string {
   const lines: string[] = ["### Recent Decisions", ""];
 
   for (const decision of decisions) {
-    const date = decision.updatedAt
-      ? ` (${formatDate(decision.updatedAt)})`
-      : "";
+    const date = decision.updatedAt ? ` (${formatDate(decision.updatedAt)})` : "";
     lines.push(`- [[${decision.title}]]${date}`);
   }
 

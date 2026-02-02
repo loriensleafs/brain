@@ -123,9 +123,7 @@ async function startOllamaServer(ollamaPath: string): Promise<boolean> {
       logger.info("Ollama server started successfully");
       return true;
     }
-    await new Promise((resolve) =>
-      setTimeout(resolve, HEALTH_CHECK_INTERVAL_MS),
-    );
+    await new Promise((resolve) => setTimeout(resolve, HEALTH_CHECK_INTERVAL_MS));
   }
 
   logger.error("Ollama server failed to start within timeout");

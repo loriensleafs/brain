@@ -32,10 +32,7 @@ export async function runRoadmapAgent(
   validateFeatureId(featureId, AGENT_NAME);
 
   return wrapAgentExecution(AGENT_NAME, async () => {
-    logger.debug(
-      { featureId, context, agent: AGENT_NAME },
-      "Running roadmap agent validation",
-    );
+    logger.debug({ featureId, context, agent: AGENT_NAME }, "Running roadmap agent validation");
 
     // Placeholder: actual roadmap validation logic deferred per C-001
     // Future implementation will:
@@ -47,8 +44,7 @@ export async function runRoadmapAgent(
     return {
       agent: AGENT_NAME,
       verdict: "PASS",
-      details:
-        "Roadmap validation placeholder - actual implementation deferred",
+      details: "Roadmap validation placeholder - actual implementation deferred",
     };
   });
 }

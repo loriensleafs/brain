@@ -27,9 +27,7 @@ export {
  * Check if a project exists in basic-memory config
  * @returns memories path if project exists, null otherwise
  */
-async function getExistingMemoriesPath(
-  project: string,
-): Promise<string | null> {
+async function getExistingMemoriesPath(project: string): Promise<string | null> {
   try {
     return await getProjectMemoriesPath(project);
   } catch (error) {
@@ -114,9 +112,7 @@ function resolveMemoriesPathOption(
   return resolvePath(option);
 }
 
-export async function handler(
-  args: CreateProjectArgs,
-): Promise<CallToolResult> {
+export async function handler(args: CreateProjectArgs): Promise<CallToolResult> {
   const { name, code_path, memories_path } = args;
 
   // Check if project already exists in basic-memory config

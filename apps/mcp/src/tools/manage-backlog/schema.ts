@@ -12,11 +12,7 @@ import type { Tool } from "@modelcontextprotocol/sdk/types.js";
  */
 export interface ManageBacklogArgs {
   project?: string;
-  operation?:
-    | "QUERY_ORDER"
-    | "SET_PRIORITY"
-    | "ADD_DEPENDENCY"
-    | "REMOVE_DEPENDENCY";
+  operation?: "QUERY_ORDER" | "SET_PRIORITY" | "ADD_DEPENDENCY" | "REMOVE_DEPENDENCY";
   feature_id?: string;
   priority?: number;
   dependency_target?: string;
@@ -35,12 +31,7 @@ export const toolDefinition: Tool = {
       },
       operation: {
         type: "string",
-        enum: [
-          "QUERY_ORDER",
-          "SET_PRIORITY",
-          "ADD_DEPENDENCY",
-          "REMOVE_DEPENDENCY",
-        ],
+        enum: ["QUERY_ORDER", "SET_PRIORITY", "ADD_DEPENDENCY", "REMOVE_DEPENDENCY"],
         description:
           "Operation to perform: QUERY_ORDER, SET_PRIORITY, ADD_DEPENDENCY, or REMOVE_DEPENDENCY",
       },
@@ -55,8 +46,7 @@ export const toolDefinition: Tool = {
       },
       dependency_target: {
         type: "string",
-        description:
-          "Target feature permalink (required for ADD_DEPENDENCY, REMOVE_DEPENDENCY)",
+        description: "Target feature permalink (required for ADD_DEPENDENCY, REMOVE_DEPENDENCY)",
       },
     },
     required: ["operation"],

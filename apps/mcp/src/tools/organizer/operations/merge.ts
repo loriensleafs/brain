@@ -28,20 +28,16 @@ export async function executeMerge(
         arguments: { identifier: permalink, project },
       });
 
-      const content = (readResult.content as any)?.[0]?.text || "";
+      const content =
+        (readResult.content as Array<{ type: string; text?: string }> | undefined)?.[0]?.text || "";
       noteContents.push({ permalink, content });
     }
 
     // Generate merged content
-    const mergedContent = generateMergedContent(
-      candidate.suggestedTitle,
-      noteContents,
-    );
+    const mergedContent = generateMergedContent(candidate.suggestedTitle, noteContents);
 
     // Determine target path
-    const target =
-      targetPath ||
-      generateTargetPath(candidate.notes[0], candidate.suggestedTitle);
+    const target = targetPath || generateTargetPath(candidate.notes[0], candidate.suggestedTitle);
 
     // Create merged note
     await client.callTool({
@@ -118,9 +114,7 @@ function generateMergedContent(
   }
 
   // Extract and combine observations
-  const allObservations = notes.flatMap((n) =>
-    extractSection(n.content, "Observations"),
-  );
+  const allObservations = notes.flatMap((n) => extractSection(n.content, "Observations"));
   if (allObservations.length > 0) {
     sections.push("## Observations");
     sections.push("");
@@ -131,9 +125,7 @@ function generateMergedContent(
   }
 
   // Extract and combine relations
-  const allRelations = notes.flatMap((n) =>
-    extractSection(n.content, "Relations"),
-  );
+  const allRelations = notes.flatMap((n) => extractSection(n.content, "Relations"));
   if (allRelations.length > 0) {
     sections.push("## Relations");
     sections.push("");

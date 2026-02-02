@@ -12,11 +12,7 @@ import {
 } from "@brain/validation";
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 
-export {
-  validateListProjectsArgs,
-  parseListProjectsArgs,
-  type ListProjectsArgs,
-};
+export { validateListProjectsArgs, parseListProjectsArgs, type ListProjectsArgs };
 
 // Re-export for backward compatibility
 export const ListProjectsArgsSchema = {

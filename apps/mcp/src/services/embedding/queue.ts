@@ -110,9 +110,7 @@ export function getQueueLength(): number {
   const db = createVectorConnection();
   try {
     const result = db
-      .query<{ count: number }, []>(
-        "SELECT COUNT(*) as count FROM embedding_queue",
-      )
+      .query<{ count: number }, []>("SELECT COUNT(*) as count FROM embedding_queue")
       .get();
     return result?.count ?? 0;
   } finally {

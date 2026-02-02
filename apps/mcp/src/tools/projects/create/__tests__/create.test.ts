@@ -37,58 +37,66 @@ function getResponseText(content: ToolResultContent[]): string {
   return first.text;
 }
 
-// Mock filesystem operations
-const mockFs = {
-  existsSync: vi.fn<(p: unknown) => boolean>(() => false),
-  readFileSync: vi.fn<(p: unknown) => string>(() => "{}"),
-  writeFileSync: vi.fn<(p: unknown, data: unknown) => void>(() => undefined),
-  mkdirSync: vi.fn<(p: unknown, opts: unknown) => void>(() => undefined),
-};
+// Use vi.hoisted() to ensure mocks are available before vi.mock() hoisting
+const {
+  mockFs,
+  mockSetCodePath,
+  mockGetCodePath,
+  mockGetDefaultMemoriesLocation,
+  mockState,
+  MockProjectNotFoundError,
+} = vi.hoisted(() => {
+  // Mutable state for test control
+  const mockState = {
+    projects: {} as Record<string, string>,
+  };
+
+  class MockProjectNotFoundError extends Error {
+    constructor(
+      public readonly project: string,
+      public readonly availableProjects: string[],
+    ) {
+      super(`Project "${project}" not found`);
+      this.name = "ProjectNotFoundError";
+    }
+  }
+
+  return {
+    mockState,
+    MockProjectNotFoundError,
+    mockFs: {
+      existsSync: vi.fn<(p: unknown) => boolean>(() => false),
+      readFileSync: vi.fn<(p: unknown) => string>(() => "{}"),
+      writeFileSync: vi.fn<(p: unknown, data: unknown) => void>(() => undefined),
+      mkdirSync: vi.fn<(p: unknown, opts: unknown) => void>(() => undefined),
+    },
+    mockSetCodePath: vi.fn<(name: unknown, path: unknown) => void>(() => undefined),
+    mockGetCodePath: vi.fn<(name: unknown) => string | undefined>(
+      () => undefined as string | undefined,
+    ),
+    mockGetDefaultMemoriesLocation: vi.fn(() => "~/memories"),
+  };
+});
 
 vi.mock("node:fs", () => mockFs);
 vi.mock("fs", () => mockFs);
 
-// Mock @brain/utils to use our mocked fs
-// The actual module uses Bun.file() which can't be mocked
-class MockProjectNotFoundError extends Error {
-  constructor(
-    public readonly project: string,
-    public readonly availableProjects: string[],
-  ) {
-    super(`Project "${project}" not found`);
-    this.name = "ProjectNotFoundError";
-  }
-}
-
-// Stores project configs for @brain/utils mock
-let mockProjects: Record<string, string> = {};
-
 vi.mock("@brain/utils", () => ({
   getProjectMemoriesPath: async (project: string) => {
-    const path = mockProjects[project];
+    const path = mockState.projects[project];
     if (!path) {
-      throw new MockProjectNotFoundError(project, Object.keys(mockProjects));
+      throw new MockProjectNotFoundError(project, Object.keys(mockState.projects));
     }
     return path;
   },
-  getAvailableProjects: async () => Object.keys(mockProjects),
+  getAvailableProjects: async () => Object.keys(mockState.projects),
   ProjectNotFoundError: MockProjectNotFoundError,
 }));
-
-// Mock config module
-const mockSetCodePath = vi.fn<(name: unknown, path: unknown) => void>(() => undefined);
-const mockGetCodePath = vi.fn<(name: unknown) => string | undefined>(
-  () => undefined as string | undefined,
-);
 
 vi.mock("../../../project/config", () => ({
   setCodePath: mockSetCodePath,
   getCodePath: mockGetCodePath,
 }));
-
-// Mock getDefaultMemoriesLocation from brain-config
-// Default to ~/memories, individual tests can override via mockReturnValue
-const mockGetDefaultMemoriesLocation = vi.fn(() => "~/memories");
 
 vi.mock("../../../../config/brain-config", () => ({
   getDefaultMemoriesLocation: mockGetDefaultMemoriesLocation,
@@ -111,7 +119,7 @@ describe("create_project tool", () => {
     mockGetCodePath.mockReset();
 
     // Reset @brain/utils mock state
-    mockProjects = {};
+    mockState.projects = {};
 
     // Reset default memories location to default
     mockGetDefaultMemoriesLocation.mockReturnValue("~/memories");
@@ -283,7 +291,7 @@ describe("create_project tool", () => {
   describe("Error handling", () => {
     test("returns error if project exists in basic-memory config", async () => {
       // Set up @brain/utils mock
-      mockProjects["existing-project"] = "/existing/notes/path";
+      mockState.projects["existing-project"] = "/existing/notes/path";
 
       // Project exists in config.json (basic-memory)
       mockFs.existsSync.mockImplementation((p: unknown) => {
@@ -325,7 +333,7 @@ describe("create_project tool", () => {
 
     test("returns error with suggestion and includes edit_project guidance", async () => {
       // Set up @brain/utils mock
-      mockProjects["duplicate-project"] = "/some/notes/path";
+      mockState.projects["duplicate-project"] = "/some/notes/path";
 
       // Project exists in config.json (basic-memory)
       mockFs.existsSync.mockImplementation((p: unknown) => {

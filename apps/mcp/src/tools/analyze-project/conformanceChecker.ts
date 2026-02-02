@@ -36,10 +36,7 @@ export function inferTypeFromPath(relativePath: string): NoteType | null {
 /**
  * Checks a note against the target schema and returns any conformance issues
  */
-export function checkConformance(
-  note: ParsedNote,
-  schema: TargetSchema,
-): ConformanceIssue[] {
+export function checkConformance(note: ParsedNote, schema: TargetSchema): ConformanceIssue[] {
   const issues: ConformanceIssue[] = [];
   const fileName = path.basename(note.relativePath);
   const dirPath = path.dirname(note.relativePath);
@@ -136,10 +133,7 @@ export function checkConformance(
 /**
  * Computes the suggested target path by applying fixes for all issues
  */
-export function getSuggestedTarget(
-  note: ParsedNote,
-  issues: ConformanceIssue[],
-): string {
+export function getSuggestedTarget(note: ParsedNote, issues: ConformanceIssue[]): string {
   let target = note.relativePath;
 
   for (const issue of issues) {

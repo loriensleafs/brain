@@ -15,7 +15,7 @@
  */
 
 // Re-export from utils - this is the canonical implementation
-export { resolveProject, type ResolveOptions } from "@brain/utils";
+export { type ResolveOptions, resolveProject } from "@brain/utils";
 
 import { logger } from "../utils/internal/logger";
 

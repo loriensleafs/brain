@@ -63,9 +63,7 @@ export function makeChunkId(entityId: string, chunkIndex: number): string {
 /**
  * Parse a chunk ID back to entity_id and chunk_index.
  */
-export function parseChunkId(
-  chunkId: string,
-): { entityId: string; chunkIndex: number } | null {
+export function parseChunkId(chunkId: string): { entityId: string; chunkIndex: number } | null {
   const match = chunkId.match(/^(.+)#chunk-(\d+)$/);
   if (!match) return null;
   return {

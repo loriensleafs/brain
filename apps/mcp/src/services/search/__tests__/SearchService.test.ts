@@ -11,53 +11,72 @@
  */
 
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import { createSearchService, getSearchService, SearchService } from "../index";
-import type { SearchOptions } from "../types";
 
-// Mock modules
-const mockCallTool = vi.fn(() =>
-  Promise.resolve({
-    content: [
-      {
-        type: "text",
-        text: JSON.stringify({
-          results: [
-            {
-              title: "Test Note",
-              permalink: "notes/test-note",
-              content: "Test content snippet",
-              score: 0.85,
-            },
-            {
-              title: "Feature Note",
-              permalink: "features/test-feature",
-              content: "Feature content",
-              score: 0.75,
-            },
-          ],
-          total: 2,
-          page: 1,
-          page_size: 10,
-        }),
+// Use vi.hoisted() to ensure mocks are available before vi.mock() hoisting
+const { mockCallTool, mockGenerateEmbedding, mockDbQuery, mockDb, mockHasEmbeddings } = vi.hoisted(
+  () => {
+    const mockCallTool = vi.fn(() =>
+      Promise.resolve({
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              results: [
+                {
+                  title: "Test Note",
+                  permalink: "notes/test-note",
+                  content: "Test content snippet",
+                  score: 0.85,
+                },
+                {
+                  title: "Feature Note",
+                  permalink: "features/test-feature",
+                  content: "Feature content",
+                  score: 0.75,
+                },
+              ],
+              total: 2,
+              page: 1,
+              page_size: 10,
+            }),
+          },
+        ],
+      }),
+    );
+
+    const mockGenerateEmbedding = vi.fn(() =>
+      Promise.resolve(Array.from({ length: 768 }, () => 0.5)),
+    );
+
+    const mockDbQuery = vi.fn(() => ({
+      all: () => [
+        { entity_id: "notes/semantic-result", distance: 0.1 },
+        { entity_id: "features/semantic-feature", distance: 0.2 },
+      ],
+      get: () => ({ count: 2 }),
+    }));
+
+    const mockDb = {
+      query: mockDbQuery,
+      close: vi.fn(() => {}),
+    };
+
+    const mockHasEmbeddings = vi.fn(
+      (db: { query: (sql: string) => { get: () => { count: number } } }) => {
+        const result = db.query("").get();
+        return result.count > 0;
       },
-    ],
-  }),
+    );
+
+    return {
+      mockCallTool,
+      mockGenerateEmbedding,
+      mockDbQuery,
+      mockDb,
+      mockHasEmbeddings,
+    };
+  },
 );
-
-const mockGenerateEmbedding = vi.fn(() => Promise.resolve(Array.from({ length: 768 }, () => 0.5)));
-
-const mockDbQuery = vi.fn(() => ({
-  all: () => [
-    { entity_id: "notes/semantic-result", distance: 0.1 },
-    { entity_id: "features/semantic-feature", distance: 0.2 },
-  ],
-  get: () => ({ count: 2 }),
-}));
-
-const mockDb = {
-  query: mockDbQuery,
-  close: vi.fn(() => {}),
-};
 
 // Mock the dependencies
 vi.mock("../../../proxy/client", () => ({
@@ -77,14 +96,6 @@ vi.mock("../../../db/schema", () => ({
   ensureEmbeddingTables: vi.fn(() => {}),
 }));
 
-// Mock hasEmbeddings to use the mockDbQuery's count
-const mockHasEmbeddings = vi.fn(
-  (db: { query: (sql: string) => { get: () => { count: number } } }) => {
-    const result = db.query("").get();
-    return result.count > 0;
-  },
-);
-
 vi.mock("../../../db/vectors", () => ({
   hasEmbeddings: mockHasEmbeddings,
   semanticSearchChunked: vi.fn(() => []),
@@ -98,6 +109,9 @@ vi.mock("../../embedding/generateEmbedding", () => ({
 vi.mock("../../../project/resolve", () => ({
   resolveProject: vi.fn(() => "test-project"),
 }));
+
+import { createSearchService, getSearchService, SearchService } from "../index";
+import type { SearchOptions } from "../types";
 
 describe("SearchService", () => {
   let service: SearchService;
@@ -399,7 +413,6 @@ describe("fullContent option", () => {
     callCount = 0;
 
     // Configure mock to handle both search_notes and read_note calls
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     mockCallTool.mockImplementation(createFullContentMock() as any);
   });
 
@@ -476,7 +489,6 @@ describe("fullContent option", () => {
   test("fullContent enforces character limit", async () => {
     const longContent = "x".repeat(6000);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     mockCallTool.mockImplementation(((call: unknown) => {
       const typedCall = call as {
         name: string;
@@ -530,7 +542,6 @@ describe("fullContent option", () => {
   });
 
   test("fullContent handles read errors gracefully", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     mockCallTool.mockImplementation(((call: unknown) => {
       const typedCall = call as { name: string };
       if (typedCall.name === "search_notes") {

@@ -18,10 +18,7 @@ describe("project-resolver", () => {
     delete process.env.BM_PROJECT;
 
     // Create unique temp directory for each test
-    testDir = join(
-      tmpdir(),
-      `brain-test-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-    );
+    testDir = join(tmpdir(), `brain-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
     mkdirSync(join(testDir, "brain"), { recursive: true });
     testConfigPath = join(testDir, "brain", "config.json");
 
@@ -252,9 +249,7 @@ describe("project-resolver", () => {
       );
 
       const { resolveProjectFromCwd } = await import("../project-resolver");
-      const result = resolveProjectFromCwd(
-        "/Users/dev/brain/apps/claude-plugin/cmd/hooks",
-      );
+      const result = resolveProjectFromCwd("/Users/dev/brain/apps/claude-plugin/cmd/hooks");
       expect(result).toBe("brain");
     });
 
@@ -274,9 +269,7 @@ describe("project-resolver", () => {
       const { resolveProjectFromCwd } = await import("../project-resolver");
 
       // Should match brain-plugin (deepest)
-      const result1 = resolveProjectFromCwd(
-        "/Users/dev/brain/apps/claude-plugin/cmd",
-      );
+      const result1 = resolveProjectFromCwd("/Users/dev/brain/apps/claude-plugin/cmd");
       expect(result1).toBe("brain-plugin");
 
       // Should match brain (not parent)

@@ -15,25 +15,31 @@ import * as path from "node:path";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { type BrainConfig, DEFAULT_BRAIN_CONFIG } from "../schema";
 
-// Mock filesystem
-const mockFs = {
-  existsSync: vi.fn<(p: string) => boolean>(() => false),
-  readFileSync: vi.fn<(p: string, enc: string) => string>(() => ""),
-  writeFileSync: vi.fn<(p: string, content: string, opts: unknown) => void>(
-    () => undefined,
-  ),
-  mkdirSync: vi.fn<(p: string, opts?: unknown) => void>(() => undefined),
-  chmodSync: vi.fn<(p: string, mode: number) => void>(() => undefined),
-  renameSync: vi.fn<(from: string, to: string) => void>(() => undefined),
-  unlinkSync: vi.fn<(p: string) => void>(() => undefined),
-  openSync: vi.fn<(p: string, flags: number) => number>(() => 1),
-  closeSync: vi.fn<(fd: number) => void>(() => undefined),
-  constants: {
-    O_CREAT: 0x0200,
-    O_EXCL: 0x0800,
-    O_WRONLY: 0x0001,
+// Use vi.hoisted() to ensure mocks are available before vi.mock() hoisting
+const { mockFs, mockLock } = vi.hoisted(() => ({
+  mockFs: {
+    existsSync: vi.fn<(p: string) => boolean>(() => false),
+    readFileSync: vi.fn<(p: string, enc: string) => string>(() => ""),
+    writeFileSync: vi.fn<(p: string, content: string, opts: unknown) => void>(() => undefined),
+    mkdirSync: vi.fn<(p: string, opts?: unknown) => void>(() => undefined),
+    chmodSync: vi.fn<(p: string, mode: number) => void>(() => undefined),
+    renameSync: vi.fn<(from: string, to: string) => void>(() => undefined),
+    unlinkSync: vi.fn<(p: string) => void>(() => undefined),
+    openSync: vi.fn<(p: string, flags: number) => number>(() => 1),
+    closeSync: vi.fn<(fd: number) => void>(() => undefined),
+    constants: {
+      O_CREAT: 0x0200,
+      O_EXCL: 0x0800,
+      O_WRONLY: 0x0001,
+    },
   },
-};
+  mockLock: {
+    acquireConfigLock: vi.fn<(opts: unknown) => Promise<{ acquired: boolean; error?: string }>>(
+      async () => ({ acquired: true }),
+    ),
+    releaseConfigLock: vi.fn<() => boolean>(() => true),
+  },
+}));
 
 vi.mock("fs", () => mockFs);
 
@@ -53,14 +59,6 @@ vi.mock("../path-validator", () => ({
     return path.normalize(path.resolve(expanded));
   },
 }));
-
-// Mock configLock
-const mockLock = {
-  acquireConfigLock: vi.fn<
-    (opts: unknown) => Promise<{ acquired: boolean; error?: string }>
-  >(async () => ({ acquired: true })),
-  releaseConfigLock: vi.fn<() => boolean>(() => true),
-};
 
 vi.mock("../../utils/security/configLock", () => mockLock);
 
@@ -101,11 +99,7 @@ describe("getBasicMemoryConfigDir", () => {
 describe("resolveMemoriesPath", () => {
   describe("DEFAULT mode", () => {
     test("resolves to memories_location/project_name", () => {
-      const result = resolveMemoriesPath(
-        "brain",
-        { code_path: "/dev/brain" },
-        "~/memories",
-      );
+      const result = resolveMemoriesPath("brain", { code_path: "/dev/brain" }, "~/memories");
 
       expect(result.mode).toBe("DEFAULT");
       expect(result.error).toBeUndefined();
@@ -182,11 +176,7 @@ describe("resolveMemoriesPath", () => {
 
   describe("mode defaults", () => {
     test("defaults to DEFAULT mode when not specified", () => {
-      const result = resolveMemoriesPath(
-        "project",
-        { code_path: "/dev/project" },
-        "~/memories",
-      );
+      const result = resolveMemoriesPath("project", { code_path: "/dev/project" }, "~/memories");
 
       expect(result.mode).toBe("DEFAULT");
     });
@@ -320,9 +310,7 @@ describe("syncConfigToBasicMemory", () => {
       error: "Lock timeout",
     });
 
-    await expect(syncConfigToBasicMemory(DEFAULT_BRAIN_CONFIG)).rejects.toThrow(
-      TranslationError,
-    );
+    await expect(syncConfigToBasicMemory(DEFAULT_BRAIN_CONFIG)).rejects.toThrow(TranslationError);
   });
 
   test("preserves existing config fields during sync", async () => {
@@ -511,11 +499,7 @@ describe("TranslationError", () => {
 
 describe("Field mapping test cases from ADR-020", () => {
   test("DEFAULT mode: ~/memories + brain -> ~/memories/brain", () => {
-    const result = resolveMemoriesPath(
-      "brain",
-      { code_path: "/dev/brain" },
-      "~/memories",
-    );
+    const result = resolveMemoriesPath("brain", { code_path: "/dev/brain" }, "~/memories");
 
     expect(result.mode).toBe("DEFAULT");
     expect(result.path).toContain("memories");

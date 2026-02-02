@@ -152,8 +152,7 @@ export const toolDefinition: Tool = {
         type: "string",
         enum: ["conform", "import"],
         default: "conform",
-        description:
-          "Analysis mode. conform=check existing notes, import=analyze external project",
+        description: "Analysis mode. conform=check existing notes, import=analyze external project",
       },
       preview: {
         type: "boolean",

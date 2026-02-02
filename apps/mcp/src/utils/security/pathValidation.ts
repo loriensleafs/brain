@@ -172,10 +172,7 @@ export function validateDeletePath(targetPath: string): PathValidationResult {
   // Check against system root paths
   for (const systemRoot of SYSTEM_ROOTS) {
     const normalizedRoot = path.normalize(systemRoot);
-    if (
-      resolved === normalizedRoot ||
-      resolved.startsWith(normalizedRoot + path.sep)
-    ) {
+    if (resolved === normalizedRoot || resolved.startsWith(normalizedRoot + path.sep)) {
       return {
         valid: false,
         error: `Cannot delete system path: ${systemRoot}`,
@@ -186,10 +183,7 @@ export function validateDeletePath(targetPath: string): PathValidationResult {
   // Check against protected paths under home directory
   for (const protectedName of PROTECTED_HOME_PATHS) {
     const protectedFull = path.join(homeDir, protectedName);
-    if (
-      resolved === protectedFull ||
-      resolved.startsWith(protectedFull + path.sep)
-    ) {
+    if (resolved === protectedFull || resolved.startsWith(protectedFull + path.sep)) {
       return {
         valid: false,
         error: `Cannot delete protected path: ~/${protectedName}`,

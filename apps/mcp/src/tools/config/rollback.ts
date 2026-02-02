@@ -24,9 +24,7 @@ export {
  * @param args - Tool arguments
  * @returns CallToolResult with rollback result or error
  */
-export async function handler(
-  args: ConfigRollbackArgs,
-): Promise<CallToolResult> {
+export async function handler(args: ConfigRollbackArgs): Promise<CallToolResult> {
   const { target } = args;
 
   // Check if rollback manager is initialized
@@ -40,8 +38,7 @@ export async function handler(
             type: "text" as const,
             text: JSON.stringify(
               {
-                error:
-                  "Rollback manager not initialized and failed to initialize",
+                error: "Rollback manager not initialized and failed to initialize",
                 details: error instanceof Error ? error.message : String(error),
               },
               null,
@@ -144,10 +141,7 @@ export async function handler(
   const history = rollbackManager.getHistory();
   response.rollback_history = {
     total_snapshots: history.length,
-    available_targets: [
-      "lastKnownGood",
-      ...(history.length > 0 ? ["previous"] : []),
-    ],
+    available_targets: ["lastKnownGood", ...(history.length > 0 ? ["previous"] : [])],
   };
 
   return {

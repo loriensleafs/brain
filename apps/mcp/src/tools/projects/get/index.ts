@@ -17,9 +17,7 @@ export {
   toolDefinition,
 } from "./schema";
 
-export async function handler(
-  args: GetProjectDetailsArgs,
-): Promise<CallToolResult> {
+export async function handler(args: GetProjectDetailsArgs): Promise<CallToolResult> {
   const { project } = args;
 
   // Get memories path from basic-memory config

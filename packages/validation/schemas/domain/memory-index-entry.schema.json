@@ -67,12 +67,7 @@
         "prohibitedContent": {
           "type": "array",
           "items": {
-            "enum": [
-              "titles",
-              "metadata_blocks",
-              "navigation_sections",
-              "non_table_content"
-            ]
+            "enum": ["titles", "metadata_blocks", "navigation_sections", "non_table_content"]
           },
           "description": "Content types prohibited in index files"
         }

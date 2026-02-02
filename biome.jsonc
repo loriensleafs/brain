@@ -91,6 +91,26 @@
     }
   },
 
+  // --- Overrides ---
+  "overrides": [
+    {
+      // Relax rules for test files - mocks and assertions need flexibility
+      "includes": ["**/*.test.ts", "**/*.test.tsx", "**/__tests__/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            // Non-null assertions are common after expect().toBeDefined()
+            "noNonNullAssertion": "off"
+          },
+          "suspicious": {
+            // Mocks often require any for type flexibility
+            "noExplicitAny": "off"
+          }
+        }
+      }
+    }
+  ],
+
   // --- VCS ---
   "vcs": {
     "clientKind": "git",

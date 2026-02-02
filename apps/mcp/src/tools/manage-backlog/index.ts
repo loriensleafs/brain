@@ -14,9 +14,7 @@ import type { ManageBacklogArgs } from "./schema";
 /**
  * Main handler for the manage_backlog tool
  */
-export async function handler(
-  args: ManageBacklogArgs,
-): Promise<CallToolResult> {
+export async function handler(args: ManageBacklogArgs): Promise<CallToolResult> {
   if (!args.operation) {
     return {
       content: [{ type: "text" as const, text: "operation is required" }],
@@ -47,9 +45,7 @@ export async function handler(
 
   if (!result.success) {
     return {
-      content: [
-        { type: "text" as const, text: result.error || "Operation failed" },
-      ],
+      content: [{ type: "text" as const, text: result.error || "Operation failed" }],
       isError: true,
     };
   }
@@ -66,7 +62,7 @@ export async function handler(
 /**
  * Format operation result as human-readable text
  */
-function formatOperationResult(result: any): string {
+function formatOperationResult(result: BacklogResult): string {
   const lines: string[] = [];
 
   switch (result.operation) {
@@ -98,9 +94,7 @@ function formatOperationResult(result: any): string {
       lines.push(``);
 
       for (const feature of features) {
-        const statusBadge = feature.status
-          ? `[${feature.status}]`
-          : "[UNKNOWN]";
+        const statusBadge = feature.status ? `[${feature.status}]` : "[UNKNOWN]";
         const priorityStars = "★".repeat(feature.priority || 3);
 
         lines.push(`**${feature.rank}. ${feature.title}** ${statusBadge}`);

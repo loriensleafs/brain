@@ -16,11 +16,7 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
-import {
-  getCodePath,
-  getCodePaths,
-  removeCodePath,
-} from "../../../project/config";
+import { getCodePath, getCodePaths, removeCodePath } from "../../../project/config";
 import { logger } from "../../../utils/internal/logger";
 import { withConfigLockSync } from "../../../utils/security/configLock";
 import {
@@ -38,11 +34,7 @@ export {
 /**
  * Path to basic-memory config file
  */
-const BASIC_MEMORY_CONFIG_PATH = path.join(
-  os.homedir(),
-  ".basic-memory",
-  "config.json",
-);
+const BASIC_MEMORY_CONFIG_PATH = path.join(os.homedir(), ".basic-memory", "config.json");
 
 /**
  * Get notes path for a project from basic-memory config
@@ -71,16 +63,9 @@ function removeNotesPath(project: string): boolean {
       const content = fs.readFileSync(BASIC_MEMORY_CONFIG_PATH, "utf-8");
       const config = JSON.parse(content);
 
-      if (
-        config.projects &&
-        typeof config.projects === "object" &&
-        project in config.projects
-      ) {
+      if (config.projects && typeof config.projects === "object" && project in config.projects) {
         delete config.projects[project];
-        fs.writeFileSync(
-          BASIC_MEMORY_CONFIG_PATH,
-          JSON.stringify(config, null, 2),
-        );
+        fs.writeFileSync(BASIC_MEMORY_CONFIG_PATH, JSON.stringify(config, null, 2));
         logger.info({ project }, "Removed notes path from basic-memory config");
         return true;
       }
@@ -123,19 +108,14 @@ function countFiles(dirPath: string): number {
   return count;
 }
 
-export async function handler(
-  args: DeleteProjectArgs,
-): Promise<CallToolResult> {
+export async function handler(args: DeleteProjectArgs): Promise<CallToolResult> {
   const { project, delete_notes = false } = args;
 
   // FIRST: Validate project name for security (C-001)
   // This must happen BEFORE any config lookups to prevent injection attacks
   const nameValidation = validateProjectName(project);
   if (!nameValidation.valid) {
-    logger.warn(
-      { project, error: nameValidation.error },
-      "Project name validation failed",
-    );
+    logger.warn({ project, error: nameValidation.error }, "Project name validation failed");
     return {
       content: [
         {
@@ -275,8 +255,7 @@ export async function handler(
             type: "text" as const,
             text: JSON.stringify(
               {
-                warning:
-                  "Partial deletion - config removed but file deletion failed",
+                warning: "Partial deletion - config removed but file deletion failed",
                 project,
                 deleted_config: result.config_removed,
                 deleted_notes: false,

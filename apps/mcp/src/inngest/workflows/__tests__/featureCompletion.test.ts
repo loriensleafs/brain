@@ -21,9 +21,7 @@ describe("Feature Completion Workflow", () => {
     test("workflow has id property set to 'feature-completion'", () => {
       // Access workflow options through the function object
       // Inngest functions have an 'id' getter
-      const workflowId = (
-        featureCompletionWorkflow as unknown as { id: () => string }
-      ).id();
+      const workflowId = (featureCompletionWorkflow as unknown as { id: () => string }).id();
       expect(workflowId).toBe("feature-completion");
     });
   });
@@ -153,9 +151,7 @@ describe("Feature Completion Workflow", () => {
 
       // Verify all required agents are present
       for (const agent of requiredAgents) {
-        expect(
-          mockResult.verdicts[agent as keyof typeof mockResult.verdicts],
-        ).toBeDefined();
+        expect(mockResult.verdicts[agent as keyof typeof mockResult.verdicts]).toBeDefined();
       }
     });
   });

@@ -18,11 +18,7 @@ import { logger } from "../internal/logger";
 /**
  * Lock file path for brain config operations
  */
-const CONFIG_LOCK_PATH = path.join(
-  os.homedir(),
-  ".basic-memory",
-  ".brain-config.lock",
-);
+const CONFIG_LOCK_PATH = path.join(os.homedir(), ".basic-memory", ".brain-config.lock");
 
 /**
  * Default timeout for lock acquisition in milliseconds
@@ -107,9 +103,7 @@ function tryAcquireLock(lockPath: string): boolean {
  * @param options - Lock options including timeout
  * @returns LockResult indicating success or failure
  */
-export async function acquireConfigLock(
-  options: ConfigLockOptions = {},
-): Promise<LockResult> {
+export async function acquireConfigLock(options: ConfigLockOptions = {}): Promise<LockResult> {
   const { timeoutMs = DEFAULT_LOCK_TIMEOUT_MS } = options;
   const startTime = Date.now();
 
@@ -213,10 +207,7 @@ export async function withConfigLock<T>(
  * @returns Result of operation
  * @throws If lock cannot be acquired or operation throws
  */
-export function withConfigLockSync<T>(
-  operation: () => T,
-  options: ConfigLockOptions = {},
-): T {
+export function withConfigLockSync<T>(operation: () => T, options: ConfigLockOptions = {}): T {
   const { timeoutMs = DEFAULT_LOCK_TIMEOUT_MS } = options;
   const startTime = Date.now();
 

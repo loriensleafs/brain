@@ -33,16 +33,11 @@ export async function checkOllamaHealth(): Promise<boolean> {
   }
 
   try {
-    const response = await fetch(
-      `${ollamaConfig.baseUrl ?? "http://localhost:11434"}/api/tags`,
-      {
-        signal: AbortSignal.timeout(5000),
-      },
-    );
+    const response = await fetch(`${ollamaConfig.baseUrl ?? "http://localhost:11434"}/api/tags`, {
+      signal: AbortSignal.timeout(5000),
+    });
     const data = (await response.json()) as TagsResponse;
-    const hasModel = data.models?.some((m) =>
-      m.name.includes("nomic-embed-text"),
-    );
+    const hasModel = data.models?.some((m) => m.name.includes("nomic-embed-text"));
 
     if (!hasModel) {
       logger.warn("nomic-embed-text model not found.");

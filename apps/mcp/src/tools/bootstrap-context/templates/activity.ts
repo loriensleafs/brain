@@ -16,10 +16,7 @@ export interface ActivityData {
 /**
  * Render activity section
  */
-export function renderActivitySection(
-  activity: ActivityData[],
-  limit: number = 10,
-): string {
+export function renderActivitySection(activity: ActivityData[], limit: number = 10): string {
   if (activity.length === 0) {
     return "";
   }

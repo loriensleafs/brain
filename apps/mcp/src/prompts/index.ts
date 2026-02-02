@@ -21,18 +21,13 @@ let discoveredPrompts: Prompt[] = [];
  * Discover and register prompt handlers.
  * Prompts are proxied from basic-memory.
  */
-export async function discoverAndRegisterPrompts(
-  server: McpServer,
-): Promise<void> {
+export async function discoverAndRegisterPrompts(server: McpServer): Promise<void> {
   const client = await getBasicMemoryClient();
 
   // Discover available prompts
   const promptsResult = await client.listPrompts();
   discoveredPrompts = promptsResult.prompts;
-  logger.info(
-    { count: discoveredPrompts.length },
-    "Discovered basic-memory prompts",
-  );
+  logger.info({ count: discoveredPrompts.length }, "Discovered basic-memory prompts");
 
   // Register prompts/list handler
   server.server.setRequestHandler(ListPromptsRequestSchema, async () => {

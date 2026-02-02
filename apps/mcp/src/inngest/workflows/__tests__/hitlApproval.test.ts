@@ -20,9 +20,7 @@ describe("HITL Approval Workflow", () => {
 
     test("workflow has id property set to 'hitl-approval'", () => {
       // Access workflow options through the function object
-      const workflowId = (
-        hitlApprovalWorkflow as unknown as { id: () => string }
-      ).id();
+      const workflowId = (hitlApprovalWorkflow as unknown as { id: () => string }).id();
       expect(workflowId).toBe("hitl-approval");
     });
   });

@@ -68,9 +68,7 @@ export function generateCacheKey(options: CacheOptions): string {
  *
  * @returns Cached content or null if not found/expired
  */
-export function getCachedContext(
-  options: CacheOptions,
-): StructuredContent | null {
+export function getCachedContext(options: CacheOptions): StructuredContent | null {
   const key = generateCacheKey(options);
   const entry = cache.get(key);
 
@@ -174,10 +172,7 @@ export function invalidateCache(project?: string): void {
   }
 
   stats.invalidations += count;
-  logger.debug(
-    { project, count },
-    "Cache invalidated: project entries cleared",
-  );
+  logger.debug({ project, count }, "Cache invalidated: project entries cleared");
 }
 
 /**

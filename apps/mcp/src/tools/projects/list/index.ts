@@ -17,9 +17,7 @@ export {
   toolDefinition,
 } from "./schema";
 
-export async function handler(
-  _args: ListProjectsArgs,
-): Promise<CallToolResult> {
+export async function handler(_args: ListProjectsArgs): Promise<CallToolResult> {
   const client = await getBasicMemoryClient();
 
   // Get projects from basic-memory

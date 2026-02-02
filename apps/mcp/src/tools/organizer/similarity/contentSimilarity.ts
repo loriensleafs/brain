@@ -54,34 +54,22 @@ export async function calculateContentSimilarity(
 /**
  * Calculate overall content similarity between two notes
  */
-function calculateSimilarity(
-  content1: NoteContent,
-  content2: NoteContent,
-): number {
+function calculateSimilarity(content1: NoteContent, content2: NoteContent): number {
   let score = 0;
   let weights = 0;
 
   // Observation overlap (weight: 0.4)
-  const obsSim = calculateObservationSimilarity(
-    content1.observations,
-    content2.observations,
-  );
+  const obsSim = calculateObservationSimilarity(content1.observations, content2.observations);
   score += obsSim * 0.4;
   weights += 0.4;
 
   // Wikilink overlap (weight: 0.3)
-  const linkSim = calculateJaccardSimilarity(
-    content1.wikilinks,
-    content2.wikilinks,
-  );
+  const linkSim = calculateJaccardSimilarity(content1.wikilinks, content2.wikilinks);
   score += linkSim * 0.3;
   weights += 0.3;
 
   // Keyword overlap (weight: 0.3)
-  const keywordSim = calculateJaccardSimilarity(
-    content1.keywords,
-    content2.keywords,
-  );
+  const keywordSim = calculateJaccardSimilarity(content1.keywords, content2.keywords);
   score += keywordSim * 0.3;
   weights += 0.3;
 
@@ -91,10 +79,7 @@ function calculateSimilarity(
 /**
  * Calculate observation similarity using fuzzy matching
  */
-function calculateObservationSimilarity(
-  obs1: string[],
-  obs2: string[],
-): number {
+function calculateObservationSimilarity(obs1: string[], obs2: string[]): number {
   if (obs1.length === 0 && obs2.length === 0) return 0;
   if (obs1.length === 0 || obs2.length === 0) return 0;
 

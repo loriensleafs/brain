@@ -27,9 +27,7 @@ import { describe, expect, test } from "vitest";
  *   retrospective → retrospectives
  *   skill → skills
  */
-function folderToPatternType(
-  folder: string | undefined,
-): PatternType | undefined {
+function folderToPatternType(folder: string | undefined): PatternType | undefined {
   if (!folder) {
     return undefined;
   }
@@ -81,9 +79,7 @@ describe("folderToPatternType mapping", () => {
     });
 
     test("specs/myproject/requirements -> requirement", () => {
-      expect(folderToPatternType("specs/myproject/requirements")).toBe(
-        "requirement",
-      );
+      expect(folderToPatternType("specs/myproject/requirements")).toBe("requirement");
     });
 
     test("specs/myproject/design -> design", () => {
@@ -199,9 +195,7 @@ describe("folderToPatternType mapping", () => {
     });
 
     test("specs path with any project name works", () => {
-      expect(folderToPatternType("specs/brain/requirements")).toBe(
-        "requirement",
-      );
+      expect(folderToPatternType("specs/brain/requirements")).toBe("requirement");
       expect(folderToPatternType("specs/my-project/design")).toBe("design");
       expect(folderToPatternType("specs/another_one/tasks")).toBe("task");
     });

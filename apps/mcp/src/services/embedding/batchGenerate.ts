@@ -33,9 +33,7 @@ export async function batchGenerate(
 
   for (let i = 0; i < texts.length; i += batchSize) {
     const batch = texts.slice(i, i + batchSize);
-    const results = await Promise.allSettled(
-      batch.map((text) => generateEmbedding(text)),
-    );
+    const results = await Promise.allSettled(batch.map((text) => generateEmbedding(text)));
 
     results.forEach((result, idx) => {
       const globalIdx = i + idx;

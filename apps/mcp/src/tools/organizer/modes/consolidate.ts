@@ -39,12 +39,7 @@ interface NoteInfo {
 export async function findConsolidationCandidates(
   config: ConsolidateConfig,
 ): Promise<ConsolidateResult> {
-  const {
-    project,
-    similarityThreshold = 0.85,
-    minNoteSize = 10,
-    maxNoteSize = 200,
-  } = config;
+  const { project, similarityThreshold = 0.85, minNoteSize = 10, maxNoteSize = 200 } = config;
 
   const client = await getBasicMemoryClient();
 
@@ -71,11 +66,7 @@ export async function findConsolidationCandidates(
   }
 
   // Find merge candidates (small similar notes)
-  const mergeCandidates = findMergeCandidates(
-    notes,
-    similarityThreshold,
-    minNoteSize,
-  );
+  const mergeCandidates = findMergeCandidates(notes, similarityThreshold, minNoteSize);
 
   // Find split candidates (large multi-topic notes)
   const splitCandidates = findSplitCandidates(notes, maxNoteSize);
@@ -131,23 +122,15 @@ function findMergeCandidates(
     // Check for title similarity
     for (let i = 0; i < groupNotes.length; i++) {
       for (let j = i + 1; j < groupNotes.length; j++) {
-        const similarity = calculateTitleSimilarity(
-          groupNotes[i],
-          groupNotes[j],
-        );
+        const similarity = calculateTitleSimilarity(groupNotes[i], groupNotes[j]);
         if (similarity >= similarityThreshold) {
           // Check if already in a candidate
-          const alreadyGrouped = candidates.some((c) =>
-            c.notes.includes(groupNotes[i].permalink),
-          );
+          const alreadyGrouped = candidates.some((c) => c.notes.includes(groupNotes[i].permalink));
           if (!alreadyGrouped) {
             candidates.push({
               notes: [groupNotes[i].permalink, groupNotes[j].permalink],
               similarity,
-              suggestedTitle: generateMergedTitle([
-                groupNotes[i],
-                groupNotes[j],
-              ]),
+              suggestedTitle: generateMergedTitle([groupNotes[i], groupNotes[j]]),
               rationale: `Similar titles in "${folder}" (similarity: ${similarity.toFixed(2)})`,
             });
           }
@@ -162,10 +145,7 @@ function findMergeCandidates(
 /**
  * Identify split candidates (large multi-topic notes)
  */
-function findSplitCandidates(
-  notes: NoteInfo[],
-  maxNoteSize: number,
-): SplitCandidate[] {
+function findSplitCandidates(notes: NoteInfo[], maxNoteSize: number): SplitCandidate[] {
   const candidates: SplitCandidate[] = [];
 
   for (const note of notes) {
@@ -287,10 +267,14 @@ function findCommonPrefix(strings: string[]): string {
   return prefix;
 }
 
+interface McpToolResult {
+  content?: Array<{ type: string; text?: string }>;
+}
+
 /**
  * Parse list_directory output to extract file paths
  */
-function parseListDirectoryResult(result: any): string[] {
+function parseListDirectoryResult(result: McpToolResult): string[] {
   const text = result.content?.[0]?.text || "";
   const files: string[] = [];
   const lines = text.split("\n");
@@ -308,7 +292,7 @@ function parseListDirectoryResult(result: any): string[] {
 /**
  * Parse note content to extract metadata
  */
-function parseNoteContent(permalink: string, result: any): NoteInfo {
+function parseNoteContent(permalink: string, result: McpToolResult): NoteInfo {
   const text = result.content?.[0]?.text || "";
   const lines = text.split("\n");
 
@@ -316,9 +300,7 @@ function parseNoteContent(permalink: string, result: any): NoteInfo {
   const title = extractTitle(text) || permalink;
 
   // Extract folder from permalink
-  const folder = permalink.includes("/")
-    ? permalink.substring(0, permalink.lastIndexOf("/"))
-    : "";
+  const folder = permalink.includes("/") ? permalink.substring(0, permalink.lastIndexOf("/")) : "";
 
   // Extract wikilinks
   const wikilinks = extractWikilinks(text);

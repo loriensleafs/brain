@@ -7,10 +7,7 @@
  */
 
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
-import {
-  resolveProject,
-  setActiveProject,
-} from "../../project/resolve";
+import { resolveProject, setActiveProject } from "../../project/resolve";
 import { createDefaultSessionState, getSession } from "../../services/session";
 import { logger } from "../../utils/internal/logger";
 import { triggerCatchupEmbedding } from "./catchupTrigger";
@@ -23,17 +20,11 @@ import {
   queryRecentActivity,
   queryRecentDecisions,
 } from "./sectionQueries";
-import {
-  type CacheOptions,
-  getCachedContext,
-  setCachedContext,
-} from "./sessionCache";
+import { type CacheOptions, getCachedContext, setCachedContext } from "./sessionCache";
 import { buildSessionEnrichment } from "./sessionEnrichment";
 import { buildStructuredOutput } from "./structuredOutput";
 
-export async function handler(
-  args: BootstrapContextArgs,
-): Promise<CallToolResult> {
+export async function handler(args: BootstrapContextArgs): Promise<CallToolResult> {
   const project = args.project || resolveProject();
 
   if (!project) {
@@ -75,10 +66,7 @@ export async function handler(
     };
   }
 
-  logger.info(
-    { project, timeframe, includeReferenced },
-    "Building bootstrap context",
-  );
+  logger.info({ project, timeframe, includeReferenced }, "Building bootstrap context");
 
   try {
     // Load session state (create default if none exists)
@@ -89,19 +77,14 @@ export async function handler(
     }
 
     // Query all sections in parallel, including session enrichment
-    const [
-      recentActivity,
-      activeFeatures,
-      recentDecisions,
-      openBugs,
-      sessionEnrichment,
-    ] = await Promise.all([
-      queryRecentActivity({ project, timeframe }),
-      queryActiveFeatures({ project, timeframe }),
-      queryRecentDecisions({ project, timeframe: "3d" }),
-      queryOpenBugs({ project, timeframe }),
-      buildSessionEnrichment({ project, sessionState }),
-    ]);
+    const [recentActivity, activeFeatures, recentDecisions, openBugs, sessionEnrichment] =
+      await Promise.all([
+        queryRecentActivity({ project, timeframe }),
+        queryActiveFeatures({ project, timeframe }),
+        queryRecentDecisions({ project, timeframe: "3d" }),
+        queryOpenBugs({ project, timeframe }),
+        buildSessionEnrichment({ project, sessionState }),
+      ]);
 
     // Follow relations if requested
     let referencedNotes: Awaited<ReturnType<typeof followRelations>> = [];

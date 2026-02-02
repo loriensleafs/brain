@@ -17,11 +17,7 @@ import {
 } from "@brain/validation";
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 
-export {
-  validateCreateProjectArgs,
-  parseCreateProjectArgs,
-  type CreateProjectArgs,
-};
+export { validateCreateProjectArgs, parseCreateProjectArgs, type CreateProjectArgs };
 
 /**
  * Memories path options:
@@ -79,6 +75,7 @@ Examples:
       memories_path: {
         type: "string",
         description:
+          // biome-ignore lint/suspicious/noTemplateCurlyInString: Intentional placeholder syntax in docs
           "Memories directory path. Options: 'DEFAULT' (${default_memories_location}/${name}), 'CODE' (${code_path}/docs), or absolute path. Defaults to 'DEFAULT'.",
       },
     },

@@ -102,9 +102,7 @@ describe("Inngest Client", () => {
 
     test("returns false when fetch throws an error", async () => {
       // Mock fetch to throw error (connection refused)
-      const mockFetch = vi.fn(() =>
-        Promise.reject(new Error("Connection refused")),
-      );
+      const mockFetch = vi.fn(() => Promise.reject(new Error("Connection refused")));
       globalThis.fetch = mockFetch as unknown as typeof fetch;
 
       const { checkInngestAvailability } = await import("../client");
@@ -160,9 +158,7 @@ describe("Inngest Client", () => {
       );
       globalThis.fetch = mockFetch as unknown as typeof fetch;
 
-      const { checkInngestAvailability, isInngestAvailable } = await import(
-        "../client"
-      );
+      const { checkInngestAvailability, isInngestAvailable } = await import("../client");
 
       // Perform a successful check
       await checkInngestAvailability(1000);
@@ -174,14 +170,10 @@ describe("Inngest Client", () => {
 
     test("returns false after failed availability check", async () => {
       // Mock failed fetch
-      const mockFetch = vi.fn(() =>
-        Promise.reject(new Error("Connection refused")),
-      );
+      const mockFetch = vi.fn(() => Promise.reject(new Error("Connection refused")));
       globalThis.fetch = mockFetch as unknown as typeof fetch;
 
-      const { checkInngestAvailability, isInngestAvailable } = await import(
-        "../client"
-      );
+      const { checkInngestAvailability, isInngestAvailable } = await import("../client");
 
       // Perform a failed check
       await checkInngestAvailability(1000);

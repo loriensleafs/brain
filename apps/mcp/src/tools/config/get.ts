@@ -30,11 +30,7 @@ function getNestedValue(obj: Record<string, unknown>, path: string): unknown {
   let current: unknown = obj;
 
   for (const key of keys) {
-    if (
-      current === null ||
-      current === undefined ||
-      typeof current !== "object"
-    ) {
+    if (current === null || current === undefined || typeof current !== "object") {
       return undefined;
     }
     current = (current as Record<string, unknown>)[key];
@@ -49,9 +45,7 @@ function getNestedValue(obj: Record<string, unknown>, path: string): unknown {
  * @param args - Tool arguments (raw from MCP, will be validated)
  * @returns CallToolResult with config data or error
  */
-export async function handler(
-  args: Record<string, unknown>,
-): Promise<CallToolResult> {
+export async function handler(args: Record<string, unknown>): Promise<CallToolResult> {
   try {
     // Validate and parse input using AJV
     const parsed: ConfigGetArgs = ConfigGetArgsSchema.parse(args);
@@ -71,10 +65,7 @@ export async function handler(
     }
 
     // Get specific key using dot notation
-    const value = getNestedValue(
-      config as unknown as Record<string, unknown>,
-      parsed.key,
-    );
+    const value = getNestedValue(config as unknown as Record<string, unknown>, parsed.key);
 
     if (value === undefined) {
       return {

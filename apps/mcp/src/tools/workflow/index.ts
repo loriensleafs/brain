@@ -6,11 +6,7 @@
  */
 
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
-import {
-  getInngestDevServerUrl,
-  inngest,
-  isInngestAvailable,
-} from "../../inngest/client";
+import { getInngestDevServerUrl, inngest, isInngestAvailable } from "../../inngest/client";
 import { logger } from "../../utils/internal/logger";
 import {
   GetWorkflowArgsSchema,
@@ -97,14 +93,11 @@ function toCallToolResult(data: unknown, isError = false): CallToolResult {
 /**
  * Check if Inngest is available, return error result if not.
  */
-function checkAvailability():
-  | { available: true }
-  | { available: false; error: string } {
+function checkAvailability(): { available: true } | { available: false; error: string } {
   if (!isInngestAvailable()) {
     return {
       available: false,
-      error:
-        "Inngest dev server unavailable. Start with: npx inngest-cli@latest dev",
+      error: "Inngest dev server unavailable. Start with: npx inngest-cli@latest dev",
     };
   }
   return { available: true };
@@ -211,10 +204,7 @@ async function sendWorkflowEvent(
     return { success: true, ids: result.ids };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    logger.error(
-      { eventName, error: message },
-      "Failed to send workflow event",
-    );
+    logger.error({ eventName, error: message }, "Failed to send workflow event");
     return { success: false, error: message };
   }
 }
@@ -258,9 +248,7 @@ async function getWorkflow(runId: string): Promise<{
     // Fetch steps
     let steps: WorkflowRun["steps"] = [];
     try {
-      const stepsResponse = await fetch(
-        `${getDevServerUrl()}/v1/runs/${runId}/actions`,
-      );
+      const stepsResponse = await fetch(`${getDevServerUrl()}/v1/runs/${runId}/actions`);
       if (stepsResponse.ok) {
         const stepsData = (await stepsResponse.json()) as Array<{
           id: string;
@@ -290,10 +278,7 @@ async function getWorkflow(runId: string): Promise<{
       steps,
     };
 
-    logger.debug(
-      { runId, status: run.status, stepCount: steps.length },
-      "Got workflow details",
-    );
+    logger.debug({ runId, status: run.status, stepCount: steps.length }, "Got workflow details");
     return { success: true, run };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

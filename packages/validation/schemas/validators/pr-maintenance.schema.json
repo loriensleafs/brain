@@ -266,14 +266,7 @@
           }
         }
       },
-      "required": [
-        "number",
-        "category",
-        "hasConflicts",
-        "reason",
-        "author",
-        "title"
-      ],
+      "required": ["number", "category", "hasConflicts", "reason", "author", "title"],
       "additionalProperties": false
     },
     "DerivativePR": {

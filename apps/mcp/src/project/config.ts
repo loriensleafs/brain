@@ -15,11 +15,7 @@ import { logger } from "../utils/internal/logger";
  * Path to brain-specific config file
  * Separate from basic-memory config to avoid conflicts
  */
-const CONFIG_PATH = path.join(
-  os.homedir(),
-  ".basic-memory",
-  "brain-config.json",
-);
+const CONFIG_PATH = path.join(os.homedir(), ".basic-memory", "brain-config.json");
 
 /**
  * Brain configuration schema (legacy format)

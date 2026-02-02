@@ -13,19 +13,14 @@
 
 import { buildDependencyGraph } from "../../list-features-by-priority/dependencyGraph";
 import { topologicalSort } from "../../list-features-by-priority/topologicalSort";
-import {
-  addDependency,
-  removeDependency,
-} from "../operations/manageDependencies";
+import { addDependency, removeDependency } from "../operations/manageDependencies";
 import { setPriority } from "../operations/setPriority";
 import type { BacklogConfig, BacklogResult } from "../types";
 
 /**
  * Execute backlog mode operation
  */
-export async function executeBacklogOperation(
-  config: BacklogConfig,
-): Promise<BacklogResult> {
+export async function executeBacklogOperation(config: BacklogConfig): Promise<BacklogResult> {
   const { project, operation } = config;
 
   try {
@@ -41,11 +36,7 @@ export async function executeBacklogOperation(
             error: "SET_PRIORITY requires feature_id and priority",
           };
         }
-        return await executeSetPriority(
-          project,
-          config.feature_id,
-          config.priority,
-        );
+        return await executeSetPriority(project, config.feature_id, config.priority);
 
       case "ADD_DEPENDENCY":
         if (!config.feature_id || !config.dependency_target) {
@@ -55,26 +46,17 @@ export async function executeBacklogOperation(
             error: "ADD_DEPENDENCY requires feature_id and dependency_target",
           };
         }
-        return await executeAddDependency(
-          project,
-          config.feature_id,
-          config.dependency_target,
-        );
+        return await executeAddDependency(project, config.feature_id, config.dependency_target);
 
       case "REMOVE_DEPENDENCY":
         if (!config.feature_id || !config.dependency_target) {
           return {
             operation,
             success: false,
-            error:
-              "REMOVE_DEPENDENCY requires feature_id and dependency_target",
+            error: "REMOVE_DEPENDENCY requires feature_id and dependency_target",
           };
         }
-        return await executeRemoveDependency(
-          project,
-          config.feature_id,
-          config.dependency_target,
-        );
+        return await executeRemoveDependency(project, config.feature_id, config.dependency_target);
 
       default:
         return {

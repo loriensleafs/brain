@@ -6,13 +6,7 @@
   "definitions": {
     "TaskStatus": {
       "type": "string",
-      "enum": [
-        "NOT_STARTED",
-        "IN_PROGRESS",
-        "COMPLETED",
-        "BLOCKED",
-        "DEFERRED"
-      ],
+      "enum": ["NOT_STARTED", "IN_PROGRESS", "COMPLETED", "BLOCKED", "DEFERRED"],
       "description": "Status of a task"
     },
     "Task": {

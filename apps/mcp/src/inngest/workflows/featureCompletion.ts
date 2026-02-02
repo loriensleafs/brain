@@ -70,9 +70,7 @@ function checkTasks(tasks: Task[]): {
       checks.length > 0
         ? checks
         : [{ name: "tasks-check", passed: true, message: "All tasks valid" }],
-    remediation: allPassed
-      ? undefined
-      : "Complete all IN_PROGRESS tasks before proceeding",
+    remediation: allPassed ? undefined : "Complete all IN_PROGRESS tasks before proceeding",
   };
 }
 
@@ -112,10 +110,7 @@ export interface FeatureCompletionError {
  * @param data - Event data to validate
  * @throws NonRetriableError if data is invalid
  */
-function validateEventData(data: {
-  featureId?: string;
-  context?: unknown;
-}): void {
+function validateEventData(data: { featureId?: string; context?: unknown }): void {
   if (!data.featureId || typeof data.featureId !== "string") {
     throw createNonRetriableError(
       WorkflowErrorType.VALIDATION_ERROR,
@@ -203,10 +198,7 @@ export const featureCompletionWorkflow = inngest.createFunction(
             { context: { remediation: taskResult.remediation } },
           );
         }
-        logger.info(
-          { featureId, taskCount: tasks.length },
-          "All tasks validated successfully",
-        );
+        logger.info({ featureId, taskCount: tasks.length }, "All tasks validated successfully");
       } else {
         logger.debug({ featureId }, "No tasks provided for validation");
       }
@@ -258,8 +250,7 @@ export const featureCompletionWorkflow = inngest.createFunction(
       return result;
     } catch (error) {
       // Log error details for debugging
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
       const isNonRetriable = error instanceof NonRetriableError;
 
       logger.error(

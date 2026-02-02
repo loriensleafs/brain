@@ -41,8 +41,7 @@ const SETTABLE_KEYS: Record<
   },
   "logging.level": {
     type: "string",
-    validate: (v) =>
-      ["trace", "debug", "info", "warn", "error"].includes(v as string),
+    validate: (v) => ["trace", "debug", "info", "warn", "error"].includes(v as string),
   },
   "watcher.enabled": { type: "boolean" },
   "watcher.debounce_ms": {
@@ -58,21 +57,13 @@ const SETTABLE_KEYS: Record<
  * @param path - Dot-separated path
  * @param value - Value to set
  */
-function setNestedValue(
-  obj: Record<string, unknown>,
-  path: string,
-  value: unknown,
-): void {
+function setNestedValue(obj: Record<string, unknown>, path: string, value: unknown): void {
   const keys = path.split(".");
   let current = obj;
 
   for (let i = 0; i < keys.length - 1; i++) {
     const key = keys[i];
-    if (
-      !(key in current) ||
-      typeof current[key] !== "object" ||
-      current[key] === null
-    ) {
+    if (!(key in current) || typeof current[key] !== "object" || current[key] === null) {
       current[key] = {};
     }
     current = current[key] as Record<string, unknown>;
@@ -87,9 +78,7 @@ function setNestedValue(
  * @param args - Tool arguments (raw from MCP, will be validated)
  * @returns CallToolResult with update confirmation or error
  */
-export async function handler(
-  args: Record<string, unknown>,
-): Promise<CallToolResult> {
+export async function handler(args: Record<string, unknown>): Promise<CallToolResult> {
   // Validate and parse input using AJV
   const parsed: ConfigSetArgs = ConfigSetArgsSchema.parse(args);
   const { key, value } = parsed;
@@ -184,10 +173,7 @@ export async function handler(
 
     // Mark as good after successful update
     if (rollbackManager.isInitialized()) {
-      await rollbackManager.markAsGood(
-        newConfig as BrainConfig,
-        `After config_set: ${key}`,
-      );
+      await rollbackManager.markAsGood(newConfig as BrainConfig, `After config_set: ${key}`);
     }
 
     return {
@@ -198,10 +184,7 @@ export async function handler(
             {
               success: true,
               key,
-              old_value: getNestedValue(
-                oldConfig as unknown as Record<string, unknown>,
-                key,
-              ),
+              old_value: getNestedValue(oldConfig as unknown as Record<string, unknown>, key),
               new_value: value,
               requires_migration: diff.requiresMigration,
               changes: summarizeConfigDiff(diff),
@@ -241,11 +224,7 @@ function getNestedValue(obj: Record<string, unknown>, path: string): unknown {
   let current: unknown = obj;
 
   for (const key of keys) {
-    if (
-      current === null ||
-      current === undefined ||
-      typeof current !== "object"
-    ) {
+    if (current === null || current === undefined || typeof current !== "object") {
       return undefined;
     }
     current = (current as Record<string, unknown>)[key];

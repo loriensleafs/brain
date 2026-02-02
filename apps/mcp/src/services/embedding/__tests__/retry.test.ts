@@ -9,12 +9,7 @@ import * as schemaModule from "../../../db/schema";
 import * as vectorsModule from "../../../db/vectors";
 import { logger } from "../../../utils/internal/logger";
 import * as queueModule from "../queue";
-import {
-  BASE_DELAY_MS,
-  MAX_RETRIES,
-  processEmbeddingQueue,
-  processWithRetry,
-} from "../retry";
+import { BASE_DELAY_MS, MAX_RETRIES, processEmbeddingQueue, processWithRetry } from "../retry";
 
 describe("retry", () => {
   const originalFetch = globalThis.fetch;
@@ -54,7 +49,7 @@ describe("retry", () => {
       Promise.resolve({
         ok: true,
         status: 200,
-        json: () => Promise.resolve({ embedding }),
+        json: () => Promise.resolve({ embeddings: [embedding] }),
       } as Response),
     ) as unknown as typeof fetch;
   };
@@ -97,11 +92,7 @@ describe("retry", () => {
     test("returns false after max retries exceeded", async () => {
       mockFetchFailure();
 
-      const result = await processWithRetry(
-        "note-123",
-        "Test content",
-        MAX_RETRIES,
-      );
+      const result = await processWithRetry("note-123", "Test content", MAX_RETRIES);
 
       expect(result).toBe(false);
       expect(loggerWarnSpy).toHaveBeenCalledWith(
@@ -250,9 +241,7 @@ describe("retry", () => {
       const result = await processEmbeddingQueue(async () => null);
 
       expect(result).toEqual({ processed: 0, failed: 1 });
-      expect(loggerWarnSpy).toHaveBeenCalledWith(
-        "Could not fetch content for note note-1",
-      );
+      expect(loggerWarnSpy).toHaveBeenCalledWith("Could not fetch content for note note-1");
       expect(markProcessedSpy).toHaveBeenCalledWith(1);
     });
 

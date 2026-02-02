@@ -1,45 +1,45 @@
 /**
  * Configuration schema and environment loading for Brain MCP server.
- * Uses Zod for validation and type-safe environment parsing.
+ * Uses plain TypeScript for validation - migrated from Zod.
  */
 
 import * as os from "node:os";
 import * as path from "node:path";
-import { z } from "zod";
-
-export const configSchema = z.object({
-  /** Transport mode: stdio for Claude/Cursor, http for TUI */
-  transport: z.enum(["stdio", "http"]).default("stdio"),
-
-  /** HTTP server port (only used when transport=http) */
-  httpPort: z.coerce.number().default(8765),
-
-  /** HTTP server host (only used when transport=http) */
-  httpHost: z.string().default("127.0.0.1"),
-
-  /** Log file path - NEVER log to stdout in MCP! */
-  logFile: z.string().default("~/.basic-memory/brain.log"),
-
-  /** Command to spawn basic-memory MCP server */
-  basicMemoryCmd: z.string().default("basic-memory"),
-
-  /** Log level */
-  logLevel: z.enum(["trace", "debug", "info", "warn", "error"]).default("info"),
-
-  /** Search guard mode: "warn" (log only), "enforce" (block duplicates), "off" (disabled) */
-  searchGuard: z.enum(["warn", "enforce", "off"]).default("warn"),
-
-  /** Computed: whether search guard is enabled */
-  searchGuardEnabled: z.boolean().optional(),
-
-  /** Computed: whether search guard should enforce (block duplicates) */
-  searchGuardEnforce: z.boolean().optional(),
-});
-
-export type Config = z.infer<typeof configSchema>;
 
 /**
- * Expand ~ to home directory in paths
+ * MCP Server configuration type.
+ */
+export interface Config {
+  /** Transport mode: stdio for Claude/Cursor, http for TUI */
+  transport: "stdio" | "http";
+
+  /** HTTP server port (only used when transport=http) */
+  httpPort: number;
+
+  /** HTTP server host (only used when transport=http) */
+  httpHost: string;
+
+  /** Log file path - NEVER log to stdout in MCP! */
+  logFile: string;
+
+  /** Command to spawn basic-memory MCP server */
+  basicMemoryCmd: string;
+
+  /** Log level */
+  logLevel: "trace" | "debug" | "info" | "warn" | "error";
+
+  /** Search guard mode: "warn" (log only), "enforce" (block duplicates), "off" (disabled) */
+  searchGuard: "warn" | "enforce" | "off";
+
+  /** Computed: whether search guard is enabled */
+  searchGuardEnabled?: boolean;
+
+  /** Computed: whether search guard should enforce (block duplicates) */
+  searchGuardEnforce?: boolean;
+}
+
+/**
+ * Expand ~ to home directory in paths.
  */
 function expandPath(p: string): string {
   if (p.startsWith("~")) {
@@ -49,29 +49,58 @@ function expandPath(p: string): string {
 }
 
 /**
- * Parse and validate configuration from environment variables
+ * Parse transport from environment variable.
+ */
+function parseTransport(value: string | undefined): "stdio" | "http" {
+  if (value === "http") return "http";
+  return "stdio";
+}
+
+/**
+ * Parse log level from environment variable.
+ */
+function parseLogLevel(value: string | undefined): "trace" | "debug" | "info" | "warn" | "error" {
+  const validLevels = ["trace", "debug", "info", "warn", "error"] as const;
+  if (value && validLevels.includes(value as (typeof validLevels)[number])) {
+    return value as (typeof validLevels)[number];
+  }
+  return "info";
+}
+
+/**
+ * Parse search guard mode from environment variable.
+ */
+function parseSearchGuard(value: string | undefined): "warn" | "enforce" | "off" {
+  const validModes = ["warn", "enforce", "off"] as const;
+  if (value && validModes.includes(value as (typeof validModes)[number])) {
+    return value as (typeof validModes)[number];
+  }
+  return "warn";
+}
+
+/**
+ * Parse and validate configuration from environment variables.
  */
 function loadConfig(): Config {
-  const raw = {
-    transport: process.env.BRAIN_TRANSPORT,
-    httpPort: process.env.BRAIN_HTTP_PORT,
-    httpHost: process.env.BRAIN_HTTP_HOST,
-    logFile: process.env.BRAIN_LOG_FILE,
-    basicMemoryCmd: process.env.BRAIN_BM_CMD,
-    logLevel: process.env.BRAIN_LOG_LEVEL,
-    searchGuard: process.env.BRAIN_SEARCH_GUARD,
+  const transport = parseTransport(process.env.BRAIN_TRANSPORT);
+  const httpPort = Number(process.env.BRAIN_HTTP_PORT) || 8765;
+  const httpHost = process.env.BRAIN_HTTP_HOST || "127.0.0.1";
+  const logFile = expandPath(process.env.BRAIN_LOG_FILE || "~/.basic-memory/brain.log");
+  const basicMemoryCmd = process.env.BRAIN_BM_CMD || "basic-memory";
+  const logLevel = parseLogLevel(process.env.BRAIN_LOG_LEVEL);
+  const searchGuard = parseSearchGuard(process.env.BRAIN_SEARCH_GUARD);
+
+  return {
+    transport,
+    httpPort,
+    httpHost,
+    logFile,
+    basicMemoryCmd,
+    logLevel,
+    searchGuard,
+    searchGuardEnabled: searchGuard !== "off",
+    searchGuardEnforce: searchGuard === "enforce",
   };
-
-  const parsed = configSchema.parse(raw);
-
-  // Expand paths
-  parsed.logFile = expandPath(parsed.logFile);
-
-  // Compute search guard flags
-  parsed.searchGuardEnabled = parsed.searchGuard !== "off";
-  parsed.searchGuardEnforce = parsed.searchGuard === "enforce";
-
-  return parsed;
 }
 
 export const config = loadConfig();

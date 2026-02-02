@@ -8,10 +8,7 @@
 import type { WorkflowMode } from "../../services/session/types";
 import type { NoteType } from "./noteType";
 import type { ContextNote } from "./sectionQueries";
-import type {
-  AgentHistorySummary,
-  SessionEnrichment,
-} from "./sessionEnrichment";
+import type { AgentHistorySummary, SessionEnrichment } from "./sessionEnrichment";
 import type { NoteStatus } from "./statusParser";
 
 /**
@@ -115,9 +112,7 @@ export interface StructuredOutputInput {
 /**
  * Build structured content output from context data
  */
-export function buildStructuredOutput(
-  input: StructuredOutputInput,
-): StructuredContent {
+export function buildStructuredOutput(input: StructuredOutputInput): StructuredContent {
   const {
     project,
     timeframe,
@@ -138,9 +133,7 @@ export function buildStructuredOutput(
     referencedNotes.length;
 
   // Build session context if enrichment available
-  const sessionContext = sessionEnrichment
-    ? buildSessionContext(sessionEnrichment)
-    : undefined;
+  const sessionContext = sessionEnrichment ? buildSessionContext(sessionEnrichment) : undefined;
 
   return {
     metadata: {
@@ -161,11 +154,8 @@ export function buildStructuredOutput(
 /**
  * Build structured session context from enrichment data
  */
-function buildSessionContext(
-  enrichment: SessionEnrichment,
-): StructuredSessionContext {
-  const { sessionState, taskNotes, featureNotes, recentAgentHistory } =
-    enrichment;
+function buildSessionContext(enrichment: SessionEnrichment): StructuredSessionContext {
+  const { sessionState, taskNotes, featureNotes, recentAgentHistory } = enrichment;
   const workflow = sessionState.orchestratorWorkflow;
 
   return {

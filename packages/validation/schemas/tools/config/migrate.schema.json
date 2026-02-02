@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://brain.dev/schemas/tools/config/migrate.json",
+  "title": "ConfigMigrateArgs",
+  "description": "Schema for migrate_config tool arguments. Migrates Brain configuration from old format to new format.",
+  "type": "object",
+  "properties": {
+    "dry_run": {
+      "type": "boolean",
+      "default": false,
+      "description": "Preview migration without making changes."
+    },
+    "cleanup": {
+      "type": "boolean",
+      "default": false,
+      "description": "Remove deprecated files after successful migration."
+    }
+  },
+  "additionalProperties": false
+}

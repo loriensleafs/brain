@@ -3,12 +3,7 @@
  * Provides embedding generation and health check functionality.
  */
 
-import {
-  type BatchEmbedResponse,
-  type OllamaConfig,
-  OllamaError,
-  type TaskType,
-} from "./types";
+import { type BatchEmbedResponse, type OllamaConfig, OllamaError, type TaskType } from "./types";
 
 /**
  * Client for interacting with Ollama API.
@@ -38,11 +33,7 @@ export class OllamaClient {
     taskType: TaskType = "search_document",
     model: string = "nomic-embed-text",
   ): Promise<number[]> {
-    const [embedding] = await this.generateBatchEmbeddings(
-      [text],
-      taskType,
-      model,
-    );
+    const [embedding] = await this.generateBatchEmbeddings([text], taskType, model);
     return embedding;
   }
 
@@ -82,10 +73,7 @@ export class OllamaClient {
     });
 
     if (!response.ok) {
-      throw new OllamaError(
-        `Ollama API error: ${response.status}`,
-        response.status,
-      );
+      throw new OllamaError(`Ollama API error: ${response.status}`, response.status);
     }
 
     const data = (await response.json()) as BatchEmbedResponse;

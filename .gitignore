@@ -34,6 +34,9 @@ node_modules/
 coverage/
 generated/
 
+# Exception: validation package types are committed (shared dependency)
+!packages/validation/generated/
+
 # ==============================
 # Git Hooks
 # ==============================

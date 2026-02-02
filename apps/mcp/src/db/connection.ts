@@ -26,8 +26,10 @@ export function createVectorConnection(): Database {
 
 export function verifySqliteVec(db: Database): string | null {
   try {
-    const result = db.query("SELECT vec_version()").get() as any;
-    return result["vec_version()"];
+    const result = db.query("SELECT vec_version()").get() as
+      | { "vec_version()": string }
+      | undefined;
+    return result?.["vec_version()"] ?? null;
   } catch {
     return null;
   }

@@ -9,11 +9,7 @@
  * Uses union-find algorithm for connected component detection in reference graphs.
  */
 
-import type {
-  FileCluster,
-  FileReference,
-  ParsedSourceFile,
-} from "./schemas/clusterSchema";
+import type { FileCluster, FileReference, ParsedSourceFile } from "./schemas/clusterSchema";
 import type { SourceSchema } from "./schemas/sourceSchema";
 
 /**
@@ -26,10 +22,7 @@ export async function detectClusters(
   const clusters: FileCluster[] = [];
 
   // Pass 1: Reference-based clusters
-  const refClusters = detectReferenceClusters(
-    files,
-    sourceSchema.relation_patterns,
-  );
+  const refClusters = detectReferenceClusters(files, sourceSchema.relation_patterns);
   clusters.push(...refClusters);
 
   // Pass 2: Folder-based clusters (for files not in reference clusters)
@@ -53,9 +46,7 @@ function detectReferenceClusters(
 ): FileCluster[] {
   // Build reference graph
   const references: FileReference[] = [];
-  const filePathMap = new Map(
-    files.map((f) => [extractFilename(f.path), f.path]),
-  );
+  const filePathMap = new Map(files.map((f) => [extractFilename(f.path), f.path]));
 
   for (const file of files) {
     for (const pattern of relationPatterns) {
@@ -66,9 +57,7 @@ function detectReferenceClusters(
         for (const match of matches) {
           const target = match[1] || match[0];
           const targetClean = target.replace(/\[\[|\]\]/g, "").trim();
-          const targetPath =
-            filePathMap.get(targetClean) ||
-            filePathMap.get(`${targetClean}.md`);
+          const targetPath = filePathMap.get(targetClean) || filePathMap.get(`${targetClean}.md`);
 
           if (targetPath && targetPath !== file.path) {
             references.push({
@@ -142,10 +131,11 @@ function buildClustersFromReferences(
 
   const find = (x: string): string => {
     if (!parent.has(x)) parent.set(x, x);
-    if (parent.get(x) !== x) {
-      parent.set(x, find(parent.get(x)!));
+    const current = parent.get(x);
+    if (current !== x && current !== undefined) {
+      parent.set(x, find(current));
     }
-    return parent.get(x)!;
+    return parent.get(x) ?? x;
   };
 
   const union = (a: string, b: string) => {
@@ -161,10 +151,7 @@ function buildClustersFromReferences(
 
   // Group by root
   const groups = new Map<string, string[]>();
-  const filesInRefs = new Set([
-    ...references.map((r) => r.from),
-    ...references.map((r) => r.to),
-  ]);
+  const filesInRefs = new Set([...references.map((r) => r.from), ...references.map((r) => r.to)]);
 
   for (const filePath of filesInRefs) {
     const root = find(filePath);
@@ -178,10 +165,7 @@ function buildClustersFromReferences(
   for (const [, groupFiles] of groups) {
     if (groupFiles.length > 1) {
       const groupParsedFiles = files.filter((f) => groupFiles.includes(f.path));
-      const totalLines = groupParsedFiles.reduce(
-        (sum, f) => sum + f.lineCount,
-        0,
-      );
+      const totalLines = groupParsedFiles.reduce((sum, f) => sum + f.lineCount, 0);
       const refCount = references.filter(
         (r) => groupFiles.includes(r.from) && groupFiles.includes(r.to),
       ).length;
@@ -213,7 +197,9 @@ function deduplicateClusters(clusters: FileCluster[]): FileCluster[] {
     const uniqueFiles = cluster.files.filter((f) => !seenFiles.has(f));
     if (uniqueFiles.length > 1) {
       result.push({ ...cluster, files: uniqueFiles });
-      uniqueFiles.forEach((f) => seenFiles.add(f));
+      for (const f of uniqueFiles) {
+        seenFiles.add(f);
+      }
     }
   }
 

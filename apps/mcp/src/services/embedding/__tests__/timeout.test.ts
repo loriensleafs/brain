@@ -12,8 +12,7 @@ import { OllamaClient } from "../../ollama/client";
 import { OllamaError } from "../../ollama/types";
 
 /** Helper to create mock fetch */
-const createFetchMock = (impl: () => unknown) =>
-  vi.fn(impl) as unknown as typeof fetch;
+const createFetchMock = (impl: () => unknown) => vi.fn(impl) as unknown as typeof fetch;
 
 describe("OllamaClient timeout behavior", () => {
   const originalFetch = globalThis.fetch;
@@ -67,10 +66,7 @@ describe("OllamaClient timeout behavior", () => {
     await client.generateBatchEmbeddings(["test"]);
 
     // Verify timeout was applied via AbortSignal
-    const callArgs = mockFetch.mock.calls[0] as unknown as [
-      string,
-      RequestInit,
-    ];
+    const callArgs = mockFetch.mock.calls[0] as unknown as [string, RequestInit];
     expect(callArgs[1].signal).toBeDefined();
   });
 
@@ -87,10 +83,7 @@ describe("OllamaClient timeout behavior", () => {
     await client.healthCheck();
 
     // Health check should use 5-second timeout
-    const callArgs = mockFetch.mock.calls[0] as unknown as [
-      string,
-      RequestInit,
-    ];
+    const callArgs = mockFetch.mock.calls[0] as unknown as [string, RequestInit];
     expect(callArgs[1].signal).toBeDefined();
   });
 
@@ -216,10 +209,7 @@ describe("Timeout configuration", () => {
     await client.generateBatchEmbeddings(["test"]);
 
     // Verify custom timeout was used
-    const callArgs = mockFetch.mock.calls[0] as unknown as [
-      string,
-      RequestInit,
-    ];
+    const callArgs = mockFetch.mock.calls[0] as unknown as [string, RequestInit];
     expect(callArgs[1].signal).toBeDefined();
   });
 
@@ -243,10 +233,7 @@ describe("Timeout configuration", () => {
     });
     await client.generateBatchEmbeddings(["test"]);
 
-    const callArgs = mockFetch.mock.calls[0] as unknown as [
-      string,
-      RequestInit,
-    ];
+    const callArgs = mockFetch.mock.calls[0] as unknown as [string, RequestInit];
     expect(callArgs[0]).toBe("http://custom:9999/api/embed");
     expect(callArgs[1].signal).toBeDefined();
   });
@@ -316,9 +303,7 @@ describe("Performance validation", () => {
     const client = new OllamaClient();
 
     const startTime = Date.now();
-    await client.generateBatchEmbeddings(
-      Array.from({ length: TEXT_COUNT }, (_, i) => `text${i}`),
-    );
+    await client.generateBatchEmbeddings(Array.from({ length: TEXT_COUNT }, (_, i) => `text${i}`));
     const elapsed = Date.now() - startTime;
 
     // Batch should be ~1 API call (30ms + overhead)

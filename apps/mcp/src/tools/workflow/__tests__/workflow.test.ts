@@ -35,9 +35,7 @@ describe("Workflow MCP Tools", () => {
         const { listWorkflowsToolDefinition } = await import("../schema");
 
         expect(listWorkflowsToolDefinition.description).toBeDefined();
-        expect(listWorkflowsToolDefinition.description?.length).toBeGreaterThan(
-          0,
-        );
+        expect(listWorkflowsToolDefinition.description?.length).toBeGreaterThan(0);
       });
 
       test("has input schema with object type", async () => {
@@ -51,34 +49,30 @@ describe("Workflow MCP Tools", () => {
       test("has correct name", async () => {
         const { sendWorkflowEventToolDefinition } = await import("../schema");
 
-        expect(sendWorkflowEventToolDefinition.name).toBe(
-          "send_workflow_event",
-        );
+        expect(sendWorkflowEventToolDefinition.name).toBe("send_workflow_event");
       });
 
       test("has description", async () => {
         const { sendWorkflowEventToolDefinition } = await import("../schema");
 
         expect(sendWorkflowEventToolDefinition.description).toBeDefined();
-        expect(
-          sendWorkflowEventToolDefinition.description?.length,
-        ).toBeGreaterThan(0);
+        expect(sendWorkflowEventToolDefinition.description?.length).toBeGreaterThan(0);
       });
 
       test("has input schema with required event_name property", async () => {
         const { sendWorkflowEventToolDefinition } = await import("../schema");
 
         expect(sendWorkflowEventToolDefinition.inputSchema.type).toBe("object");
-        expect(sendWorkflowEventToolDefinition.inputSchema.required).toContain(
-          "event_name",
-        );
+        expect(sendWorkflowEventToolDefinition.inputSchema.required).toContain("event_name");
       });
 
       test("has event_name and data properties in schema", async () => {
         const { sendWorkflowEventToolDefinition } = await import("../schema");
 
-        const properties = sendWorkflowEventToolDefinition.inputSchema
-          .properties as Record<string, unknown>;
+        const properties = sendWorkflowEventToolDefinition.inputSchema.properties as Record<
+          string,
+          unknown
+        >;
         expect(properties.event_name).toBeDefined();
         expect(properties.data).toBeDefined();
       });
@@ -95,18 +89,14 @@ describe("Workflow MCP Tools", () => {
         const { getWorkflowToolDefinition } = await import("../schema");
 
         expect(getWorkflowToolDefinition.description).toBeDefined();
-        expect(getWorkflowToolDefinition.description?.length).toBeGreaterThan(
-          0,
-        );
+        expect(getWorkflowToolDefinition.description?.length).toBeGreaterThan(0);
       });
 
       test("has input schema with required run_id property", async () => {
         const { getWorkflowToolDefinition } = await import("../schema");
 
         expect(getWorkflowToolDefinition.inputSchema.type).toBe("object");
-        expect(getWorkflowToolDefinition.inputSchema.required).toContain(
-          "run_id",
-        );
+        expect(getWorkflowToolDefinition.inputSchema.required).toContain("run_id");
       });
     });
   });
@@ -252,11 +242,9 @@ describe("Workflow MCP Tools", () => {
     });
 
     test("handler responses are valid JSON", async () => {
-      const {
-        listWorkflowsHandler,
-        sendWorkflowEventHandler,
-        getWorkflowHandler,
-      } = await import("../index");
+      const { listWorkflowsHandler, sendWorkflowEventHandler, getWorkflowHandler } = await import(
+        "../index"
+      );
 
       const results = await Promise.all([
         listWorkflowsHandler({}),
@@ -273,14 +261,7 @@ describe("Workflow MCP Tools", () => {
 
   describe("WorkflowStatus type structure", () => {
     test("WorkflowStatus includes all expected values", () => {
-      const validStatuses = [
-        "PENDING",
-        "RUNNING",
-        "COMPLETED",
-        "FAILED",
-        "CANCELLED",
-        "UNKNOWN",
-      ];
+      const validStatuses = ["PENDING", "RUNNING", "COMPLETED", "FAILED", "CANCELLED", "UNKNOWN"];
 
       expect(validStatuses).toContain("PENDING");
       expect(validStatuses).toContain("RUNNING");

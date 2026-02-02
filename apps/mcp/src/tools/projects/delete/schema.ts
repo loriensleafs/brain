@@ -21,11 +21,7 @@ import {
 } from "@brain/validation";
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 
-export {
-  validateDeleteProjectArgs,
-  parseDeleteProjectArgs,
-  type DeleteProjectArgs,
-};
+export { validateDeleteProjectArgs, parseDeleteProjectArgs, type DeleteProjectArgs };
 
 // Re-export for backward compatibility
 export const DeleteProjectArgsSchema = {

@@ -15,69 +15,78 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 import type { BrainConfig } from "../schema";
 import { DEFAULT_BRAIN_CONFIG } from "../schema";
 
-// Mock event emitter for chokidar
+// Module-level state for mock event emitter
 type EventHandler = (...args: unknown[]) => void;
 const mockWatcherEvents: Map<string, EventHandler[]> = new Map();
-const mockWatcher = {
-  on: vi.fn((event: string, handler: EventHandler) => {
+
+// Use vi.hoisted() to ensure mocks are available before vi.mock() hoisting
+const { mockWatcher, mockBrainConfig, mockTranslationLayer, mockRollback } = vi.hoisted(() => {
+  // Note: mockWatcherEvents is module-level, cleared in beforeEach
+  const mockWatcher = {
+    on: vi.fn(),
+    close: vi.fn(() => Promise.resolve()),
+  };
+
+  const mockBrainConfig = {
+    getBrainConfigPath: vi.fn(() => ""),
+    loadBrainConfig: vi.fn(async () => ({})),
+    loadBrainConfigSync: vi.fn(() => ({})),
+  };
+
+  const mockTranslationLayer = {
+    syncConfigToBasicMemory: vi.fn(async () => undefined),
+  };
+
+  const mockRollback = {
+    rollbackManager: {
+      isInitialized: vi.fn(() => true),
+      initialize: vi.fn(async () => true),
+      snapshot: vi.fn(() => ({})),
+      markAsGood: vi.fn(async () => undefined),
+      revert: vi.fn(async () => ({})),
+    },
+  };
+
+  return { mockWatcher, mockBrainConfig, mockTranslationLayer, mockRollback };
+});
+
+// Configure mock implementations that need runtime values
+function setupMockImplementations() {
+  mockWatcher.on.mockImplementation((event: string, handler: EventHandler) => {
     const handlers = mockWatcherEvents.get(event) || [];
     handlers.push(handler);
     mockWatcherEvents.set(event, handlers);
     return mockWatcher;
-  }),
-  close: vi.fn(() => Promise.resolve()),
-};
+  });
 
-// Mock chokidar
+  mockBrainConfig.getBrainConfigPath.mockReturnValue(
+    path.join(os.homedir(), ".config", "brain", "config.json"),
+  );
+  mockBrainConfig.loadBrainConfig.mockResolvedValue({ ...DEFAULT_BRAIN_CONFIG });
+  mockBrainConfig.loadBrainConfigSync.mockReturnValue({ ...DEFAULT_BRAIN_CONFIG });
+
+  mockRollback.rollbackManager.snapshot.mockReturnValue({
+    id: "snap-test",
+    createdAt: new Date(),
+    reason: "test",
+    checksum: "abc123",
+    config: DEFAULT_BRAIN_CONFIG,
+  });
+  mockRollback.rollbackManager.revert.mockResolvedValue({
+    success: true,
+    restoredConfig: DEFAULT_BRAIN_CONFIG,
+  });
+}
+
 vi.mock("chokidar", () => ({
   watch: vi.fn(() => mockWatcher),
 }));
 
-// Mock brain-config module
-const mockBrainConfig = {
-  getBrainConfigPath: vi.fn(() =>
-    path.join(os.homedir(), ".config", "brain", "config.json"),
-  ),
-  loadBrainConfig: vi.fn(async () => ({ ...DEFAULT_BRAIN_CONFIG })),
-  loadBrainConfigSync: vi.fn(() => ({ ...DEFAULT_BRAIN_CONFIG })),
-};
-
 vi.mock("../brain-config", () => mockBrainConfig);
-
-// Mock translation-layer module
-const mockTranslationLayer = {
-  syncConfigToBasicMemory: vi.fn(async () => undefined),
-};
-
 vi.mock("../translation-layer", () => mockTranslationLayer);
-
-// Mock rollback module
-const mockRollback = {
-  rollbackManager: {
-    isInitialized: vi.fn(() => true),
-    initialize: vi.fn(async () => true),
-    snapshot: vi.fn(() => ({
-      id: "snap-test",
-      createdAt: new Date(),
-      reason: "test",
-      checksum: "abc123",
-      config: DEFAULT_BRAIN_CONFIG,
-    })),
-    markAsGood: vi.fn(async () => undefined),
-    revert: vi.fn(async () => ({
-      success: true,
-      restoredConfig: DEFAULT_BRAIN_CONFIG,
-    })),
-  },
-};
-
 vi.mock("../rollback", () => mockRollback);
 
-import {
-  ConfigFileWatcher,
-  createConfigWatcher,
-  type WatcherEvent,
-} from "../watcher";
+import { ConfigFileWatcher, createConfigWatcher, type WatcherEvent } from "../watcher";
 
 /**
  * Create a test config with specified overrides.
@@ -120,6 +129,9 @@ describe("ConfigFileWatcher", () => {
     mockRollback.rollbackManager.snapshot.mockReset();
     mockRollback.rollbackManager.markAsGood.mockReset();
     mockRollback.rollbackManager.revert.mockReset();
+
+    // Set up mock implementations (must be done after reset)
+    setupMockImplementations();
 
     // Default behaviors
     mockBrainConfig.loadBrainConfig.mockResolvedValue({
@@ -190,11 +202,7 @@ describe("ConfigFileWatcher", () => {
 
       await watcher.start();
 
-      expect(
-        events.some(
-          (e) => e.type === "change" && e.message.includes("started"),
-        ),
-      ).toBe(true);
+      expect(events.some((e) => e.type === "change" && e.message.includes("started"))).toBe(true);
     });
 
     test("is idempotent - no-op if already running", async () => {
@@ -211,14 +219,8 @@ describe("ConfigFileWatcher", () => {
 
       await watcher.start();
 
-      expect(mockWatcher.on).toHaveBeenCalledWith(
-        "change",
-        expect.any(Function),
-      );
-      expect(mockWatcher.on).toHaveBeenCalledWith(
-        "error",
-        expect.any(Function),
-      );
+      expect(mockWatcher.on).toHaveBeenCalledWith("change", expect.any(Function));
+      expect(mockWatcher.on).toHaveBeenCalledWith("error", expect.any(Function));
     });
   });
 
@@ -260,11 +262,7 @@ describe("ConfigFileWatcher", () => {
 
       watcher.stop();
 
-      expect(
-        events.some(
-          (e) => e.type === "change" && e.message.includes("stopped"),
-        ),
-      ).toBe(true);
+      expect(events.some((e) => e.type === "change" && e.message.includes("stopped"))).toBe(true);
     });
   });
 
@@ -284,17 +282,13 @@ describe("ConfigFileWatcher", () => {
 
       // Wait less than debounce
       await new Promise((r) => setTimeout(r, 50));
-      const eventCountBefore = events.filter(
-        (e) => e.type === "reconfigure",
-      ).length;
+      const eventCountBefore = events.filter((e) => e.type === "reconfigure").length;
 
       // Wait for debounce to fire
       await waitForDebounce(100);
 
       // Should process only once
-      const eventCountAfter = events.filter(
-        (e) => e.type === "reconfigure",
-      ).length;
+      const eventCountAfter = events.filter((e) => e.type === "reconfigure").length;
       expect(eventCountAfter - eventCountBefore).toBeLessThanOrEqual(1);
 
       watcher.stop();
@@ -509,9 +503,7 @@ describe("ConfigFileWatcher", () => {
       await watcher.endMigration();
 
       // Should have processed the queued change
-      expect(
-        events.some((e) => e.type === "reconfigure" || e.type === "change"),
-      ).toBe(true);
+      expect(events.some((e) => e.type === "reconfigure" || e.type === "change")).toBe(true);
 
       watcher.stop();
     });
@@ -539,6 +531,8 @@ describe("ConfigFileWatcher", () => {
 
 describe("createConfigWatcher", () => {
   beforeEach(() => {
+    mockWatcherEvents.clear();
+    setupMockImplementations();
     mockBrainConfig.loadBrainConfig.mockResolvedValue({
       ...DEFAULT_BRAIN_CONFIG,
     });

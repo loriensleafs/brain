@@ -130,10 +130,7 @@ export async function checkForDuplicates(
     };
   } catch (error) {
     // If search fails, log and allow the write
-    logger.error(
-      { error, title },
-      "Search guard: search failed, allowing write",
-    );
+    logger.error({ error, title }, "Search guard: search failed, allowing write");
     return { allowed: true };
   }
 }

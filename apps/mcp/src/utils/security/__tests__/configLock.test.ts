@@ -7,33 +7,33 @@
 
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
-// Mock filesystem
-const mockFs = {
-  existsSync: vi.fn<(p: unknown) => boolean>(() => false),
-  openSync: vi.fn<(p: unknown, flags: unknown) => number>(() => 1),
-  writeSync: vi.fn<(fd: unknown, data: unknown) => void>(() => undefined),
-  closeSync: vi.fn<(fd: unknown) => void>(() => undefined),
-  unlinkSync: vi.fn<(p: unknown) => void>(() => undefined),
-  statSync: vi.fn<(p: unknown) => { mtimeMs: number }>(() => ({
-    mtimeMs: Date.now(),
-  })),
-  mkdirSync: vi.fn<(p: unknown, opts: unknown) => void>(() => undefined),
-  constants: {
-    O_CREAT: 0x0200,
-    O_EXCL: 0x0800,
-    O_WRONLY: 0x0001,
+// Use vi.hoisted() to ensure mocks are available before vi.mock() hoisting
+const { mockFs, mockLogger } = vi.hoisted(() => ({
+  mockFs: {
+    existsSync: vi.fn<(p: unknown) => boolean>(() => false),
+    openSync: vi.fn<(p: unknown, flags: unknown) => number>(() => 1),
+    writeSync: vi.fn<(fd: unknown, data: unknown) => void>(() => undefined),
+    closeSync: vi.fn<(fd: unknown) => void>(() => undefined),
+    unlinkSync: vi.fn<(p: unknown) => void>(() => undefined),
+    statSync: vi.fn<(p: unknown) => { mtimeMs: number }>(() => ({
+      mtimeMs: Date.now(),
+    })),
+    mkdirSync: vi.fn<(p: unknown, opts: unknown) => void>(() => undefined),
+    constants: {
+      O_CREAT: 0x0200,
+      O_EXCL: 0x0800,
+      O_WRONLY: 0x0001,
+    },
   },
-};
+  mockLogger: {
+    info: vi.fn(() => undefined),
+    warn: vi.fn(() => undefined),
+    error: vi.fn(() => undefined),
+    debug: vi.fn(() => undefined),
+  },
+}));
 
 vi.mock("fs", () => mockFs);
-
-// Mock logger
-const mockLogger = {
-  info: vi.fn(() => undefined),
-  warn: vi.fn(() => undefined),
-  error: vi.fn(() => undefined),
-  debug: vi.fn(() => undefined),
-};
 
 vi.mock("../../internal/logger", () => ({
   logger: mockLogger,
@@ -59,8 +59,7 @@ describe("acquireConfigLock", () => {
     // Default: directory exists, lock doesn't exist
     mockFs.existsSync.mockImplementation((p: unknown) => {
       const pStr = String(p);
-      if (pStr.includes(".basic-memory") && !pStr.includes(".lock"))
-        return true;
+      if (pStr.includes(".basic-memory") && !pStr.includes(".lock")) return true;
       return false;
     });
     mockFs.openSync.mockReturnValue(1);
@@ -257,9 +256,9 @@ describe("withConfigLock", () => {
     mockFs.existsSync.mockReturnValue(true);
     mockFs.statSync.mockReturnValue({ mtimeMs: Date.now() });
 
-    await expect(
-      withConfigLock(async () => "should not run", { timeoutMs: 100 }),
-    ).rejects.toThrow("timed out");
+    await expect(withConfigLock(async () => "should not run", { timeoutMs: 100 })).rejects.toThrow(
+      "timed out",
+    );
   });
 });
 
@@ -318,8 +317,8 @@ describe("withConfigLockSync", () => {
     mockFs.existsSync.mockReturnValue(true);
     mockFs.statSync.mockReturnValue({ mtimeMs: Date.now() });
 
-    expect(() =>
-      withConfigLockSync(() => "should not run", { timeoutMs: 100 }),
-    ).toThrow("timed out");
+    expect(() => withConfigLockSync(() => "should not run", { timeoutMs: 100 })).toThrow(
+      "timed out",
+    );
   });
 });

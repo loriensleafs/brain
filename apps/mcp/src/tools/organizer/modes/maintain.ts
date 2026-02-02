@@ -19,9 +19,7 @@ import type { MaintainConfig, MaintainResult } from "../types";
 /**
  * Find all maintenance issues in a project
  */
-export async function findMaintainIssues(
-  config: MaintainConfig,
-): Promise<MaintainResult> {
+export async function findMaintainIssues(config: MaintainConfig): Promise<MaintainResult> {
   const { project, staleThresholdDays = 90, qualityThreshold = 0.5 } = config;
 
   // Run all analyzers in parallel for efficiency

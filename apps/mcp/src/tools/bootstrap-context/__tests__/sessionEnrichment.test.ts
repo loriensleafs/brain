@@ -12,33 +12,48 @@
  */
 
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import type { AgentInvocation } from "../../../services/session/types";
-import {
-  createDefaultSessionState,
-  createEmptyWorkflow,
-} from "../../../services/session/types";
-import {
-  buildSessionEnrichment,
-  extractTaskWikilinks,
-} from "../sessionEnrichment";
 
-// Mock the basic-memory client
-const mockCallTool = vi.fn(() =>
-  Promise.resolve({ content: [{ type: "text", text: '{"results":[]}' }] }),
-);
-
-vi.mock("../../../proxy/client", () => ({
-  getBasicMemoryClient: () =>
+// Use vi.hoisted() to ensure mocks are available before vi.mock() hoisting
+const { mockSearchService } = vi.hoisted(() => {
+  const mockSearch = vi.fn(() =>
     Promise.resolve({
-      callTool: mockCallTool,
+      results: [],
+      total: 0,
+      source: "keyword" as const,
     }),
+  );
+
+  const mockSearchService = {
+    search: mockSearch,
+    semanticSearch: vi.fn(() => Promise.resolve([])),
+    keywordSearch: vi.fn(() =>
+      Promise.resolve({ results: [], total: 0, source: "keyword" as const }),
+    ),
+    hybridSearch: vi.fn(() =>
+      Promise.resolve({ results: [], total: 0, source: "keyword" as const }),
+    ),
+  };
+
+  return { mockSearchService };
+});
+
+// Mock the SearchService singleton
+vi.mock("../../../services/search", () => ({
+  getSearchService: () => mockSearchService,
+  SearchService: vi.fn(() => mockSearchService),
 }));
+
+import type { AgentInvocation } from "../../../services/session/types";
+import { createDefaultSessionState, createEmptyWorkflow } from "../../../services/session/types";
+import { buildSessionEnrichment, extractTaskWikilinks } from "../sessionEnrichment";
 
 describe("Session Enrichment", () => {
   beforeEach(() => {
-    mockCallTool.mockClear();
-    mockCallTool.mockResolvedValue({
-      content: [{ type: "text", text: '{"results":[]}' }],
+    mockSearchService.search.mockClear();
+    mockSearchService.search.mockResolvedValue({
+      results: [],
+      total: 0,
+      source: "keyword" as const,
     });
   });
 
@@ -62,22 +77,17 @@ describe("Session Enrichment", () => {
       const sessionState = createDefaultSessionState();
       sessionState.activeTask = "TASK-001";
 
-      mockCallTool.mockResolvedValueOnce({
-        content: [
+      mockSearchService.search.mockResolvedValueOnce({
+        results: [
           {
-            type: "text",
-            text: JSON.stringify({
-              results: [
-                {
-                  type: "entity",
-                  title: "TASK-001 Implementation",
-                  permalink: "tasks/TASK-001",
-                  content: "Task details",
-                },
-              ],
-            }),
+            title: "TASK-001 Implementation",
+            permalink: "tasks/TASK-001",
+            snippet: "Task details",
+            score: 0.85,
           },
         ],
+        total: 1,
+        source: "keyword" as const,
       });
 
       const result = await buildSessionEnrichment({
@@ -85,12 +95,12 @@ describe("Session Enrichment", () => {
         sessionState,
       });
 
-      expect(mockCallTool).toHaveBeenCalledWith({
-        name: "search_notes",
-        arguments: expect.objectContaining({
-          query: "TASK-001",
+      expect(mockSearchService.search).toHaveBeenCalledWith(
+        "TASK-001",
+        expect.objectContaining({
+          project: "test-project",
         }),
-      });
+      );
       expect(result.taskNotes.length).toBe(1);
       expect(result.taskNotes[0].title).toBe("TASK-001 Implementation");
     });
@@ -99,28 +109,23 @@ describe("Session Enrichment", () => {
       const sessionState = createDefaultSessionState();
       sessionState.activeFeature = "oauth-integration";
 
-      mockCallTool.mockResolvedValueOnce({
-        content: [
+      mockSearchService.search.mockResolvedValueOnce({
+        results: [
           {
-            type: "text",
-            text: JSON.stringify({
-              results: [
-                {
-                  type: "entity",
-                  title: "OAuth Integration Feature",
-                  permalink: "features/oauth-integration",
-                  content: "Feature details",
-                },
-                {
-                  type: "entity",
-                  title: "OAuth API Design",
-                  permalink: "features/oauth-integration/design",
-                  content: "Design notes",
-                },
-              ],
-            }),
+            title: "OAuth Integration Feature",
+            permalink: "features/oauth-integration",
+            snippet: "Feature details",
+            score: 0.9,
+          },
+          {
+            title: "OAuth API Design",
+            permalink: "features/oauth-integration/design",
+            snippet: "Design notes",
+            score: 0.85,
           },
         ],
+        total: 2,
+        source: "keyword" as const,
       });
 
       const result = await buildSessionEnrichment({
@@ -128,12 +133,12 @@ describe("Session Enrichment", () => {
         sessionState,
       });
 
-      expect(mockCallTool).toHaveBeenCalledWith({
-        name: "search_notes",
-        arguments: expect.objectContaining({
-          query: "oauth-integration",
+      expect(mockSearchService.search).toHaveBeenCalledWith(
+        "oauth-integration",
+        expect.objectContaining({
+          project: "test-project",
         }),
-      });
+      );
       expect(result.featureNotes.length).toBe(2);
     });
 
@@ -252,35 +257,18 @@ describe("Session Enrichment", () => {
       const sessionState = createDefaultSessionState();
       sessionState.activeFeature = "oauth-integration";
 
-      // search_notes for feature (returns feature with task wikilinks)
-      mockCallTool.mockResolvedValueOnce({
-        content: [
+      // Search returns feature with task wikilinks in snippet
+      mockSearchService.search.mockResolvedValue({
+        results: [
           {
-            type: "text",
-            text: JSON.stringify({
-              results: [
-                {
-                  type: "entity",
-                  title: "OAuth Integration Feature",
-                  permalink: "features/oauth-integration",
-                  content:
-                    "Feature details with tasks: [[TASK-001]] and [[TASK-002]]",
-                },
-              ],
-            }),
+            title: "OAuth Integration Feature",
+            permalink: "features/oauth-integration",
+            snippet: "Feature details with tasks: [[TASK-001]] and [[TASK-002]]",
+            score: 0.9,
           },
         ],
-      });
-
-      // read_note calls for fullContent enrichment and relation expansion
-      // Return content with task wikilinks
-      mockCallTool.mockResolvedValue({
-        content: [
-          {
-            type: "text",
-            text: "Feature details with tasks: [[TASK-001]] and [[TASK-002]] - full content",
-          },
-        ],
+        total: 1,
+        source: "keyword" as const,
       });
 
       const result = await buildSessionEnrichment({
@@ -302,35 +290,25 @@ describe("Session Enrichment", () => {
       const sessionState = createDefaultSessionState();
       sessionState.activeFeature = "test-feature";
 
-      // search_notes for feature
-      mockCallTool.mockResolvedValueOnce({
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify({
-              results: [
-                {
-                  type: "entity",
-                  title: "Test Feature",
-                  permalink: "features/test-feature",
-                  content: "References [[TASK-999]] which does not exist",
-                },
-              ],
-            }),
-          },
-        ],
-      });
-
-      // read_note and additional search_notes calls return content without task results
-      // (mimics missing task scenario)
-      mockCallTool.mockResolvedValue({
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify({ results: [] }),
-          },
-        ],
-      });
+      // First call returns feature with task reference, subsequent calls return empty
+      mockSearchService.search
+        .mockResolvedValueOnce({
+          results: [
+            {
+              title: "Test Feature",
+              permalink: "features/test-feature",
+              snippet: "References [[TASK-999]] which does not exist",
+              score: 0.9,
+            },
+          ],
+          total: 1,
+          source: "keyword" as const,
+        })
+        .mockResolvedValue({
+          results: [],
+          total: 0,
+          source: "keyword" as const,
+        });
 
       const result = await buildSessionEnrichment({
         project: "test-project",
@@ -341,9 +319,7 @@ describe("Session Enrichment", () => {
       expect(result.featuresWithTasks.length).toBeGreaterThanOrEqual(1);
 
       // Find the test feature and verify its tasks array exists (may be empty)
-      const testFeature = result.featuresWithTasks.find(
-        (f) => f.feature.title === "Test Feature",
-      );
+      const testFeature = result.featuresWithTasks.find((f) => f.feature.title === "Test Feature");
       expect(testFeature).toBeDefined();
       expect(testFeature?.tasks).toBeDefined();
     });

@@ -14,23 +14,20 @@ import { resetOllamaClient } from "../generateEmbedding";
 describe("batchGenerate", () => {
   const originalFetch = globalThis.fetch;
 
-  // Helper to create mock fetch response
+  // Helper to create mock fetch response (batch API format)
   const mockFetchSuccess = (embedding: number[]) => {
     globalThis.fetch = vi.fn(() =>
       Promise.resolve({
         ok: true,
         status: 200,
-        json: () => Promise.resolve({ embedding }),
+        json: () => Promise.resolve({ embeddings: [embedding] }),
       } as Response),
     ) as unknown as typeof fetch;
   };
 
   // Helper to create mock fetch that fails on specific text indices (not call indices)
   // Uses 400 Bad Request (non-retryable) to ensure immediate failure
-  const mockFetchWithFailures = (
-    embedding: number[],
-    failTextIndices: Set<number>,
-  ) => {
+  const mockFetchWithFailures = (embedding: number[], failTextIndices: Set<number>) => {
     // Track which text index we're processing based on successful calls
     let textIndex = 0;
     globalThis.fetch = vi.fn(() => {
@@ -44,7 +41,7 @@ describe("batchGenerate", () => {
       return Promise.resolve({
         ok: true,
         status: 200,
-        json: () => Promise.resolve({ embedding }),
+        json: () => Promise.resolve({ embeddings: [embedding] }),
       } as Response);
     }) as unknown as typeof fetch;
   };

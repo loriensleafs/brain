@@ -7,7 +7,7 @@
  * To regenerate: bun run generate:types
  * Source schemas: packages/validation/schemas/*.schema.json
  *
- * Generated: 2026-02-02T02:38:47.255Z
+ * Generated: 2026-02-02T04:07:26.331Z
  */
 
 // Source: schemas/config/brain-config.schema.json
@@ -109,6 +109,49 @@ export interface InngestConfig {
    * Always true - local dev mode only
    */
   dev: true;
+}
+
+// Source: schemas/config/mcp-server.schema.json
+/**
+ * Configuration schema for Brain MCP server. Loaded from environment variables.
+ */
+export interface McpServerConfig {
+  /**
+   * Transport mode: stdio for Claude/Cursor, http for TUI.
+   */
+  transport?: "stdio" | "http";
+  /**
+   * HTTP server port (only used when transport=http).
+   */
+  httpPort?: number;
+  /**
+   * HTTP server host (only used when transport=http).
+   */
+  httpHost?: string;
+  /**
+   * Log file path - NEVER log to stdout in MCP!
+   */
+  logFile?: string;
+  /**
+   * Command to spawn basic-memory MCP server.
+   */
+  basicMemoryCmd?: string;
+  /**
+   * Log level.
+   */
+  logLevel?: "trace" | "debug" | "info" | "warn" | "error";
+  /**
+   * Search guard mode: 'warn' (log only), 'enforce' (block duplicates), 'off' (disabled).
+   */
+  searchGuard?: "warn" | "enforce" | "off";
+  /**
+   * Computed: whether search guard is enabled.
+   */
+  searchGuardEnabled?: boolean;
+  /**
+   * Computed: whether search guard should enforce (block duplicates).
+   */
+  searchGuardEnforce?: boolean;
 }
 
 // Source: schemas/domain/memory-index-entry.schema.json
@@ -728,6 +771,21 @@ export interface ConfigGetArgs {
    * Specific config key to retrieve (e.g., 'logging.level', 'defaults.memories_location'). If not provided, returns entire config.
    */
   key?: string;
+}
+
+// Source: schemas/tools/config/migrate.schema.json
+/**
+ * Schema for migrate_config tool arguments. Migrates Brain configuration from old format to new format.
+ */
+export interface ConfigMigrateArgs {
+  /**
+   * Preview migration without making changes.
+   */
+  dry_run?: boolean;
+  /**
+   * Remove deprecated files after successful migration.
+   */
+  cleanup?: boolean;
 }
 
 // Source: schemas/tools/config/reset.schema.json

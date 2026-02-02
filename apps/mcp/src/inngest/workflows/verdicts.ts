@@ -80,9 +80,7 @@ function buildBlockingReason(
     return details ? `${base}: ${details}` : base;
   }
 
-  const agentList = blockingAgents
-    .map(({ agent, verdict }) => `${agent} (${verdict})`)
-    .join(", ");
+  const agentList = blockingAgents.map(({ agent, verdict }) => `${agent} (${verdict})`).join(", ");
   return `Blocked by ${blockingAgents.length} agents: ${agentList}`;
 }
 
@@ -102,9 +100,7 @@ function buildWarningReason(
     return details ? `${base}: ${details}` : base;
   }
 
-  const agentList = warningAgents
-    .map(({ agent, verdict }) => `${agent} (${verdict})`)
-    .join(", ");
+  const agentList = warningAgents.map(({ agent, verdict }) => `${agent} (${verdict})`).join(", ");
   return `Warnings from ${warningAgents.length} agents: ${agentList}`;
 }
 
@@ -167,15 +163,13 @@ export function mergeVerdicts(verdicts: AgentVerdict[]): FinalVerdict {
   if (blockingAgentData.length > 0) {
     // Find highest priority blocking verdict
     for (const blockingVerdict of BLOCKING_VERDICTS) {
-      const found = blockingAgentData.find(
-        (a) => a.verdict === blockingVerdict,
-      );
+      const found = blockingAgentData.find((a) => a.verdict === blockingVerdict);
       if (found) {
         finalVerdict = blockingVerdict;
         break;
       }
     }
-    finalVerdict = finalVerdict! || "FAIL";
+    finalVerdict = finalVerdict ?? "FAIL";
     isBlocking = true;
     reason = buildBlockingReason(blockingAgentData);
   } else if (warningAgentData.length > 0) {
@@ -187,7 +181,7 @@ export function mergeVerdicts(verdicts: AgentVerdict[]): FinalVerdict {
         break;
       }
     }
-    finalVerdict = finalVerdict! || "WARN";
+    finalVerdict = finalVerdict ?? "WARN";
     isBlocking = false;
     reason = buildWarningReason(warningAgentData);
   } else {

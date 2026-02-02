@@ -16,15 +16,11 @@ import { getMissingEmbeddingsCount } from "../catchupTrigger";
 
 describe("getMissingEmbeddingsCount", () => {
   it("should reject empty project parameter", async () => {
-    await expect(getMissingEmbeddingsCount("")).rejects.toThrow(
-      "Project parameter is required",
-    );
+    await expect(getMissingEmbeddingsCount("")).rejects.toThrow("Project parameter is required");
   });
 
   it("should reject whitespace-only project parameter", async () => {
-    await expect(getMissingEmbeddingsCount("   ")).rejects.toThrow(
-      "Project parameter is required",
-    );
+    await expect(getMissingEmbeddingsCount("   ")).rejects.toThrow("Project parameter is required");
   });
 
   it("should return 0 on error (graceful degradation)", async () => {

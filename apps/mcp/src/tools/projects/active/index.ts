@@ -21,9 +21,7 @@ export {
   toolDefinition,
 } from "./schema";
 
-export async function handler(
-  args: ActiveProjectArgs,
-): Promise<CallToolResult> {
+export async function handler(args: ActiveProjectArgs): Promise<CallToolResult> {
   const operation = args.operation || "get";
 
   switch (operation) {

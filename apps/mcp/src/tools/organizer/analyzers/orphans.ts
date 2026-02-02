@@ -12,9 +12,7 @@ import { extractWikilinks } from "../utils/wikilinks";
 /**
  * Find notes that have no relations to other notes
  */
-export async function findOrphanNotes(
-  project: string,
-): Promise<QualityIssue[]> {
+export async function findOrphanNotes(project: string): Promise<QualityIssue[]> {
   const client = await getBasicMemoryClient();
   const issues: QualityIssue[] = [];
 
@@ -49,10 +47,14 @@ export async function findOrphanNotes(
   return issues;
 }
 
+interface McpToolResult {
+  content?: Array<{ type: string; text?: string }>;
+}
+
 /**
  * Parse list_directory output to extract file paths
  */
-function parseListDirectoryResult(result: any): string[] {
+function parseListDirectoryResult(result: McpToolResult): string[] {
   const text = result.content?.[0]?.text || "";
   const files: string[] = [];
   const lines = text.split("\n");
@@ -70,7 +72,7 @@ function parseListDirectoryResult(result: any): string[] {
 /**
  * Count relations in a note
  */
-function countRelations(result: any): number {
+function countRelations(result: McpToolResult): number {
   const text = result.content?.[0]?.text || "";
 
   // Count wikilinks as relations

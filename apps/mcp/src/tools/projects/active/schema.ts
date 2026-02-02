@@ -12,11 +12,7 @@ import {
 } from "@brain/validation";
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 
-export {
-  validateActiveProjectArgs,
-  parseActiveProjectArgs,
-  type ActiveProjectArgs,
-};
+export { validateActiveProjectArgs, parseActiveProjectArgs, type ActiveProjectArgs };
 
 // Re-export for backward compatibility
 export const ActiveProjectArgsSchema = {

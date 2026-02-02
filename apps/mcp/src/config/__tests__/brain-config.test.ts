@@ -15,26 +15,32 @@ import * as path from "node:path";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { type BrainConfig, DEFAULT_BRAIN_CONFIG } from "../schema";
 
-// Mock filesystem
-const mockFs = {
-  existsSync: vi.fn<(p: string) => boolean>(() => false),
-  readFileSync: vi.fn<(p: string, enc: string) => string>(() => ""),
-  writeFileSync: vi.fn<(p: string, content: string, opts: unknown) => void>(
-    () => undefined,
-  ),
-  mkdirSync: vi.fn<(p: string, opts: unknown) => void>(() => undefined),
-  chmodSync: vi.fn<(p: string, mode: number) => void>(() => undefined),
-  renameSync: vi.fn<(from: string, to: string) => void>(() => undefined),
-  unlinkSync: vi.fn<(p: string) => void>(() => undefined),
-  statSync: vi.fn<(p: string) => { mode: number }>(() => ({ mode: 0o700 })),
-  openSync: vi.fn<(p: string, flags: number) => number>(() => 1),
-  closeSync: vi.fn<(fd: number) => void>(() => undefined),
-  constants: {
-    O_CREAT: 0x0200,
-    O_EXCL: 0x0800,
-    O_WRONLY: 0x0001,
+// Use vi.hoisted() to ensure mocks are available before vi.mock() hoisting
+const { mockFs, mockLock } = vi.hoisted(() => ({
+  mockFs: {
+    existsSync: vi.fn<(p: string) => boolean>(() => false),
+    readFileSync: vi.fn<(p: string, enc: string) => string>(() => ""),
+    writeFileSync: vi.fn<(p: string, content: string, opts: unknown) => void>(() => undefined),
+    mkdirSync: vi.fn<(p: string, opts: unknown) => void>(() => undefined),
+    chmodSync: vi.fn<(p: string, mode: number) => void>(() => undefined),
+    renameSync: vi.fn<(from: string, to: string) => void>(() => undefined),
+    unlinkSync: vi.fn<(p: string) => void>(() => undefined),
+    statSync: vi.fn<(p: string) => { mode: number }>(() => ({ mode: 0o700 })),
+    openSync: vi.fn<(p: string, flags: number) => number>(() => 1),
+    closeSync: vi.fn<(fd: number) => void>(() => undefined),
+    constants: {
+      O_CREAT: 0x0200,
+      O_EXCL: 0x0800,
+      O_WRONLY: 0x0001,
+    },
   },
-};
+  mockLock: {
+    acquireConfigLock: vi.fn<(opts: unknown) => Promise<{ acquired: boolean; error?: string }>>(
+      async () => ({ acquired: true }),
+    ),
+    releaseConfigLock: vi.fn<() => boolean>(() => true),
+  },
+}));
 
 vi.mock("fs", () => mockFs);
 
@@ -45,14 +51,6 @@ vi.mock("../path-validator", () => ({
   expandTilde: (p: string) => p.replace(/^~/, os.homedir()),
   normalizePath: (p: string) => path.normalize(p),
 }));
-
-// Mock configLock
-const mockLock = {
-  acquireConfigLock: vi.fn<
-    (opts: unknown) => Promise<{ acquired: boolean; error?: string }>
-  >(async () => ({ acquired: true })),
-  releaseConfigLock: vi.fn<() => boolean>(() => true),
-};
 
 vi.mock("../../utils/security/configLock", () => mockLock);
 
@@ -255,9 +253,7 @@ describe("saveBrainConfig", () => {
       version: "1.0.0", // Wrong version
     } as unknown as BrainConfig;
 
-    await expect(saveBrainConfig(invalidConfig)).rejects.toThrow(
-      BrainConfigError,
-    );
+    await expect(saveBrainConfig(invalidConfig)).rejects.toThrow(BrainConfigError);
     await expect(saveBrainConfig(invalidConfig)).rejects.toMatchObject({
       code: "VALIDATION_ERROR",
     });
@@ -309,26 +305,20 @@ describe("saveBrainConfig", () => {
       throw new Error("Disk full");
     });
 
-    await expect(saveBrainConfig(DEFAULT_BRAIN_CONFIG)).rejects.toThrow(
-      BrainConfigError,
-    );
+    await expect(saveBrainConfig(DEFAULT_BRAIN_CONFIG)).rejects.toThrow(BrainConfigError);
 
     // Temp file cleanup attempted (unlinkSync may be called)
     expect(mockLock.releaseConfigLock).toHaveBeenCalled();
   });
 
   test("cleans up temp file on rename failure", async () => {
-    mockFs.existsSync.mockImplementation((p: string) =>
-      String(p).includes(".tmp"),
-    );
+    mockFs.existsSync.mockImplementation((p: string) => String(p).includes(".tmp"));
     mockFs.readFileSync.mockReturnValue(JSON.stringify(DEFAULT_BRAIN_CONFIG));
     mockFs.renameSync.mockImplementation(() => {
       throw new Error("Cross-device link");
     });
 
-    await expect(saveBrainConfig(DEFAULT_BRAIN_CONFIG)).rejects.toThrow(
-      BrainConfigError,
-    );
+    await expect(saveBrainConfig(DEFAULT_BRAIN_CONFIG)).rejects.toThrow(BrainConfigError);
     expect(mockFs.unlinkSync).toHaveBeenCalled();
   });
 
@@ -348,9 +338,7 @@ describe("saveBrainConfig", () => {
       error: "Timeout",
     });
 
-    await expect(saveBrainConfig(DEFAULT_BRAIN_CONFIG)).rejects.toThrow(
-      BrainConfigError,
-    );
+    await expect(saveBrainConfig(DEFAULT_BRAIN_CONFIG)).rejects.toThrow(BrainConfigError);
     await expect(saveBrainConfig(DEFAULT_BRAIN_CONFIG)).rejects.toMatchObject({
       code: "LOCK_ERROR",
     });

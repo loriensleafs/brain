@@ -13,10 +13,7 @@
  */
 
 import { logger } from "../../utils/internal/logger";
-import {
-  type BrainSessionPersistence,
-  getDefaultPersistence,
-} from "./brain-persistence";
+import { type BrainSessionPersistence, getDefaultPersistence } from "./brain-persistence";
 import type { ModeHistoryEntry, SessionState, WorkflowMode } from "./types";
 import { createDefaultSessionState } from "./types";
 
@@ -103,9 +100,7 @@ export async function getSession(): Promise<SessionState | null> {
  * @param updates - Partial updates to apply
  * @returns Updated session state or null on error
  */
-export async function setSession(
-  updates: SessionUpdates,
-): Promise<SessionState | null> {
+export async function setSession(updates: SessionUpdates): Promise<SessionState | null> {
   // Get or create current state from Brain notes
   let state = await getPersistence().loadSession();
   if (!state) {
@@ -119,10 +114,7 @@ export async function setSession(
     state = {
       ...state,
       currentMode: updates.mode,
-      modeHistory: [
-        ...state.modeHistory,
-        { mode: updates.mode, timestamp: now },
-      ],
+      modeHistory: [...state.modeHistory, { mode: updates.mode, timestamp: now }],
       updatedAt: now,
     };
     logger.info({ mode: updates.mode }, "Session mode updated");
@@ -166,10 +158,7 @@ export async function setSession(
  * @param newMode - Mode to transition to
  * @returns Updated SessionState with mode change recorded in history
  */
-export function withModeChange(
-  state: SessionState,
-  newMode: WorkflowMode,
-): SessionState {
+export function withModeChange(state: SessionState, newMode: WorkflowMode): SessionState {
   const now = new Date().toISOString();
   return {
     ...state,
@@ -187,10 +176,7 @@ export function withModeChange(
  * @param feature - Feature slug/path or undefined to clear
  * @returns Updated SessionState with new active feature
  */
-export function withFeatureChange(
-  state: SessionState,
-  feature: string | undefined,
-): SessionState {
+export function withFeatureChange(state: SessionState, feature: string | undefined): SessionState {
   return {
     ...state,
     activeFeature: feature,
@@ -207,10 +193,7 @@ export function withFeatureChange(
  * @param task - Task identifier or undefined to clear
  * @returns Updated SessionState with new active task
  */
-export function withTaskChange(
-  state: SessionState,
-  task: string | undefined,
-): SessionState {
+export function withTaskChange(state: SessionState, task: string | undefined): SessionState {
   return {
     ...state,
     activeTask: task,
@@ -244,10 +227,7 @@ export function deserializeSessionState(json: string): SessionState | null {
   try {
     const parsed = JSON.parse(json) as SessionState;
     // Basic validation
-    if (
-      typeof parsed.currentMode !== "string" ||
-      !Array.isArray(parsed.modeHistory)
-    ) {
+    if (typeof parsed.currentMode !== "string" || !Array.isArray(parsed.modeHistory)) {
       return null;
     }
     return parsed;
@@ -264,10 +244,7 @@ export function deserializeSessionState(json: string): SessionState | null {
  * @param count - Number of entries to return (default 5)
  * @returns Array of recent mode history entries
  */
-export function getRecentModeHistory(
-  state: SessionState,
-  count: number = 5,
-): ModeHistoryEntry[] {
+export function getRecentModeHistory(state: SessionState, count: number = 5): ModeHistoryEntry[] {
   return state.modeHistory.slice(-count);
 }
 

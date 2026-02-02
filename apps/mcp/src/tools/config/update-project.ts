@@ -16,10 +16,7 @@ import { detectConfigDiff } from "../../config/diff";
 import { expandTilde, normalizePath } from "../../config/path-validator";
 import { rollbackManager } from "../../config/rollback";
 import type { BrainConfig, ProjectConfig } from "../../config/schema";
-import {
-  resolveMemoriesPath,
-  syncConfigToBasicMemory,
-} from "../../config/translation-layer";
+import { resolveMemoriesPath, syncConfigToBasicMemory } from "../../config/translation-layer";
 import { getBasicMemoryClient } from "../../proxy/client";
 import type { ConfigUpdateProjectArgs } from "./schema";
 
@@ -168,9 +165,7 @@ function migrateMemories(oldPath: string, newPath: string): MigrationResult {
 /**
  * Verify that a memory is searchable via basic-memory.
  */
-async function verifyIndexing(
-  memoriesPath: string,
-): Promise<{ success: boolean; error?: string }> {
+async function verifyIndexing(memoriesPath: string): Promise<{ success: boolean; error?: string }> {
   try {
     // Check if any .md files exist
     const mdFiles: string[] = [];
@@ -228,16 +223,8 @@ function resolvePath(inputPath: string): string {
 /**
  * Handler for config_update_project tool.
  */
-export async function handler(
-  args: ConfigUpdateProjectArgs,
-): Promise<CallToolResult> {
-  const {
-    project,
-    code_path,
-    memories_path,
-    memories_mode,
-    migrate = true,
-  } = args;
+export async function handler(args: ConfigUpdateProjectArgs): Promise<CallToolResult> {
+  const { project, code_path, memories_path, memories_mode, migrate = true } = args;
 
   try {
     // Load current config
@@ -266,10 +253,7 @@ export async function handler(
 
     // Create snapshot before modification
     if (rollbackManager.isInitialized()) {
-      rollbackManager.snapshot(
-        oldConfig,
-        `Before config_update_project: ${project}`,
-      );
+      rollbackManager.snapshot(oldConfig, `Before config_update_project: ${project}`);
     }
 
     // Get current project config
@@ -347,21 +331,13 @@ export async function handler(
     // Check if migration is needed
     let migrationResult: MigrationResult | null = null;
     const pathChanged =
-      oldResolvedPath.path &&
-      newResolvedPath.path &&
-      oldResolvedPath.path !== newResolvedPath.path;
+      oldResolvedPath.path && newResolvedPath.path && oldResolvedPath.path !== newResolvedPath.path;
 
     if (migrate && pathChanged && fs.existsSync(oldResolvedPath.path)) {
       // Perform migration
-      migrationResult = migrateMemories(
-        oldResolvedPath.path,
-        newResolvedPath.path,
-      );
+      migrationResult = migrateMemories(oldResolvedPath.path, newResolvedPath.path);
 
-      if (
-        !migrationResult.migrated &&
-        !migrationResult.error?.includes("Cleanup failed")
-      ) {
+      if (!migrationResult.migrated && !migrationResult.error?.includes("Cleanup failed")) {
         // Migration failed - rollback
         if (rollbackManager.isInitialized()) {
           await rollbackManager.rollback("lastKnownGood");
@@ -422,10 +398,7 @@ export async function handler(
 
     // Mark as good after successful update
     if (rollbackManager.isInitialized()) {
-      await rollbackManager.markAsGood(
-        newConfig,
-        `After config_update_project: ${project}`,
-      );
+      await rollbackManager.markAsGood(newConfig, `After config_update_project: ${project}`);
     }
 
     // Detect diff for response

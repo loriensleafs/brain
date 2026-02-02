@@ -210,10 +210,9 @@ describe("Optimistic Locking", () => {
       const state = createDefaultSessionState();
       storage.initialize(state);
 
-      await updateSessionWithLocking(
-        (current) => ({ ...current, activeTask: "TASK-001" }),
-        { storage },
-      );
+      await updateSessionWithLocking((current) => ({ ...current, activeTask: "TASK-001" }), {
+        storage,
+      });
 
       const updated = await storage.read();
       expect(updated?.version).toBe(2);
@@ -221,9 +220,9 @@ describe("Optimistic Locking", () => {
     });
 
     test("throws for non-existent session", async () => {
-      await expect(
-        updateSessionWithLocking((current) => current, { storage }),
-      ).rejects.toThrow("Session not found");
+      await expect(updateSessionWithLocking((current) => current, { storage })).rejects.toThrow(
+        "Session not found",
+      );
     });
 
     test("preserves state fields not in update", async () => {
@@ -231,10 +230,9 @@ describe("Optimistic Locking", () => {
       state.activeFeature = "existing-feature";
       storage.initialize(state);
 
-      await updateSessionWithLocking(
-        (current) => ({ ...current, activeTask: "TASK-001" }),
-        { storage },
-      );
+      await updateSessionWithLocking((current) => ({ ...current, activeTask: "TASK-001" }), {
+        storage,
+      });
 
       const updated = await storage.read();
       expect(updated?.activeFeature).toBe("existing-feature");
@@ -287,16 +285,13 @@ describe("Optimistic Locking", () => {
       baseStorage.initialize(createDefaultSessionState());
 
       // Cause conflict on first 2 writes, succeed on 3rd
-      const conflictStorage = new SimulatedConcurrentStorage(
-        baseStorage,
-        [1, 2],
-      );
+      const conflictStorage = new SimulatedConcurrentStorage(baseStorage, [1, 2]);
 
       // Should succeed after retries
-      await updateSessionWithLocking(
-        (current) => ({ ...current, activeTask: "test" }),
-        { storage: conflictStorage, maxRetries: 3 },
-      );
+      await updateSessionWithLocking((current) => ({ ...current, activeTask: "test" }), {
+        storage: conflictStorage,
+        maxRetries: 3,
+      });
 
       const updated = await baseStorage.read();
       expect(updated?.activeTask).toBe("test");
@@ -307,16 +302,13 @@ describe("Optimistic Locking", () => {
       baseStorage.initialize(createDefaultSessionState());
 
       // Cause conflict on every write
-      const conflictStorage = new SimulatedConcurrentStorage(
-        baseStorage,
-        [1, 2, 3, 4, 5, 6],
-      );
+      const conflictStorage = new SimulatedConcurrentStorage(baseStorage, [1, 2, 3, 4, 5, 6]);
 
       try {
-        await updateSessionWithLocking(
-          (current) => ({ ...current, activeTask: "test" }),
-          { storage: conflictStorage, maxRetries: 2 },
-        );
+        await updateSessionWithLocking((current) => ({ ...current, activeTask: "test" }), {
+          storage: conflictStorage,
+          maxRetries: 2,
+        });
         expect(true).toBe(false); // Should not reach here
       } catch (error) {
         expect(error).toBeInstanceOf(VersionConflictError);
@@ -330,10 +322,7 @@ describe("Optimistic Locking", () => {
       baseStorage.initialize(createDefaultSessionState());
 
       // Always conflict
-      const conflictStorage = new SimulatedConcurrentStorage(
-        baseStorage,
-        [1, 2, 3, 4],
-      );
+      const conflictStorage = new SimulatedConcurrentStorage(baseStorage, [1, 2, 3, 4]);
 
       try {
         await updateSessionWithLocking((current) => ({ ...current }), {
@@ -400,10 +389,7 @@ describe("Optimistic Locking", () => {
       baseStorage.initialize(initial);
 
       // Conflict on first two writes, succeed on third
-      const conflictStorage = new SimulatedConcurrentStorage(
-        baseStorage,
-        [1, 2],
-      );
+      const conflictStorage = new SimulatedConcurrentStorage(baseStorage, [1, 2]);
 
       await updateSessionWithLocking(
         (current) => ({
@@ -429,10 +415,7 @@ describe("Optimistic Locking", () => {
       baseStorage.initialize(createDefaultSessionState());
 
       // Conflict on every write (will exhaust default 3 retries)
-      const conflictStorage = new SimulatedConcurrentStorage(
-        baseStorage,
-        [1, 2, 3, 4, 5],
-      );
+      const conflictStorage = new SimulatedConcurrentStorage(baseStorage, [1, 2, 3, 4, 5]);
 
       try {
         await updateSessionWithLocking(

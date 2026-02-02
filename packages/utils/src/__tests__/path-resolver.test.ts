@@ -24,21 +24,15 @@ describe("path-resolver", () => {
     });
 
     it("throws ProjectNotFoundError for invalid project", async () => {
-      const { getProjectMemoriesPath, ProjectNotFoundError } = await import(
-        "../path-resolver"
-      );
+      const { getProjectMemoriesPath, ProjectNotFoundError } = await import("../path-resolver");
 
       try {
         await getProjectMemoriesPath("nonexistent-project");
         expect(true).toBe(false); // Should not reach here
       } catch (error) {
         expect(error).toBeInstanceOf(ProjectNotFoundError);
-        expect((error as ProjectNotFoundError).project).toBe(
-          "nonexistent-project",
-        );
-        expect((error as ProjectNotFoundError).availableProjects).toContain(
-          "brain",
-        );
+        expect((error as ProjectNotFoundError).project).toBe("nonexistent-project");
+        expect((error as ProjectNotFoundError).availableProjects).toContain("brain");
       }
     });
 
@@ -64,17 +58,13 @@ describe("path-resolver", () => {
 
     it("returns undefined for unrecognized path", async () => {
       const { detectProjectFromPath } = await import("../path-resolver");
-      const project = await detectProjectFromPath(
-        "/totally/random/path/unknown",
-      );
+      const project = await detectProjectFromPath("/totally/random/path/unknown");
       expect(project).toBeUndefined();
     });
 
     it("detects project when cwd is inside memories path", async () => {
       const { detectProjectFromPath } = await import("../path-resolver");
-      const project = await detectProjectFromPath(
-        "/Users/peter.kloss/memories/mcps/brain/notes",
-      );
+      const project = await detectProjectFromPath("/Users/peter.kloss/memories/mcps/brain/notes");
       expect(project).toBe("brain");
     });
   });
@@ -83,38 +73,26 @@ describe("path-resolver", () => {
     it("uses explicit project parameter first", async () => {
       const { resolveProjectMemoriesPath } = await import("../path-resolver");
       process.env.BRAIN_PROJECT = "shared"; // Should be ignored
-      const path = await resolveProjectMemoriesPath(
-        "brain",
-        "/some/other/path",
-      );
+      const path = await resolveProjectMemoriesPath("brain", "/some/other/path");
       expect(path).toBe("/Users/peter.kloss/memories/mcps/brain");
     });
 
     it("uses BRAIN_PROJECT env var when no explicit project", async () => {
       const { resolveProjectMemoriesPath } = await import("../path-resolver");
       process.env.BRAIN_PROJECT = "memory";
-      const path = await resolveProjectMemoriesPath(
-        undefined,
-        "/unrelated/path",
-      );
+      const path = await resolveProjectMemoriesPath(undefined, "/unrelated/path");
       expect(path).toBe("/Users/peter.kloss/memories/mcps/memory");
     });
 
     it("detects project from cwd when no explicit project or env var", async () => {
       const { resolveProjectMemoriesPath } = await import("../path-resolver");
-      const path = await resolveProjectMemoriesPath(
-        undefined,
-        "/some/path/brain",
-      );
+      const path = await resolveProjectMemoriesPath(undefined, "/some/path/brain");
       expect(path).toBe("/Users/peter.kloss/memories/mcps/brain");
     });
 
     it("falls back to default project when nothing else matches", async () => {
       const { resolveProjectMemoriesPath } = await import("../path-resolver");
-      const path = await resolveProjectMemoriesPath(
-        undefined,
-        "/totally/random/unknown",
-      );
+      const path = await resolveProjectMemoriesPath(undefined, "/totally/random/unknown");
       // Default project is "shared"
       expect(path).toBe("/Users/peter.kloss/memories/shared");
     });

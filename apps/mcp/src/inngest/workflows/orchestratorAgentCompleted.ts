@@ -115,10 +115,7 @@ function validateEventData(data: {
  * @param agent - Agent type to find
  * @returns Index of the invocation or -1 if not found
  */
-function findInProgressInvocation(
-  history: AgentInvocation[],
-  agent: string,
-): number {
+function findInProgressInvocation(history: AgentInvocation[], agent: string): number {
   // Search from the end to find the most recent in-progress invocation
   for (let i = history.length - 1; i >= 0; i--) {
     if (history[i].agent === agent && history[i].status === "in_progress") {
@@ -255,11 +252,7 @@ async function compactAgentHistory(
 
   // Generate note path and content
   const notePath = `sessions/session-${sessionId}-history-${timestamp.replace(/[:.]/g, "-")}`;
-  const noteContent = generateCompactionNoteContent(
-    archiveInvocations,
-    sessionId,
-    timestamp,
-  );
+  const noteContent = generateCompactionNoteContent(archiveInvocations, sessionId, timestamp);
 
   // Write to Brain note
   await client.callTool({
@@ -327,8 +320,7 @@ export const orchestratorAgentCompletedWorkflow = inngest.createFunction(
   },
   { event: "orchestrator/agent.completed" },
   async ({ event, step }): Promise<AgentCompletedResult> => {
-    const { sessionId, agent, output, handoffTo, handoffReason, timestamp } =
-      event.data;
+    const { sessionId, agent, output, handoffTo, handoffReason, timestamp } = event.data;
 
     // Step 0: Validate input data
     await step.run("validate-input", async (): Promise<void> => {
@@ -340,43 +332,38 @@ export const orchestratorAgentCompletedWorkflow = inngest.createFunction(
     });
 
     // Step 1: Load current session state
-    const currentState = await step.run(
-      "load-session",
-      async (): Promise<SessionState> => {
-        const persistence = new BrainSessionPersistence();
-        const state = await persistence.loadSession();
+    const currentState = await step.run("load-session", async (): Promise<SessionState> => {
+      const persistence = new BrainSessionPersistence();
+      const state = await persistence.loadSession();
 
-        if (!state) {
-          throw createNonRetriableError(
-            WorkflowErrorType.VALIDATION_ERROR,
-            "Session not found",
-            { context: { sessionId } },
-          );
-        }
+      if (!state) {
+        throw createNonRetriableError(WorkflowErrorType.VALIDATION_ERROR, "Session not found", {
+          context: { sessionId },
+        });
+      }
 
-        if (!state.orchestratorWorkflow) {
-          throw createNonRetriableError(
-            WorkflowErrorType.VALIDATION_ERROR,
-            "Session has no orchestrator workflow",
-            { context: { sessionId } },
-          );
-        }
+      if (!state.orchestratorWorkflow) {
+        throw createNonRetriableError(
+          WorkflowErrorType.VALIDATION_ERROR,
+          "Session has no orchestrator workflow",
+          { context: { sessionId } },
+        );
+      }
 
-        return state;
-      },
-    );
+      return state;
+    });
 
     // Step 2: Update invocation with completion data
     const stateWithCompletion = await step.run(
       "complete-invocation",
       async (): Promise<SessionState> => {
-        const workflow = currentState.orchestratorWorkflow!;
+        const workflow = currentState.orchestratorWorkflow;
+        if (!workflow) {
+          throw new Error("No orchestrator workflow found in session state");
+        }
 
         // Find the in-progress invocation for this agent
-        const invocationIndex = findInProgressInvocation(
-          workflow.agentHistory,
-          agent,
-        );
+        const invocationIndex = findInProgressInvocation(workflow.agentHistory, agent);
 
         if (invocationIndex === -1) {
           logger.warn(
@@ -417,25 +404,25 @@ export const orchestratorAgentCompletedWorkflow = inngest.createFunction(
     );
 
     // Step 3: Check if compaction is needed
-    const shouldCompact = await step.run(
-      "check-compaction",
-      async (): Promise<boolean> => {
-        const workflow = stateWithCompletion.orchestratorWorkflow!;
-        const result = needsCompaction(workflow);
+    const shouldCompact = await step.run("check-compaction", async (): Promise<boolean> => {
+      const workflow = stateWithCompletion.orchestratorWorkflow;
+      if (!workflow) {
+        return false;
+      }
+      const result = needsCompaction(workflow);
 
-        logger.debug(
-          {
-            sessionId,
-            historyLength: workflow.agentHistory.length,
-            threshold: COMPACTION_THRESHOLD,
-            needsCompaction: result,
-          },
-          "Compaction check completed",
-        );
+      logger.debug(
+        {
+          sessionId,
+          historyLength: workflow.agentHistory.length,
+          threshold: COMPACTION_THRESHOLD,
+          needsCompaction: result,
+        },
+        "Compaction check completed",
+      );
 
-        return result;
-      },
-    );
+      return result;
+    });
 
     // Step 4: Compact history if needed
     let finalState = stateWithCompletion;
@@ -449,16 +436,18 @@ export const orchestratorAgentCompletedWorkflow = inngest.createFunction(
           try {
             client = await getBasicMemoryClient();
           } catch (error) {
-            logger.warn(
-              { error },
-              "Brain MCP unavailable - skipping compaction",
-            );
+            logger.warn({ error }, "Brain MCP unavailable - skipping compaction");
             // Return current state without compaction
             return { state: stateWithCompletion, notePath: "" };
           }
 
+          const currentWorkflow = stateWithCompletion.orchestratorWorkflow;
+          if (!currentWorkflow) {
+            return { state: stateWithCompletion, notePath: "" };
+          }
+
           const { workflow, notePath } = await compactAgentHistory(
-            stateWithCompletion.orchestratorWorkflow!,
+            currentWorkflow,
             sessionId,
             client,
             process.cwd(),
@@ -557,10 +546,7 @@ export async function getTotalInvocationCount(): Promise<number> {
 
   const workflow = state.orchestratorWorkflow;
   const currentCount = workflow.agentHistory.length;
-  const compactedCount = workflow.compactionHistory.reduce(
-    (sum, entry) => sum + entry.count,
-    0,
-  );
+  const compactedCount = workflow.compactionHistory.reduce((sum, entry) => sum + entry.count, 0);
 
   return currentCount + compactedCount;
 }

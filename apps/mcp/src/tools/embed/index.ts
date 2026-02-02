@@ -9,16 +9,10 @@ import pLimit from "p-limit";
 import { ollamaConfig } from "../../config/ollama";
 import { createVectorConnection } from "../../db/connection";
 import { ensureEmbeddingTables } from "../../db/schema";
-import {
-  type ChunkEmbeddingInput,
-  storeChunkedEmbeddings,
-} from "../../db/vectors";
+import { type ChunkEmbeddingInput, storeChunkedEmbeddings } from "../../db/vectors";
 import { resolveProject } from "../../project/resolve";
 import { getBasicMemoryClient } from "../../proxy/client";
-import {
-  type ChunkMetadata,
-  chunkText,
-} from "../../services/embedding/chunking";
+import { type ChunkMetadata, chunkText } from "../../services/embedding/chunking";
 import { generateEmbedding } from "../../services/embedding/generateEmbedding";
 import { OllamaClient } from "../../services/ollama/client";
 import { logger } from "../../utils/internal/logger";
@@ -55,8 +49,7 @@ Returns progress and counts of processed/failed notes.`,
       },
       force: {
         type: "boolean",
-        description:
-          "Regenerate all embeddings, not just missing (default: false)",
+        description: "Regenerate all embeddings, not just missing (default: false)",
       },
       limit: {
         type: "number",
@@ -92,10 +85,7 @@ async function generateChunkEmbeddings(
       const texts = chunkBatch.map((c) => c.text);
 
       // Call batch API
-      const embeddings = await ollamaClient.generateBatchEmbeddings(
-        texts,
-        "search_document",
-      );
+      const embeddings = await ollamaClient.generateBatchEmbeddings(texts, "search_document");
 
       // Map embeddings back to chunk metadata
       for (let j = 0; j < chunkBatch.length; j++) {
@@ -120,15 +110,10 @@ async function generateChunkEmbeddings(
   }
 }
 
-export async function handler(
-  args: Record<string, unknown>,
-): Promise<CallToolResult> {
+export async function handler(args: Record<string, unknown>): Promise<CallToolResult> {
   const force = (args.force as boolean) ?? false;
   const limit = (args.limit as number) ?? 100;
-  const project =
-    args.project !== undefined
-      ? (args.project as string)
-      : resolveProject(undefined);
+  const project = args.project !== undefined ? (args.project as string) : resolveProject(undefined);
 
   if (!project) {
     return {
@@ -183,10 +168,7 @@ export async function handler(
     } catch (warmupError) {
       logger.warn(
         {
-          error:
-            warmupError instanceof Error
-              ? warmupError.message
-              : String(warmupError),
+          error: warmupError instanceof Error ? warmupError.message : String(warmupError),
         },
         "Ollama warmup failed, continuing anyway",
       );
@@ -215,11 +197,10 @@ export async function handler(
         const existing = db
           .query("SELECT DISTINCT entity_id FROM brain_embeddings")
           .all() as Array<{ entity_id: string }>;
-        existing.forEach((e) => existingIds.add(e.entity_id));
-        logger.info(
-          { count: existingIds.size },
-          "Found existing embeddings in v2 table",
-        );
+        for (const e of existing) {
+          existingIds.add(e.entity_id);
+        }
+        logger.info({ count: existingIds.size }, "Found existing embeddings in v2 table");
       } catch {
         // Table might be empty or have issues, continue
         logger.debug("No existing v2 embeddings found");
@@ -227,25 +208,17 @@ export async function handler(
     }
 
     // List all notes from project
-    logger.info(
-      { project, callName: "list_directory" },
-      "Calling list_directory",
-    );
+    logger.info({ project, callName: "list_directory" }, "Calling list_directory");
     const listResult = await client.callTool({
       name: "list_directory",
       arguments: { project, depth: 10 },
     });
-    logger.info(
-      { hasContent: !!listResult.content },
-      "list_directory returned",
-    );
+    logger.info({ hasContent: !!listResult.content }, "list_directory returned");
 
     // Parse the response to get note permalinks
     let notes: string[] = [];
     if (listResult.content && Array.isArray(listResult.content)) {
-      const textContent = listResult.content.find(
-        (c: { type: string }) => c.type === "text",
-      );
+      const textContent = listResult.content.find((c: { type: string }) => c.type === "text");
       if (textContent && "text" in textContent) {
         const text = textContent.text as string;
         const lines = text.split("\n").filter((l) => l.trim());
@@ -342,16 +315,10 @@ export async function handler(
             );
 
             // Generate embeddings for all chunks using batch API
-            const chunkEmbeddings = await generateChunkEmbeddings(
-              chunks,
-              ollamaClient,
-            );
+            const chunkEmbeddings = await generateChunkEmbeddings(chunks, ollamaClient);
 
             if (!chunkEmbeddings) {
-              logger.warn(
-                { notePath },
-                "Failed to generate embeddings for one or more chunks",
-              );
+              logger.warn({ notePath }, "Failed to generate embeddings for one or more chunks");
               errors.push(`${notePath}: embedding generation failed`);
               return { success: false, chunks: 0 };
             }
@@ -361,15 +328,8 @@ export async function handler(
               { permalink: notePath, chunkCount: chunkEmbeddings.length },
               "Storing chunk embeddings",
             );
-            const stored = storeChunkedEmbeddings(
-              db,
-              notePath,
-              chunkEmbeddings,
-            );
-            logger.debug(
-              { permalink: notePath, storedCount: stored },
-              "Chunk embeddings stored",
-            );
+            const stored = storeChunkedEmbeddings(db, notePath, chunkEmbeddings);
+            logger.debug({ permalink: notePath, storedCount: stored }, "Chunk embeddings stored");
 
             return { success: true, chunks: stored };
           } catch (error) {

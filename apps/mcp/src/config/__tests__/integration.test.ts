@@ -131,11 +131,7 @@ describe("Translation Layer - Unit Tests", () => {
       };
 
       const memoriesLocation = path.join(os.homedir(), "memories");
-      const result = resolveMemoriesPath(
-        "myproject",
-        projectConfig,
-        memoriesLocation,
-      );
+      const result = resolveMemoriesPath("myproject", projectConfig, memoriesLocation);
 
       expect(result.mode).toBe("DEFAULT");
       expect(result.path).toBe(path.join(memoriesLocation, "myproject"));
@@ -208,9 +204,7 @@ describe("Translation Layer - Unit Tests", () => {
 
   describe("translateBrainToBasicMemory", () => {
     test("translates projects with resolved paths", async () => {
-      const { translateBrainToBasicMemory } = await import(
-        "../translation-layer"
-      );
+      const { translateBrainToBasicMemory } = await import("../translation-layer");
 
       // Use home-relative paths to avoid system path validation
       const codePath1 = path.join(os.homedir(), "Dev/project1");
@@ -245,9 +239,7 @@ describe("Translation Layer - Unit Tests", () => {
     });
 
     test("translates sync settings", async () => {
-      const { translateBrainToBasicMemory } = await import(
-        "../translation-layer"
-      );
+      const { translateBrainToBasicMemory } = await import("../translation-layer");
 
       const brainConfig: BrainConfig = {
         ...DEFAULT_BRAIN_CONFIG,
@@ -264,9 +256,7 @@ describe("Translation Layer - Unit Tests", () => {
     });
 
     test("translates logging settings", async () => {
-      const { translateBrainToBasicMemory } = await import(
-        "../translation-layer"
-      );
+      const { translateBrainToBasicMemory } = await import("../translation-layer");
 
       const brainConfig: BrainConfig = {
         ...DEFAULT_BRAIN_CONFIG,
@@ -281,9 +271,7 @@ describe("Translation Layer - Unit Tests", () => {
     });
 
     test("preserves unknown fields from existing config", async () => {
-      const { translateBrainToBasicMemory } = await import(
-        "../translation-layer"
-      );
+      const { translateBrainToBasicMemory } = await import("../translation-layer");
 
       const existingConfig = {
         custom_field: "preserved",
@@ -443,9 +431,7 @@ describe("Config Diff - Unit Tests", () => {
 
   describe("getDefaultModeAffectedProjects", () => {
     test("identifies projects using DEFAULT mode when location changes", async () => {
-      const { detectConfigDiff, getDefaultModeAffectedProjects } = await import(
-        "../diff"
-      );
+      const { detectConfigDiff, getDefaultModeAffectedProjects } = await import("../diff");
 
       const oldConfig: BrainConfig = {
         ...DEFAULT_BRAIN_CONFIG,
@@ -474,11 +460,7 @@ describe("Config Diff - Unit Tests", () => {
       };
 
       const diff = detectConfigDiff(oldConfig, newConfig);
-      const affected = getDefaultModeAffectedProjects(
-        diff,
-        oldConfig,
-        newConfig,
-      );
+      const affected = getDefaultModeAffectedProjects(diff, oldConfig, newConfig);
 
       expect(affected).toContain("defaultProject");
       expect(affected).not.toContain("codeProject"); // CODE mode not affected
@@ -505,16 +487,8 @@ describe("Mode Transition Scenarios", () => {
         memories_mode: "CODE",
       };
 
-      const oldPath = resolveMemoriesPath(
-        "myproject",
-        oldProjectConfig,
-        "~/memories",
-      );
-      const newPath = resolveMemoriesPath(
-        "myproject",
-        newProjectConfig,
-        "~/memories",
-      );
+      const oldPath = resolveMemoriesPath("myproject", oldProjectConfig, "~/memories");
+      const newPath = resolveMemoriesPath("myproject", newProjectConfig, "~/memories");
 
       expect(oldPath.mode).toBe("DEFAULT");
       expect(newPath.mode).toBe("CODE");
@@ -537,16 +511,8 @@ describe("Mode Transition Scenarios", () => {
         memories_mode: "DEFAULT",
       };
 
-      const oldPath = resolveMemoriesPath(
-        "myproject",
-        oldProjectConfig,
-        "~/memories",
-      );
-      const newPath = resolveMemoriesPath(
-        "myproject",
-        newProjectConfig,
-        "~/memories",
-      );
+      const oldPath = resolveMemoriesPath("myproject", oldProjectConfig, "~/memories");
+      const newPath = resolveMemoriesPath("myproject", newProjectConfig, "~/memories");
 
       expect(oldPath.mode).toBe("CODE");
       expect(newPath.mode).toBe("DEFAULT");
@@ -557,9 +523,7 @@ describe("Mode Transition Scenarios", () => {
 
   describe("Global default change affecting multiple projects", () => {
     test("identifies all affected DEFAULT mode projects", async () => {
-      const { detectConfigDiff, getDefaultModeAffectedProjects } = await import(
-        "../diff"
-      );
+      const { detectConfigDiff, getDefaultModeAffectedProjects } = await import("../diff");
 
       const oldConfig: BrainConfig = {
         ...DEFAULT_BRAIN_CONFIG,
@@ -588,11 +552,7 @@ describe("Mode Transition Scenarios", () => {
       };
 
       const diff = detectConfigDiff(oldConfig, newConfig);
-      const affected = getDefaultModeAffectedProjects(
-        diff,
-        oldConfig,
-        newConfig,
-      );
+      const affected = getDefaultModeAffectedProjects(diff, oldConfig, newConfig);
 
       expect(affected).toContain("project1");
       expect(affected).toContain("project2");
@@ -951,14 +911,8 @@ describe("Rollback Manager", () => {
       const config1 = { ...DEFAULT_BRAIN_CONFIG };
       const config2 = { ...DEFAULT_BRAIN_CONFIG };
 
-      const checksum1 = crypto
-        .createHash("sha256")
-        .update(JSON.stringify(config1))
-        .digest("hex");
-      const checksum2 = crypto
-        .createHash("sha256")
-        .update(JSON.stringify(config2))
-        .digest("hex");
+      const checksum1 = crypto.createHash("sha256").update(JSON.stringify(config1)).digest("hex");
+      const checksum2 = crypto.createHash("sha256").update(JSON.stringify(config2)).digest("hex");
 
       expect(checksum1).toBe(checksum2);
     });
@@ -969,14 +923,8 @@ describe("Rollback Manager", () => {
       const config1 = { ...DEFAULT_BRAIN_CONFIG, logging: { level: "info" } };
       const config2 = { ...DEFAULT_BRAIN_CONFIG, logging: { level: "debug" } };
 
-      const checksum1 = crypto
-        .createHash("sha256")
-        .update(JSON.stringify(config1))
-        .digest("hex");
-      const checksum2 = crypto
-        .createHash("sha256")
-        .update(JSON.stringify(config2))
-        .digest("hex");
+      const checksum1 = crypto.createHash("sha256").update(JSON.stringify(config1)).digest("hex");
+      const checksum2 = crypto.createHash("sha256").update(JSON.stringify(config2)).digest("hex");
 
       expect(checksum1).not.toBe(checksum2);
     });

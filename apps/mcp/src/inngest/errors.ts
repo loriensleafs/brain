@@ -34,8 +34,7 @@ export const WorkflowErrorType = {
   AGENT_FAILURE: "AGENT_FAILURE",
 } as const;
 
-export type WorkflowErrorType =
-  (typeof WorkflowErrorType)[keyof typeof WorkflowErrorType];
+export type WorkflowErrorType = (typeof WorkflowErrorType)[keyof typeof WorkflowErrorType];
 
 /**
  * Extended error info attached to NonRetriableError.

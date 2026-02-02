@@ -171,30 +171,22 @@ export const orchestratorAgentInvokedWorkflow = inngest.createFunction(
     // Step 0: Validate input data
     await step.run("validate-input", async (): Promise<void> => {
       validateEventData(event.data);
-      logger.info(
-        { agent, handoffFrom },
-        "Orchestrator agent invocation workflow initiated",
-      );
+      logger.info({ agent, handoffFrom }, "Orchestrator agent invocation workflow initiated");
     });
 
     // Step 1: Load current session state
-    const currentState = await step.run(
-      "load-session",
-      async (): Promise<SessionState> => {
-        const persistence = new BrainSessionPersistence();
-        const state = await persistence.loadSession();
+    const currentState = await step.run("load-session", async (): Promise<SessionState> => {
+      const persistence = new BrainSessionPersistence();
+      const state = await persistence.loadSession();
 
-        if (!state) {
-          throw createNonRetriableError(
-            WorkflowErrorType.VALIDATION_ERROR,
-            "Session not found",
-            { context: {} },
-          );
-        }
+      if (!state) {
+        throw createNonRetriableError(WorkflowErrorType.VALIDATION_ERROR, "Session not found", {
+          context: {},
+        });
+      }
 
-        return state;
-      },
-    );
+      return state;
+    });
 
     // Step 2: Record invocation in agent history
     const { updatedState, invocationIndex } = await step.run(
@@ -207,19 +199,14 @@ export const orchestratorAgentInvokedWorkflow = inngest.createFunction(
         const stateWithWorkflow = ensureOrchestratorWorkflow(currentState);
 
         // Create invocation record
-        const invocation = createAgentInvocation(
-          agent,
-          prompt,
-          context,
-          handoffFrom,
-          timestamp,
-        );
+        const invocation = createAgentInvocation(agent, prompt, context, handoffFrom, timestamp);
 
         // Add to history
-        const updatedWorkflow = addInvocationToHistory(
-          stateWithWorkflow.orchestratorWorkflow!,
-          invocation,
-        );
+        const currentWorkflow = stateWithWorkflow.orchestratorWorkflow;
+        if (!currentWorkflow) {
+          throw new Error("No orchestrator workflow found in session state");
+        }
+        const updatedWorkflow = addInvocationToHistory(currentWorkflow, invocation);
 
         const newState: SessionState = {
           ...stateWithWorkflow,
@@ -248,10 +235,7 @@ export const orchestratorAgentInvokedWorkflow = inngest.createFunction(
       const persistence = new BrainSessionPersistence();
       await persistence.saveSession(updatedState);
 
-      logger.info(
-        { version: updatedState.version },
-        "Session state saved with agent invocation",
-      );
+      logger.info({ version: updatedState.version }, "Session state saved with agent invocation");
     });
 
     // Step 4: Emit state update event for downstream workflows

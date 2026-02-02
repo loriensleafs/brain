@@ -60,11 +60,7 @@ export class VersionConflictError extends Error {
   public readonly actualVersion: number;
   public readonly retryCount: number;
 
-  constructor(
-    expectedVersion: number,
-    actualVersion: number,
-    retryCount: number,
-  ) {
+  constructor(expectedVersion: number, actualVersion: number, retryCount: number) {
     super(
       `Version conflict for session: ` +
         `expected version ${expectedVersion}, found ${actualVersion}. ` +
@@ -94,9 +90,7 @@ export type SessionUpdateFn = (current: SessionState) => SessionState;
  * Partial updates to apply to session state.
  * Used by the simplified update API.
  */
-export type SessionPartialUpdate = Partial<
-  Omit<SessionState, "version" | "createdAt">
->;
+export type SessionPartialUpdate = Partial<Omit<SessionState, "version" | "createdAt">>;
 
 /**
  * Storage adapter interface for session state persistence.
@@ -195,10 +189,7 @@ export function applyPartialUpdates(
     return {
       ...current,
       ...updates,
-      modeHistory: [
-        ...current.modeHistory,
-        { mode: updates.currentMode, timestamp: now },
-      ],
+      modeHistory: [...current.modeHistory, { mode: updates.currentMode, timestamp: now }],
       updatedAt: now,
     };
   }
@@ -291,9 +282,7 @@ export async function updateSessionWithLocking(
     const verification = await storage.read();
 
     if (!verification) {
-      throw new Error(
-        "Session disappeared after write. Storage inconsistency.",
-      );
+      throw new Error("Session disappeared after write. Storage inconsistency.");
     }
 
     lastActualVersion = verification.version;
@@ -323,11 +312,7 @@ export async function updateSessionWithLocking(
   }
 
   // All retries exhausted
-  throw new VersionConflictError(
-    lastAttemptedVersion,
-    lastActualVersion,
-    maxRetries,
-  );
+  throw new VersionConflictError(lastAttemptedVersion, lastActualVersion, maxRetries);
 }
 
 /**
@@ -349,10 +334,7 @@ export async function updateSession(
   updates: SessionPartialUpdate,
   options: UpdateOptions,
 ): Promise<void> {
-  return updateSessionWithLocking(
-    (current) => applyPartialUpdates(current, updates),
-    options,
-  );
+  return updateSessionWithLocking((current) => applyPartialUpdates(current, updates), options);
 }
 
 // ============================================================================

@@ -35,7 +35,8 @@ export async function setPriority(
       arguments: { identifier: featureId, project },
     });
 
-    const content = (readResult.content as any)?.[0]?.text || "";
+    const content =
+      (readResult.content as Array<{ type: string; text?: string }> | undefined)?.[0]?.text || "";
     const oldPriority = extractPriority(content);
 
     // Update priority in frontmatter

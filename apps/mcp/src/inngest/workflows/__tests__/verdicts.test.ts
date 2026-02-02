@@ -9,11 +9,7 @@ import { canProceed, type FinalVerdict, mergeVerdicts } from "../verdicts";
 /**
  * Helper to create an AgentVerdict.
  */
-function makeVerdict(
-  agent: string,
-  verdict: Verdict,
-  details?: string,
-): AgentVerdict {
+function makeVerdict(agent: string, verdict: Verdict, details?: string): AgentVerdict {
   return { agent, verdict, details };
 }
 
@@ -22,11 +18,7 @@ describe("mergeVerdicts", () => {
     it("returns CRITICAL_FAIL when any agent returns CRITICAL_FAIL", () => {
       const verdicts: AgentVerdict[] = [
         makeVerdict("qa", "PASS"),
-        makeVerdict(
-          "analyst",
-          "CRITICAL_FAIL",
-          "Test coverage below threshold",
-        ),
+        makeVerdict("analyst", "CRITICAL_FAIL", "Test coverage below threshold"),
         makeVerdict("architect", "PASS"),
         makeVerdict("roadmap", "PASS"),
       ];
@@ -75,11 +67,7 @@ describe("mergeVerdicts", () => {
       const verdicts: AgentVerdict[] = [
         makeVerdict("qa", "PASS"),
         makeVerdict("analyst", "PASS"),
-        makeVerdict(
-          "architect",
-          "NEEDS_REVIEW",
-          "Complex changes require review",
-        ),
+        makeVerdict("architect", "NEEDS_REVIEW", "Complex changes require review"),
         makeVerdict("roadmap", "PASS"),
       ];
 
@@ -182,12 +170,7 @@ describe("mergeVerdicts", () => {
 
       expect(result.verdict).toBe("PASS");
       expect(result.isBlocking).toBe(false);
-      expect(result.passingAgents).toEqual([
-        "qa",
-        "analyst",
-        "architect",
-        "roadmap",
-      ]);
+      expect(result.passingAgents).toEqual(["qa", "analyst", "architect", "roadmap"]);
       expect(result.reason).toContain("4 agents passed");
     });
 
@@ -238,9 +221,7 @@ describe("mergeVerdicts", () => {
     });
 
     it("includes details in single blocking agent reason", () => {
-      const result = mergeVerdicts([
-        makeVerdict("qa", "FAIL", "Specific failure reason"),
-      ]);
+      const result = mergeVerdicts([makeVerdict("qa", "FAIL", "Specific failure reason")]);
 
       expect(result.reason).toContain("Specific failure reason");
     });

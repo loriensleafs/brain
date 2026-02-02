@@ -142,11 +142,7 @@ export interface DedupeResult {
  */
 export interface BacklogConfig {
   project: string;
-  operation:
-    | "QUERY_ORDER"
-    | "SET_PRIORITY"
-    | "ADD_DEPENDENCY"
-    | "REMOVE_DEPENDENCY";
+  operation: "QUERY_ORDER" | "SET_PRIORITY" | "ADD_DEPENDENCY" | "REMOVE_DEPENDENCY";
   feature_id?: string;
   priority?: number;
   dependency_target?: string;
@@ -158,6 +154,6 @@ export interface BacklogConfig {
 export interface BacklogResult {
   operation: string;
   success: boolean;
-  data?: any;
+  data?: unknown;
   error?: string;
 }

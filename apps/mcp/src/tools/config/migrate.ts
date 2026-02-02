@@ -8,8 +8,9 @@
  * @see TASK-020-11 for implementation requirements
  */
 
+import configMigrateSchema from "@brain/validation/schemas/tools/config/migrate.schema.json";
 import type { CallToolResult, Tool } from "@modelcontextprotocol/sdk/types.js";
-import { z } from "zod";
+import Ajv from "ajv";
 import { getBrainConfigPath } from "../../config/brain-config";
 import {
   getOldConfigPath,
@@ -21,20 +22,45 @@ import {
 // Schema Definition
 // ============================================================================
 
-export const ConfigMigrateArgsSchema = z.object({
-  dry_run: z
-    .boolean()
-    .optional()
-    .default(false)
-    .describe("Preview migration without making changes."),
-  cleanup: z
-    .boolean()
-    .optional()
-    .default(false)
-    .describe("Remove deprecated files after successful migration."),
+/**
+ * ConfigMigrateArgs type definition.
+ */
+export interface ConfigMigrateArgs {
+  /** Preview migration without making changes. Default: false. */
+  dry_run?: boolean;
+  /** Remove deprecated files after successful migration. Default: false. */
+  cleanup?: boolean;
+}
+
+const ajv = new Ajv({
+  allErrors: true,
+  useDefaults: true,
+  coerceTypes: false,
+  strict: true,
 });
 
-export type ConfigMigrateArgs = z.infer<typeof ConfigMigrateArgsSchema>;
+const _validateConfigMigrateArgs = ajv.compile<ConfigMigrateArgs>(configMigrateSchema);
+
+/**
+ * Parse and validate ConfigMigrateArgs.
+ * Throws on validation failure.
+ */
+function parseConfigMigrateArgs(data: unknown): ConfigMigrateArgs {
+  const cloned = typeof data === "object" && data !== null ? { ...data } : data;
+  if (_validateConfigMigrateArgs(cloned)) {
+    return cloned;
+  }
+  const errors = _validateConfigMigrateArgs.errors ?? [];
+  const message = errors.map((e) => `${e.instancePath || "root"}: ${e.message}`).join("; ");
+  throw new Error(`Validation failed: ${message}`);
+}
+
+/**
+ * ConfigMigrateArgsSchema provides parse interface.
+ */
+export const ConfigMigrateArgsSchema = {
+  parse: parseConfigMigrateArgs,
+};
 
 export const toolDefinition: Tool = {
   name: "migrate_config",
@@ -84,9 +110,7 @@ Use dry_run=true to preview what will be migrated without making changes.`,
  * @param args - Tool arguments (raw from MCP, will be validated)
  * @returns CallToolResult with migration result or error
  */
-export async function handler(
-  args: Record<string, unknown>,
-): Promise<CallToolResult> {
+export async function handler(args: Record<string, unknown>): Promise<CallToolResult> {
   try {
     // Validate and parse input
     const parsed = ConfigMigrateArgsSchema.parse(args);

@@ -78,10 +78,7 @@ function calculateSimilarity(note1: NoteMetadata, note2: NoteMetadata): number {
   weights += 0.2;
 
   // Shared wikilinks (weight: 0.2)
-  const wikilinkSim = calculateWikilinkSimilarity(
-    note1.wikilinks,
-    note2.wikilinks,
-  );
+  const wikilinkSim = calculateWikilinkSimilarity(note1.wikilinks, note2.wikilinks);
   score += wikilinkSim * 0.2;
   weights += 0.2;
 
@@ -109,10 +106,7 @@ function calculateTitleSimilarity(title1: string, title2: string): number {
 /**
  * Calculate wikilink similarity using Jaccard coefficient
  */
-function calculateWikilinkSimilarity(
-  links1: string[],
-  links2: string[],
-): number {
+function calculateWikilinkSimilarity(links1: string[], links2: string[]): number {
   if (links1.length === 0 && links2.length === 0) return 0;
 
   const set1 = new Set(links1);
@@ -127,10 +121,7 @@ function calculateWikilinkSimilarity(
 /**
  * Calculate keyword similarity using Jaccard coefficient
  */
-function calculateKeywordSimilarity(
-  keywords1: string[],
-  keywords2: string[],
-): number {
+function calculateKeywordSimilarity(keywords1: string[], keywords2: string[]): number {
   if (keywords1.length === 0 && keywords2.length === 0) return 0;
 
   const set1 = new Set(keywords1);
@@ -145,11 +136,7 @@ function calculateKeywordSimilarity(
 /**
  * Generate rationale for why two notes are similar
  */
-function generateRationale(
-  note1: NoteMetadata,
-  note2: NoteMetadata,
-  similarity: number,
-): string {
+function generateRationale(note1: NoteMetadata, note2: NoteMetadata, similarity: number): string {
   const reasons: string[] = [];
 
   const titleSim = calculateTitleSimilarity(note1.title, note2.title);
@@ -161,21 +148,16 @@ function generateRationale(
     reasons.push(`same folder "${note1.folder}"`);
   }
 
-  const sharedLinks = note1.wikilinks.filter((link) =>
-    note2.wikilinks.includes(link),
-  );
+  const sharedLinks = note1.wikilinks.filter((link) => note2.wikilinks.includes(link));
   if (sharedLinks.length > 0) {
     reasons.push(`${sharedLinks.length} shared wikilinks`);
   }
 
-  const sharedKeywords = note1.keywords.filter((kw) =>
-    note2.keywords.includes(kw),
-  );
+  const sharedKeywords = note1.keywords.filter((kw) => note2.keywords.includes(kw));
   if (sharedKeywords.length > 0) {
     reasons.push(`${sharedKeywords.length} shared keywords`);
   }
 
-  const reasonText =
-    reasons.length > 0 ? reasons.join(", ") : "metadata similarity";
+  const reasonText = reasons.length > 0 ? reasons.join(", ") : "metadata similarity";
   return `Similarity ${(similarity * 100).toFixed(0)}%: ${reasonText}`;
 }

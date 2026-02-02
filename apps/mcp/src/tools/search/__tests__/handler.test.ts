@@ -2,12 +2,23 @@ import { Database } from "bun:sqlite";
 import * as sqliteVec from "sqlite-vec";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { createEmbeddingsTable } from "../../../db/schema";
-import {
-  type ChunkEmbeddingInput,
-  storeChunkedEmbeddings,
-} from "../../../db/vectors";
+import { type ChunkEmbeddingInput, storeChunkedEmbeddings } from "../../../db/vectors";
 
-// Note: Custom SQLite is configured in test preload (src/__tests__/setup.ts)
+// Note: These tests require sqlite-vec native extension.
+// - With Bun: Tests are excluded (vitest.config.ts)
+// - With Node.js: Run via `bun run test:integration` (vitest.integration.config.ts)
+
+/**
+ * Create an embedding with variation for more realistic cosine distance calculations.
+ * Constant embeddings (fill(x)) cause numerical precision issues.
+ */
+function createEmbedding(baseValue: number): Float32Array {
+  const arr = new Float32Array(768);
+  for (let i = 0; i < 768; i++) {
+    arr[i] = baseValue + (i % 10) * 0.01;
+  }
+  return arr;
+}
 
 describe("search handler integration", () => {
   let db: Database;
@@ -23,9 +34,7 @@ describe("search handler integration", () => {
   });
 
   test("checkEmbeddingsExist returns false when table is empty", () => {
-    const count = db
-      .query("SELECT COUNT(*) as c FROM brain_embeddings")
-      .get() as { c: number };
+    const count = db.query("SELECT COUNT(*) as c FROM brain_embeddings").get() as { c: number };
     expect(count.c).toBe(0);
   });
 
@@ -42,9 +51,7 @@ describe("search handler integration", () => {
     ];
     storeChunkedEmbeddings(db, "test-entity", chunks);
 
-    const count = db
-      .query("SELECT COUNT(*) as c FROM brain_embeddings")
-      .get() as { c: number };
+    const count = db.query("SELECT COUNT(*) as c FROM brain_embeddings").get() as { c: number };
     expect(count.c).toBe(1);
   });
 
@@ -94,7 +101,8 @@ describe("search handler integration", () => {
   });
 
   test("vector search deduplicates by entity when multiple chunks match", () => {
-    // Store multiple chunks for same entity
+    // Store multiple chunks for same entity with varied embeddings
+    // (constant embeddings cause numerical precision issues in cosine distance)
     const chunks: ChunkEmbeddingInput[] = [
       {
         chunkIndex: 0,
@@ -102,7 +110,7 @@ describe("search handler integration", () => {
         chunkStart: 0,
         chunkEnd: 100,
         chunkText: "First chunk",
-        embedding: new Float32Array(768).fill(0.3),
+        embedding: createEmbedding(0.1), // Very different from query
       },
       {
         chunkIndex: 1,
@@ -110,13 +118,13 @@ describe("search handler integration", () => {
         chunkStart: 80,
         chunkEnd: 200,
         chunkText: "Second chunk",
-        embedding: new Float32Array(768).fill(0.5),
+        embedding: createEmbedding(0.5), // Same as query
       },
     ];
     storeChunkedEmbeddings(db, "test-entity", chunks);
 
     // Query returns both chunks
-    const queryEmbedding = new Float32Array(768).fill(0.5);
+    const queryEmbedding = createEmbedding(0.5);
     const results = db
       .query(`
       SELECT entity_id, chunk_index, vec_distance_cosine(embedding, ?) as distance

@@ -12,6 +12,23 @@
  *   } from '@brain/validation';
  */
 
+// Naming pattern validators
+export {
+  CanonicalDirectories,
+  DeprecatedDirectories,
+  DeprecatedPatterns,
+  type DirectoryValidationResult,
+  getMatchingPatterns,
+  getPatternRegex,
+  getPatternTypes,
+  isValidNamingPattern,
+  type NamingPatternResult,
+  NamingPatterns,
+  type PatternType,
+  parseNamingPattern,
+  validateDirectory,
+  validateNamingPattern,
+} from "./naming-pattern";
 export {
   // Types - Tool Args
   type ActiveProjectArgs,
@@ -117,21 +134,3 @@ export {
   type WorkflowMode,
   type WorkflowPhase,
 } from "./validate";
-
-// Naming pattern validators
-export {
-  CanonicalDirectories,
-  DeprecatedDirectories,
-  DeprecatedPatterns,
-  getMatchingPatterns,
-  getPatternRegex,
-  getPatternTypes,
-  isValidNamingPattern,
-  NamingPatterns,
-  parseNamingPattern,
-  validateDirectory,
-  validateNamingPattern,
-  type DirectoryValidationResult,
-  type NamingPatternResult,
-  type PatternType,
-} from "./naming-pattern";

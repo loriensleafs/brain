@@ -24,7 +24,8 @@ export async function executeSplit(
       arguments: { identifier: candidate.note, project },
     });
 
-    const content = (readResult.content as any)?.[0]?.text || "";
+    const content =
+      (readResult.content as Array<{ type: string; text?: string }> | undefined)?.[0]?.text || "";
 
     // Parse content into sections
     const sections = parseSections(content);
@@ -185,9 +186,7 @@ function generateSplitContent(
   parts.push("");
 
   // Add relevant observations
-  const relevantObs = observations.filter((obs) =>
-    isRelevantToSection(obs, section),
-  );
+  const relevantObs = observations.filter((obs) => isRelevantToSection(obs, section));
   if (relevantObs.length > 0) {
     parts.push("## Observations");
     parts.push("");
@@ -198,9 +197,7 @@ function generateSplitContent(
   }
 
   // Add relevant relations
-  const relevantRels = relations.filter((rel) =>
-    isRelevantToSection(rel, section),
-  );
+  const relevantRels = relations.filter((rel) => isRelevantToSection(rel, section));
   if (relevantRels.length > 0) {
     parts.push("## Relations");
     parts.push("");
@@ -221,18 +218,13 @@ function isRelevantToSection(text: string, section: Section): boolean {
   const textLower = text.toLowerCase();
 
   // Simple keyword matching - can be enhanced with LLM later
-  return sectionWords.some(
-    (word) => word.length > 3 && textLower.includes(word),
-  );
+  return sectionWords.some((word) => word.length > 3 && textLower.includes(word));
 }
 
 /**
  * Generate path for split note
  */
-function generateSplitNotePath(
-  originalPath: string,
-  sectionTitle: string,
-): string {
+function generateSplitNotePath(originalPath: string, sectionTitle: string): string {
   // Extract folder from original path
   const folder = originalPath.includes("/")
     ? originalPath.substring(0, originalPath.lastIndexOf("/"))

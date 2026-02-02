@@ -370,9 +370,7 @@ describe("DeleteProjectArgs validation", () => {
   describe("validateDeleteProjectArgs", () => {
     test("returns true for valid data", () => {
       expect(validateDeleteProjectArgs({ project: "test" })).toBe(true);
-      expect(
-        validateDeleteProjectArgs({ project: "test", delete_notes: true }),
-      ).toBe(true);
+      expect(validateDeleteProjectArgs({ project: "test", delete_notes: true })).toBe(true);
     });
 
     test("returns false for missing project", () => {
@@ -441,9 +439,7 @@ describe("ActiveProjectArgs validation", () => {
     test("returns true for valid data", () => {
       expect(validateActiveProjectArgs({})).toBe(true);
       expect(validateActiveProjectArgs({ operation: "get" })).toBe(true);
-      expect(
-        validateActiveProjectArgs({ operation: "set", project: "test" }),
-      ).toBe(true);
+      expect(validateActiveProjectArgs({ operation: "set", project: "test" })).toBe(true);
       expect(validateActiveProjectArgs({ operation: "clear" })).toBe(true);
     });
 

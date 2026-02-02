@@ -15,11 +15,7 @@ import type { Context } from "hono";
 import { Hono } from "hono";
 import { serve as serveInngest } from "inngest/bun";
 import { config } from "../config";
-import {
-  getInngestClient,
-  getWorkflowFunctions,
-  isWorkflowAvailable,
-} from "../services/inngest";
+import { getInngestClient, getWorkflowFunctions, isWorkflowAvailable } from "../services/inngest";
 import { logger } from "../utils/internal/logger";
 
 /**
@@ -94,8 +90,7 @@ export async function startHttpTransport(server: McpServer): Promise<void> {
       return c.json(
         {
           error: "Workflow features unavailable",
-          message:
-            "Inngest dev server not running. Start with: npx inngest-cli@latest dev",
+          message: "Inngest dev server not running. Start with: npx inngest-cli@latest dev",
           available: false,
         },
         503,
@@ -105,8 +100,9 @@ export async function startHttpTransport(server: McpServer): Promise<void> {
   });
 
   // MCP endpoint handler (shared logic)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleMcpRequest = async (c: Context<any, any, any>) => {
+  const handleMcpRequest = async (
+    c: Context<Record<string, unknown>, string, Record<string, unknown>>,
+  ) => {
     // Track session activity
     const sessionId = c.req.header("mcp-session-id");
     if (sessionId) {

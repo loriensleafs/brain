@@ -10,9 +10,7 @@ import { topologicalSort } from "./topologicalSort";
 
 const COMPLETED_STATUSES = ["COMPLETE", "COMPLETED", "DONE", "ARCHIVED"];
 
-export async function handler(
-  args: ListFeaturesByPriorityArgs,
-): Promise<CallToolResult> {
+export async function handler(args: ListFeaturesByPriorityArgs): Promise<CallToolResult> {
   const project = args.project || resolveProject();
   const entityType = args.entity_type || "feature";
   const includeCompleted = args.include_completed ?? false;
@@ -83,8 +81,7 @@ export async function handler(
       actionable_items: filteredSorted.filter((n) =>
         n.dependencies.every(
           (d) =>
-            !graph.nodes.has(d) ||
-            COMPLETED_STATUSES.includes(graph.nodes.get(d)?.status ?? ""),
+            !graph.nodes.has(d) || COMPLETED_STATUSES.includes(graph.nodes.get(d)?.status ?? ""),
         ),
       ).length,
       generated_at: new Date().toISOString(),
@@ -125,8 +122,7 @@ export async function handler(
   lines.push(``);
   for (let i = 0; i < filteredSorted.length; i++) {
     const item = filteredSorted[i];
-    const priorityStr =
-      item.priority !== undefined ? `P${item.priority}` : "P?";
+    const priorityStr = item.priority !== undefined ? `P${item.priority}` : "P?";
     lines.push(`${i + 1}. **${item.title}** [${priorityStr}] - ${item.status}`);
   }
 
@@ -140,8 +136,7 @@ export async function handler(
     lines.push(``);
     lines.push(`### Items in Cycles (unsorted)`);
     for (const item of unsorted) {
-      const priorityStr =
-        item.priority !== undefined ? `P${item.priority}` : "P?";
+      const priorityStr = item.priority !== undefined ? `P${item.priority}` : "P?";
       lines.push(`- **${item.title}** [${priorityStr}] - ${item.status}`);
     }
   }

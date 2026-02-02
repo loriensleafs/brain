@@ -29,14 +29,8 @@ import * as path from "node:path";
 import { promisify } from "node:util";
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { getBasicMemoryClient } from "../../proxy/client";
-import {
-  BrainSessionPersistence,
-  BrainUnavailableError,
-} from "../../services/session";
-import {
-  createDefaultSessionState,
-  type SessionState,
-} from "../../services/session/types";
+import { BrainSessionPersistence, BrainUnavailableError } from "../../services/session";
+import { createDefaultSessionState, type SessionState } from "../../services/session/types";
 import { logger } from "../../utils/internal/logger";
 import { inngest } from "../client";
 import { createNonRetriableError, WorkflowErrorType } from "../errors";
@@ -127,10 +121,7 @@ interface ReadNoteResult {
  * @param workingDirectory - Project working directory
  * @returns Initialization timestamp or error message
  */
-async function initializeBrainMCP(
-  client: Client,
-  workingDirectory: string,
-): Promise<string> {
+async function initializeBrainMCP(client: Client, workingDirectory: string): Promise<string> {
   try {
     await client.callTool({
       name: "bootstrap_context",
@@ -147,9 +138,7 @@ async function initializeBrainMCP(
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     logger.error({ error: message }, "Brain MCP initialization failed");
-    throw new BrainUnavailableError(
-      `Brain MCP initialization failed: ${message}`,
-    );
+    throw new BrainUnavailableError(`Brain MCP initialization failed: ${message}`);
   }
 }
 
@@ -229,11 +218,7 @@ async function createSessionLog(
 /**
  * Generate session log markdown template.
  */
-function generateSessionLogTemplate(
-  sessionId: string,
-  date: string,
-  sessionNum: string,
-): string {
+function generateSessionLogTemplate(sessionId: string, date: string, sessionNum: string): string {
   const now = new Date();
   const timeStr = now.toTimeString().split(" ")[0];
 
@@ -294,9 +279,7 @@ None
  * @param workingDirectory - Project working directory
  * @returns Array of skill script paths
  */
-async function verifySkillsDirectory(
-  workingDirectory: string,
-): Promise<string[]> {
+async function verifySkillsDirectory(workingDirectory: string): Promise<string[]> {
   const skillsDir = path.join(workingDirectory, ".claude", "skills");
   const scripts: string[] = [];
 
@@ -310,11 +293,7 @@ async function verifySkillsDirectory(
 
         // Look for SKILL.md and script files
         for (const file of skillFiles) {
-          if (
-            file === "SKILL.md" ||
-            file.endsWith(".ps1") ||
-            file.endsWith(".sh")
-          ) {
+          if (file === "SKILL.md" || file.endsWith(".ps1") || file.endsWith(".sh")) {
             scripts.push(path.join(skillDir, file));
           }
         }
@@ -335,9 +314,7 @@ async function verifySkillsDirectory(
  * @param workingDirectory - Project working directory
  * @returns Current branch name or null if not a git repo
  */
-async function verifyGitBranch(
-  workingDirectory: string,
-): Promise<string | null> {
+async function verifyGitBranch(workingDirectory: string): Promise<string | null> {
   try {
     const { stdout } = await execAsync("git branch --show-current", {
       cwd: workingDirectory,
@@ -348,10 +325,7 @@ async function verifyGitBranch(
     logger.debug({ branch }, "Git branch verified");
     return branch || null;
   } catch (error) {
-    logger.debug(
-      { error },
-      "Git branch verification failed - may not be a git repo",
-    );
+    logger.debug({ error }, "Git branch verification failed - may not be a git repo");
     return null;
   }
 }
@@ -395,9 +369,7 @@ async function readUsageMandatory(
  * @param workingDirectory - Project working directory
  * @returns File content or null if not found
  */
-async function readProjectConstraints(
-  workingDirectory: string,
-): Promise<string | null> {
+async function readProjectConstraints(workingDirectory: string): Promise<string | null> {
   const constraintsPath = path.join(
     workingDirectory,
     ".agents",
@@ -517,10 +489,7 @@ async function updateSessionState(
  * @param data - Event data to validate
  * @throws NonRetriableError if data is invalid
  */
-function validateEventData(data: {
-  sessionId?: string;
-  workingDirectory?: string;
-}): void {
+function validateEventData(data: { sessionId?: string; workingDirectory?: string }): void {
   if (!data.sessionId || typeof data.sessionId !== "string") {
     throw createNonRetriableError(
       WorkflowErrorType.VALIDATION_ERROR,
@@ -572,10 +541,7 @@ export const sessionProtocolStartWorkflow = inngest.createFunction(
     // Step 0: Validate input data
     await step.run("validate-input", async (): Promise<void> => {
       validateEventData(event.data);
-      logger.info(
-        { sessionId, workingDirectory },
-        "Session protocol start workflow initiated",
-      );
+      logger.info({ sessionId, workingDirectory }, "Session protocol start workflow initiated");
     });
 
     // Get Brain MCP client for subsequent steps
@@ -592,20 +558,14 @@ export const sessionProtocolStartWorkflow = inngest.createFunction(
     }
 
     // Step 1: Initialize Brain MCP
-    const brainMcpTimestamp = await step.run(
-      "init-brain-mcp",
-      async (): Promise<string> => {
-        return await initializeBrainMCP(client, workingDirectory);
-      },
-    );
+    const brainMcpTimestamp = await step.run("init-brain-mcp", async (): Promise<string> => {
+      return await initializeBrainMCP(client, workingDirectory);
+    });
 
     // Step 2: Load HANDOFF.md content
-    const handoffContent = await step.run(
-      "load-handoff",
-      async (): Promise<string | null> => {
-        return await loadHandoffContext(client, workingDirectory);
-      },
-    );
+    const handoffContent = await step.run("load-handoff", async (): Promise<string | null> => {
+      return await loadHandoffContext(client, workingDirectory);
+    });
 
     // Step 3: Create session log file
     const sessionLogPath = await step.run(
@@ -616,20 +576,14 @@ export const sessionProtocolStartWorkflow = inngest.createFunction(
     );
 
     // Step 4: Verify skills directory
-    const skillScripts = await step.run(
-      "verify-skills",
-      async (): Promise<string[]> => {
-        return await verifySkillsDirectory(workingDirectory);
-      },
-    );
+    const skillScripts = await step.run("verify-skills", async (): Promise<string[]> => {
+      return await verifySkillsDirectory(workingDirectory);
+    });
 
     // Step 5: Verify git branch
-    const gitBranch = await step.run(
-      "verify-git",
-      async (): Promise<string | null> => {
-        return await verifyGitBranch(workingDirectory);
-      },
-    );
+    const gitBranch = await step.run("verify-git", async (): Promise<string | null> => {
+      return await verifyGitBranch(workingDirectory);
+    });
 
     // Step 6: Read usage-mandatory note
     const usageMandatory = await step.run(
@@ -745,9 +699,7 @@ export async function getSessionProtocolContext(
   return {
     sessionId,
     workingDirectory,
-    brainMcpStatus: state.protocolStartEvidence.brainMcpInitialized
-      ? "initialized"
-      : "failed",
+    brainMcpStatus: state.protocolStartEvidence.brainMcpInitialized ? "initialized" : "failed",
     handoffContent: null, // Not stored in evidence
     sessionLogPath: state.protocolStartEvidence.sessionLogPath ?? null,
     skillScripts: [], // Not stored in evidence
@@ -765,9 +717,7 @@ export async function getSessionProtocolContext(
  * @param workingDirectory - Project working directory
  * @returns True if protocol start is complete
  */
-export async function isProtocolStartComplete(
-  workingDirectory: string,
-): Promise<boolean> {
+export async function isProtocolStartComplete(workingDirectory: string): Promise<boolean> {
   const persistence = new BrainSessionPersistence({
     projectPath: workingDirectory,
   });

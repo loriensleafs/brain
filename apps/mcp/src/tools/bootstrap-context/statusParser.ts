@@ -74,9 +74,7 @@ export function parseStatus(content?: string, title?: string): NoteStatus {
 export function parseStatusSection(content: string): NoteStatus | null {
   // Match ## Status section and capture content until next section or end
   // Using multiline flag and capturing everything after "## Status"
-  const sectionMatch = content.match(
-    /^##\s+Status\s*\n+([\s\S]*?)(?=\n##\s|\n---|\n\n\n|$)/im,
-  );
+  const sectionMatch = content.match(/^##\s+Status\s*\n+([\s\S]*?)(?=\n##\s|\n---|\n\n\n|$)/im);
 
   if (!sectionMatch) return null;
 

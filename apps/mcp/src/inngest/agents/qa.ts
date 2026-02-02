@@ -32,10 +32,7 @@ export async function runQaAgent(
   validateFeatureId(featureId, AGENT_NAME);
 
   return wrapAgentExecution(AGENT_NAME, async () => {
-    logger.debug(
-      { featureId, context, agent: AGENT_NAME },
-      "Running QA agent validation",
-    );
+    logger.debug({ featureId, context, agent: AGENT_NAME }, "Running QA agent validation");
 
     // Placeholder: actual QA validation logic deferred per C-001
     // Future implementation will:

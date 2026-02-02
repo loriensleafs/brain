@@ -221,9 +221,7 @@ describe("Type guards", () => {
     test("returns true for valid session state", () => {
       const validState = {
         currentMode: "analysis",
-        modeHistory: [
-          { mode: "analysis", timestamp: "2026-01-18T10:00:00.000Z" },
-        ],
+        modeHistory: [{ mode: "analysis", timestamp: "2026-01-18T10:00:00.000Z" }],
         protocolStartComplete: false,
         protocolEndComplete: false,
         protocolStartEvidence: {},

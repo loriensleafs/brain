@@ -155,18 +155,13 @@ let discoveredResources: Resource[] = [];
  * Discover and register resource handlers.
  * Combines Brain guides (brain://guides/*) with basic-memory resources.
  */
-export async function discoverAndRegisterResources(
-  server: McpServer,
-): Promise<void> {
+export async function discoverAndRegisterResources(server: McpServer): Promise<void> {
   const client = await getBasicMemoryClient();
 
   // Discover available resources from basic-memory
   const resourcesResult = await client.listResources();
   const basicMemoryResources = resourcesResult.resources;
-  logger.info(
-    { count: basicMemoryResources.length },
-    "Discovered basic-memory resources",
-  );
+  logger.info({ count: basicMemoryResources.length }, "Discovered basic-memory resources");
 
   // Combine Brain guides with basic-memory resources
   // Brain guides come first (higher priority, sorted by priority within)
@@ -187,36 +182,33 @@ export async function discoverAndRegisterResources(
   });
 
   // Register resources/read handler - handles both brain:// and memory:// URIs
-  server.server.setRequestHandler(
-    ReadResourceRequestSchema,
-    async (request) => {
-      const { uri } = request.params;
-      logger.debug({ uri }, "Reading resource");
+  server.server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
+    const { uri } = request.params;
+    logger.debug({ uri }, "Reading resource");
 
-      // Handle Brain guides directly (brain://guides/*)
-      if (uri.startsWith("brain://guides/")) {
-        const slug = uri.replace("brain://guides/", "");
-        const content = readGuideContent(slug);
-        if (content) {
-          return {
-            contents: [
-              {
-                uri,
-                mimeType: "text/markdown",
-                text: content,
-              },
-            ],
-          };
-        } else {
-          throw new Error(`Guide not found: ${uri}`);
-        }
+    // Handle Brain guides directly (brain://guides/*)
+    if (uri.startsWith("brain://guides/")) {
+      const slug = uri.replace("brain://guides/", "");
+      const content = readGuideContent(slug);
+      if (content) {
+        return {
+          contents: [
+            {
+              uri,
+              mimeType: "text/markdown",
+              text: content,
+            },
+          ],
+        };
+      } else {
+        throw new Error(`Guide not found: ${uri}`);
       }
+    }
 
-      // Proxy all other resources to basic-memory
-      const result = await client.readResource({ uri });
-      return result;
-    },
-  );
+    // Proxy all other resources to basic-memory
+    const result = await client.readResource({ uri });
+    return result;
+  });
 
   logger.debug("Registered resource handlers");
 }

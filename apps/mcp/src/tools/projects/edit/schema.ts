@@ -70,12 +70,12 @@ Examples:
       },
       code_path: {
         type: "string",
-        description:
-          "Code directory path (use ~ for home). Required for editing.",
+        description: "Code directory path (use ~ for home). Required for editing.",
       },
       memories_path: {
         type: "string",
         description:
+          // biome-ignore lint/suspicious/noTemplateCurlyInString: Intentional placeholder syntax in docs
           "Memories directory path. Options: 'DEFAULT' (${default_memories_location}/${name}), 'CODE' (${code_path}/docs), or absolute path. Defaults to 'DEFAULT' when not specified, except auto-updates to new code_path/docs if was ${old_code_path}/docs.",
       },
     },

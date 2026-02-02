@@ -58,7 +58,7 @@ describe("triggerEmbedding", () => {
       Promise.resolve({
         ok: true,
         status: 200,
-        json: () => Promise.resolve({ embedding }),
+        json: () => Promise.resolve({ embeddings: [embedding] }),
       } as Response),
     ) as unknown as typeof fetch;
   };

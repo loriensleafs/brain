@@ -28,10 +28,7 @@ async function main(): Promise<void> {
     db.close();
     logger.info("Embeddings table initialized");
   } catch (error) {
-    logger.warn(
-      { error },
-      "Failed to initialize embeddings table - semantic search disabled",
-    );
+    logger.warn({ error }, "Failed to initialize embeddings table - semantic search disabled");
   }
 
   // Ensure Ollama is running for semantic search (auto-starts if needed)

@@ -17,10 +17,7 @@ import type {
 /**
  * Maps conformance issue types to migration operations
  */
-const ISSUE_TO_OPERATION: Record<
-  ConformanceIssueType,
-  MigrationOperation | null
-> = {
+const ISSUE_TO_OPERATION: Record<ConformanceIssueType, MigrationOperation | null> = {
   bad_prefix: "rename",
   not_overview: "rename",
   redundant_child_prefix: "rename",
@@ -52,9 +49,7 @@ const ISSUE_REASONS: Record<ConformanceIssueType, string> = {
  * Groups files by operation type and calculates summary statistics.
  * Files with multiple issues are categorized by their primary operation.
  */
-export function generatePreview(
-  nonConforming: NonConformingFile[],
-): MigrationPreview {
+export function generatePreview(nonConforming: NonConformingFile[]): MigrationPreview {
   const preview: MigrationPreview = {
     total_changes: 0,
     by_operation: {
@@ -109,9 +104,7 @@ export function generatePreview(
  *
  * Priority: restructure > move > rename (more significant changes first)
  */
-function determinePrimaryOperation(
-  file: NonConformingFile,
-): MigrationOperation | null {
+function determinePrimaryOperation(file: NonConformingFile): MigrationOperation | null {
   const operations = file.issues
     .map((issue) => ISSUE_TO_OPERATION[issue.type])
     .filter((op): op is MigrationOperation => op !== null);
@@ -128,9 +121,7 @@ function determinePrimaryOperation(
  * Builds a human-readable reason string from file issues
  */
 function buildReason(file: NonConformingFile): string {
-  const fileOpIssues = file.issues.filter(
-    (i) => ISSUE_TO_OPERATION[i.type] !== null,
-  );
+  const fileOpIssues = file.issues.filter((i) => ISSUE_TO_OPERATION[i.type] !== null);
 
   if (fileOpIssues.length === 1) {
     return ISSUE_REASONS[fileOpIssues[0].type];
@@ -159,9 +150,7 @@ function detectConflicts(preview: MigrationPreview): string[] {
   // Check for conflicts (multiple sources -> same target)
   for (const [target, sources] of targetPaths) {
     if (sources.length > 1) {
-      warnings.push(
-        `Conflict: Multiple files would migrate to ${target}: ${sources.join(", ")}`,
-      );
+      warnings.push(`Conflict: Multiple files would migrate to ${target}: ${sources.join(", ")}`);
     }
   }
 
@@ -178,9 +167,7 @@ export function formatPreviewText(preview: MigrationPreview): string {
   const lines: string[] = [];
 
   // Top border
-  lines.push(
-    `\u256D\u2500 MIGRATION PREVIEW ${"─".repeat(BOX_WIDTH - 22)}\u256E`,
-  );
+  lines.push(`\u256D\u2500 MIGRATION PREVIEW ${"─".repeat(BOX_WIDTH - 22)}\u256E`);
   lines.push(`\u2502${" ".repeat(BOX_WIDTH - 2)}\u2502`);
 
   // Summary
@@ -219,27 +206,17 @@ export function formatPreviewText(preview: MigrationPreview): string {
     for (const item of displayItems) {
       const itemText = `${item.source} → ${item.target}`;
       if (itemText.length <= INNER_WIDTH - 6) {
-        lines.push(
-          `\u2502  \u2502 ${itemText.padEnd(INNER_WIDTH - 6)} \u2502  \u2502`,
-        );
+        lines.push(`\u2502  \u2502 ${itemText.padEnd(INNER_WIDTH - 6)} \u2502  \u2502`);
       } else {
         // Truncate long paths
-        const truncated = truncatePath(
-          item.source,
-          item.target,
-          INNER_WIDTH - 6,
-        );
-        lines.push(
-          `\u2502  \u2502 ${truncated.padEnd(INNER_WIDTH - 6)} \u2502  \u2502`,
-        );
+        const truncated = truncatePath(item.source, item.target, INNER_WIDTH - 6);
+        lines.push(`\u2502  \u2502 ${truncated.padEnd(INNER_WIDTH - 6)} \u2502  \u2502`);
       }
     }
 
     if (items.length > 10) {
       const moreText = `... and ${items.length - 10} more`;
-      lines.push(
-        `\u2502  \u2502 ${moreText.padEnd(INNER_WIDTH - 6)} \u2502  \u2502`,
-      );
+      lines.push(`\u2502  \u2502 ${moreText.padEnd(INNER_WIDTH - 6)} \u2502  \u2502`);
     }
 
     // Section footer
@@ -249,9 +226,7 @@ export function formatPreviewText(preview: MigrationPreview): string {
 
   // Warnings section
   if (preview.warnings.length > 0) {
-    lines.push(
-      `\u2502  \u26A0 WARNINGS:${" ".repeat(INNER_WIDTH - 12)}  \u2502`,
-    );
+    lines.push(`\u2502  \u26A0 WARNINGS:${" ".repeat(INNER_WIDTH - 12)}  \u2502`);
     for (const warning of preview.warnings) {
       const wrappedWarning = wrapText(warning, INNER_WIDTH - 6);
       for (const line of wrappedWarning) {

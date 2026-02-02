@@ -216,10 +216,7 @@ export class BrainSessionPersistence {
         return null;
       }
 
-      logger.debug(
-        { version: state.version },
-        "Session loaded from Brain note",
-      );
+      logger.debug({ version: state.version }, "Session loaded from Brain note");
 
       return state;
     } catch (error) {
@@ -239,10 +236,7 @@ export class BrainSessionPersistence {
   async deleteSession(): Promise<void> {
     const client = await this.getClient();
 
-    logger.debug(
-      { notePath: SESSION_PATH },
-      "Deleting session from Brain note",
-    );
+    logger.debug({ notePath: SESSION_PATH }, "Deleting session from Brain note");
 
     // Write tombstone content to mark as deleted
     const tombstone = {
@@ -272,10 +266,7 @@ export class BrainSessionPersistence {
    * @param invocation - Agent invocation data
    * @throws BrainUnavailableError if Brain MCP is unavailable
    */
-  async saveAgentContext(
-    agent: AgentType,
-    invocation: AgentInvocation,
-  ): Promise<void> {
+  async saveAgentContext(agent: AgentType, invocation: AgentInvocation): Promise<void> {
     const client = await this.getClient();
 
     const notePath = `${AGENT_CONTEXT_PREFIX}${agent}`;

@@ -69,17 +69,13 @@ export function chunkText(text: string): ChunkMetadata[] {
   });
 
   // Filter out empty/null chunks and map to our format
-  const validChunks = chunks.filter(
-    (chunk) => chunk.text !== null && chunk.text !== "",
-  );
+  const validChunks = chunks.filter((chunk) => chunk.text !== null && chunk.text !== "");
 
   const totalChunks = validChunks.length;
 
   return validChunks.map((chunk, index) => {
     // Handle both string and string[] return types from llm-splitter
-    const chunkText = Array.isArray(chunk.text)
-      ? chunk.text.join(" ")
-      : (chunk.text as string);
+    const chunkText = Array.isArray(chunk.text) ? chunk.text.join(" ") : (chunk.text as string);
 
     return {
       text: chunkText,

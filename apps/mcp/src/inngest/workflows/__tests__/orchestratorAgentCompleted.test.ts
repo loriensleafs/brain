@@ -78,10 +78,7 @@ describe("Orchestrator Agent Completed Workflow", () => {
       const output: AgentInvocationOutput = {
         artifacts: ["analysis.md", "recommendations.md"],
         summary: "Completed analysis of OAuth 2.0 implementation options",
-        recommendations: [
-          "Use PKCE for public clients",
-          "Implement refresh token rotation",
-        ],
+        recommendations: ["Use PKCE for public clients", "Implement refresh token rotation"],
         blockers: [],
       };
 
@@ -96,10 +93,7 @@ describe("Orchestrator Agent Completed Workflow", () => {
         artifacts: [],
         summary: "Unable to complete due to missing dependencies",
         recommendations: [],
-        blockers: [
-          "Missing API documentation",
-          "Access credentials not provided",
-        ],
+        blockers: ["Missing API documentation", "Access credentials not provided"],
       };
 
       expect(output.blockers).toHaveLength(2);
@@ -246,10 +240,7 @@ describe("Orchestrator Agent Completed Workflow", () => {
 
         expect(compactionHistory).toHaveLength(2);
 
-        const totalCompacted = compactionHistory.reduce(
-          (sum, entry) => sum + entry.count,
-          0,
-        );
+        const totalCompacted = compactionHistory.reduce((sum, entry) => sum + entry.count, 0);
         expect(totalCompacted).toBe(18);
       });
     });
@@ -552,10 +543,7 @@ describe("Orchestrator Agent Completed Workflow", () => {
       // Find in-progress invocation for planner
       let foundIndex = -1;
       for (let i = history.length - 1; i >= 0; i--) {
-        if (
-          history[i].agent === "planner" &&
-          history[i].status === "in_progress"
-        ) {
+        if (history[i].agent === "planner" && history[i].status === "in_progress") {
           foundIndex = i;
           break;
         }
@@ -588,10 +576,7 @@ describe("Orchestrator Agent Completed Workflow", () => {
       // Find in-progress invocation for planner (doesn't exist)
       let foundIndex = -1;
       for (let i = history.length - 1; i >= 0; i--) {
-        if (
-          history[i].agent === "planner" &&
-          history[i].status === "in_progress"
-        ) {
+        if (history[i].agent === "planner" && history[i].status === "in_progress") {
           foundIndex = i;
           break;
         }

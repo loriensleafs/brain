@@ -13,68 +13,71 @@
 import * as path from "node:path";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
-// Track mock checksum value
-let mockChecksumValue = "abc123def456";
+// Use vi.hoisted() to ensure mocks are available before vi.mock() hoisting
+// Include mockState as a mutable reference that can be modified by tests
+const { mockFs, mockCrypto, mockLogger, mockState } = vi.hoisted(() => {
+  // Mutable state for test control
+  const mockState = {
+    checksumValue: "abc123def456",
+  };
 
-// Mock filesystem
-const mockFs = {
-  existsSync: vi.fn<(p: string) => boolean>(() => false),
-  mkdirSync: vi.fn<(p: string, opts: unknown) => void>(() => undefined),
-  writeFileSync: vi.fn<(p: string, content: string, opts: unknown) => void>(
-    () => undefined,
-  ),
-  readFileSync: vi.fn<
-    (p: string | Buffer, encoding?: string) => string | Buffer
-  >(() => Buffer.from("test content")),
-  renameSync: vi.fn<(from: string, to: string) => void>(() => undefined),
-  unlinkSync: vi.fn<(p: string) => void>(() => undefined),
-  rmdirSync: vi.fn<(p: string) => void>(() => undefined),
-  readdirSync: vi.fn<(p: string) => string[]>(() => [] as string[]),
-  createReadStream: vi.fn(() => {
-    // Create a simple event emitter-like object for streams
-    const handlers: Record<string, ((...args: unknown[]) => void)[]> = {};
-    const stream = {
-      on: (event: string, handler: (...args: unknown[]) => void) => {
-        if (!handlers[event]) handlers[event] = [];
-        handlers[event].push(handler);
-        // Schedule events
-        if (event === "end") {
-          setTimeout(() => {
-            if (handlers.data) {
-              handlers.data.forEach((h) => h(Buffer.from("test")));
+  return {
+    mockState,
+    mockFs: {
+      existsSync: vi.fn<(p: string) => boolean>(() => false),
+      mkdirSync: vi.fn<(p: string, opts: unknown) => void>(() => undefined),
+      writeFileSync: vi.fn<(p: string, content: string, opts: unknown) => void>(() => undefined),
+      readFileSync: vi.fn<(p: string | Buffer, encoding?: string) => string | Buffer>(() =>
+        Buffer.from("test content"),
+      ),
+      renameSync: vi.fn<(from: string, to: string) => void>(() => undefined),
+      unlinkSync: vi.fn<(p: string) => void>(() => undefined),
+      rmdirSync: vi.fn<(p: string) => void>(() => undefined),
+      readdirSync: vi.fn<(p: string) => string[]>(() => [] as string[]),
+      createReadStream: vi.fn(() => {
+        // Create a simple event emitter-like object for streams
+        const handlers: Record<string, ((...args: unknown[]) => void)[]> = {};
+        const stream = {
+          on: (event: string, handler: (...args: unknown[]) => void) => {
+            if (!handlers[event]) handlers[event] = [];
+            handlers[event].push(handler);
+            // Schedule events
+            if (event === "end") {
+              setTimeout(() => {
+                if (handlers.data) {
+                  handlers.data.forEach((h) => {
+                    h(Buffer.from("test"));
+                  });
+                }
+                handler();
+              }, 1);
             }
-            handler();
-          }, 1);
-        }
+            return stream;
+          },
+        };
         return stream;
-      },
-    };
-    return stream;
-  }),
-};
+      }),
+    },
+    mockCrypto: {
+      createHash: () => ({
+        update: function (this: unknown) {
+          return this;
+        },
+        digest: () => mockState.checksumValue, // Reference hoisted state
+      }),
+      randomBytes: () => Buffer.from("12345678", "hex"),
+    },
+    mockLogger: {
+      debug: vi.fn(() => undefined),
+      info: vi.fn(() => undefined),
+      warn: vi.fn(() => undefined),
+      error: vi.fn(() => undefined),
+    },
+  };
+});
 
 vi.mock("fs", () => mockFs);
-
-// Mock crypto with controllable checksum
-const mockCrypto = {
-  createHash: () => ({
-    update: function (this: unknown) {
-      return this;
-    },
-    digest: () => mockChecksumValue,
-  }),
-  randomBytes: () => Buffer.from("12345678", "hex"),
-};
-
 vi.mock("crypto", () => mockCrypto);
-
-// Mock logger
-const mockLogger = {
-  debug: vi.fn(() => undefined),
-  info: vi.fn(() => undefined),
-  warn: vi.fn(() => undefined),
-  error: vi.fn(() => undefined),
-};
 
 vi.mock("../../utils/internal/logger", () => ({
   logger: mockLogger,
@@ -108,7 +111,7 @@ describe("createCopyManifest", () => {
     mockFs.renameSync.mockReset();
 
     mockFs.existsSync.mockReturnValue(false);
-    mockChecksumValue = "abc123def456";
+    mockState.checksumValue = "abc123def456";
 
     // Mock readFileSync to return valid JSON for verification
     mockFs.readFileSync.mockImplementation((p: unknown) => {
@@ -120,12 +123,10 @@ describe("createCopyManifest", () => {
   });
 
   test("creates manifest with all entries as pending", async () => {
-    const manifest = await createCopyManifest(
-      "test-project",
-      "/source",
-      "/target",
-      ["file1.md", "file2.md"],
-    );
+    const manifest = await createCopyManifest("test-project", "/source", "/target", [
+      "file1.md",
+      "file2.md",
+    ]);
 
     expect(manifest.project).toBe("test-project");
     expect(manifest.sourceRoot).toBe("/source");
@@ -137,9 +138,7 @@ describe("createCopyManifest", () => {
   });
 
   test("generates unique migration ID", async () => {
-    const manifest1 = await createCopyManifest("test", "/src", "/dst", [
-      "a.md",
-    ]);
+    const manifest1 = await createCopyManifest("test", "/src", "/dst", ["a.md"]);
 
     expect(manifest1.migrationId).toContain("migration-");
   });
@@ -152,19 +151,12 @@ describe("createCopyManifest", () => {
   });
 
   test("sets correct paths for entries", async () => {
-    const manifest = await createCopyManifest(
-      "test",
-      "/source/root",
-      "/target/root",
-      ["docs/file.md"],
-    );
+    const manifest = await createCopyManifest("test", "/source/root", "/target/root", [
+      "docs/file.md",
+    ]);
 
-    expect(manifest.entries[0].sourcePath).toBe(
-      path.join("/source/root", "docs/file.md"),
-    );
-    expect(manifest.entries[0].targetPath).toBe(
-      path.join("/target/root", "docs/file.md"),
-    );
+    expect(manifest.entries[0].sourcePath).toBe(path.join("/source/root", "docs/file.md"));
+    expect(manifest.entries[0].targetPath).toBe(path.join("/target/root", "docs/file.md"));
   });
 });
 
@@ -179,10 +171,8 @@ describe("markEntryCopied", () => {
     mockFs.renameSync.mockReset();
 
     mockFs.existsSync.mockReturnValue(false);
-    mockChecksumValue = "targetChecksum123";
-    mockFs.readFileSync.mockReturnValue(
-      JSON.stringify({ migrationId: "test" }),
-    );
+    mockState.checksumValue = "targetChecksum123";
+    mockFs.readFileSync.mockReturnValue(JSON.stringify({ migrationId: "test" }));
 
     manifest = {
       migrationId: "test-migration",
@@ -225,9 +215,7 @@ describe("verifyEntry", () => {
     mockFs.renameSync.mockReset();
 
     mockFs.existsSync.mockReturnValue(false);
-    mockFs.readFileSync.mockReturnValue(
-      JSON.stringify({ migrationId: "test" }),
-    );
+    mockFs.readFileSync.mockReturnValue(JSON.stringify({ migrationId: "test" }));
 
     manifest = {
       migrationId: "test-migration",
@@ -269,9 +257,7 @@ describe("markEntryFailed", () => {
     mockFs.renameSync.mockReset();
 
     mockFs.existsSync.mockReturnValue(false);
-    mockFs.readFileSync.mockReturnValue(
-      JSON.stringify({ migrationId: "test" }),
-    );
+    mockFs.readFileSync.mockReturnValue(JSON.stringify({ migrationId: "test" }));
   });
 
   test("updates entry status and error", () => {
@@ -310,9 +296,7 @@ describe("markManifestCompleted", () => {
     mockFs.renameSync.mockReset();
 
     mockFs.existsSync.mockReturnValue(false);
-    mockFs.readFileSync.mockReturnValue(
-      JSON.stringify({ migrationId: "test" }),
-    );
+    mockFs.readFileSync.mockReturnValue(JSON.stringify({ migrationId: "test" }));
   });
 
   test("sets completedAt timestamp", () => {
@@ -487,9 +471,7 @@ describe("rollbackPartialCopy", () => {
 
     // Manifest should be deleted
     const unlinkCalls = mockFs.unlinkSync.mock.calls;
-    const manifestDeleted = unlinkCalls.some((call) =>
-      String(call[0]).includes("test-migration"),
-    );
+    const manifestDeleted = unlinkCalls.some((call) => String(call[0]).includes("test-migration"));
     expect(manifestDeleted).toBe(true);
   });
 });
@@ -802,7 +784,7 @@ describe("getManifestDir", () => {
 describe("computeFileChecksumSync", () => {
   beforeEach(() => {
     mockFs.readFileSync.mockReset();
-    mockChecksumValue = "sha256hash123";
+    mockState.checksumValue = "sha256hash123";
   });
 
   test("computes SHA-256 checksum", () => {

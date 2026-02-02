@@ -12,11 +12,7 @@ import { resolveProject } from "../../project/resolve";
 import { getBasicMemoryClient } from "../../proxy/client";
 import { detectClusters } from "../organizer/clusterDetection";
 import type { ParsedSourceFile } from "../organizer/schemas/clusterSchema";
-import {
-  checkConformance,
-  getSuggestedTarget,
-  inferTypeFromPath,
-} from "./conformanceChecker";
+import { checkConformance, getSuggestedTarget, inferTypeFromPath } from "./conformanceChecker";
 import { formatPreviewText, generatePreview } from "./preview";
 import type {
   AnalyzeProjectArgs,
@@ -29,9 +25,7 @@ import { brainTargetSchema } from "./schema";
 /**
  * Main handler for the analyze_project tool
  */
-export async function handler(
-  args: AnalyzeProjectArgs,
-): Promise<CallToolResult> {
+export async function handler(args: AnalyzeProjectArgs): Promise<CallToolResult> {
   const project = args.project || resolveProject();
   const mode = args.mode || "conform";
 
@@ -70,11 +64,12 @@ export async function handler(
 
   // Branch by mode
   if (mode === "import") {
-    return handleImportMode(
-      args.source_path!,
-      args.source_schema!,
-      args.preview || false,
-    );
+    if (!args.source_path || !args.source_schema) {
+      return {
+        content: [{ type: "text", text: "Import mode requires source_path and source_schema" }],
+      };
+    }
+    return handleImportMode(args.source_path, args.source_schema, args.preview || false);
   } else {
     return handleConformMode(project, args.preview || false);
   }
@@ -83,10 +78,7 @@ export async function handler(
 /**
  * Handle conform mode - check existing Brain notes for conformance
  */
-async function handleConformMode(
-  project: string,
-  preview: boolean,
-): Promise<CallToolResult> {
+async function handleConformMode(project: string, preview: boolean): Promise<CallToolResult> {
   const client = await getBasicMemoryClient();
 
   // Get all notes via list_directory with depth
@@ -123,7 +115,7 @@ async function handleConformMode(
       nonConforming.push({
         path: filePath,
         current_type:
-          (parsed.frontmatter?.type as any) || inferTypeFromPath(filePath),
+          (parsed.frontmatter?.type as string | undefined) || inferTypeFromPath(filePath),
         issues,
         suggested_target: suggestedTarget,
       });
@@ -208,9 +200,14 @@ async function handleConformMode(
  * Handle import mode - analyze external project files for migration to Brain
  * Reads directly from filesystem at source_path
  */
+interface SourceSchema {
+  folder_types: Record<string, string>;
+  file_patterns: Record<string, string>;
+}
+
 async function handleImportMode(
   sourcePath: string,
-  sourceSchema: any,
+  sourceSchema: SourceSchema,
   preview: boolean,
 ): Promise<CallToolResult> {
   // Expand ~ to home directory
@@ -301,9 +298,7 @@ async function handleImportMode(
   if (clusters.length > 0) {
     lines.push(`### Detected Clusters`);
     for (const cluster of clusters) {
-      lines.push(
-        `- **${cluster.id}** (${cluster.cluster_type}): ${cluster.files.length} files`,
-      );
+      lines.push(`- **${cluster.id}** (${cluster.cluster_type}): ${cluster.files.length} files`);
       lines.push(`  ${cluster.rationale}`);
       lines.push(`  Recommendation: ${cluster.merge_recommendation}`);
     }
@@ -356,9 +351,7 @@ function findMarkdownFiles(dir: string): string[] {
  */
 function extractTitle(content: string): string | undefined {
   // Try YAML frontmatter
-  const fmMatch = content.match(
-    /^---\n[\s\S]*?title:\s*['"]?([^'"\n]+)['"]?[\s\S]*?\n---/,
-  );
+  const fmMatch = content.match(/^---\n[\s\S]*?title:\s*['"]?([^'"\n]+)['"]?[\s\S]*?\n---/);
   if (fmMatch) return fmMatch[1];
 
   // Try first H1
@@ -375,7 +368,7 @@ function extractTitle(content: string): string | undefined {
 /**
  * Infers note type from source schema folder_types and file_patterns
  */
-function inferTypeFromSourceSchema(filePath: string, sourceSchema: any): any {
+function inferTypeFromSourceSchema(filePath: string, sourceSchema: SourceSchema): string | null {
   // Check folder_types first
   for (const [folder, type] of Object.entries(sourceSchema.folder_types)) {
     if (filePath.startsWith(`${folder}/`)) {
@@ -397,7 +390,7 @@ function inferTypeFromSourceSchema(filePath: string, sourceSchema: any): any {
 /**
  * Generates Brain-compliant target path from source file and inferred type
  */
-function generateBrainTargetPath(sourcePath: string, noteType: any): string {
+function generateBrainTargetPath(sourcePath: string, noteType: string | null): string {
   // Extract slug from filename
   const fileName = sourcePath.split("/").pop() || "";
   const slug = fileName
@@ -424,10 +417,14 @@ function generateBrainTargetPath(sourcePath: string, noteType: any): string {
   }
 }
 
+interface McpToolResult {
+  content?: Array<{ type: string; text?: string }>;
+}
+
 /**
  * Parses list_directory output to extract file paths
  */
-function parseListDirectoryResult(result: any): string[] {
+function parseListDirectoryResult(result: McpToolResult): string[] {
   // Parse list_directory output to extract file paths
   const text = result.content?.[0]?.text || "";
   const files: string[] = [];
@@ -447,7 +444,7 @@ function parseListDirectoryResult(result: any): string[] {
  */
 function parseNoteContent(
   path: string,
-  result: any,
+  result: McpToolResult,
 ): {
   path: string;
   relativePath: string;

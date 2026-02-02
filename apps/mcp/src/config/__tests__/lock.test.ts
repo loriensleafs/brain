@@ -13,34 +13,34 @@
 
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
-// Mock filesystem
-const mockFs = {
-  existsSync: vi.fn<(p: string) => boolean>(() => false),
-  mkdirSync: vi.fn<(p: string, opts: unknown) => void>(() => undefined),
-  openSync: vi.fn<(p: string, flags: number, mode?: number) => number>(() => 3),
-  writeSync: vi.fn<(fd: number, content: string) => void>(() => undefined),
-  closeSync: vi.fn<(fd: number) => void>(() => undefined),
-  unlinkSync: vi.fn<(p: string) => void>(() => undefined),
-  statSync: vi.fn<(p: string) => { mtimeMs: number }>(() => ({
-    mtimeMs: Date.now(),
-  })),
-  readdirSync: vi.fn<(p: string) => string[]>(() => [] as string[]),
-  constants: {
-    O_CREAT: 0x0200,
-    O_EXCL: 0x0800,
-    O_WRONLY: 0x0001,
+// Use vi.hoisted() to ensure mocks are available before vi.mock() hoisting
+const { mockFs, mockLogger } = vi.hoisted(() => ({
+  mockFs: {
+    existsSync: vi.fn<(p: string) => boolean>(() => false),
+    mkdirSync: vi.fn<(p: string, opts: unknown) => void>(() => undefined),
+    openSync: vi.fn<(p: string, flags: number, mode?: number) => number>(() => 3),
+    writeSync: vi.fn<(fd: number, content: string) => void>(() => undefined),
+    closeSync: vi.fn<(fd: number) => void>(() => undefined),
+    unlinkSync: vi.fn<(p: string) => void>(() => undefined),
+    statSync: vi.fn<(p: string) => { mtimeMs: number }>(() => ({
+      mtimeMs: Date.now(),
+    })),
+    readdirSync: vi.fn<(p: string) => string[]>(() => [] as string[]),
+    constants: {
+      O_CREAT: 0x0200,
+      O_EXCL: 0x0800,
+      O_WRONLY: 0x0001,
+    },
   },
-};
+  mockLogger: {
+    debug: vi.fn(() => undefined),
+    info: vi.fn(() => undefined),
+    warn: vi.fn(() => undefined),
+    error: vi.fn(() => undefined),
+  },
+}));
 
 vi.mock("fs", () => mockFs);
-
-// Mock logger
-const mockLogger = {
-  debug: vi.fn(() => undefined),
-  info: vi.fn(() => undefined),
-  warn: vi.fn(() => undefined),
-  error: vi.fn(() => undefined),
-};
 
 vi.mock("../../utils/internal/logger", () => ({
   logger: mockLogger,
@@ -276,11 +276,7 @@ describe("LockManager", () => {
         return 3;
       });
 
-      const result = await lockManager.acquireProjectLocks([
-        "charlie",
-        "alpha",
-        "bravo",
-      ]);
+      const result = await lockManager.acquireProjectLocks(["charlie", "alpha", "bravo"]);
 
       expect(result.acquired).toBe(true);
       expect(acquiredOrder).toEqual(["alpha", "bravo", "charlie"]);
@@ -305,10 +301,9 @@ describe("LockManager", () => {
         return pathStr.includes("locks") || pathStr.includes(".lock");
       });
 
-      const result = await lockManager.acquireProjectLocks(
-        ["alpha", "bravo", "charlie"],
-        { timeoutMs: 200 },
-      );
+      const result = await lockManager.acquireProjectLocks(["alpha", "bravo", "charlie"], {
+        timeoutMs: 200,
+      });
 
       expect(result.acquired).toBe(false);
       // Previously acquired locks should be released - the manager tracks which locks it holds
@@ -472,9 +467,9 @@ describe("Convenience Functions", () => {
         throw error;
       });
 
-      await expect(
-        withGlobalLock(async () => "success", { timeoutMs: 100 }),
-      ).rejects.toThrow("timed out");
+      await expect(withGlobalLock(async () => "success", { timeoutMs: 100 })).rejects.toThrow(
+        "timed out",
+      );
     });
   });
 
@@ -507,17 +502,14 @@ describe("Convenience Functions", () => {
 
   describe("withProjectLocks", () => {
     test("acquires multiple locks in order", async () => {
-      const result = await withProjectLocks(
-        ["charlie", "alpha", "bravo"],
-        async () => {
-          const manager = getLockManager();
-          return {
-            alpha: manager.isProjectLocked("alpha"),
-            bravo: manager.isProjectLocked("bravo"),
-            charlie: manager.isProjectLocked("charlie"),
-          };
-        },
-      );
+      const result = await withProjectLocks(["charlie", "alpha", "bravo"], async () => {
+        const manager = getLockManager();
+        return {
+          alpha: manager.isProjectLocked("alpha"),
+          bravo: manager.isProjectLocked("bravo"),
+          charlie: manager.isProjectLocked("charlie"),
+        };
+      });
 
       expect(result.alpha).toBe(true);
       expect(result.bravo).toBe(true);

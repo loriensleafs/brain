@@ -33,9 +33,7 @@ type ResettableKey = (typeof RESETTABLE_KEYS)[number];
  * @param args - Tool arguments (raw from MCP, will be validated)
  * @returns CallToolResult with reset confirmation or error
  */
-export async function handler(
-  args: Record<string, unknown>,
-): Promise<CallToolResult> {
+export async function handler(args: Record<string, unknown>): Promise<CallToolResult> {
   // Validate and parse input using AJV
   const parsed: ConfigResetArgs = ConfigResetArgsSchema.parse(args);
   const { key, all } = parsed;
@@ -110,8 +108,7 @@ export async function handler(
         ...DEFAULT_BRAIN_CONFIG,
         projects: oldConfig.projects, // Preserve existing projects
       };
-      resetDescription =
-        "Reset entire configuration to defaults (projects preserved)";
+      resetDescription = "Reset entire configuration to defaults (projects preserved)";
     } else if (key) {
       // Reset specific section
       const topLevelKey = key.split(".")[0] as ResettableKey;

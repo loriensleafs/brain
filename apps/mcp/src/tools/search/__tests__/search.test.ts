@@ -176,8 +176,7 @@ describe("search result structure", () => {
       similarity_score: 0.85,
       snippet: "Short snippet",
       source: "keyword",
-      fullContent:
-        "This is the full note content that can be much longer than the snippet.",
+      fullContent: "This is the full note content that can be much longer than the snippet.",
     };
 
     expect(resultWithFullContent.fullContent).toBe(

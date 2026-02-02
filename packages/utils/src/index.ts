@@ -19,10 +19,10 @@ export {
 export {
   type BrainConfig,
   type BrainProjectConfig,
-  type ResolveOptions,
   getBrainConfigPath,
   getProjectCodePaths,
   loadBrainConfig,
+  type ResolveOptions,
   resolveProject,
   resolveProjectFromCwd,
 } from "./project-resolver";

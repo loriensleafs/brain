@@ -40,22 +40,18 @@ describe("createNonRetriableError", () => {
 
   test("creates NonRetriableError with cause", () => {
     const originalError = new Error("Original error");
-    const error = createNonRetriableError(
-      WorkflowErrorType.AGENT_FAILURE,
-      "Agent failed",
-      { cause: originalError },
-    );
+    const error = createNonRetriableError(WorkflowErrorType.AGENT_FAILURE, "Agent failed", {
+      cause: originalError,
+    });
 
     expect(error).toBeInstanceOf(NonRetriableError);
     expect(error.cause).toBeDefined();
   });
 
   test("creates NonRetriableError with context", () => {
-    const error = createNonRetriableError(
-      WorkflowErrorType.CONFIGURATION_ERROR,
-      "Missing config",
-      { context: { configKey: "API_KEY" } },
-    );
+    const error = createNonRetriableError(WorkflowErrorType.CONFIGURATION_ERROR, "Missing config", {
+      context: { configKey: "API_KEY" },
+    });
 
     expect(error).toBeInstanceOf(NonRetriableError);
   });
@@ -133,12 +129,10 @@ describe("validateFeatureId", () => {
   });
 
   test("throws NonRetriableError for null-ish values", () => {
-    expect(() => validateFeatureId(null as unknown as string, "qa")).toThrow(
+    expect(() => validateFeatureId(null as unknown as string, "qa")).toThrow(NonRetriableError);
+    expect(() => validateFeatureId(undefined as unknown as string, "qa")).toThrow(
       NonRetriableError,
     );
-    expect(() =>
-      validateFeatureId(undefined as unknown as string, "qa"),
-    ).toThrow(NonRetriableError);
   });
 
   test("includes agent name in error context", () => {
@@ -155,22 +149,14 @@ describe("validateRequiredContext", () => {
   test("accepts context with all required fields", () => {
     const context = { featurePath: "/features/foo", projectRoot: "/project" };
     expect(() =>
-      validateRequiredContext(
-        context,
-        ["featurePath", "projectRoot"],
-        "architect",
-      ),
+      validateRequiredContext(context, ["featurePath", "projectRoot"], "architect"),
     ).not.toThrow();
   });
 
   test("throws NonRetriableError when required field is missing", () => {
     const context = { featurePath: "/features/foo" };
     expect(() =>
-      validateRequiredContext(
-        context,
-        ["featurePath", "projectRoot"],
-        "architect",
-      ),
+      validateRequiredContext(context, ["featurePath", "projectRoot"], "architect"),
     ).toThrow(NonRetriableError);
   });
 
@@ -188,22 +174,14 @@ describe("validateRequiredContext", () => {
   test("throws NonRetriableError when required field is undefined", () => {
     const context = { featurePath: "/features/foo", projectRoot: undefined };
     expect(() =>
-      validateRequiredContext(
-        context,
-        ["featurePath", "projectRoot"],
-        "architect",
-      ),
+      validateRequiredContext(context, ["featurePath", "projectRoot"], "architect"),
     ).toThrow(NonRetriableError);
   });
 
   test("lists all missing fields in error message", () => {
     const context = { foo: "bar" };
     try {
-      validateRequiredContext(
-        context,
-        ["featurePath", "projectRoot", "branch"],
-        "architect",
-      );
+      validateRequiredContext(context, ["featurePath", "projectRoot", "branch"], "architect");
     } catch (error) {
       expect(error).toBeInstanceOf(NonRetriableError);
       expect((error as Error).message).toContain("featurePath");

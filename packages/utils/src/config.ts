@@ -42,8 +42,7 @@ export async function readConfig(): Promise<BasicMemoryConfig> {
 
   if (!exists) {
     throw new Error(
-      `Basic-memory config not found at ${configPath}. ` +
-        `Run 'basic-memory init' to create it.`,
+      `Basic-memory config not found at ${configPath}. Run 'basic-memory init' to create it.`,
     );
   }
 

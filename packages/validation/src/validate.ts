@@ -148,9 +148,7 @@ addFormats(ajv);
  * Convert AJV errors to structured ValidationError format.
  * Sanitizes errors to avoid exposing raw input values.
  */
-function toValidationErrors(
-  errors: ErrorObject[] | null | undefined,
-): ValidationError[] {
+function toValidationErrors(errors: ErrorObject[] | null | undefined): ValidationError[] {
   if (!errors) return [];
 
   return errors.map((error) => ({
@@ -163,9 +161,7 @@ function toValidationErrors(
 /**
  * Create a validation error message from AJV errors.
  */
-function formatValidationError(
-  errors: ErrorObject[] | null | undefined,
-): string {
+function formatValidationError(errors: ErrorObject[] | null | undefined): string {
   const validationErrors = toValidationErrors(errors);
   if (validationErrors.length === 0) {
     return "Validation failed";
@@ -177,37 +173,24 @@ function formatValidationError(
 }
 
 // Compile validators
-const _validateActiveProjectArgs =
-  ajv.compile<ActiveProjectArgs>(activeProjectSchema);
-const _validateBootstrapContextArgs = ajv.compile<BootstrapContextArgs>(
-  bootstrapContextSchema,
-);
+const _validateActiveProjectArgs = ajv.compile<ActiveProjectArgs>(activeProjectSchema);
+const _validateBootstrapContextArgs = ajv.compile<BootstrapContextArgs>(bootstrapContextSchema);
 const _validateBrainConfig = ajv.compile<BrainConfig>(brainConfigSchema);
 const _validateConfigGetArgs = ajv.compile<ConfigGetArgs>(configGetSchema);
-const _validateConfigResetArgs =
-  ajv.compile<ConfigResetArgs>(configResetSchema);
+const _validateConfigResetArgs = ajv.compile<ConfigResetArgs>(configResetSchema);
 const _validateConfigSetArgs = ajv.compile<ConfigSetArgs>(configSetSchema);
-const _validateCreateProjectArgs =
-  ajv.compile<CreateProjectArgs>(createProjectSchema);
-const _validateDeleteProjectArgs =
-  ajv.compile<DeleteProjectArgs>(deleteProjectSchema);
-const _validateEditProjectArgs =
-  ajv.compile<EditProjectArgs>(editProjectSchema);
-const _validateGetProjectDetailsArgs = ajv.compile<GetProjectDetailsArgs>(
-  getProjectDetailsSchema,
+const _validateCreateProjectArgs = ajv.compile<CreateProjectArgs>(createProjectSchema);
+const _validateDeleteProjectArgs = ajv.compile<DeleteProjectArgs>(deleteProjectSchema);
+const _validateEditProjectArgs = ajv.compile<EditProjectArgs>(editProjectSchema);
+const _validateGetProjectDetailsArgs = ajv.compile<GetProjectDetailsArgs>(getProjectDetailsSchema);
+const _validateGetWorkflowArgs = ajv.compile<GetWorkflowArgs>(getWorkflowSchema);
+const _validateListFeaturesByPriorityArgs = ajv.compile<ListFeaturesByPriorityArgs>(
+  listFeaturesByPrioritySchema,
 );
-const _validateGetWorkflowArgs =
-  ajv.compile<GetWorkflowArgs>(getWorkflowSchema);
-const _validateListFeaturesByPriorityArgs =
-  ajv.compile<ListFeaturesByPriorityArgs>(listFeaturesByPrioritySchema);
-const _validateListProjectsArgs =
-  ajv.compile<ListProjectsArgs>(listProjectsSchema);
-const _validateListWorkflowsArgs =
-  ajv.compile<ListWorkflowsArgs>(listWorkflowsSchema);
+const _validateListProjectsArgs = ajv.compile<ListProjectsArgs>(listProjectsSchema);
+const _validateListWorkflowsArgs = ajv.compile<ListWorkflowsArgs>(listWorkflowsSchema);
 const _validateSearchArgs = ajv.compile<SearchArgs>(searchSchema);
-const _validateSendWorkflowEventArgs = ajv.compile<SendWorkflowEventArgs>(
-  sendWorkflowEventSchema,
-);
+const _validateSendWorkflowEventArgs = ajv.compile<SendWorkflowEventArgs>(sendWorkflowEventSchema);
 const _validateSessionArgs = ajv.compile<SessionArgs>(sessionSchema);
 const _validateSessionState = ajv.compile<SessionState>(sessionStateSchema);
 
@@ -232,32 +215,28 @@ export const validateBootstrapContextArgs: ValidateFunction<BootstrapContextArgs
  * Returns true if valid, false otherwise.
  * Access errors via validateBrainConfig.errors after validation.
  */
-export const validateBrainConfig: ValidateFunction<BrainConfig> =
-  _validateBrainConfig;
+export const validateBrainConfig: ValidateFunction<BrainConfig> = _validateBrainConfig;
 
 /**
  * Validate ConfigGetArgs.
  * Returns true if valid, false otherwise.
  * Access errors via validateConfigGetArgs.errors after validation.
  */
-export const validateConfigGetArgs: ValidateFunction<ConfigGetArgs> =
-  _validateConfigGetArgs;
+export const validateConfigGetArgs: ValidateFunction<ConfigGetArgs> = _validateConfigGetArgs;
 
 /**
  * Validate ConfigResetArgs.
  * Returns true if valid, false otherwise.
  * Access errors via validateConfigResetArgs.errors after validation.
  */
-export const validateConfigResetArgs: ValidateFunction<ConfigResetArgs> =
-  _validateConfigResetArgs;
+export const validateConfigResetArgs: ValidateFunction<ConfigResetArgs> = _validateConfigResetArgs;
 
 /**
  * Validate ConfigSetArgs.
  * Returns true if valid, false otherwise.
  * Access errors via validateConfigSetArgs.errors after validation.
  */
-export const validateConfigSetArgs: ValidateFunction<ConfigSetArgs> =
-  _validateConfigSetArgs;
+export const validateConfigSetArgs: ValidateFunction<ConfigSetArgs> = _validateConfigSetArgs;
 
 /**
  * Validate CreateProjectArgs.
@@ -280,8 +259,7 @@ export const validateDeleteProjectArgs: ValidateFunction<DeleteProjectArgs> =
  * Returns true if valid, false otherwise.
  * Access errors via validateEditProjectArgs.errors after validation.
  */
-export const validateEditProjectArgs: ValidateFunction<EditProjectArgs> =
-  _validateEditProjectArgs;
+export const validateEditProjectArgs: ValidateFunction<EditProjectArgs> = _validateEditProjectArgs;
 
 /**
  * Validate GetProjectDetailsArgs.
@@ -296,8 +274,7 @@ export const validateGetProjectDetailsArgs: ValidateFunction<GetProjectDetailsAr
  * Returns true if valid, false otherwise.
  * Access errors via validateGetWorkflowArgs.errors after validation.
  */
-export const validateGetWorkflowArgs: ValidateFunction<GetWorkflowArgs> =
-  _validateGetWorkflowArgs;
+export const validateGetWorkflowArgs: ValidateFunction<GetWorkflowArgs> = _validateGetWorkflowArgs;
 
 /**
  * Validate ListFeaturesByPriorityArgs.
@@ -328,8 +305,7 @@ export const validateListWorkflowsArgs: ValidateFunction<ListWorkflowsArgs> =
  * Returns true if valid, false otherwise.
  * Access errors via validateSearchArgs.errors after validation.
  */
-export const validateSearchArgs: ValidateFunction<SearchArgs> =
-  _validateSearchArgs;
+export const validateSearchArgs: ValidateFunction<SearchArgs> = _validateSearchArgs;
 
 /**
  * Validate SendWorkflowEventArgs.
@@ -344,16 +320,14 @@ export const validateSendWorkflowEventArgs: ValidateFunction<SendWorkflowEventAr
  * Returns true if valid, false otherwise.
  * Access errors via validateSessionArgs.errors after validation.
  */
-export const validateSessionArgs: ValidateFunction<SessionArgs> =
-  _validateSessionArgs;
+export const validateSessionArgs: ValidateFunction<SessionArgs> = _validateSessionArgs;
 
 /**
  * Validate SessionState.
  * Returns true if valid, false otherwise.
  * Access errors via validateSessionState.errors after validation.
  */
-export const validateSessionState: ValidateFunction<SessionState> =
-  _validateSessionState;
+export const validateSessionState: ValidateFunction<SessionState> = _validateSessionState;
 
 /**
  * Parse and validate ActiveProjectArgs.
@@ -395,9 +369,7 @@ export function parseBootstrapContextArgs(data: unknown): BootstrapContextArgs {
 export function parseBrainConfig(data: unknown): BrainConfig {
   // Deep clone data to avoid mutating input when applying defaults
   const cloned =
-    typeof data === "object" && data !== null
-      ? JSON.parse(JSON.stringify(data))
-      : data;
+    typeof data === "object" && data !== null ? JSON.parse(JSON.stringify(data)) : data;
 
   if (_validateBrainConfig(cloned)) {
     return cloned;
@@ -507,9 +479,7 @@ export function parseEditProjectArgs(data: unknown): EditProjectArgs {
  * Returns validated data with defaults applied.
  * Throws Error with structured message on validation failure.
  */
-export function parseGetProjectDetailsArgs(
-  data: unknown,
-): GetProjectDetailsArgs {
+export function parseGetProjectDetailsArgs(data: unknown): GetProjectDetailsArgs {
   // Clone data to avoid mutating input when applying defaults
   const cloned = typeof data === "object" && data !== null ? { ...data } : data;
 
@@ -541,9 +511,7 @@ export function parseGetWorkflowArgs(data: unknown): GetWorkflowArgs {
  * Returns validated data with defaults applied.
  * Throws Error with structured message on validation failure.
  */
-export function parseListFeaturesByPriorityArgs(
-  data: unknown,
-): ListFeaturesByPriorityArgs {
+export function parseListFeaturesByPriorityArgs(data: unknown): ListFeaturesByPriorityArgs {
   // Clone data to avoid mutating input when applying defaults
   const cloned = typeof data === "object" && data !== null ? { ...data } : data;
 
@@ -551,9 +519,7 @@ export function parseListFeaturesByPriorityArgs(
     return cloned;
   }
 
-  throw new Error(
-    formatValidationError(_validateListFeaturesByPriorityArgs.errors),
-  );
+  throw new Error(formatValidationError(_validateListFeaturesByPriorityArgs.errors));
 }
 
 /**
@@ -609,9 +575,7 @@ export function parseSearchArgs(data: unknown): SearchArgs {
  * Returns validated data with defaults applied.
  * Throws Error with structured message on validation failure.
  */
-export function parseSendWorkflowEventArgs(
-  data: unknown,
-): SendWorkflowEventArgs {
+export function parseSendWorkflowEventArgs(data: unknown): SendWorkflowEventArgs {
   // Clone data to avoid mutating input when applying defaults
   const cloned = typeof data === "object" && data !== null ? { ...data } : data;
 
@@ -646,9 +610,7 @@ export function parseSessionArgs(data: unknown): SessionArgs {
 export function parseSessionState(data: unknown): SessionState {
   // Deep clone data to avoid mutating input when applying defaults
   const cloned =
-    typeof data === "object" && data !== null
-      ? JSON.parse(JSON.stringify(data))
-      : data;
+    typeof data === "object" && data !== null ? JSON.parse(JSON.stringify(data)) : data;
 
   if (_validateSessionState(cloned)) {
     return cloned;
@@ -665,9 +627,7 @@ export function parseSessionState(data: unknown): SessionState {
  */
 export function safeParseSessionState(value: unknown): SessionState | null {
   const cloned =
-    typeof value === "object" && value !== null
-      ? JSON.parse(JSON.stringify(value))
-      : value;
+    typeof value === "object" && value !== null ? JSON.parse(JSON.stringify(value)) : value;
   if (_validateSessionState(cloned)) {
     return cloned;
   }
@@ -688,9 +648,7 @@ export function getActiveProjectArgsErrors(data: unknown): ValidationError[] {
  * Get validation errors for BootstrapContextArgs without throwing.
  * Returns empty array if valid, array of ValidationError otherwise.
  */
-export function getBootstrapContextArgsErrors(
-  data: unknown,
-): ValidationError[] {
+export function getBootstrapContextArgsErrors(data: unknown): ValidationError[] {
   const cloned = typeof data === "object" && data !== null ? { ...data } : data;
   _validateBootstrapContextArgs(cloned);
   return toValidationErrors(_validateBootstrapContextArgs.errors);
@@ -702,9 +660,7 @@ export function getBootstrapContextArgsErrors(
  */
 export function getBrainConfigErrors(data: unknown): ValidationError[] {
   const cloned =
-    typeof data === "object" && data !== null
-      ? JSON.parse(JSON.stringify(data))
-      : data;
+    typeof data === "object" && data !== null ? JSON.parse(JSON.stringify(data)) : data;
   _validateBrainConfig(cloned);
   return toValidationErrors(_validateBrainConfig.errors);
 }
@@ -773,9 +729,7 @@ export function getEditProjectArgsErrors(data: unknown): ValidationError[] {
  * Get validation errors for GetProjectDetailsArgs without throwing.
  * Returns empty array if valid, array of ValidationError otherwise.
  */
-export function getGetProjectDetailsArgsErrors(
-  data: unknown,
-): ValidationError[] {
+export function getGetProjectDetailsArgsErrors(data: unknown): ValidationError[] {
   const cloned = typeof data === "object" && data !== null ? { ...data } : data;
   _validateGetProjectDetailsArgs(cloned);
   return toValidationErrors(_validateGetProjectDetailsArgs.errors);
@@ -795,9 +749,7 @@ export function getGetWorkflowArgsErrors(data: unknown): ValidationError[] {
  * Get validation errors for ListFeaturesByPriorityArgs without throwing.
  * Returns empty array if valid, array of ValidationError otherwise.
  */
-export function getListFeaturesByPriorityArgsErrors(
-  data: unknown,
-): ValidationError[] {
+export function getListFeaturesByPriorityArgsErrors(data: unknown): ValidationError[] {
   const cloned = typeof data === "object" && data !== null ? { ...data } : data;
   _validateListFeaturesByPriorityArgs(cloned);
   return toValidationErrors(_validateListFeaturesByPriorityArgs.errors);
@@ -837,9 +789,7 @@ export function getSearchArgsErrors(data: unknown): ValidationError[] {
  * Get validation errors for SendWorkflowEventArgs without throwing.
  * Returns empty array if valid, array of ValidationError otherwise.
  */
-export function getSendWorkflowEventArgsErrors(
-  data: unknown,
-): ValidationError[] {
+export function getSendWorkflowEventArgsErrors(data: unknown): ValidationError[] {
   const cloned = typeof data === "object" && data !== null ? { ...data } : data;
   _validateSendWorkflowEventArgs(cloned);
   return toValidationErrors(_validateSendWorkflowEventArgs.errors);
@@ -861,9 +811,7 @@ export function getSessionArgsErrors(data: unknown): ValidationError[] {
  */
 export function getSessionStateErrors(data: unknown): ValidationError[] {
   const cloned =
-    typeof data === "object" && data !== null
-      ? JSON.parse(JSON.stringify(data))
-      : data;
+    typeof data === "object" && data !== null ? JSON.parse(JSON.stringify(data)) : data;
   _validateSessionState(cloned);
   return toValidationErrors(_validateSessionState.errors);
 }

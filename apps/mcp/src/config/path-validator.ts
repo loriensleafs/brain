@@ -12,15 +12,14 @@ import * as path from "node:path";
 
 /**
  * Result of path validation.
+ *
+ * Uses discriminated union for proper TypeScript narrowing:
+ * - When `valid: true`, `normalizedPath` is guaranteed to exist
+ * - When `valid: false`, `error` is guaranteed to exist
  */
-export interface PathValidationResult {
-  /** Whether the path is valid. */
-  valid: boolean;
-  /** Error message if validation failed. */
-  error?: string;
-  /** Normalized path if validation succeeded. */
-  normalizedPath?: string;
-}
+export type PathValidationResult =
+  | { valid: true; normalizedPath: string }
+  | { valid: false; error: string };
 
 /**
  * System paths that are blocked from access.
@@ -160,10 +159,7 @@ function isBlockedSystemPath(normalizedPath: string): boolean {
     const lowerBlocked = blockedPath.toLowerCase();
 
     // Check exact match or if path is under blocked directory
-    if (
-      lowerPath === lowerBlocked ||
-      lowerPath.startsWith(lowerBlocked + path.sep)
-    ) {
+    if (lowerPath === lowerBlocked || lowerPath.startsWith(lowerBlocked + path.sep)) {
       return true;
     }
   }
@@ -233,10 +229,7 @@ export function validatePath(inputPath: string): PathValidationResult {
 
     for (const blockedPath of blockedPaths) {
       const lowerBlocked = blockedPath.toLowerCase();
-      if (
-        lowerPath === lowerBlocked ||
-        lowerPath.startsWith(lowerBlocked + path.sep)
-      ) {
+      if (lowerPath === lowerBlocked || lowerPath.startsWith(lowerBlocked + path.sep)) {
         return {
           valid: false,
           error: `System path not allowed: ${blockedPath}`,
@@ -274,7 +267,7 @@ export function validatePathOrThrow(inputPath: string): string {
   if (!result.valid) {
     throw new Error(result.error);
   }
-  return result.normalizedPath!;
+  return result.normalizedPath;
 }
 
 /**
@@ -301,10 +294,7 @@ export function isPathWithin(inputPath: string, basePath: string): boolean {
     ? normalizedBase
     : normalizedBase + path.sep;
 
-  return (
-    normalizedInput === normalizedBase ||
-    normalizedInput.startsWith(baseWithSep)
-  );
+  return normalizedInput === normalizedBase || normalizedInput.startsWith(baseWithSep);
 }
 
 /**

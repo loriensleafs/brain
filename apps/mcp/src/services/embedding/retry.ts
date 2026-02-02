@@ -7,18 +7,11 @@
 
 import { createVectorConnection } from "../../db/connection";
 import { ensureEmbeddingTables } from "../../db/schema";
-import {
-  type ChunkEmbeddingInput,
-  storeChunkedEmbeddings,
-} from "../../db/vectors";
+import { type ChunkEmbeddingInput, storeChunkedEmbeddings } from "../../db/vectors";
 import { logger } from "../../utils/internal/logger";
 import { chunkText } from "./chunking";
 import { generateEmbedding } from "./generateEmbedding";
-import {
-  dequeueEmbedding,
-  incrementAttempts,
-  markEmbeddingProcessed,
-} from "./queue";
+import { dequeueEmbedding, incrementAttempts, markEmbeddingProcessed } from "./queue";
 
 const MAX_RETRIES = 3;
 const BASE_DELAY_MS = 1000;
@@ -35,9 +28,7 @@ function sleep(ms: number): Promise<void> {
  * @param content - Full content to chunk and embed
  * @returns Array of chunk embeddings or null if any chunk fails
  */
-async function generateChunkedEmbeddings(
-  content: string,
-): Promise<ChunkEmbeddingInput[] | null> {
+async function generateChunkedEmbeddings(content: string): Promise<ChunkEmbeddingInput[] | null> {
   const chunks = chunkText(content);
   const results: ChunkEmbeddingInput[] = [];
 
@@ -95,9 +86,7 @@ export async function processWithRetry(
     return true; // null embedding (empty content) is still "success"
   } catch (_error) {
     const delay = BASE_DELAY_MS * 2 ** attempts;
-    logger.warn(
-      `Retry ${attempts + 1}/${MAX_RETRIES} for note ${noteId}. Next in ${delay}ms`,
-    );
+    logger.warn(`Retry ${attempts + 1}/${MAX_RETRIES} for note ${noteId}. Next in ${delay}ms`);
     await sleep(delay);
     return false;
   }
@@ -118,9 +107,7 @@ export async function processEmbeddingQueue(
     const { id, noteId, attempts } = item;
 
     if (attempts >= MAX_RETRIES) {
-      logger.warn(
-        `Removing note ${noteId} from queue after ${MAX_RETRIES} failures`,
-      );
+      logger.warn(`Removing note ${noteId} from queue after ${MAX_RETRIES} failures`);
       markEmbeddingProcessed(id);
       failed++;
       item = dequeueEmbedding();

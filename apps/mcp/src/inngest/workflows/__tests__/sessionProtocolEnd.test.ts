@@ -23,9 +23,7 @@ describe("Session Protocol End Workflow", () => {
     });
 
     test("workflow has id property set to 'session-protocol-end'", () => {
-      const workflowId = (
-        sessionProtocolEndWorkflow as unknown as { id: () => string }
-      ).id();
+      const workflowId = (sessionProtocolEndWorkflow as unknown as { id: () => string }).id();
       expect(workflowId).toBe("session-protocol-end");
     });
   });
@@ -138,9 +136,7 @@ describe("Session Protocol End Workflow", () => {
 
       expect(stepResult.passed).toBe(true);
       expect(stepResult.message).toBe("Session log validated");
-      expect(stepResult.evidence).toBe(
-        "/path/to/.agents/sessions/2026-01-18-session-01.md",
-      );
+      expect(stepResult.evidence).toBe("/path/to/.agents/sessions/2026-01-18-session-01.md");
     });
 
     test("step result without evidence", () => {
@@ -196,9 +192,7 @@ describe("Session Protocol End Workflow", () => {
 
       // Verify all required steps are present
       for (const step of requiredSteps) {
-        expect(
-          mockResult.steps[step as keyof typeof mockResult.steps],
-        ).toBeDefined();
+        expect(mockResult.steps[step as keyof typeof mockResult.steps]).toBeDefined();
       }
     });
   });

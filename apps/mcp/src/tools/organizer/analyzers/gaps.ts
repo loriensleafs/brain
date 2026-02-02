@@ -13,9 +13,7 @@ import { extractWikilinks } from "../utils/wikilinks";
 /**
  * Find referenced notes that don't exist
  */
-export async function findGapReferences(
-  project: string,
-): Promise<QualityIssue[]> {
+export async function findGapReferences(project: string): Promise<QualityIssue[]> {
   const client = await getBasicMemoryClient();
   const issues: QualityIssue[] = [];
 
@@ -37,7 +35,8 @@ export async function findGapReferences(
         arguments: { identifier: permalink, project },
       });
 
-      const noteContent = (readResult.content as any)?.[0]?.text || "";
+      const noteContent =
+        (readResult.content as Array<{ type: string; text?: string }> | undefined)?.[0]?.text || "";
       const title = extractTitle(noteContent);
 
       if (title) {
@@ -57,7 +56,8 @@ export async function findGapReferences(
         arguments: { identifier: permalink, project },
       });
 
-      const noteContent = (readResult.content as any)?.[0]?.text || "";
+      const noteContent =
+        (readResult.content as Array<{ type: string; text?: string }> | undefined)?.[0]?.text || "";
       const wikilinks = extractWikilinks(noteContent);
 
       for (const link of wikilinks) {
@@ -87,10 +87,14 @@ export async function findGapReferences(
   return issues;
 }
 
+interface McpToolResult {
+  content?: Array<{ type: string; text?: string }>;
+}
+
 /**
  * Parse list_directory output to extract file paths
  */
-function parseListDirectoryResult(result: any): string[] {
+function parseListDirectoryResult(result: McpToolResult): string[] {
   const text = result.content?.[0]?.text || "";
   const files: string[] = [];
   const lines = text.split("\n");

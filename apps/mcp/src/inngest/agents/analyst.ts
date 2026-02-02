@@ -32,10 +32,7 @@ export async function runAnalystAgent(
   validateFeatureId(featureId, AGENT_NAME);
 
   return wrapAgentExecution(AGENT_NAME, async () => {
-    logger.debug(
-      { featureId, context, agent: AGENT_NAME },
-      "Running analyst agent validation",
-    );
+    logger.debug({ featureId, context, agent: AGENT_NAME }, "Running analyst agent validation");
 
     // Placeholder: actual analyst validation logic deferred per C-001
     // Future implementation will:
@@ -47,8 +44,7 @@ export async function runAnalystAgent(
     return {
       agent: AGENT_NAME,
       verdict: "PASS",
-      details:
-        "Analyst validation placeholder - actual implementation deferred",
+      details: "Analyst validation placeholder - actual implementation deferred",
     };
   });
 }

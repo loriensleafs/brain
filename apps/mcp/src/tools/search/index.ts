@@ -60,14 +60,11 @@ function mapServiceResultToToolResult(result: ServiceSearchResult): {
  * Main search handler with automatic fallback.
  * Delegates to SearchService for all search operations.
  */
-export async function handler(
-  args: Record<string, unknown>,
-): Promise<CallToolResult> {
+export async function handler(args: Record<string, unknown>): Promise<CallToolResult> {
   try {
     // Validate and parse input
     const parsed = SearchArgsSchema.parse(args);
-    const { query, limit, threshold, mode, depth, project, full_context } =
-      parsed;
+    const { query, limit, threshold, mode, depth, project, full_context } = parsed;
 
     logger.debug(
       { query, limit, threshold, mode, depth, project, full_context },
@@ -115,9 +112,7 @@ export async function handler(
       content: [
         {
           type: "text" as const,
-          text: `Error in search: ${
-            error instanceof Error ? error.message : String(error)
-          }`,
+          text: `Error in search: ${error instanceof Error ? error.message : String(error)}`,
         },
       ],
       isError: true,

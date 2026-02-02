@@ -25,9 +25,7 @@ import { handler as generateEmbeddings } from "../embed";
  * @param project - Project name to filter notes
  * @returns Count of notes without embeddings
  */
-export async function getMissingEmbeddingsCount(
-  project: string,
-): Promise<number> {
+export async function getMissingEmbeddingsCount(project: string): Promise<number> {
   if (!project || project.trim().length === 0) {
     throw new Error("Project parameter is required");
   }
@@ -46,9 +44,7 @@ export async function getMissingEmbeddingsCount(
     // Parse the response to get note permalinks
     const notes: string[] = [];
     if (listResult.content && Array.isArray(listResult.content)) {
-      const textContent = listResult.content.find(
-        (c: { type: string }) => c.type === "text",
-      );
+      const textContent = listResult.content.find((c: { type: string }) => c.type === "text");
       if (textContent && "text" in textContent) {
         const text = textContent.text as string;
         const lines = text.split("\n").filter((l) => l.trim());
@@ -79,11 +75,11 @@ export async function getMissingEmbeddingsCount(
 
     try {
       const existing = db
-        .query<{ entity_id: string }, []>(
-          "SELECT DISTINCT entity_id FROM brain_embeddings",
-        )
+        .query<{ entity_id: string }, []>("SELECT DISTINCT entity_id FROM brain_embeddings")
         .all();
-      existing.forEach((e) => existingIds.add(e.entity_id));
+      for (const e of existing) {
+        existingIds.add(e.entity_id);
+      }
     } catch {
       // Table might be empty or have issues, continue
       logger.debug({ project }, "No existing embeddings found");
@@ -140,10 +136,7 @@ export async function triggerCatchupEmbedding(project: string): Promise<void> {
   }
 
   // Log trigger event (REQ-003a from requirements)
-  logger.info(
-    { project, missingCount: count },
-    "Catch-up embedding trigger activated",
-  );
+  logger.info({ project, missingCount: count }, "Catch-up embedding trigger activated");
 
   // Fire-and-forget batch embedding
   // Use limit: 0 to process all missing embeddings
@@ -164,10 +157,7 @@ export async function triggerCatchupEmbedding(project: string): Promise<void> {
             "Catch-up embedding complete",
           );
         } catch {
-          logger.info(
-            { project },
-            "Catch-up embedding complete (unable to parse stats)",
-          );
+          logger.info({ project }, "Catch-up embedding complete (unable to parse stats)");
         }
       }
     })

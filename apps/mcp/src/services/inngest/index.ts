@@ -7,11 +7,7 @@
  * LOCAL-ONLY - all operations use the local Inngest dev server.
  */
 
-import {
-  checkInngestAvailability,
-  inngest,
-  isInngestAvailable,
-} from "../../inngest/client";
+import { checkInngestAvailability, inngest, isInngestAvailable } from "../../inngest/client";
 import { featureCompletionWorkflow } from "../../inngest/workflows/featureCompletion";
 import { hitlApprovalWorkflow } from "../../inngest/workflows/hitlApproval";
 import {
@@ -92,24 +88,17 @@ export async function sendWorkflowEvent(event: {
   if (!isInngestAvailable()) {
     return {
       success: false,
-      error:
-        "Inngest unavailable. Start dev server: npx inngest-cli@latest dev",
+      error: "Inngest unavailable. Start dev server: npx inngest-cli@latest dev",
     };
   }
 
   try {
     const result = await inngest.send(event);
-    logger.debug(
-      { eventName: event.name, ids: result.ids },
-      "Sent workflow event",
-    );
+    logger.debug({ eventName: event.name, ids: result.ids }, "Sent workflow event");
     return { success: true, ids: result.ids };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    logger.error(
-      { eventName: event.name, error: message },
-      "Failed to send workflow event",
-    );
+    logger.error({ eventName: event.name, error: message }, "Failed to send workflow event");
     return { success: false, error: message };
   }
 }

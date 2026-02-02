@@ -13,7 +13,21 @@ import {
   storeChunkedEmbeddings,
 } from "../vectors";
 
-// Note: Custom SQLite is configured in test preload (src/__tests__/setup.ts)
+// Note: These tests require sqlite-vec native extension.
+// - With Bun: Tests are excluded (vitest.config.ts)
+// - With Node.js: Run via `bun run test:integration` (vitest.integration.config.ts)
+
+/**
+ * Create an embedding with variation for more realistic cosine distance calculations.
+ * Constant embeddings (fill(x)) cause numerical precision issues.
+ */
+function createEmbedding(baseValue: number): Float32Array {
+  const arr = new Float32Array(768);
+  for (let i = 0; i < 768; i++) {
+    arr[i] = baseValue + (i % 10) * 0.01;
+  }
+  return arr;
+}
 
 describe("chunked embedding CRUD operations", () => {
   let db: Database;
@@ -88,9 +102,7 @@ describe("chunked embedding CRUD operations", () => {
       },
     ];
 
-    expect(() => storeChunkedEmbeddings(db, "entity-1", chunks)).toThrow(
-      "Expected 768",
-    );
+    expect(() => storeChunkedEmbeddings(db, "entity-1", chunks)).toThrow("Expected 768");
   });
 
   test("storeChunkedEmbeddings replaces existing chunks", () => {
@@ -315,7 +327,8 @@ describe("semantic search with chunked embeddings", () => {
   });
 
   test("deduplicateByEntity keeps best chunk per entity", () => {
-    // Store multiple chunks for same entity
+    // Store multiple chunks for same entity with varied embeddings
+    // (constant embeddings cause numerical precision issues in cosine distance)
     const chunks: ChunkEmbeddingInput[] = [
       {
         chunkIndex: 0,
@@ -323,7 +336,7 @@ describe("semantic search with chunked embeddings", () => {
         chunkStart: 0,
         chunkEnd: 100,
         chunkText: "Chunk 0",
-        embedding: new Float32Array(768).fill(0.3),
+        embedding: createEmbedding(0.1), // Very different from query
       },
       {
         chunkIndex: 1,
@@ -331,13 +344,13 @@ describe("semantic search with chunked embeddings", () => {
         chunkStart: 80,
         chunkEnd: 200,
         chunkText: "Chunk 1",
-        embedding: new Float32Array(768).fill(0.5),
+        embedding: createEmbedding(0.5), // Same as query
       },
     ];
     storeChunkedEmbeddings(db, "entity-1", chunks);
 
     // Query will match chunk 1 better
-    const queryEmbedding = new Float32Array(768).fill(0.5);
+    const queryEmbedding = createEmbedding(0.5);
     const rawResults = semanticSearchChunked(db, queryEmbedding, 10, 0.5);
 
     const deduplicated = deduplicateByEntity(rawResults);

@@ -1,47 +1,80 @@
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
-  // --- Build optimization ---
+  // =============================================================================
+  // Build
+  // =============================================================================
+
+  cacheDir: "node_modules/.vite",
+
   esbuild: {
     target: "esnext",
   },
 
-  // --- Cache ---
-  cacheDir: "node_modules/.vite",
-
-  // --- Test ---
-  test: {
-    // Coverage
-    coverage: {
-      enabled: false,
-      exclude: ["**/*.test.ts", "**/dist/**", "**/node_modules/**"],
-      provider: "v8",
-      reporter: ["html", "json", "text"],
+  server: {
+    deps: {
+      // Inline certain modules to fix SSR import issues with Bun
+      inline: ["zod"],
     },
+  },
 
-    // Environment
+  // =============================================================================
+  // Test
+  // =============================================================================
+
+  test: {
+    // --- Environment ---
     environment: "node",
     globals: false,
-    passWithNoTests: true,
 
-    // Patterns
-    exclude: ["**/dist/**", "**/node_modules/**"],
-    include: ["src/**/*.test.ts"],
+    // --- Patterns ---
+    include: [
+      "apps/**/src/**/*.test.ts",
+      "packages/**/src/**/*.test.ts",
+    ],
+    exclude: [
+      "**/dist/**",
+      "**/node_modules/**",
+    ],
 
-    // Performance
+    // --- Performance ---
+    // Vitest 4: pool options are now top-level (not nested in poolOptions)
     fileParallelism: true,
-    hookTimeout: 10000,
     isolate: true,
     pool: "forks",
-    slowTestThreshold: 1000,
+    minForks: 2,
+    maxForks: 8,
+
+    // --- Timeouts ---
+    hookTimeout: 10000,
     teardownTimeout: 1000,
     testTimeout: 10000,
 
-    // Reporter
+    // --- Thresholds ---
+    passWithNoTests: true,
+    slowTestThreshold: 1000,
+
+    // --- Reporter ---
     reporter: process.env.CI ? "dot" : "default",
 
-    // Watch
+    // --- Watch ---
     watch: false,
-    watchExclude: ["**/.turbo/**", "**/dist/**", "**/node_modules/**"],
+    watchExclude: [
+      "**/.turbo/**",
+      "**/dist/**",
+      "**/node_modules/**",
+    ],
+
+    // --- Coverage ---
+    coverage: {
+      enabled: false,
+      provider: "v8",
+      exclude: [
+        "**/*.test.ts",
+        "**/dist/**",
+        "**/node_modules/**",
+      ],
+      reporter: ["html", "json", "text"],
+    },
   },
 });

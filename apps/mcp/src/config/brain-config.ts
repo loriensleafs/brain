@@ -16,23 +16,15 @@
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
-import {
-  acquireConfigLock,
-  releaseConfigLock,
-} from "../utils/security/configLock";
+import { acquireConfigLock, releaseConfigLock } from "../utils/security/configLock";
 import { validatePathOrThrow } from "./path-validator";
-import {
-  type BrainConfig,
-  DEFAULT_BRAIN_CONFIG,
-  validateBrainConfig,
-} from "./schema";
+import { type BrainConfig, DEFAULT_BRAIN_CONFIG, validateBrainConfig } from "./schema";
 
 /**
  * XDG-compliant configuration directory for Brain.
  * Uses ~/.config/brain/ on Unix-like systems.
  */
-const XDG_CONFIG_HOME =
-  process.env.XDG_CONFIG_HOME || path.join(os.homedir(), ".config");
+const XDG_CONFIG_HOME = process.env.XDG_CONFIG_HOME || path.join(os.homedir(), ".config");
 const BRAIN_CONFIG_DIR = path.join(XDG_CONFIG_HOME, "brain");
 const BRAIN_CONFIG_FILE = "config.json";
 const BRAIN_CONFIG_TEMP_FILE = "config.json.tmp";
@@ -56,11 +48,7 @@ const DEFAULT_LOCK_TIMEOUT_MS = 5000;
 export class BrainConfigError extends Error {
   constructor(
     message: string,
-    public readonly code:
-      | "PARSE_ERROR"
-      | "VALIDATION_ERROR"
-      | "IO_ERROR"
-      | "LOCK_ERROR",
+    public readonly code: "PARSE_ERROR" | "VALIDATION_ERROR" | "IO_ERROR" | "LOCK_ERROR",
     public readonly cause?: unknown,
   ) {
     super(message);
@@ -163,9 +151,7 @@ function setSecureFilePermissions(filePath: string): void {
  * console.log(config.defaults.memories_location);
  * ```
  */
-export async function loadBrainConfig(
-  options: BrainConfigOptions = {},
-): Promise<BrainConfig> {
+export async function loadBrainConfig(options: BrainConfigOptions = {}): Promise<BrainConfig> {
   const configPath = getBrainConfigPath();
   const { lockTimeoutMs = DEFAULT_LOCK_TIMEOUT_MS } = options;
 
@@ -189,11 +175,7 @@ export async function loadBrainConfig(
     try {
       content = fs.readFileSync(configPath, "utf-8");
     } catch (error) {
-      throw new BrainConfigError(
-        `Failed to read config file: ${configPath}`,
-        "IO_ERROR",
-        error,
-      );
+      throw new BrainConfigError(`Failed to read config file: ${configPath}`, "IO_ERROR", error);
     }
 
     // Parse JSON
@@ -222,7 +204,7 @@ export async function loadBrainConfig(
       );
     }
 
-    return result.data!;
+    return result.data;
   } finally {
     releaseConfigLock();
   }
@@ -249,7 +231,7 @@ export function loadBrainConfigSync(): BrainConfig {
     const result = validateBrainConfig(parsed);
 
     if (result.success) {
-      return result.data!;
+      return result.data;
     }
   } catch {
     // Return defaults on any error
@@ -385,9 +367,7 @@ export async function saveBrainConfig(
  * const config = await initBrainConfig();
  * ```
  */
-export async function initBrainConfig(
-  options: BrainConfigOptions = {},
-): Promise<BrainConfig> {
+export async function initBrainConfig(options: BrainConfigOptions = {}): Promise<BrainConfig> {
   const configPath = getBrainConfigPath();
 
   if (!fs.existsSync(configPath)) {
@@ -417,9 +397,7 @@ function validateConfigPaths(config: BrainConfig): void {
   }
 
   // Validate project paths
-  for (const [projectName, projectConfig] of Object.entries(
-    config.projects ?? {},
-  )) {
+  for (const [projectName, projectConfig] of Object.entries(config.projects ?? {})) {
     if (!projectConfig) continue;
 
     // Validate code_path
@@ -500,9 +478,7 @@ export function getDefaultMemoriesLocation(): string {
  * @param options - Configuration options
  * @throws BrainConfigError if deletion fails
  */
-export async function deleteBrainConfig(
-  options: BrainConfigOptions = {},
-): Promise<void> {
+export async function deleteBrainConfig(options: BrainConfigOptions = {}): Promise<void> {
   const { lockTimeoutMs = DEFAULT_LOCK_TIMEOUT_MS } = options;
   const configPath = getBrainConfigPath();
 
@@ -521,11 +497,7 @@ export async function deleteBrainConfig(
   try {
     fs.unlinkSync(configPath);
   } catch (error) {
-    throw new BrainConfigError(
-      `Failed to delete config file: ${configPath}`,
-      "IO_ERROR",
-      error,
-    );
+    throw new BrainConfigError(`Failed to delete config file: ${configPath}`, "IO_ERROR", error);
   } finally {
     releaseConfigLock();
   }

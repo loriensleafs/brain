@@ -125,37 +125,39 @@ export const DeprecatedPatterns: Record<string, RegExp> = {
 
 /**
  * Result of naming pattern validation.
+ *
+ * Uses discriminated union for proper TypeScript narrowing:
+ * - When `valid: true`, `patternType` is guaranteed to exist
+ * - When `valid: false`, `error` is guaranteed to exist
  */
-export interface NamingPatternResult {
-  /** Whether the file name matches a valid pattern */
-  valid: boolean;
-  /** The matched pattern type, if valid */
-  patternType?: PatternType;
-  /** Error message if invalid */
-  error?: string;
-  /** Whether the file name matches a deprecated pattern */
-  isDeprecated?: boolean;
-  /** The deprecated pattern that matched */
-  deprecatedPattern?: string;
-  /** Whether the directory path is deprecated (ADR-024) */
-  isDeprecatedDirectory?: boolean;
-  /** The canonical directory to use instead */
-  canonicalDirectory?: string;
-}
+export type NamingPatternResult =
+  | {
+      valid: true;
+      patternType: PatternType;
+      isDeprecated?: boolean;
+      deprecatedPattern?: string;
+      isDeprecatedDirectory?: boolean;
+      canonicalDirectory?: string;
+    }
+  | {
+      valid: false;
+      error: string;
+      isDeprecated?: boolean;
+      deprecatedPattern?: string;
+      isDeprecatedDirectory?: boolean;
+      canonicalDirectory?: string;
+    };
 
 /**
  * Result of directory validation.
+ *
+ * Uses discriminated union for proper TypeScript narrowing:
+ * - When `valid: true`, `error` does not exist
+ * - When `valid: false`, `error` is guaranteed to exist
  */
-export interface DirectoryValidationResult {
-  /** Whether the directory is valid for the pattern type */
-  valid: boolean;
-  /** Error message if invalid */
-  error?: string;
-  /** Whether the directory is deprecated */
-  isDeprecated?: boolean;
-  /** The canonical directory to migrate to */
-  canonicalDirectory?: string;
-}
+export type DirectoryValidationResult =
+  | { valid: true; isDeprecated?: boolean; canonicalDirectory?: string }
+  | { valid: false; error: string; isDeprecated?: boolean; canonicalDirectory?: string };
 
 /**
  * Validate that a directory is valid for a pattern type.
@@ -199,8 +201,7 @@ export function validateDirectory(
     // Extract the pattern prefix and suffix (e.g., "specs/" and "/requirements")
     const [prefix, suffix] = canonicalDir.split("{name}");
     const isAllowed =
-      normalized.startsWith(prefix.toLowerCase()) &&
-      normalized.endsWith(suffix.toLowerCase());
+      normalized.startsWith(prefix.toLowerCase()) && normalized.endsWith(suffix.toLowerCase());
     if (!isAllowed) {
       return {
         valid: false,
@@ -232,9 +233,7 @@ export function validateDirectory(
  * @param input - Input containing fileName and optional patternType
  * @returns Validation result with pattern type if matched
  */
-export function validateNamingPattern(
-  input: NamingPatternValidation,
-): NamingPatternResult {
+export function validateNamingPattern(input: NamingPatternValidation): NamingPatternResult {
   const { fileName, patternType } = input;
 
   // Validate fileName is non-empty
@@ -246,11 +245,7 @@ export function validateNamingPattern(
   }
 
   // Check for path traversal attempts
-  if (
-    fileName.includes("..") ||
-    fileName.includes("/") ||
-    fileName.includes("\\")
-  ) {
+  if (fileName.includes("..") || fileName.includes("/") || fileName.includes("\\")) {
     return {
       valid: false,
       error: "Path traversal detected: fileName must not contain .., /, or \\",
@@ -346,12 +341,12 @@ export function parseNamingPattern(
   const result = validateNamingPattern(input);
 
   if (!result.valid) {
-    throw new Error(result.error || "Validation failed");
+    throw new Error(result.error);
   }
 
   return {
     fileName: input.fileName,
-    patternType: result.patternType!,
+    patternType: result.patternType,
   };
 }
 

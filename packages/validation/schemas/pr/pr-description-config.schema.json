@@ -31,15 +31,7 @@
       "items": {
         "type": "string"
       },
-      "default": [
-        ".github",
-        "scripts",
-        "src",
-        ".agents",
-        "cmd",
-        "pkg",
-        "internal"
-      ],
+      "default": [".github", "scripts", "src", ".agents", "cmd", "pkg", "internal"],
       "description": "Path prefixes for files that should be mentioned in PR description"
     },
     "requiredSections": {

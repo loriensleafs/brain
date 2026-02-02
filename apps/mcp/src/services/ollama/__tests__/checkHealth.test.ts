@@ -37,9 +37,7 @@ describe("checkOllamaHealth", () => {
     const result = await checkOllamaHealth();
 
     expect(result).toBe(false);
-    expect(warnSpy).toHaveBeenCalledWith(
-      "Ollama not available. Semantic search disabled.",
-    );
+    expect(warnSpy).toHaveBeenCalledWith("Ollama not available. Semantic search disabled.");
     expect(warnSpy).toHaveBeenCalledWith("Start Ollama with: ollama serve");
   });
 
@@ -51,9 +49,7 @@ describe("checkOllamaHealth", () => {
     const result = await checkOllamaHealth();
 
     expect(result).toBe(false);
-    expect(warnSpy).toHaveBeenCalledWith(
-      "Ollama not available. Semantic search disabled.",
-    );
+    expect(warnSpy).toHaveBeenCalledWith("Ollama not available. Semantic search disabled.");
   });
 
   test("returns false when nomic-embed-text model not found", async () => {
@@ -129,11 +125,7 @@ describe("checkOllamaHealth", () => {
         status: 200,
         json: () =>
           Promise.resolve({
-            models: [
-              { name: "llama2" },
-              { name: "nomic-embed-text:latest" },
-              { name: "mistral" },
-            ],
+            models: [{ name: "llama2" }, { name: "nomic-embed-text:latest" }, { name: "mistral" }],
           }),
       } as Response);
     });
@@ -141,9 +133,7 @@ describe("checkOllamaHealth", () => {
     const result = await checkOllamaHealth();
 
     expect(result).toBe(true);
-    expect(infoSpy).toHaveBeenCalledWith(
-      "Ollama health check passed. Semantic search enabled.",
-    );
+    expect(infoSpy).toHaveBeenCalledWith("Ollama health check passed. Semantic search enabled.");
   });
 
   test("returns true when nomic-embed-text is available with version tag", async () => {

@@ -204,8 +204,7 @@ function parseDecisions(lines: string[]): Decision[] {
     // Decision patterns in various formats
     const explicitDecision = line.match(/^\*\*Decision\*\*:\s*(.+)$/);
     const simpleDecision = line.match(/^Decision:\s*(.+)$/);
-    const sectionDecision =
-      inDecisionSection && line.match(/^\s*[-*]\s+\*\*(.+?)\*\*:\s*(.+)$/);
+    const sectionDecision = inDecisionSection && line.match(/^\s*[-*]\s+\*\*(.+?)\*\*:\s*(.+)$/);
 
     if (explicitDecision || simpleDecision || sectionDecision) {
       decisionIndex++;
@@ -309,8 +308,7 @@ function parseEvents(lines: string[]): Event[] {
 
     // Milestone events (check mark emoji or completion words)
     if (
-      (/\u2705|completed?|done|finished|success/i.test(line) &&
-        /^[-*]/.test(line)) ||
+      (/\u2705|completed?|done|finished|success/i.test(line) && /^[-*]/.test(line)) ||
       /\[x\]/i.test(line)
     ) {
       const content = line.trim().replace(/^[-*]\s*/, "");
@@ -329,10 +327,7 @@ function parseEvents(lines: string[]): Event[] {
     }
 
     // Test events
-    if (
-      /test[s]?\s+(pass|fail|run)/i.test(line) ||
-      /Pester|pytest/i.test(line)
-    ) {
+    if (/test[s]?\s+(pass|fail|run)/i.test(line) || /Pester|pytest/i.test(line)) {
       const content = line.trim();
       if (!seenContent.has(content)) {
         eventIndex++;
@@ -386,10 +381,7 @@ function parseLessons(lines: string[]): string[] {
     }
 
     // Also capture inline lessons
-    if (
-      /lesson|learned|takeaway|note for future/i.test(line) &&
-      !/^#/.test(line)
-    ) {
+    if (/lesson|learned|takeaway|note for future/i.test(line) && !/^#/.test(line)) {
       const lesson = line.trim();
       if (!seen.has(lesson)) {
         lessons.push(lesson);
@@ -413,8 +405,7 @@ function parseMetrics(lines: string[]): Metrics {
 
   for (const line of lines) {
     // Duration
-    const durationMatch =
-      line.match(/(\d+)\s*minutes?/i) || line.match(/duration:\s*(\d+)/i);
+    const durationMatch = line.match(/(\d+)\s*minutes?/i) || line.match(/duration:\s*(\d+)/i);
     if (durationMatch) {
       metrics.duration_minutes = parseInt(durationMatch[1], 10);
     }
@@ -430,9 +421,7 @@ function parseMetrics(lines: string[]): Metrics {
     }
 
     // Count files
-    const filesMatch = line.match(
-      /(\d+)\s+files?\s+(changed|modified|created)/i,
-    );
+    const filesMatch = line.match(/(\d+)\s+files?\s+(changed|modified|created)/i);
     if (filesMatch) {
       metrics.files_changed += parseInt(filesMatch[1], 10);
     }
@@ -441,10 +430,7 @@ function parseMetrics(lines: string[]): Metrics {
   return metrics;
 }
 
-function getSessionOutcome(
-  metadata: Metadata,
-  events: Event[],
-): "success" | "partial" | "failure" {
+function getSessionOutcome(metadata: Metadata, events: Event[]): "success" | "partial" | "failure" {
   const status = metadata.status?.toLowerCase() || "";
 
   if (/complete|done|success/.test(status)) {
@@ -472,12 +458,7 @@ function getSessionOutcome(
 }
 
 function loadTemplate(): string {
-  const templatePath = join(
-    import.meta.dir,
-    "..",
-    "templates",
-    "episode-template.md",
-  );
+  const templatePath = join(import.meta.dir, "..", "templates", "episode-template.md");
   try {
     return readFileSync(templatePath, "utf-8");
   } catch {
@@ -545,8 +526,7 @@ function formatDecisions(decisions: Decision[]): string {
 
   return decisions
     .map(
-      (d) =>
-        `- **${d.id}** [${d.type}]: ${d.chosen}${d.context ? ` (context: ${d.context})` : ""}`,
+      (d) => `- **${d.id}** [${d.type}]: ${d.chosen}${d.context ? ` (context: ${d.context})` : ""}`,
     )
     .join("\n");
 }
@@ -556,9 +536,7 @@ function formatEvents(events: Event[]): string {
     return "- No events recorded";
   }
 
-  return events
-    .map((e) => `- **${e.id}** [${e.type}]: ${e.content}`)
-    .join("\n");
+  return events.map((e) => `- **${e.id}** [${e.type}]: ${e.content}`).join("\n");
 }
 
 function formatLessons(lessons: string[]): string {
@@ -569,11 +547,7 @@ function formatLessons(lessons: string[]): string {
   return lessons.map((l) => `- ${l}`).join("\n");
 }
 
-function formatObservations(
-  decisions: Decision[],
-  events: Event[],
-  lessons: string[],
-): string {
+function formatObservations(decisions: Decision[], events: Event[], lessons: string[]): string {
   const observations: string[] = [];
 
   // Add decision observations
@@ -591,9 +565,7 @@ function formatObservations(
     observations.push(`- [insight] ${l} #lesson`);
   }
 
-  return observations.length > 0
-    ? observations.join("\n")
-    : "- No observations extracted";
+  return observations.length > 0 ? observations.join("\n") : "- No observations extracted";
 }
 
 function renderTemplate(episode: Episode, template: string): string {
@@ -608,11 +580,7 @@ function renderTemplate(episode: Episode, template: string): string {
     "{{commits}}": String(episode.metrics.commits),
     "{{files_changed}}": String(episode.metrics.files_changed),
     "{{duration_minutes}}": String(episode.metrics.duration_minutes),
-    "{{observations}}": formatObservations(
-      episode.decisions,
-      episode.events,
-      episode.lessons,
-    ),
+    "{{observations}}": formatObservations(episode.decisions, episode.events, episode.lessons),
     "{{decisions}}": formatDecisions(episode.decisions),
     "{{events}}": formatEvents(episode.events),
     "{{lessons}}": formatLessons(episode.lessons),
@@ -711,9 +679,7 @@ files directly to the project's episodes folder as EPISODE-{session-id}.md.
     try {
       timestamp = new Date(metadata.date).toISOString();
     } catch {
-      console.warn(
-        `Warning: Could not parse date '${metadata.date}', using current time`,
-      );
+      console.warn(`Warning: Could not parse date '${metadata.date}', using current time`);
       timestamp = new Date().toISOString();
     }
   } else {
@@ -726,8 +692,7 @@ files directly to the project's episodes folder as EPISODE-{session-id}.md.
     session: sessionId,
     timestamp,
     outcome,
-    task:
-      metadata.objectives.length > 0 ? metadata.objectives[0] : metadata.title,
+    task: metadata.objectives.length > 0 ? metadata.objectives[0] : metadata.title,
     decisions,
     events,
     metrics,
@@ -743,9 +708,7 @@ files directly to the project's episodes folder as EPISODE-{session-id}.md.
   try {
     memoriesPath = await getProjectMemoriesPath(project);
   } catch (error) {
-    console.error(
-      `Error: ${error instanceof Error ? error.message : String(error)}`,
-    );
+    console.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
     process.exit(1);
   }
 

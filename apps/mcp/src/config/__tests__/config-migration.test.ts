@@ -21,70 +21,36 @@ import { DEFAULT_BRAIN_CONFIG } from "../schema";
 let fileSystem: Map<string, string>;
 let deletedFiles: Set<string>;
 
-// Mock filesystem
-const mockFs = {
-  existsSync: vi.fn<(p: string) => boolean>((p: string) => fileSystem.has(p)),
-  readFileSync: vi.fn<(p: string, enc: string) => string>((p: string) => {
-    const content = fileSystem.get(p);
-    if (!content) throw new Error(`ENOENT: no such file: ${p}`);
-    return content;
-  }),
-  writeFileSync: vi.fn<(p: string, content: string, opts: unknown) => void>(
-    (p: string, content: string) => {
-      fileSystem.set(p, content);
-    },
-  ),
-  mkdirSync: vi.fn<(p: string, opts: unknown) => void>(() => undefined),
-  copyFileSync: vi.fn<(src: string, dest: string) => void>(
-    (src: string, dest: string) => {
-      const content = fileSystem.get(src);
-      if (!content) throw new Error(`ENOENT: no such file: ${src}`);
-      fileSystem.set(dest, content);
-    },
-  ),
-  unlinkSync: vi.fn<(p: string) => void>((p: string) => {
-    fileSystem.delete(p);
-    deletedFiles.add(p);
-  }),
-  chmodSync: vi.fn<(p: string, mode: number) => void>(() => undefined),
-  renameSync: vi.fn<(from: string, to: string) => void>(
-    (from: string, to: string) => {
-      const content = fileSystem.get(from);
-      if (content) {
-        fileSystem.set(to, content);
-        fileSystem.delete(from);
-      }
-    },
-  ),
-};
+// Use vi.hoisted() to ensure mocks are available before vi.mock() hoisting
+const { mockFs, mockBrainConfig, mockTranslationLayer } = vi.hoisted(() => {
+  // NOTE: fileSystem and deletedFiles are module-level, initialized in beforeEach
+  const mockFs = {
+    existsSync: vi.fn<(p: string) => boolean>(() => false),
+    readFileSync: vi.fn<(p: string, enc: string) => string>(() => ""),
+    writeFileSync: vi.fn<(p: string, content: string, opts: unknown) => void>(() => undefined),
+    mkdirSync: vi.fn<(p: string, opts: unknown) => void>(() => undefined),
+    copyFileSync: vi.fn<(src: string, dest: string) => void>(() => undefined),
+    unlinkSync: vi.fn<(p: string) => void>(() => undefined),
+    chmodSync: vi.fn<(p: string, mode: number) => void>(() => undefined),
+    renameSync: vi.fn<(from: string, to: string) => void>(() => undefined),
+  };
+
+  const mockBrainConfig = {
+    saveBrainConfig: vi.fn(async () => undefined),
+    loadBrainConfig: vi.fn(async () => ({})),
+    getBrainConfigDir: vi.fn(() => ""),
+    getBrainConfigPath: vi.fn(() => ""),
+  };
+
+  const mockTranslationLayer = {
+    syncConfigToBasicMemory: vi.fn(async () => undefined),
+  };
+
+  return { mockFs, mockBrainConfig, mockTranslationLayer };
+});
 
 vi.mock("fs", () => mockFs);
-
-// Mock brain-config module
-const mockBrainConfig = {
-  saveBrainConfig: vi.fn(async (config: BrainConfig) => {
-    const newPath = path.join(os.homedir(), ".config", "brain", "config.json");
-    fileSystem.set(newPath, JSON.stringify(config, null, 2));
-  }),
-  loadBrainConfig: vi.fn(async () => {
-    const newPath = path.join(os.homedir(), ".config", "brain", "config.json");
-    const content = fileSystem.get(newPath);
-    if (!content) return { ...DEFAULT_BRAIN_CONFIG };
-    return JSON.parse(content) as BrainConfig;
-  }),
-  getBrainConfigDir: vi.fn(() => path.join(os.homedir(), ".config", "brain")),
-  getBrainConfigPath: vi.fn(() =>
-    path.join(os.homedir(), ".config", "brain", "config.json"),
-  ),
-};
-
 vi.mock("../brain-config", () => mockBrainConfig);
-
-// Mock translation-layer module
-const mockTranslationLayer = {
-  syncConfigToBasicMemory: vi.fn(async () => undefined),
-};
-
 vi.mock("../translation-layer", () => mockTranslationLayer);
 
 // Mock logger
@@ -96,6 +62,50 @@ vi.mock("../../utils/internal/logger", () => ({
     error: () => {},
   },
 }));
+
+// Configure mock implementations that need access to fileSystem (done in beforeEach)
+function setupMockImplementations() {
+  mockFs.existsSync.mockImplementation((p: string) => fileSystem.has(p));
+  mockFs.readFileSync.mockImplementation((p: string) => {
+    const content = fileSystem.get(p);
+    if (!content) throw new Error(`ENOENT: no such file: ${p}`);
+    return content;
+  });
+  mockFs.writeFileSync.mockImplementation((p: string, content: string) => {
+    fileSystem.set(p, content);
+  });
+  mockFs.copyFileSync.mockImplementation((src: string, dest: string) => {
+    const content = fileSystem.get(src);
+    if (!content) throw new Error(`ENOENT: no such file: ${src}`);
+    fileSystem.set(dest, content);
+  });
+  mockFs.unlinkSync.mockImplementation((p: string) => {
+    fileSystem.delete(p);
+    deletedFiles.add(p);
+  });
+  mockFs.renameSync.mockImplementation((from: string, to: string) => {
+    const content = fileSystem.get(from);
+    if (content) {
+      fileSystem.set(to, content);
+      fileSystem.delete(from);
+    }
+  });
+
+  mockBrainConfig.saveBrainConfig.mockImplementation(async (config: BrainConfig) => {
+    const newPath = path.join(os.homedir(), ".config", "brain", "config.json");
+    fileSystem.set(newPath, JSON.stringify(config, null, 2));
+  });
+  mockBrainConfig.loadBrainConfig.mockImplementation(async () => {
+    const newPath = path.join(os.homedir(), ".config", "brain", "config.json");
+    const content = fileSystem.get(newPath);
+    if (!content) return { ...DEFAULT_BRAIN_CONFIG };
+    return JSON.parse(content) as BrainConfig;
+  });
+  mockBrainConfig.getBrainConfigDir.mockReturnValue(path.join(os.homedir(), ".config", "brain"));
+  mockBrainConfig.getBrainConfigPath.mockReturnValue(
+    path.join(os.homedir(), ".config", "brain", "config.json"),
+  );
+}
 
 import {
   getOldConfigPath,
@@ -111,9 +121,7 @@ import {
 /**
  * Create a test old config.
  */
-function createOldConfig(
-  overrides: Partial<OldBrainConfig> = {},
-): OldBrainConfig {
+function createOldConfig(overrides: Partial<OldBrainConfig> = {}): OldBrainConfig {
   return {
     version: "1.0.0",
     notes_path: "~/old-memories",
@@ -145,6 +153,7 @@ describe("oldConfigExists", () => {
   beforeEach(() => {
     fileSystem = new Map();
     deletedFiles = new Set();
+    setupMockImplementations();
   });
 
   test("returns true when old config exists", () => {
@@ -163,6 +172,7 @@ describe("needsMigration", () => {
   beforeEach(() => {
     fileSystem = new Map();
     deletedFiles = new Set();
+    setupMockImplementations();
   });
 
   test("returns true when old exists and new does not", () => {
@@ -201,6 +211,7 @@ describe("loadOldConfig", () => {
   beforeEach(() => {
     fileSystem = new Map();
     deletedFiles = new Set();
+    setupMockImplementations();
   });
 
   test("loads and parses old config", () => {
@@ -271,8 +282,8 @@ describe("transformOldToNew", () => {
     const newConfig = transformOldToNew(oldConfig);
 
     expect(newConfig.projects.myproject).toBeDefined();
-    expect(newConfig.projects.myproject!.memories_path).toBe("~/custom/notes");
-    expect(newConfig.projects.myproject!.memories_mode).toBe("CUSTOM");
+    expect(newConfig.projects.myproject?.memories_path).toBe("~/custom/notes");
+    expect(newConfig.projects.myproject?.memories_mode).toBe("CUSTOM");
   });
 
   test("transforms project mode to memories_mode", () => {
@@ -286,9 +297,9 @@ describe("transformOldToNew", () => {
     const newConfig = transformOldToNew(oldConfig);
 
     expect(newConfig.projects.codemode).toBeDefined();
-    expect(newConfig.projects.codemode!.memories_mode).toBe("CODE");
+    expect(newConfig.projects.codemode?.memories_mode).toBe("CODE");
     expect(newConfig.projects.defaultmode).toBeDefined();
-    expect(newConfig.projects.defaultmode!.memories_mode).toBe("DEFAULT");
+    expect(newConfig.projects.defaultmode?.memories_mode).toBe("DEFAULT");
   });
 
   test("sets version to 2.0.0", () => {
@@ -340,30 +351,19 @@ describe("migrateToNewConfigLocation", () => {
   beforeEach(() => {
     fileSystem = new Map();
     deletedFiles = new Set();
+    setupMockImplementations();
 
     mockBrainConfig.saveBrainConfig.mockReset();
     mockBrainConfig.loadBrainConfig.mockReset();
     mockTranslationLayer.syncConfigToBasicMemory.mockReset();
 
-    mockBrainConfig.saveBrainConfig.mockImplementation(
-      async (config: BrainConfig) => {
-        const newPath = path.join(
-          os.homedir(),
-          ".config",
-          "brain",
-          "config.json",
-        );
-        fileSystem.set(newPath, JSON.stringify(config, null, 2));
-      },
-    );
+    mockBrainConfig.saveBrainConfig.mockImplementation(async (config: BrainConfig) => {
+      const newPath = path.join(os.homedir(), ".config", "brain", "config.json");
+      fileSystem.set(newPath, JSON.stringify(config, null, 2));
+    });
 
     mockBrainConfig.loadBrainConfig.mockImplementation(async () => {
-      const newPath = path.join(
-        os.homedir(),
-        ".config",
-        "brain",
-        "config.json",
-      );
+      const newPath = path.join(os.homedir(), ".config", "brain", "config.json");
       const content = fileSystem.get(newPath);
       if (!content) return { ...DEFAULT_BRAIN_CONFIG };
       return JSON.parse(content) as BrainConfig;
@@ -393,7 +393,9 @@ describe("migrateToNewConfigLocation", () => {
     const result = await migrateToNewConfigLocation();
 
     expect(result.backupPath).toBeDefined();
-    expect(fileSystem.has(result.backupPath!)).toBe(true);
+    if (result.backupPath) {
+      expect(fileSystem.has(result.backupPath)).toBe(true);
+    }
   });
 
   test("removes old config after successful migration by default", async () => {
@@ -537,6 +539,7 @@ describe("rollbackMigration", () => {
   beforeEach(() => {
     fileSystem = new Map();
     deletedFiles = new Set();
+    setupMockImplementations();
   });
 
   test("restores old config from backup", async () => {
@@ -605,7 +608,7 @@ describe("schema transformation edge cases", () => {
     const newConfig = transformOldToNew(oldConfig);
 
     expect(newConfig.projects.uppercase).toBeDefined();
-    expect(newConfig.projects.uppercase!.memories_mode).toBe("CODE");
+    expect(newConfig.projects.uppercase?.memories_mode).toBe("CODE");
   });
 
   test("handles unknown mode values", () => {
@@ -619,7 +622,7 @@ describe("schema transformation edge cases", () => {
 
     // Should default to DEFAULT for unknown modes
     expect(newConfig.projects.unknown).toBeDefined();
-    expect(newConfig.projects.unknown!.memories_mode).toBe("DEFAULT");
+    expect(newConfig.projects.unknown?.memories_mode).toBe("DEFAULT");
   });
 
   test("preserves code_path in project config", () => {
@@ -632,6 +635,6 @@ describe("schema transformation edge cases", () => {
     const newConfig = transformOldToNew(oldConfig);
 
     expect(newConfig.projects.myproject).toBeDefined();
-    expect(newConfig.projects.myproject!.code_path).toBe("/specific/path");
+    expect(newConfig.projects.myproject?.code_path).toBe("/specific/path");
   });
 });
