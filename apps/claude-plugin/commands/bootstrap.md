@@ -1463,6 +1463,7 @@ For multi-session projects, persist context to Brain notes:
 | Metric   | Current | Target   | Status   |
 | -------- | ------- | -------- | -------- |
 | [Metric] | [Value] | [Target] | [Status] |
+
 ```
 
 **When to Create**: Any project spanning 3+ sessions or involving multiple waves/phases.
