@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
 
@@ -52,6 +53,13 @@ type WorkflowStateInfo struct {
 	SessionID   string `json:"sessionId,omitempty"`
 	UpdatedAt   string `json:"updatedAt,omitempty"`
 	Task        string `json:"task,omitempty"`
+}
+
+// OpenSession represents a session with status: in_progress
+type OpenSession struct {
+	Title  string `json:"title"`
+	Date   string `json:"date,omitempty"`
+	Branch string `json:"branch,omitempty"`
 }
 
 // ExecCommandSession is a variable holding the exec.Command function.
@@ -143,6 +151,85 @@ func getBootstrapContext(project string) (map[string]any, error) {
 	}
 
 	return result, nil
+}
+
+// parseOpenSessions extracts open sessions from bootstrap markdown output.
+// Looks for the "### Open Sessions" section and parses session entries.
+// Format: - [[SESSION-YYYY-MM-DD_NN-topic]] (branch: `branch-name`)
+func parseOpenSessions(markdown string) []OpenSession {
+	var sessions []OpenSession
+
+	// Find the Open Sessions section
+	sectionStart := strings.Index(markdown, "### Open Sessions")
+	if sectionStart == -1 {
+		return sessions
+	}
+
+	// Find the end of the section (next ### or end of string)
+	sectionContent := markdown[sectionStart:]
+	nextSection := strings.Index(sectionContent[3:], "###") // Skip the "###" we found
+	if nextSection != -1 {
+		sectionContent = sectionContent[:nextSection+3]
+	}
+
+	// Parse session entries: - [[SESSION-YYYY-MM-DD_NN-topic]] (branch: `branch-name`)
+	// The title is inside [[ ]], optional branch in parentheses
+	sessionPattern := regexp.MustCompile(`-\s*\[\[([^\]]+)\]\](?:\s*\(branch:\s*` + "`" + `?([^` + "`" + `\)]+)` + "`" + `?\))?`)
+	matches := sessionPattern.FindAllStringSubmatch(sectionContent, -1)
+
+	for _, match := range matches {
+		if len(match) < 2 {
+			continue
+		}
+
+		title := strings.TrimSpace(match[1])
+		session := OpenSession{
+			Title: title,
+		}
+
+		// Extract date from title (SESSION-YYYY-MM-DD pattern)
+		datePattern := regexp.MustCompile(`(\d{4}-\d{2}-\d{2})`)
+		if dateMatch := datePattern.FindStringSubmatch(title); len(dateMatch) > 1 {
+			session.Date = dateMatch[1]
+		}
+
+		// Extract branch if present
+		if len(match) > 2 && match[2] != "" {
+			session.Branch = strings.TrimSpace(match[2])
+		}
+
+		sessions = append(sessions, session)
+	}
+
+	return sessions
+}
+
+// formatResumePrompt generates instructions for Claude when open sessions are detected.
+func formatResumePrompt(sessions []OpenSession) string {
+	if len(sessions) == 0 {
+		return ""
+	}
+
+	var sb strings.Builder
+
+	sb.WriteString("\n### Open Sessions Detected\n\n")
+	sb.WriteString(fmt.Sprintf("Found %d session(s) with status: in_progress\n\n", len(sessions)))
+
+	for i, session := range sessions {
+		sb.WriteString(fmt.Sprintf("%d. **%s**\n", i+1, session.Title))
+		if session.Date != "" {
+			sb.WriteString(fmt.Sprintf("   - Date: %s\n", session.Date))
+		}
+		if session.Branch != "" {
+			sb.WriteString(fmt.Sprintf("   - Branch: %s\n", session.Branch))
+		}
+	}
+
+	sb.WriteString("\n**Action Required**: Ask the user if they want to:\n")
+	sb.WriteString("- Resume one of the above sessions\n")
+	sb.WriteString("- Start a new session (open sessions will remain in_progress)\n")
+
+	return sb.String()
 }
 
 // loadWorkflowState retrieves workflow state using brain session command.
@@ -286,13 +373,23 @@ func formatContextMarkdown(output *SessionStartOutput) string {
 	}
 
 	// Bootstrap markdown (main content)
+	var bootstrapMarkdown string
 	if output.BootstrapInfo != nil {
 		if markdown, ok := output.BootstrapInfo["markdown"].(string); ok && markdown != "" {
+			bootstrapMarkdown = markdown
 			sb.WriteString(markdown)
 			sb.WriteString("\n")
 		}
 		if warning, ok := output.BootstrapInfo["warning"].(string); ok && warning != "" {
 			sb.WriteString(fmt.Sprintf("**Warning:** %s\n", warning))
+		}
+	}
+
+	// Parse and format open sessions resume prompt
+	if bootstrapMarkdown != "" {
+		openSessions := parseOpenSessions(bootstrapMarkdown)
+		if len(openSessions) > 0 {
+			sb.WriteString(formatResumePrompt(openSessions))
 		}
 	}
 

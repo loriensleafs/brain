@@ -5,7 +5,7 @@
  * Returns TextContent for display in Claude Code terminal.
  */
 
-import type { ContextNote } from "./sectionQueries";
+import type { ContextNote, OpenSession } from "./sectionQueries";
 import type { SessionEnrichment } from "./sessionEnrichment";
 import { type ContextData, renderContext } from "./templates";
 
@@ -14,6 +14,7 @@ import { type ContextData, renderContext } from "./templates";
  */
 export interface FormattedOutputInput {
   project: string;
+  openSessions: OpenSession[];
   activeFeatures: ContextNote[];
   recentDecisions: ContextNote[];
   openBugs: ContextNote[];
@@ -33,6 +34,7 @@ export interface FormattedOutputInput {
 export function buildFormattedOutput(input: FormattedOutputInput, fullContent = false): string {
   const {
     project,
+    openSessions,
     activeFeatures,
     recentDecisions,
     openBugs,
@@ -45,6 +47,7 @@ export function buildFormattedOutput(input: FormattedOutputInput, fullContent = 
   const contextData: ContextData = {
     project,
     timestamp: new Date().toLocaleString(),
+    openSessions,
     activeFeatures,
     recentDecisions,
     openBugs,
@@ -83,6 +86,7 @@ export function buildFormattedOutputWithLimits(
   return buildFormattedOutput(
     {
       project: input.project,
+      openSessions: input.openSessions,
       activeFeatures: input.activeFeatures.slice(0, features),
       recentDecisions: input.recentDecisions.slice(0, decisions),
       openBugs: input.openBugs.slice(0, bugs),

@@ -27,7 +27,7 @@ One-level delegation creates two distinct memory operation modes:
 
 ### Execution Model
 
-- **Plan before delegating** — reconnaissance scan, then explicit delegation plan with waves. No plan = random delegation.
+- **Plan before delegating** — reconnaissance scan, then explicit delegation plan with waves. No plan = random delegation.  Ask the user clarifying questions before AND after reconnaissance using the `AskUserQuestion` tool when possible.
 - **Swarm-first execution** — default to aggressive parallelism. Decompose work into the finest independent items, then swarm one agent per item. Under-parallelization is a failure mode.
 - **Same-type swarming** — a single step can use N agents of the same type on independent work items. Aggressively decompose work into the finest independent items you can find, then swarm one agent per item. Bias toward more granular splits — 3 agents is fine for 3 items, but look hard for 8 items before settling for 3. Don't force splits that create cross-agent conflicts.
 - **Serialize only when impossible** — "might be useful" is not a reason to wait. "Impossible without" is the threshold.
@@ -184,6 +184,8 @@ gh workflow run [workflow] --ref [branch]
 
 ### Always Do
 
+- **Use the `AskUserQuestion` tool.**
+- **Agents and subagents (for example a delegated brain analyst) should ALWAYS be creating memories.**
 - **Verify branch** before ANY git/gh operation: `git branch --show-current`
 - **Update Brain memory** at session end with cross-session context
 - **Check for existing skills** before writing inline GitHub operations
@@ -392,6 +394,24 @@ Search: semantic similarity via vector embeddings, automatic keyword fallback, r
 **No generic `NOTE-*` type allowed.** Specs folder naming uses parent entity: `specs/ADR-015-auth-strategy/requirements/REQ-001-token-validation.md`
 
 The **title in frontmatter** is the canonical entity identifier. Prefix in title MUST be ALL CAPS (`ADR-015`, not `adr-015`). Reference with exact title in wikilinks: `- implements [[ADR-015 Auth Strategy]]`
+
+### Session Entity Type
+
+The session entity type has additional frontmatter fields for lifecycle tracking:
+
+| Field | Required | Values | Notes |
+|:--|:--|:--|:--|
+| title | Yes | SESSION-YYYY-MM-DD_NN-topic | Standard naming |
+| type | Yes | session | Entity type |
+| status | Yes | in_progress, complete | Lifecycle state |
+| date | Yes | YYYY-MM-DD | Session date |
+| tags | No | [session, ...] | Optional tags |
+
+**Status Lifecycle**:
+
+- `in_progress`: Set when session is created via start-session protocol
+- `complete`: Set when session ends via end-session protocol
+- Missing status: Treated as `complete` for backward compatibility with existing sessions
 
 ### Semantic Folders
 

@@ -911,3 +911,321 @@ func TestHookInput_EmptyJSON(t *testing.T) {
 		t.Errorf("CWD = %q, want empty", input.CWD)
 	}
 }
+
+// === Tests for parseOpenSessions ===
+
+func TestParseOpenSessions_WithOpenSessions(t *testing.T) {
+	markdown := `## Memory Context [v7] (Full)
+
+**Project:** test-project
+**Retrieved:** 2/4/2026, 10:30:00 AM
+
+### Open Sessions
+
+Sessions with work in progress that may need to be resumed:
+
+- [[SESSION-2026-02-04_01-feature-work]] (branch: ` + "`feat/session-resume`" + `)
+- [[SESSION-2026-02-03_02-bug-fix]]
+
+### Active Features
+
+- Feature-Auth`
+
+	sessions := parseOpenSessions(markdown)
+
+	if len(sessions) != 2 {
+		t.Fatalf("parseOpenSessions() returned %d sessions, want 2", len(sessions))
+	}
+
+	// Check first session
+	if sessions[0].Title != "SESSION-2026-02-04_01-feature-work" {
+		t.Errorf("sessions[0].Title = %q, want %q", sessions[0].Title, "SESSION-2026-02-04_01-feature-work")
+	}
+	if sessions[0].Date != "2026-02-04" {
+		t.Errorf("sessions[0].Date = %q, want %q", sessions[0].Date, "2026-02-04")
+	}
+	if sessions[0].Branch != "feat/session-resume" {
+		t.Errorf("sessions[0].Branch = %q, want %q", sessions[0].Branch, "feat/session-resume")
+	}
+
+	// Check second session
+	if sessions[1].Title != "SESSION-2026-02-03_02-bug-fix" {
+		t.Errorf("sessions[1].Title = %q, want %q", sessions[1].Title, "SESSION-2026-02-03_02-bug-fix")
+	}
+	if sessions[1].Date != "2026-02-03" {
+		t.Errorf("sessions[1].Date = %q, want %q", sessions[1].Date, "2026-02-03")
+	}
+	if sessions[1].Branch != "" {
+		t.Errorf("sessions[1].Branch = %q, want empty", sessions[1].Branch)
+	}
+}
+
+func TestParseOpenSessions_NoOpenSessionsSection(t *testing.T) {
+	markdown := `## Memory Context [v7] (Full)
+
+**Project:** test-project
+**Retrieved:** 2/4/2026, 10:30:00 AM
+
+### Active Features
+
+- Feature-Auth`
+
+	sessions := parseOpenSessions(markdown)
+
+	if len(sessions) != 0 {
+		t.Errorf("parseOpenSessions() returned %d sessions, want 0", len(sessions))
+	}
+}
+
+func TestParseOpenSessions_EmptyOpenSessionsSection(t *testing.T) {
+	markdown := `## Memory Context [v7] (Full)
+
+**Project:** test-project
+
+### Open Sessions
+
+Sessions with work in progress that may need to be resumed:
+
+### Active Features
+
+- Feature-Auth`
+
+	sessions := parseOpenSessions(markdown)
+
+	if len(sessions) != 0 {
+		t.Errorf("parseOpenSessions() returned %d sessions, want 0", len(sessions))
+	}
+}
+
+func TestParseOpenSessions_WithBranchNoBackticks(t *testing.T) {
+	markdown := `### Open Sessions
+
+Sessions with work in progress that may need to be resumed:
+
+- [[SESSION-2026-02-04_01-test]] (branch: main)`
+
+	sessions := parseOpenSessions(markdown)
+
+	if len(sessions) != 1 {
+		t.Fatalf("parseOpenSessions() returned %d sessions, want 1", len(sessions))
+	}
+	if sessions[0].Branch != "main" {
+		t.Errorf("sessions[0].Branch = %q, want %q", sessions[0].Branch, "main")
+	}
+}
+
+func TestParseOpenSessions_AtEndOfDocument(t *testing.T) {
+	// Test when Open Sessions is the last section (no following ###)
+	markdown := `## Memory Context
+
+**Project:** test-project
+
+### Open Sessions
+
+Sessions with work in progress that may need to be resumed:
+
+- [[SESSION-2026-02-04_01-final]]`
+
+	sessions := parseOpenSessions(markdown)
+
+	if len(sessions) != 1 {
+		t.Fatalf("parseOpenSessions() returned %d sessions, want 1", len(sessions))
+	}
+	if sessions[0].Title != "SESSION-2026-02-04_01-final" {
+		t.Errorf("sessions[0].Title = %q, want %q", sessions[0].Title, "SESSION-2026-02-04_01-final")
+	}
+}
+
+// === Tests for formatResumePrompt ===
+
+func TestFormatResumePrompt_WithSessions(t *testing.T) {
+	sessions := []OpenSession{
+		{Title: "SESSION-2026-02-04_01-feature-work", Date: "2026-02-04", Branch: "feat/session-resume"},
+		{Title: "SESSION-2026-02-03_02-bug-fix", Date: "2026-02-03"},
+	}
+
+	result := formatResumePrompt(sessions)
+
+	// Check required elements
+	if !strings.Contains(result, "### Open Sessions Detected") {
+		t.Error("Should contain '### Open Sessions Detected' header")
+	}
+	if !strings.Contains(result, "Found 2 session(s) with status: in_progress") {
+		t.Error("Should contain count of sessions")
+	}
+	if !strings.Contains(result, "**SESSION-2026-02-04_01-feature-work**") {
+		t.Error("Should contain first session title")
+	}
+	if !strings.Contains(result, "Date: 2026-02-04") {
+		t.Error("Should contain first session date")
+	}
+	if !strings.Contains(result, "Branch: feat/session-resume") {
+		t.Error("Should contain first session branch")
+	}
+	if !strings.Contains(result, "**SESSION-2026-02-03_02-bug-fix**") {
+		t.Error("Should contain second session title")
+	}
+	if !strings.Contains(result, "**Action Required**") {
+		t.Error("Should contain action required prompt")
+	}
+	if !strings.Contains(result, "Resume one of the above sessions") {
+		t.Error("Should contain resume option")
+	}
+	if !strings.Contains(result, "Start a new session") {
+		t.Error("Should contain new session option")
+	}
+}
+
+func TestFormatResumePrompt_NoSessions(t *testing.T) {
+	sessions := []OpenSession{}
+
+	result := formatResumePrompt(sessions)
+
+	if result != "" {
+		t.Errorf("formatResumePrompt() with no sessions should return empty string, got %q", result)
+	}
+}
+
+func TestFormatResumePrompt_SingleSession(t *testing.T) {
+	sessions := []OpenSession{
+		{Title: "SESSION-2026-02-04_01-solo", Date: "2026-02-04"},
+	}
+
+	result := formatResumePrompt(sessions)
+
+	if !strings.Contains(result, "Found 1 session(s) with status: in_progress") {
+		t.Error("Should contain count of 1 session")
+	}
+	if !strings.Contains(result, "1. **SESSION-2026-02-04_01-solo**") {
+		t.Error("Should contain session with index 1")
+	}
+}
+
+// === Tests for formatContextMarkdown with open sessions ===
+
+func TestFormatContextMarkdown_WithOpenSessions(t *testing.T) {
+	bootstrapContent := `## Memory Context [v7] (Full)
+
+**Project:** test-project
+
+### Open Sessions
+
+Sessions with work in progress that may need to be resumed:
+
+- [[SESSION-2026-02-04_01-feature]] (branch: ` + "`feat/test`" + `)
+
+### Active Features
+
+- Feature-Auth`
+
+	output := &SessionStartOutput{
+		Success: true,
+		Project: "test-project",
+		GitContext: &GitContextInfo{
+			Branch: "main",
+			Status: "clean",
+		},
+		BootstrapInfo: map[string]any{
+			"markdown": bootstrapContent,
+		},
+	}
+
+	result := formatContextMarkdown(output)
+
+	// Should contain the open sessions detected prompt
+	if !strings.Contains(result, "### Open Sessions Detected") {
+		t.Error("Should contain open sessions detected header")
+	}
+	if !strings.Contains(result, "Found 1 session(s)") {
+		t.Error("Should contain session count")
+	}
+	if !strings.Contains(result, "**Action Required**") {
+		t.Error("Should contain action required prompt")
+	}
+}
+
+func TestFormatContextMarkdown_WithoutOpenSessions(t *testing.T) {
+	bootstrapContent := `## Memory Context [v7] (Full)
+
+**Project:** test-project
+
+### Active Features
+
+- Feature-Auth`
+
+	output := &SessionStartOutput{
+		Success: true,
+		Project: "test-project",
+		GitContext: &GitContextInfo{
+			Branch: "main",
+			Status: "clean",
+		},
+		BootstrapInfo: map[string]any{
+			"markdown": bootstrapContent,
+		},
+	}
+
+	result := formatContextMarkdown(output)
+
+	// Should NOT contain the open sessions detected prompt
+	if strings.Contains(result, "### Open Sessions Detected") {
+		t.Error("Should NOT contain open sessions detected header when no open sessions")
+	}
+	if strings.Contains(result, "**Action Required**") {
+		t.Error("Should NOT contain action required prompt when no open sessions")
+	}
+}
+
+// === Tests for OpenSession struct JSON serialization ===
+
+func TestOpenSession_JSONSerialization(t *testing.T) {
+	session := OpenSession{
+		Title:  "SESSION-2026-02-04_01-test",
+		Date:   "2026-02-04",
+		Branch: "feat/test",
+	}
+
+	data, err := json.Marshal(session)
+	if err != nil {
+		t.Fatalf("Failed to marshal OpenSession: %v", err)
+	}
+
+	var parsed map[string]any
+	if err := json.Unmarshal(data, &parsed); err != nil {
+		t.Fatalf("Failed to unmarshal OpenSession: %v", err)
+	}
+
+	if parsed["title"] != "SESSION-2026-02-04_01-test" {
+		t.Errorf("JSON title = %v, want SESSION-2026-02-04_01-test", parsed["title"])
+	}
+	if parsed["date"] != "2026-02-04" {
+		t.Errorf("JSON date = %v, want 2026-02-04", parsed["date"])
+	}
+	if parsed["branch"] != "feat/test" {
+		t.Errorf("JSON branch = %v, want feat/test", parsed["branch"])
+	}
+}
+
+func TestOpenSession_OmitsEmptyFields(t *testing.T) {
+	session := OpenSession{
+		Title: "SESSION-2026-02-04_01-minimal",
+	}
+
+	data, err := json.Marshal(session)
+	if err != nil {
+		t.Fatalf("Failed to marshal OpenSession: %v", err)
+	}
+
+	var parsed map[string]any
+	if err := json.Unmarshal(data, &parsed); err != nil {
+		t.Fatalf("Failed to unmarshal OpenSession: %v", err)
+	}
+
+	// date and branch should be omitted when empty
+	if _, exists := parsed["date"]; exists && parsed["date"] != "" {
+		t.Error("JSON should omit or have empty date when not set")
+	}
+	if _, exists := parsed["branch"]; exists && parsed["branch"] != "" {
+		t.Error("JSON should omit or have empty branch when not set")
+	}
+}

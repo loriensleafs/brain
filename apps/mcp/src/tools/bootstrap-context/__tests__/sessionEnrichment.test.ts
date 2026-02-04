@@ -11,27 +11,44 @@
  * - Feature task enrichment
  */
 
+import type { Mock } from "vitest";
 import { beforeEach, describe, expect, test, vi } from "vitest";
+
+/**
+ * Mock result type for tests - simplified from SearchResult
+ * Uses 'score' field which gets mapped to 'similarity_score' internally
+ */
+interface MockSearchResult {
+  title: string;
+  permalink: string;
+  snippet?: string;
+  fullContent?: string;
+  score: number;
+}
+
+interface MockSearchResponse {
+  results: MockSearchResult[];
+  total: number;
+  source: "keyword" | "semantic" | "hybrid";
+}
 
 // Use vi.hoisted() to ensure mocks are available before vi.mock() hoisting
 const { mockSearchService } = vi.hoisted(() => {
-  const mockSearch = vi.fn(() =>
-    Promise.resolve({
-      results: [],
-      total: 0,
-      source: "keyword" as const,
-    }),
+  const emptyResponse: MockSearchResponse = {
+    results: [],
+    total: 0,
+    source: "keyword",
+  };
+
+  const mockSearch: Mock<() => Promise<MockSearchResponse>> = vi.fn(() =>
+    Promise.resolve(emptyResponse),
   );
 
   const mockSearchService = {
     search: mockSearch,
-    semanticSearch: vi.fn(() => Promise.resolve([])),
-    keywordSearch: vi.fn(() =>
-      Promise.resolve({ results: [], total: 0, source: "keyword" as const }),
-    ),
-    hybridSearch: vi.fn(() =>
-      Promise.resolve({ results: [], total: 0, source: "keyword" as const }),
-    ),
+    semanticSearch: vi.fn(() => Promise.resolve([] as MockSearchResult[])),
+    keywordSearch: vi.fn(() => Promise.resolve(emptyResponse)),
+    hybridSearch: vi.fn(() => Promise.resolve(emptyResponse)),
   };
 
   return { mockSearchService };

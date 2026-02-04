@@ -7,7 +7,7 @@
 
 import type { WorkflowMode } from "../../services/session/types";
 import type { NoteType } from "./noteType";
-import type { ContextNote } from "./sectionQueries";
+import type { ContextNote, OpenSession } from "./sectionQueries";
 import type { AgentHistorySummary, SessionEnrichment } from "./sessionEnrichment";
 import type { NoteStatus } from "./statusParser";
 
@@ -88,6 +88,7 @@ export interface StructuredSessionContext {
 export interface StructuredContent {
   metadata: ContextMetadata;
   session_context?: StructuredSessionContext;
+  open_sessions: OpenSession[];
   active_features: StructuredFeature[];
   recent_decisions: StructuredDecision[];
   open_bugs: StructuredBug[];
@@ -101,6 +102,7 @@ export interface StructuredContent {
 export interface StructuredOutputInput {
   project: string;
   timeframe: string;
+  openSessions: OpenSession[];
   activeFeatures: ContextNote[];
   recentDecisions: ContextNote[];
   openBugs: ContextNote[];
@@ -116,6 +118,7 @@ export function buildStructuredOutput(input: StructuredOutputInput): StructuredC
   const {
     project,
     timeframe,
+    openSessions,
     activeFeatures,
     recentDecisions,
     openBugs,
@@ -126,6 +129,7 @@ export function buildStructuredOutput(input: StructuredOutputInput): StructuredC
 
   // Calculate total note count
   const noteCount =
+    openSessions.length +
     activeFeatures.length +
     recentDecisions.length +
     openBugs.length +
@@ -143,6 +147,7 @@ export function buildStructuredOutput(input: StructuredOutputInput): StructuredC
       timeframe,
     },
     session_context: sessionContext,
+    open_sessions: openSessions,
     active_features: activeFeatures.map(toStructuredFeature),
     recent_decisions: recentDecisions.map(toStructuredDecision),
     open_bugs: openBugs.map(toStructuredBug),

@@ -17,6 +17,7 @@ import type { BootstrapContextArgs } from "./schema";
 import {
   queryActiveFeatures,
   queryOpenBugs,
+  queryOpenSessions,
   queryRecentActivity,
   queryRecentDecisions,
 } from "./sectionQueries";
@@ -77,14 +78,21 @@ export async function handler(args: BootstrapContextArgs): Promise<CallToolResul
     }
 
     // Query all sections in parallel, including session enrichment
-    const [recentActivity, activeFeatures, recentDecisions, openBugs, sessionEnrichment] =
-      await Promise.all([
-        queryRecentActivity({ project, timeframe }),
-        queryActiveFeatures({ project, timeframe }),
-        queryRecentDecisions({ project, timeframe: "3d" }),
-        queryOpenBugs({ project, timeframe }),
-        buildSessionEnrichment({ project, sessionState }),
-      ]);
+    const [
+      recentActivity,
+      activeFeatures,
+      recentDecisions,
+      openBugs,
+      openSessions,
+      sessionEnrichment,
+    ] = await Promise.all([
+      queryRecentActivity({ project, timeframe }),
+      queryActiveFeatures({ project, timeframe }),
+      queryRecentDecisions({ project, timeframe: "3d" }),
+      queryOpenBugs({ project, timeframe }),
+      queryOpenSessions({ project }),
+      buildSessionEnrichment({ project, sessionState }),
+    ]);
 
     // Follow relations if requested
     let referencedNotes: Awaited<ReturnType<typeof followRelations>> = [];
@@ -97,6 +105,7 @@ export async function handler(args: BootstrapContextArgs): Promise<CallToolResul
     const structuredContent = buildStructuredOutput({
       project,
       timeframe,
+      openSessions,
       activeFeatures,
       recentDecisions,
       openBugs,
@@ -113,6 +122,7 @@ export async function handler(args: BootstrapContextArgs): Promise<CallToolResul
     const formattedOutput = buildFormattedOutputWithLimits(
       {
         project,
+        openSessions,
         activeFeatures,
         recentDecisions,
         openBugs,
@@ -128,6 +138,7 @@ export async function handler(args: BootstrapContextArgs): Promise<CallToolResul
       {
         project,
         noteCount: structuredContent.metadata.note_count,
+        openSessions: openSessions.length,
         features: activeFeatures.length,
         decisions: recentDecisions.length,
         bugs: openBugs.length,

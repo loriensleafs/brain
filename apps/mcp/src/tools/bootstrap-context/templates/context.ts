@@ -4,12 +4,13 @@
  * Renders the complete bootstrap context with all sections.
  */
 
-import type { ContextNote } from "../sectionQueries";
+import type { ContextNote, OpenSession } from "../sectionQueries";
 import type { SessionEnrichment } from "../sessionEnrichment";
 
 export interface ContextData {
   project: string;
   timestamp: string;
+  openSessions: OpenSession[];
   activeFeatures: ContextNote[];
   recentDecisions: ContextNote[];
   openBugs: ContextNote[];
@@ -36,6 +37,11 @@ export function renderContext(data: ContextData): string {
   // Session Context (if available) - renders first as it provides current focus
   if (data.sessionEnrichment) {
     sections.push(renderSessionBlock(data.sessionEnrichment));
+  }
+
+  // Open Sessions (if any) - shows sessions that need to be resumed
+  if (data.openSessions.length > 0) {
+    sections.push(renderOpenSessionsBlock(data.openSessions));
   }
 
   // Active Features (if any) - expanded with full content
@@ -72,6 +78,22 @@ function renderHeader(project: string, timestamp: string, fullContent: boolean):
 
 **Project:** ${project}
 **Retrieved:** ${timestamp}`;
+}
+
+function renderOpenSessionsBlock(sessions: OpenSession[]): string {
+  const lines: string[] = [];
+
+  lines.push("### Open Sessions");
+  lines.push("");
+  lines.push("Sessions with work in progress that may need to be resumed:");
+  lines.push("");
+
+  sessions.forEach((session) => {
+    const branchInfo = session.branch ? ` (branch: \`${session.branch}\`)` : "";
+    lines.push(`- [[${session.title}]]${branchInfo}`);
+  });
+
+  return lines.join("\n");
 }
 
 function renderSessionBlock(session: SessionEnrichment): string {
