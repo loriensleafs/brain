@@ -213,19 +213,23 @@ describe("naming pattern validation integration", () => {
       expect(patternType).toBe("decision");
       const result = validateNamingPattern({ fileName, patternType });
       expect(result.valid).toBe(true);
-      expect(result.patternType).toBe("decision");
+      if (result.valid) {
+        expect(result.patternType).toBe("decision");
+      }
     });
 
     test("accepts valid session filename in sessions folder", () => {
       const folder = "sessions";
-      const title = "SESSION-2026-02-01-01-my-session";
+      const title = "SESSION-2026-02-01_01-my-session";
       const fileName = `${title}.md`;
       const patternType = folderToPatternType(folder);
 
       expect(patternType).toBe("session");
       const result = validateNamingPattern({ fileName, patternType });
       expect(result.valid).toBe(true);
-      expect(result.patternType).toBe("session");
+      if (result.valid) {
+        expect(result.patternType).toBe("session");
+      }
     });
 
     test("accepts valid skill filename in skills folder", () => {
@@ -237,7 +241,9 @@ describe("naming pattern validation integration", () => {
       expect(patternType).toBe("skill");
       const result = validateNamingPattern({ fileName, patternType });
       expect(result.valid).toBe(true);
-      expect(result.patternType).toBe("skill");
+      if (result.valid) {
+        expect(result.patternType).toBe("skill");
+      }
     });
   });
 
@@ -251,7 +257,9 @@ describe("naming pattern validation integration", () => {
       expect(patternType).toBe("decision");
       const result = validateNamingPattern({ fileName, patternType });
       expect(result.valid).toBe(false);
-      expect(result.error).toContain("does not match decision pattern");
+      if (!result.valid) {
+        expect(result.error).toContain("does not match decision pattern");
+      }
     });
 
     test("rejects deprecated skill filename format", () => {
@@ -285,7 +293,9 @@ describe("naming pattern validation integration", () => {
         fileName: "../../../etc/passwd",
       });
       expect(result.valid).toBe(false);
-      expect(result.error).toContain("Path traversal detected");
+      if (!result.valid) {
+        expect(result.error).toContain("Path traversal detected");
+      }
     });
 
     test("rejects forward slashes in filename", () => {
@@ -293,7 +303,9 @@ describe("naming pattern validation integration", () => {
         fileName: "folder/ADR-001-decision.md",
       });
       expect(result.valid).toBe(false);
-      expect(result.error).toContain("Path traversal detected");
+      if (!result.valid) {
+        expect(result.error).toContain("Path traversal detected");
+      }
     });
 
     test("rejects backslashes in filename", () => {
@@ -301,7 +313,9 @@ describe("naming pattern validation integration", () => {
         fileName: "folder\\ADR-001-decision.md",
       });
       expect(result.valid).toBe(false);
-      expect(result.error).toContain("Path traversal detected");
+      if (!result.valid) {
+        expect(result.error).toContain("Path traversal detected");
+      }
     });
   });
 

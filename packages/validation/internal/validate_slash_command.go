@@ -50,9 +50,6 @@ type SlashCommandFieldValidation struct {
 // Maximum line count before warning to convert to skill.
 const maxSlashCommandLines = 200
 
-// Pattern to match YAML frontmatter block.
-var slashFrontmatterPattern = regexp.MustCompile(`(?s)^---\s*\n(.*?)\n---`)
-
 // Pattern to match description field value and action verbs.
 var descriptionActionPattern = regexp.MustCompile(`^(Use when|Generate|Research|Invoke|Create|Analyze|Review|Search)`)
 
@@ -527,14 +524,14 @@ func parseSlashCommandFrontmatter(content string) (SlashCommandFrontmatter, stri
 		}
 
 		// Check for valid key: value format
-		colonIdx := strings.Index(line, ":")
-		if colonIdx == -1 {
+		key, value, found := strings.Cut(line, ":")
+		if !found {
 			yamlErr = "Invalid YAML syntax: missing colon in line '" + truncateSlashLine(line) + "'"
 			continue
 		}
 
-		key := strings.TrimSpace(line[:colonIdx])
-		value := strings.TrimSpace(line[colonIdx+1:])
+		key = strings.TrimSpace(key)
+		value = strings.TrimSpace(value)
 
 		// Remove quotes from value if present
 		value = trimSlashQuotes(value)

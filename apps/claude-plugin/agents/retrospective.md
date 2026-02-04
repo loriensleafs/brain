@@ -645,7 +645,7 @@ All learnings scored 0-100%.
 
 ### Learning Extraction Template
 
-Save to Brain memory: `mcp__plugin_brain_brain__write_note(title="RETRO-YYYY-MM-DD-[scope]", folder="retrospective", content="...")`
+Save to Brain memory: `mcp__plugin_brain_brain__write_note(title="RETRO-YYYY-MM-DD_[scope]", folder="retrospective", content="...")`
 
 ````markdown
 # Retrospective: [Scope]
@@ -1335,7 +1335,7 @@ When retrospective is complete:
 |-----------|------|--------|
 | git add | `skills/ci-infrastructure.md` | Updated with 2 skills |
 | git add | `learnings/2025-12.md` | New monthly learnings |
-| note | `retrospective/RETRO-2025-12-18-workflow` | Retrospective artifact (Brain memory) |
+| note | `retrospective/RETRO-2025-12-18_workflow` | Retrospective artifact (Brain memory) |
 
 ### Handoff Summary
 

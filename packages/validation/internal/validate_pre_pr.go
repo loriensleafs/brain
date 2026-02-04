@@ -958,7 +958,7 @@ func shouldHaveTests(path string) bool {
 	return true
 }
 
-func checkParameterDrift(config PrePRConfig, testFiles map[string]string) []string {
+func checkParameterDrift(_ PrePRConfig, _ map[string]string) []string {
 	var drifts []string
 	// This is a simplified implementation
 	// Real implementation would parse function signatures and compare
@@ -967,7 +967,8 @@ func checkParameterDrift(config PrePRConfig, testFiles map[string]string) []stri
 }
 
 func hasExternalCalls(content, lang string) bool {
-	if lang == "powershell" {
+	switch lang {
+	case "powershell":
 		externalPatterns := []string{
 			"Start-Process", "Invoke-Expression", "& ", "cmd /c",
 			"git ", "npm ", "dotnet ", "docker ",
@@ -977,7 +978,7 @@ func hasExternalCalls(content, lang string) bool {
 				return true
 			}
 		}
-	} else if lang == "bash" {
+	case "bash":
 		// Most bash scripts have external calls
 		return len(content) > 100
 	}

@@ -682,7 +682,7 @@ All learnings scored 0-100%.
 
 ### Learning Extraction Template
 
-Save to: Brain memory `retrospective/RETRO-YYYY-MM-DD-[scope]`
+Save to: Brain memory `retrospective/RETRO-YYYY-MM-DD_[scope]`
 
 ````markdown
 # Retrospective: [Scope]

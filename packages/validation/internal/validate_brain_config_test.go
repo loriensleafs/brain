@@ -24,7 +24,7 @@ var testBrainConfigSchema = []byte(`{
     "logging": { "$ref": "#/$defs/LoggingConfig" },
     "watcher": { "$ref": "#/$defs/WatcherConfig" }
   },
-  "required": ["version", "defaults"],
+  "required": ["version", "defaults", "projects", "sync", "logging", "watcher"],
   "additionalProperties": false,
   "$defs": {
     "MemoriesMode": {
@@ -92,6 +92,10 @@ func TestValidateBrainConfig_ValidMinimal(t *testing.T) {
 		"defaults": map[string]any{
 			"memories_location": "~/memories",
 		},
+		"projects": map[string]any{},
+		"sync":     map[string]any{},
+		"logging":  map[string]any{},
+		"watcher":  map[string]any{},
 	}
 
 	if !ValidateBrainConfig(data) {
@@ -251,6 +255,10 @@ func TestParseBrainConfig_AppliesDefaults(t *testing.T) {
 		"defaults": map[string]any{
 			"memories_location": "~/memories",
 		},
+		"projects": map[string]any{},
+		"sync":     map[string]any{},
+		"logging":  map[string]any{},
+		"watcher":  map[string]any{},
 	}
 
 	config, err := ParseBrainConfig(data)
@@ -295,6 +303,7 @@ func TestParseBrainConfig_PreservesExplicitValues(t *testing.T) {
 			"memories_location": "~/custom",
 			"memories_mode":     "CODE",
 		},
+		"projects": map[string]any{},
 		"sync": map[string]any{
 			"enabled":  false,
 			"delay_ms": 1000,

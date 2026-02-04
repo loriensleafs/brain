@@ -36,6 +36,7 @@ Key requirements:
 
 **Key Style Requirements for Memory Operations:**
 
+- **File naming**: Entity prefixes MUST be ALL CAPS (`ADR-`, `SESSION-`, `REQ-`). Never lowercase (`adr-`, `session-`, `req-`). See Entity Types table for full patterns.
 - **Required file structure**: All notes must include:
 
   1. **Frontmatter**: YAML with title, type (note/person/project/meeting/decision/spec), tags, optional permalink
@@ -136,12 +137,12 @@ Brain memories are organized by semantic category (folder). Per ADR-020, all age
 | `architecture/`  | ADRs and architectural decisions | `ADR-020-config-architecture` |
 | `planning/`      | Project plans, milestones, PRDs  | `FEATURE-001-oauth`           |
 | `roadmap/`       | Strategic direction, epics       | `EPIC-001-authentication`     |
-| `sessions/`      | Session logs and handoffs        | `SESSION-2026-01-20-06`       |
+| `sessions/`      | Session logs and handoffs        | `SESSION-2026-01-20_06`       |
 | `specs/`         | Requirements, design, tasks      | `REQ-001-user-login`          |
 | `critique/`      | Plan reviews, design critiques   | `CRIT-001-oauth-plan`         |
 | `qa/`            | Test strategies, test reports    | `QA-001-oauth`                |
 | `security/`      | Threat models, security reviews  | `SEC-001-auth-flow`           |
-| `retrospective/` | Post-mortem analysis, lessons    | `RETRO-2026-01-20`            |
+| `retrospective/` | Post-mortem analysis, lessons    | `RETRO-2026-01-20_failures`   |
 | `skills/`        | Reusable strategies and patterns | `SKILL-001-markdownlint`      |
 
 ### Knowledge Graph Architecture
@@ -170,7 +171,7 @@ Brain uses **semantic search with vector embeddings**:
 Memories organized in standardized semantic folders via Brain MCP. Per ADR-020:
 
 - `analysis/` - Research, investigation, findings
-- `architecture/` - ADRs and architectural decisions
+- `decisions/` - ADRs and architectural decisions
 - `planning/` - Project plans, milestones, PRDs
 - `roadmap/` - Strategic direction, epics, prioritization
 - `sessions/` - Session logs and handoffs
@@ -187,7 +188,7 @@ Relations can link to entities that don't yet exist - they automatically resolve
 
 ### Memory Tools Reference
 
-### List (Discover Available)
+#### List (Discover Available)
 
 ```text
 mcp__plugin_brain_brain__list_directory
@@ -203,7 +204,7 @@ query: "[keywords]"
 Returns: Semantically relevant notes
 ```
 
-### Read (Retrieve Content)
+#### Read (Retrieve Content)
 
 ```text
 mcp__plugin_brain_brain__read_note
@@ -211,7 +212,7 @@ identifier: "[note-title-or-permalink]"
 Returns: Full content of note
 ```
 
-### Write (Create New)
+#### Write (Create New)
 
 ```text
 mcp__plugin_brain_brain__write_note
@@ -220,7 +221,7 @@ folder: "[semantic-folder]"
 content: "[note content in markdown format with frontmatter, observations, relations]"
 ```
 
-### Edit (Update Existing)
+#### Edit (Update Existing)
 
 ```text
 mcp__plugin_brain_brain__edit_note
@@ -231,7 +232,7 @@ find_text: "[text to find]"  # For find_replace
 section: "[section heading]"  # For replace_section
 ```
 
-### Delete (Remove Obsolete)
+#### Delete (Remove Obsolete)
 
 ```text
 mcp__plugin_brain_brain__delete_note
@@ -240,29 +241,31 @@ identifier: "[note-title-or-permalink]"
 
 ## File Naming and Entity Identification
 
-**Entity Naming Convention**: All brain entities use consistent CAPS prefix pattern for clarity and scannability.
+**File names MUST match the File Pattern exactly.** The entity prefix MUST be ALL CAPS — `ADR-`, `SESSION-`, `REQ-`, etc. Never lowercase (`adr-`, `session-`, `req-`). This is non-negotiable; lowercase prefixes are malformed and will break lookups.
 
-**brain Entity Types:**
+**No generic `NOTE-*` type allowed.** Forces proper categorization.
+
+**Brain Entity Types:**
 
 | Entity Type     | File Pattern                       | Folder                     | Example                                 |
 | --------------- | ---------------------------------- | -------------------------- | --------------------------------------- |
 | `decision`      | `ADR-{number}-{topic}.md`          | architecture/              | `ADR-020-config-architecture.md`        |
-| `session`       | `SESSION-YYYY-MM-DD-NN-{topic}.md` | sessions/                  | `SESSION-2026-01-20-06-memory.md`       |
-| `requirement`   | `REQ-{number}-{topic}.md`          | specs/{spec}/requirements/ | `REQ-001-user-login.md`                 |
-| `design`        | `DESIGN-{number}-{topic}.md`       | specs/{spec}/design/       | `DESIGN-001-auth-flow.md`               |
-| `task`          | `TASK-{number}-{topic}.md`         | specs/{spec}/tasks/        | `TASK-001-implement-jwt.md`             |
+| `session`       | `SESSION-YYYY-MM-DD_NN-{topic}.md` | sessions/                  | `SESSION-2026-01-20_06-memory.md`       |
+| `requirement`   | `REQ-{number}-{topic}.md`          | specs/{ENTITY-NNN-topic}/requirements/ | `REQ-001-user-login.md`                 |
+| `design`        | `DESIGN-{number}-{topic}.md`       | specs/{ENTITY-NNN-topic}/design/       | `DESIGN-001-auth-flow.md`               |
+| `task`          | `TASK-{number}-{topic}.md`         | specs/{ENTITY-NNN-topic}/tasks/        | `TASK-001-implement-jwt.md`             |
 | `analysis`      | `ANALYSIS-{number}-{topic}.md`     | analysis/                  | `ANALYSIS-001-memory-arch.md`           |
 | `feature`       | `FEATURE-{number}-{topic}.md`      | planning/                  | `FEATURE-001-oauth.md`                  |
 | `epic`          | `EPIC-{number}-{name}.md`          | roadmap/                   | `EPIC-001-authentication.md`            |
 | `critique`      | `CRIT-{number}-{topic}.md`         | critique/                  | `CRIT-001-oauth-plan.md`                |
 | `test-report`   | `QA-{number}-{topic}.md`           | qa/                        | `QA-001-oauth.md`                       |
 | `security`      | `SEC-{number}-{component}.md`      | security/                  | `SEC-001-auth-flow.md`                  |
-| `retrospective` | `RETRO-YYYY-MM-DD-{topic}.md`      | retrospective/             | `RETRO-2026-01-20-failures.md`          |
+| `retrospective` | `RETRO-YYYY-MM-DD_{topic}.md`      | retrospective/             | `RETRO-2026-01-20_failures.md`          |
 | `skill`         | `SKILL-{number}-{topic}.md`        | skills/                    | `SKILL-001-markdownlint-before-edit.md` |
 
 **Entity Identification**:
 
-The **title in frontmatter** is the canonical entity identifier:
+The **title in frontmatter** is the canonical entity identifier. The prefix in the title MUST also be ALL CAPS — `ADR-015`, not `adr-015`:
 
 ```markdown
 ---
@@ -274,7 +277,7 @@ tags: [auth, security, adr]
 
 **Referencing Entities**:
 
-Use exact title in wikilink relations:
+Use exact title in wikilink relations — prefix casing must match the canonical title:
 
 - `- implements [[ADR-015 Auth Strategy]]`
 - `- requires [[FEATURE-001 User Authentication]]`
@@ -400,7 +403,7 @@ Choose semantic folder based on entity type. Per ADR-020, these folders consolid
 
 | Content Type              | Folder         | Entity Type             |
 | ------------------------- | -------------- | ----------------------- |
-| Architecture decisions    | architecture/  | decision                |
+| Architecture decisions    | decisions/     | decision                |
 | Session work log          | sessions/      | session                 |
 | Research findings         | analysis/      | analysis                |
 | Feature planning          | planning/      | feature                 |
@@ -410,7 +413,7 @@ Choose semantic folder based on entity type. Per ADR-020, these folders consolid
 | Security work             | security/      | security                |
 | Retrospectives            | retrospective/ | retrospective           |
 | Reusable strategies       | skills/        | skill                   |
-| Requirements/design/tasks | specs/{spec}/  | requirement/design/task |
+| Requirements/design/tasks | specs/{ENTITY-NNN-topic}/  | requirement/design/task |
 | Project governance        | governance/    | governance              |
 
 ### Creating New Memories
@@ -705,7 +708,7 @@ Session logs are stored in Brain memory under `sessions/` folder:
 ```text
 # Create session log at session start
 mcp__plugin_brain_brain__write_note
-title: "SESSION-YYYY-MM-DD-NN-topic"
+title: "SESSION-YYYY-MM-DD_NN-topic"
 folder: "sessions"
 content: "[Session log template content]"
 ```
@@ -714,7 +717,7 @@ content: "[Session log template content]"
 
 ```markdown
 ---
-title: SESSION-YYYY-MM-DD-NN-topic
+title: SESSION-YYYY-MM-DD_NN-topic
 type: session
 tags: [session, YYYY-MM-DD]
 ---

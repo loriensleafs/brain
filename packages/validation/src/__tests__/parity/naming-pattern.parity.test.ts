@@ -45,8 +45,8 @@ const validTestCases: NamingPatternTestCase[] = [
   { fileName: "ADR-999-final-decision.md", patternType: "decision", expected: true },
 
   // Session
-  { fileName: "SESSION-2026-02-01-01-import.md", patternType: "session", expected: true },
-  { fileName: "SESSION-2024-12-31-99-year-end.md", patternType: "session", expected: true },
+  { fileName: "SESSION-2026-02-01_01-import.md", patternType: "session", expected: true },
+  { fileName: "SESSION-2024-12-31_99-year-end.md", patternType: "session", expected: true },
 
   // Requirement
   { fileName: "REQ-001-user-login.md", patternType: "requirement", expected: true },
@@ -85,8 +85,8 @@ const validTestCases: NamingPatternTestCase[] = [
   { fileName: "SEC-025-data-encryption.md", patternType: "security", expected: true },
 
   // Retrospective
-  { fileName: "RETRO-2026-01-15-sprint-review.md", patternType: "retrospective", expected: true },
-  { fileName: "RETRO-2024-12-31-year-end.md", patternType: "retrospective", expected: true },
+  { fileName: "RETRO-2026-01-15_sprint-review.md", patternType: "retrospective", expected: true },
+  { fileName: "RETRO-2024-12-31_year-end.md", patternType: "retrospective", expected: true },
 
   // Skill
   { fileName: "SKILL-001-memory-ops.md", patternType: "skill", expected: true },
@@ -172,7 +172,7 @@ const patternMismatchCases: NamingPatternTestCase[] = [
     description: "ADR file with session type",
   },
   {
-    fileName: "SESSION-2026-01-01-01-test.md",
+    fileName: "SESSION-2026-01-01_01-test.md",
     patternType: "decision",
     expected: false,
     description: "SESSION file with decision type",
@@ -321,7 +321,7 @@ describe("Naming Pattern Cross-Language Parity", () => {
   describe("Auto-detection (no pattern type specified)", () => {
     const autoDetectCases: NamingPatternTestCase[] = [
       { fileName: "ADR-001-test.md", expected: true },
-      { fileName: "SESSION-2026-01-01-01-test.md", expected: true },
+      { fileName: "SESSION-2026-01-01_01-test.md", expected: true },
       { fileName: "SKILL-001-test.md", expected: true },
       { fileName: "invalid-file.md", expected: false },
     ];

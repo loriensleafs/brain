@@ -16,7 +16,7 @@ import (
 // Canonical patterns from memory.md - 13 total patterns.
 var NamingPatterns = map[string]*regexp.Regexp{
 	"decision":      regexp.MustCompile(`^ADR-\d{3}-[\w-]+\.md$`),
-	"session":       regexp.MustCompile(`^SESSION-\d{4}-\d{2}-\d{2}-\d{2}-[\w-]+\.md$`),
+	"session":       regexp.MustCompile(`^SESSION-\d{4}-\d{2}-\d{2}_\d{2}-[\w-]+\.md$`),
 	"requirement":   regexp.MustCompile(`^REQ-\d{3}-[\w-]+\.md$`),
 	"design":        regexp.MustCompile(`^DESIGN-\d{3}-[\w-]+\.md$`),
 	"task":          regexp.MustCompile(`^TASK-\d{3}-[\w-]+\.md$`),
@@ -26,7 +26,7 @@ var NamingPatterns = map[string]*regexp.Regexp{
 	"critique":      regexp.MustCompile(`^CRIT-\d{3}-[\w-]+\.md$`),
 	"test-report":   regexp.MustCompile(`^QA-\d{3}-[\w-]+\.md$`),
 	"security":      regexp.MustCompile(`^SEC-\d{3}-[\w-]+\.md$`),
-	"retrospective": regexp.MustCompile(`^RETRO-\d{4}-\d{2}-\d{2}-[\w-]+\.md$`),
+	"retrospective": regexp.MustCompile(`^RETRO-\d{4}-\d{2}-\d{2}_[\w-]+\.md$`),
 	"skill":         regexp.MustCompile(`^SKILL-\d{3}-[\w-]+\.md$`),
 }
 

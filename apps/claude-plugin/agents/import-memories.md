@@ -123,17 +123,17 @@ During ANALYZE phase, detect files in non-canonical directories.
 | Entity Type   | Canonical Folder           | Filename Pattern                 |
 | ------------- | -------------------------- | -------------------------------- |
 | decision      | **decisions/**             | ADR-{NNN}-{topic}.md             |
-| session       | sessions/                  | SESSION-YYYY-MM-DD-NN-{topic}.md |
-| requirement   | specs/{spec}/requirements/ | REQ-{NNN}-{topic}.md             |
-| design        | specs/{spec}/design/       | DESIGN-{NNN}-{topic}.md          |
-| task          | specs/{spec}/tasks/        | TASK-{NNN}-{topic}.md            |
+| session       | sessions/                  | SESSION-YYYY-MM-DD_NN-{topic}.md |
+| requirement   | specs/{ENTITY-NNN-topic}/requirements/ | REQ-{NNN}-{topic}.md             |
+| design        | specs/{ENTITY-NNN-topic}/design/       | DESIGN-{NNN}-{topic}.md          |
+| task          | specs/{ENTITY-NNN-topic}/tasks/        | TASK-{NNN}-{topic}.md            |
 | analysis      | analysis/                  | ANALYSIS-{NNN}-{topic}.md        |
 | feature       | planning/                  | FEATURE-{NNN}-{topic}.md         |
 | epic          | roadmap/                   | EPIC-{NNN}-{name}.md             |
 | critique      | critique/                  | CRIT-{NNN}-{topic}.md            |
 | test-report   | qa/                        | QA-{NNN}-{topic}.md              |
 | security      | security/                  | SEC-{NNN}-{component}.md         |
-| retrospective | retrospectives/            | RETRO-YYYY-MM-DD-{topic}.md      |
+| retrospective | retrospectives/            | RETRO-YYYY-MM-DD_{topic}.md      |
 | skill         | skills/                    | SKILL-{NNN}-{topic}.md           |
 
 ### Deprecated Directories to Detect
@@ -175,9 +175,9 @@ During PLAN phase, validate filenames match entity type patterns.
 | Deprecated Pattern          | Current Pattern                  | Migration Action     |
 | --------------------------- | -------------------------------- | -------------------- |
 | Skill-Category-NNN.md       | SKILL-NNN-{topic}.md             | Rename during import |
-| YYYY-MM-DD-session-NN.md    | SESSION-YYYY-MM-DD-NN-{topic}.md | Rename during import |
+| YYYY-MM-DD-session-NN.md    | SESSION-YYYY-MM-DD_NN-{topic}.md | Rename during import |
 | TM-NNN-*.md                 | SEC-NNN-{component}.md           | Rename during import |
-| YYYY-MM-DD-topic.md (retro) | RETRO-YYYY-MM-DD-{topic}.md      | Rename during import |
+| YYYY-MM-DD-topic.md (retro) | RETRO-YYYY-MM-DD_{topic}.md      | Rename during import |
 
 ### Validation Process
 
@@ -221,7 +221,7 @@ During EXECUTE phase, maintain link integrity.
 | ------------------------------------ | ------------------------------------------ | ------------------------------- |
 | `[[architecture/ADR-001]]`           | `[[decisions/ADR-001-topic]]`              | Directory normalized            |
 | `[[plans/feature-x]]`                | `[[planning/FEATURE-001-feature-x]]`       | Directory + filename normalized |
-| `[[sessions/2025-01-01-session-01]]` | `[[sessions/SESSION-2025-01-01-01-topic]]` | Filename normalized             |
+| `[[sessions/2025-01-01-session-01]]` | `[[sessions/SESSION-2025-01-01_01-topic]]` | Filename normalized             |
 
 ### Broken Link Handling
 

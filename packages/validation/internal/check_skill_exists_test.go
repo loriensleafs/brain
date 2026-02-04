@@ -406,7 +406,7 @@ func TestListSkills_NoSkillsDirectory(t *testing.T) {
 		t.Fatalf("ListSkills failed: %v", err)
 	}
 
-	if result != nil && len(result) != 0 {
+	if len(result) != 0 {
 		t.Errorf("Expected empty list for missing skills directory, got %v", result)
 	}
 }
@@ -600,7 +600,7 @@ func TestListSkillScripts_NoDirectory(t *testing.T) {
 		t.Fatalf("ListSkillScripts failed: %v", err)
 	}
 
-	if result != nil && len(result) != 0 {
+	if len(result) != 0 {
 		t.Errorf("Expected empty list, got %v", result)
 	}
 }

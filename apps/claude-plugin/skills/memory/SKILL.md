@@ -11,6 +11,7 @@ metadata:
   brain_version: 0.1.0
   timelessness: 8/10
 ---
+
 # Memory System Skill
 
 Memory operations for AI agents using Brain MCP.
@@ -24,25 +25,25 @@ Memory operations for AI agents using Brain MCP.
 mcp__plugin_brain_brain__search({
   query: "git hooks",
   limit: 10,
-  mode: "auto"
-})
+  mode: "auto",
+});
 
 // Tier 1: List available memories
 mcp__plugin_brain_brain__list_directory({
   dir_name: "/",
-  depth: 2
-})
+  depth: 2,
+});
 
 // Tier 1: Read specific memory
 mcp__plugin_brain_brain__read_note({
-  identifier: "usage-mandatory"
-})
+  identifier: "usage-mandatory",
+});
 ```
 
 ```bash
 # Tier 2: Extract episode from session (Episodic)
 bun run apps/claude-plugin/skills/memory/scripts/extract-episode.ts \
-  --session SESSION-2026-01-20-06
+  --session SESSION-2026-01-20_06
 
 # Tier 3: Add pattern (Causal)
 bun run apps/claude-plugin/skills/memory/scripts/add-pattern.ts \
@@ -82,13 +83,13 @@ bun run apps/claude-plugin/skills/memory/scripts/add-pattern.ts \
 
 When you encounter something you want to change:
 
-| Change Type | Memory Search Required |
-|-------------|------------------------|
-| Remove ADR constraint | `mcp__plugin_brain_brain__search({ query: "[constraint name]" })` |
-| Bypass protocol | `mcp__plugin_brain_brain__search({ query: "[protocol name] why" })` |
-| Delete >100 lines | `mcp__plugin_brain_brain__search({ query: "[component] purpose" })` |
+| Change Type           | Memory Search Required                                                |
+| --------------------- | --------------------------------------------------------------------- |
+| Remove ADR constraint | `mcp__plugin_brain_brain__search({ query: "[constraint name]" })`     |
+| Bypass protocol       | `mcp__plugin_brain_brain__search({ query: "[protocol name] why" })`   |
+| Delete >100 lines     | `mcp__plugin_brain_brain__search({ query: "[component] purpose" })`   |
 | Refactor complex code | `mcp__plugin_brain_brain__search({ query: "[component] edge case" })` |
-| Change workflow | `mcp__plugin_brain_brain__search({ query: "[workflow] rationale" })` |
+| Change workflow       | `mcp__plugin_brain_brain__search({ query: "[workflow] rationale" })`  |
 
 ### What Memory Contains (Git Archaeology)
 
@@ -137,39 +138,48 @@ See ADR-007 for:
 
 ## Triggers
 
-| Trigger Phrase | Maps To |
-|----------------|---------|
-| "search memory for X" | Tier 1: `mcp__plugin_brain_brain__search()` |
-| "what do we know about X" | Tier 1: `mcp__plugin_brain_brain__search()` |
-| "list memories" | Tier 1: `mcp__plugin_brain_brain__list_directory()` |
-| "read memory X" | Tier 1: `mcp__plugin_brain_brain__read_note()` |
-| "extract episode from session" | Tier 2: `bun run scripts/extract-episode.ts --session SESSION-X` |
-| "what happened in session X" | Tier 2: `mcp__plugin_brain_brain__read_note({ identifier: "EPISODE-X" })` |
-| "find sessions with failures" | Tier 2: `mcp__plugin_brain_brain__search({ query: "outcome:failure", folder: "episodes" })` |
-| "add pattern" | Tier 3: `bun run scripts/add-pattern.ts --name "..." --trigger "..."` |
+| Trigger Phrase                 | Maps To                                                                                       |
+| ------------------------------ | --------------------------------------------------------------------------------------------- |
+| "search memory for X"          | Tier 1: `mcp__plugin_brain_brain__search()`                                                   |
+| "what do we know about X"      | Tier 1: `mcp__plugin_brain_brain__search()`                                                   |
+| "list memories"                | Tier 1: `mcp__plugin_brain_brain__list_directory()`                                           |
+| "read memory X"                | Tier 1: `mcp__plugin_brain_brain__read_note()`                                                |
+| "extract episode from session" | Tier 2: `bun run scripts/extract-episode.ts --session SESSION-X`                              |
+| "what happened in session X"   | Tier 2: `mcp__plugin_brain_brain__read_note({ identifier: "EPISODE-X" })`                     |
+| "find sessions with failures"  | Tier 2: `mcp__plugin_brain_brain__search({ query: "outcome:failure", folder: "episodes" })`   |
+| "add pattern"                  | Tier 3: `bun run scripts/add-pattern.ts --name "..." --trigger "..."`                         |
 | "what patterns led to success" | Tier 3: `mcp__plugin_brain_brain__search({ query: "success_rate:>0.7", folder: "patterns" })` |
 
 ---
 
 ## Quick Reference
 
-| Operation | Tool | Key Parameters |
-|-----------|------|----------------|
-| Search facts/patterns | `mcp__plugin_brain_brain__search` | `query`, `mode`, `limit` |
-| List memories | `mcp__plugin_brain_brain__list_directory` | `dir_name`, `depth` |
-| Read memory | `mcp__plugin_brain_brain__read_note` | `identifier` |
-| Write memory | `mcp__plugin_brain_brain__write_note` | `title`, `content`, `folder` |
-| Edit memory | `mcp__plugin_brain_brain__edit_note` | `identifier`, `operation`, `content` |
-| Extract episode | `bun run scripts/extract-episode.ts` | `--session SESSION-ID`, `--force` |
-| Query episodes | `mcp__plugin_brain_brain__search` | `query`, `folder: "episodes"` |
-| Read episode | `mcp__plugin_brain_brain__read_note` | `identifier: "EPISODE-{id}"` |
-| Add pattern | `bun run scripts/add-pattern.ts` | `--name`, `--trigger`, `--action`, `--success-rate` |
-| Query patterns | `mcp__plugin_brain_brain__search` | `query`, `folder: "patterns"` |
-| Get antipatterns | `mcp__plugin_brain_brain__search` | `query: "success_rate:<0.3"` |
+| Operation             | Tool                                      | Key Parameters                                      |
+| --------------------- | ----------------------------------------- | --------------------------------------------------- |
+| Search facts/patterns | `mcp__plugin_brain_brain__search`         | `query`, `mode`, `limit`, `depth`, `folder`         |
+| List memories         | `mcp__plugin_brain_brain__list_directory` | `dir_name`, `depth`                                 |
+| Read memory           | `mcp__plugin_brain_brain__read_note`      | `identifier`                                        |
+| Write memory          | `mcp__plugin_brain_brain__write_note`     | `title`, `content`, `folder`                        |
+| Edit memory           | `mcp__plugin_brain_brain__edit_note`      | `identifier`, `operation`, `content`                |
+| Extract episode       | `bun run scripts/extract-episode.ts`      | `--session SESSION-ID`, `--force`                   |
+| Query episodes        | `mcp__plugin_brain_brain__search`         | `query`, `folder: "episodes"`                       |
+| Read episode          | `mcp__plugin_brain_brain__read_note`      | `identifier: "EPISODE-{id}"`                        |
+| Add pattern           | `bun run scripts/add-pattern.ts`          | `--name`, `--trigger`, `--action`, `--success-rate` |
+| Query patterns        | `mcp__plugin_brain_brain__search`         | `query`, `folder: "patterns"`                       |
+| Get antipatterns      | `mcp__plugin_brain_brain__search`         | `query: "success_rate:<0.3"`                        |
+
+### Retrieval Depth Strategy
+
+Use `depth` parameter to expand context via relations:
+
+| Depth | Behavior                                 | Use When                          |
+| ----- | ---------------------------------------- | --------------------------------- |
+| 0     | Direct matches only                      | Targeted lookup                   |
+| 1     | Include notes linked via relations       | Standard retrieval (recommended)  |
+| 2     | Include second-level connections (2 hop) | Exploring related decisions       |
+| 3     | Maximum depth (3 hop)                    | Deep investigation, impact analysis |
 
 ---
-
-## Decision Tree
 
 ```text
 What do you need?
@@ -209,18 +219,18 @@ What do you need?
 
 ## Anti-Patterns
 
-| Anti-Pattern | Do This Instead |
-|--------------|-----------------|
-| Skipping memory search | Always search before multi-step reasoning |
-| Using old Serena/Forgetful tools | Use Brain MCP tools (`mcp__plugin_brain_brain__*`) |
-| Expecting Tier 2-3 features | Document needs, these are planned for future |
-| Not documenting memory gaps | When memory lacks info, note it for future enhancement |
-| Skipping pre-flight validation | ALWAYS complete validation checklist before writes |
-| Writing to wrong folder | Check entity type to folder mapping |
-| Missing CAPS prefix in filename | Follow pattern: `{PREFIX}-{NNN}-{topic}.md` |
-| Fewer than 3 observations | Add more facts/decisions with categories |
-| No relations section | Add 2+ wikilinks to related entities |
-| Generic NOTE-* entity type | Choose specific entity type (13 valid types) |
+| Anti-Pattern                     | Do This Instead                                        |
+| -------------------------------- | ------------------------------------------------------ |
+| Skipping memory search           | Always search before multi-step reasoning              |
+| Using old Serena/Forgetful tools | Use Brain MCP tools (`mcp__plugin_brain_brain__*`)     |
+| Expecting Tier 2-3 features      | Document needs, these are planned for future           |
+| Not documenting memory gaps      | When memory lacks info, note it for future enhancement |
+| Skipping pre-flight validation   | ALWAYS complete validation checklist before writes     |
+| Writing to wrong folder          | Check entity type to folder mapping                    |
+| Missing CAPS prefix in filename  | Follow pattern: `{PREFIX}-{NNN}-{topic}.md`            |
+| Fewer than 3 observations        | Add more facts/decisions with categories               |
+| No relations section             | Add 2+ wikilinks to related entities                   |
+| Generic NOTE-\* entity type      | Choose specific entity type (13 valid types)           |
 
 ---
 
@@ -228,22 +238,22 @@ What do you need?
 
 > **Configuration**: Memory paths configured in `~/.config/brain/config.json` (see ADR-020).
 
-| Mode | Example Path | Pattern Explanation |
-|------|--------------|---------------------|
-| DEFAULT | ~/memories/brain/episodes/ | {memories_location}/{project}/episodes/ |
-| CODE | ~/Dev/brain/docs/episodes/ | {code_path}/docs/episodes/ (no /{project}) |
-| CUSTOM | /custom/path/episodes/ | {memories_path}/episodes/ (no /{project}) |
+| Mode    | Example Path               | Pattern Explanation                        |
+| ------- | -------------------------- | ------------------------------------------ |
+| DEFAULT | ~/memories/brain/episodes/ | {memories_location}/{project}/episodes/    |
+| CODE    | ~/Dev/brain/docs/episodes/ | {code_path}/docs/episodes/ (no /{project}) |
+| CUSTOM  | /custom/path/episodes/     | {memories_path}/episodes/ (no /{project})  |
 
 Note: `memories_location` defaults to `~/memories` but is configurable via `brain config set memories-location <path>`.
 
-| Data | Location |
-|------|----------|
-| Brain config | `~/.config/brain/config.json` |
-| Brain memories | `{resolved_path}/` (see modes above) |
-| Episodes | `{resolved_path}/episodes/EPISODE-*.md` |
-| Patterns | `{resolved_path}/patterns/PATTERN-*.md` |
-| Sessions | `{resolved_path}/sessions/SESSION-*.md` |
-| Governance | `{resolved_path}/governance/` |
+| Data           | Location                                |
+| -------------- | --------------------------------------- |
+| Brain config   | `~/.config/brain/config.json`           |
+| Brain memories | `{resolved_path}/` (see modes above)    |
+| Episodes       | `{resolved_path}/episodes/EPISODE-*.md` |
+| Patterns       | `{resolved_path}/patterns/PATTERN-*.md` |
+| Sessions       | `{resolved_path}/sessions/SESSION-*.md` |
+| Governance     | `{resolved_path}/governance/`           |
 
 **Notes**:
 
@@ -255,22 +265,22 @@ Note: `memories_location` defaults to `~/memories` but is configurable via `brai
 
 ## Verification
 
-| Operation | Verification |
-|-----------|--------------|
-| Search completed | Result count > 0 OR logged "no results" |
-| Memory read | Note content returned |
-| Memory written | Confirmation with permalink |
-| Episode extracted | Markdown file created in `episodes/` folder |
-| Pattern added | Markdown file created in `patterns/` folder |
-| Pattern updated | Success rate recalculated, occurrences incremented |
+| Operation         | Verification                                       |
+| ----------------- | -------------------------------------------------- |
+| Search completed  | Result count > 0 OR logged "no results"            |
+| Memory read       | Note content returned                              |
+| Memory written    | Confirmation with permalink                        |
+| Episode extracted | Markdown file created in `episodes/` folder        |
+| Pattern added     | Markdown file created in `patterns/` folder        |
+| Pattern updated   | Success rate recalculated, occurrences incremented |
 
 ---
 
 ## Related Skills
 
-| Skill | When to Use Instead |
-|-------|---------------------|
-| `curating-memories` | Memory maintenance (if available) |
+| Skill                       | When to Use Instead                      |
+| --------------------------- | ---------------------------------------- |
+| `curating-memories`         | Memory maintenance (if available)        |
 | `exploring-knowledge-graph` | Multi-hop graph traversal (if available) |
 
 ---
@@ -295,9 +305,9 @@ The agent system uses one-level delegation. Subagents cannot delegate to other s
 
 ### All Agents Can Write (with Validation)
 
-| Agent | write_note | edit_note | Requirement |
-|-------|------------|-----------|-------------|
-| **All agents** | **Yes** | **Yes** | MUST complete pre-flight validation |
+| Agent          | write_note | edit_note | Requirement                         |
+| -------------- | ---------- | --------- | ----------------------------------- |
+| **All agents** | **Yes**    | **Yes**   | MUST complete pre-flight validation |
 
 **No delegation required.** All agents write directly after completing validation.
 
@@ -322,29 +332,61 @@ Before calling `write_note` or `edit_note`, you MUST complete this checklist:
 
 ### Entity Type to Folder Mapping (Canonical)
 
-| Entity Type | Folder | File Pattern |
-|-------------|--------|--------------|
-| decision | decisions/ | `ADR-{NNN}-{topic}.md` |
-| session | sessions/ | `SESSION-YYYY-MM-DD-NN-{topic}.md` |
-| requirement | specs/{spec}/requirements/ | `REQ-{NNN}-{topic}.md` |
-| design | specs/{spec}/design/ | `DESIGN-{NNN}-{topic}.md` |
-| task | specs/{spec}/tasks/ | `TASK-{NNN}-{topic}.md` |
-| analysis | analysis/ | `ANALYSIS-{NNN}-{topic}.md` |
-| feature | planning/ | `FEATURE-{NNN}-{topic}.md` |
-| epic | roadmap/ | `EPIC-{NNN}-{name}.md` |
-| critique | critique/ | `CRIT-{NNN}-{topic}.md` |
-| test-report | qa/ | `QA-{NNN}-{topic}.md` |
-| security | security/ | `SEC-{NNN}-{component}.md` |
-| retrospective | retrospective/ | `RETRO-YYYY-MM-DD-{topic}.md` |
-| skill | skills/ | `SKILL-{NNN}-{topic}.md` |
+**File names MUST match the File Pattern exactly.** The entity prefix MUST be ALL CAPS — `ADR-`, `SESSION-`, `REQ-`, etc. Never lowercase (`adr-`, `session-`, `req-`). This is non-negotiable; lowercase prefixes are malformed and will break lookups.
+
+| Entity Type   | Folder                     | File Pattern                       |
+| :------------ | :------------------------- | :--------------------------------- |
+| decision      | decisions/                 | `ADR-{NNN}-{topic}.md`             |
+| session       | sessions/                  | `SESSION-YYYY-MM-DD_NN-{topic}.md` |
+| requirement   | specs/{ENTITY-NNN-topic}/requirements/ | `REQ-{NNN}-{topic}.md`             |
+| design        | specs/{ENTITY-NNN-topic}/design/       | `DESIGN-{NNN}-{topic}.md`          |
+| task          | specs/{ENTITY-NNN-topic}/tasks/        | `TASK-{NNN}-{topic}.md`            |
+| analysis      | analysis/                  | `ANALYSIS-{NNN}-{topic}.md`        |
+| feature       | planning/                  | `FEATURE-{NNN}-{topic}.md`         |
+| epic          | roadmap/                   | `EPIC-{NNN}-{name}.md`             |
+| critique      | critique/                  | `CRIT-{NNN}-{topic}.md`            |
+| test-report   | qa/                        | `QA-{NNN}-{topic}.md`              |
+| security      | security/                  | `SEC-{NNN}-{component}.md`         |
+| retrospective | retrospective/             | `RETRO-YYYY-MM-DD_{topic}.md`      |
+| skill         | skills/                    | `SKILL-{NNN}-{topic}.md`           |
 
 **No generic `NOTE-*` type allowed.** Forces proper categorization.
+
+**Specs folder naming**: `{ENTITY-NNN-topic}` is the canonical name of the parent entity the spec belongs to. Use the parent's ALL CAPS prefix and kebab-case topic. Examples:
+
+- `specs/ADR-015-auth-strategy/requirements/REQ-001-token-validation.md`
+- `specs/FEATURE-003-oauth/design/DESIGN-001-auth-flow.md`
+- `specs/EPIC-001-authentication/tasks/TASK-001-implement-jwt.md`
 
 ### Valid Observation Categories
 
 ```text
 [fact], [decision], [requirement], [technique], [insight],
 [problem], [solution], [constraint], [risk], [outcome]
+```
+
+### Source Attribution in Observations
+
+Every observation should include provenance. Three methods:
+
+**Context in observation** — source in parentheses:
+
+```markdown
+- [decision] Using JWT tokens (decided in ADR-005) #auth
+- [fact] Rate limit is 1000/hour (per API Documentation) #api
+```
+
+**Wikilink to source** — link to related entity:
+
+```markdown
+- [decision] Using JWT tokens #auth
+  - requires [[ADR-005 Auth Token Strategy]]
+```
+
+**Tags for agent source** — indicate which agent created observation:
+
+```markdown
+- [insight] Auth failures spike at token expiry #pattern #analyst
 ```
 
 ### Valid Relation Types
@@ -356,13 +398,15 @@ inspired_by, contains, pairs_with, supersedes, leads_to, caused_by
 
 ### Quality Thresholds
 
-| Element | Min | Max | Example |
-|---------|-----|-----|---------|
-| Observations | 3 | 10 | `- [decision] Using JWT #auth` |
-| Relations | 2 | 8 | `- implements [[REQ-001]]` |
-| Tags | 2 | 5 | `tags: [auth, security]` |
+| Element      | Min | Max | Example                        |
+| ------------ | --- | --- | ------------------------------ |
+| Observations | 3   | 10  | `- [decision] Using JWT #auth` |
+| Relations    | 2   | 8   | `- implements [[REQ-001]]`     |
+| Tags         | 2   | 5   | `tags: [auth, security]`       |
 
 ### Example: Compliant Note Structure
+
+The frontmatter title prefix MUST be ALL CAPS (`ADR-019`, not `adr-019`). Wikilink references MUST match the canonical title casing.
 
 ```markdown
 ---
@@ -418,7 +462,178 @@ Need to write/edit a memory note?
 
 ---
 
-## Validation
+## Storage Protocol
+
+### When to Store
+
+Store frequently. Autocompaction, crashes, and session interruptions lose context. Incremental updates prevent information loss.
+
+| Trigger                    | Action                                        |
+| -------------------------- | --------------------------------------------- |
+| Significant insight/decision | Write or update immediately                 |
+| Every back-and-forth exchange | Don't wait for milestones                  |
+| During research/analysis   | Update incrementally, not one batch at end    |
+| Before risky operations    | Store before compaction or long-running tasks |
+| Session end                | Final sync                                    |
+
+**Anti-pattern**: Large research task then single update at end.
+**Correct pattern**: Update note after each finding during research.
+
+### Create vs Update Decision
+
+| Condition                              | Action                                 |
+| -------------------------------------- | -------------------------------------- |
+| Existing note covers this topic        | Update with `edit_note`                |
+| Distinct atomic unit, no coverage      | Create new with `write_note`           |
+| Related folder exists                  | Create in appropriate folder           |
+| No related folder                      | Create in closest related folder       |
+
+**Always search before creating** to prevent duplicates.
+
+### Curation Operations
+
+Treat memories as living documents. Refine, reorganize, clarify continuously.
+
+**Append** — add new observations, relations, or context:
+
+```text
+mcp__plugin_brain_brain__edit_note
+identifier: "[note-title]"
+operation: "append"
+content: "- [decision] Made choice X based on constraint Y #topic"
+```
+
+**Prepend** — add critical updates at top for visibility:
+
+```text
+mcp__plugin_brain_brain__edit_note
+identifier: "[note-title]"
+operation: "prepend"
+content: "- [problem] Critical issue discovered: Z #urgent"
+```
+
+**Find/Replace** — refine existing observations as understanding evolves:
+
+```text
+mcp__plugin_brain_brain__edit_note
+identifier: "[note-title]"
+operation: "find_replace"
+find_text: "- [idea] Might use approach A"
+content: "- [decision] Decided on approach A after testing B #validated"
+```
+
+**Replace Section** — update entire sections when context changes:
+
+```text
+mcp__plugin_brain_brain__edit_note
+identifier: "[note-title]"
+operation: "replace_section"
+section: "Context"
+content: "## Context\n[Updated context with new information]"
+```
+
+---
+
+## Freshness Protocol
+
+### Update Triggers
+
+Update parent memory entities when downstream refinements occur:
+
+| Event                    | Action                                | Example                        |
+| ------------------------ | ------------------------------------- | ------------------------------ |
+| Epic refined             | Update `EPIC-*` entity with new scope | Scope narrowed during planning |
+| PRD completed            | Add observation linking to PRD        | PRD created from epic          |
+| Tasks decomposed         | Update with task count and coverage   | 15 tasks generated             |
+| Implementation started   | Add progress observations             | Sprint 1 started               |
+| Milestone completed      | Update with outcome                   | Auth feature shipped           |
+| Decision changed         | Supersede old observation             | ADR-005 supersedes ADR-003     |
+
+### Staleness Detection
+
+Observations older than 30 days without updates should be reviewed:
+
+1. **Mark for review**: Add `[REVIEW]` tag if uncertain about accuracy
+2. **Supersede if outdated**: Create new observation with `supersedes` relation
+3. **Archive if irrelevant**: Move to archive folder or delete note
+
+### Conflict Resolution
+
+When observations contradict:
+
+1. Prefer most recent observation
+2. Create relation with type `supersedes`
+3. Add `[REVIEW]` tag if uncertain
+
+---
+
+## Session Log Creation
+
+Session logs are stored in Brain memory under `sessions/` folder.
+
+```text
+mcp__plugin_brain_brain__write_note
+title: "SESSION-YYYY-MM-DD_NN-topic"
+folder: "sessions"
+content: "[Session log template content]"
+```
+
+**Session Log Template**:
+
+```markdown
+---
+title: SESSION-YYYY-MM-DD_NN-topic
+type: session
+tags: [session, YYYY-MM-DD]
+---
+
+# Session NN - YYYY-MM-DD
+
+## Session Info
+
+- **Date**: YYYY-MM-DD
+- **Branch**: [branch name]
+- **Starting Commit**: [SHA]
+- **Objective**: [What this session aims to accomplish]
+
+## Protocol Compliance
+
+[Session start checklist here]
+
+## Work Log
+
+### [Task/Topic]
+
+**Status**: In Progress / Complete / Blocked
+
+**What was done**:
+- [Action taken]
+
+**Decisions made**:
+- [Decision]: [Rationale]
+
+## Relations
+
+- part_of [[Current Project]]
+- leads_to [[Next Session Topic]]
+```
+
+---
+
+## Governance Access
+
+Project governance documents are stored in Brain memory under `governance/` folder:
+
+| Document            | Identifier             | Access Pattern                                                        |
+| ------------------- | ---------------------- | --------------------------------------------------------------------- |
+| Project Handoff     | `handoff`              | `mcp__plugin_brain_brain__read_note(identifier="handoff")`            |
+| Project Constraints | `constraints`          | `mcp__plugin_brain_brain__read_note(identifier="constraints")`        |
+| Naming Conventions  | `naming-conventions`   | `mcp__plugin_brain_brain__read_note(identifier="naming-conventions")` |
+
+**At session start**: Read handoff for current state.
+**At session end**: Update handoff with `edit_note` using `replace_section` on "Current State".
+
+---
 
 Entity naming is enforced by validators in both TypeScript and Go:
 
@@ -448,7 +663,7 @@ Session replay via structured episode extraction. Reduces session logs from 10K-
 ```bash
 # Extract episode from completed session (reads from Brain memory)
 bun run apps/claude-plugin/skills/memory/scripts/extract-episode.ts \
-  --session SESSION-2026-01-20-06
+  --session SESSION-2026-01-20_06
 
 # Query episodes by outcome
 mcp__plugin_brain_brain__search({

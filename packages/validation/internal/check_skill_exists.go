@@ -329,7 +329,7 @@ func ListAllSkillScripts(basePath string) (map[string][]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		if scripts != nil && len(scripts) > 0 {
+		if len(scripts) > 0 {
 			result[op] = scripts
 		}
 	}

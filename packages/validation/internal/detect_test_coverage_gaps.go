@@ -416,7 +416,7 @@ func getGitStagedSourceFiles(repoRoot string, langConfig LanguageConfig) []strin
 }
 
 // getAllSourceFiles gets all source files in the path.
-func getAllSourceFiles(basePath, repoRoot string, langConfig LanguageConfig) []string {
+func getAllSourceFiles(basePath, _ string, langConfig LanguageConfig) []string {
 	var files []string
 
 	filepath.Walk(basePath, func(path string, info os.FileInfo, err error) error {
@@ -477,7 +477,7 @@ func filterIgnoredFiles(files []string, patterns []string) []string {
 }
 
 // findExpectedTestPath calculates the expected test file path.
-func findExpectedTestPath(sourcePath string, langConfig LanguageConfig, repoRoot string) string {
+func findExpectedTestPath(sourcePath string, langConfig LanguageConfig, _ string) string {
 	dir := filepath.Dir(sourcePath)
 	base := filepath.Base(sourcePath)
 	ext := filepath.Ext(base)
@@ -580,7 +580,7 @@ func formatCoveragePercent(value float64) string {
 }
 
 // buildCoverageRemediation builds remediation message for missing tests.
-func buildCoverageRemediation(missing []MissingTestFile, language string) string {
+func buildCoverageRemediation(missing []MissingTestFile, _ string) string {
 	if len(missing) == 0 {
 		return ""
 	}
@@ -589,10 +589,7 @@ func buildCoverageRemediation(missing []MissingTestFile, language string) string
 	sb.WriteString("Add test files for the following source files:\n")
 
 	// Show up to 10 examples
-	maxShow := 10
-	if len(missing) < maxShow {
-		maxShow = len(missing)
-	}
+	maxShow := min(10, len(missing))
 
 	for i := 0; i < maxShow; i++ {
 		sb.WriteString("  - ")

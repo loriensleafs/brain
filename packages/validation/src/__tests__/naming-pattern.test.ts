@@ -31,17 +31,6 @@ function expectValid(
   expect(result.valid).toBe(true);
 }
 
-/**
- * Type guard to assert validation result is invalid.
- * Narrows type to allow safe access to error.
- * Note: Prefixed with _ because tests use inline type narrowing instead.
- */
-function _expectInvalid(
-  result: NamingPatternResult,
-): asserts result is Extract<NamingPatternResult, { valid: false }> {
-  expect(result.valid).toBe(false);
-}
-
 describe("NamingPatterns", () => {
   test("contains all 13 pattern types", () => {
     const types = Object.keys(NamingPatterns);
@@ -98,9 +87,9 @@ describe("validateNamingPattern", () => {
   describe("session pattern", () => {
     test("accepts valid session file names", () => {
       const validNames = [
-        "SESSION-2026-01-15-01-audit.md",
-        "SESSION-2024-12-31-99-year-end.md",
-        "SESSION-2026-02-01-05-morning-standup.md",
+        "SESSION-2026-01-15_01-audit.md",
+        "SESSION-2024-12-31_99-year-end.md",
+        "SESSION-2026-02-01_05-morning-standup.md",
       ];
 
       for (const fileName of validNames) {
@@ -241,7 +230,7 @@ describe("validateNamingPattern", () => {
 
   describe("retrospective pattern", () => {
     test("accepts valid retrospective file names", () => {
-      const validNames = ["RETRO-2026-01-15-sprint-review.md", "RETRO-2024-12-31-year-end.md"];
+      const validNames = ["RETRO-2026-01-15_sprint-review.md", "RETRO-2024-12-31_year-end.md"];
 
       for (const fileName of validNames) {
         const result = validateNamingPattern({ fileName });
@@ -410,7 +399,7 @@ describe("getMatchingPatterns", () => {
 describe("isValidNamingPattern", () => {
   test("returns true for valid patterns", () => {
     expect(isValidNamingPattern("ADR-001-test.md")).toBe(true);
-    expect(isValidNamingPattern("SESSION-2026-01-15-01-audit.md")).toBe(true);
+    expect(isValidNamingPattern("SESSION-2026-01-15_01-audit.md")).toBe(true);
     expect(isValidNamingPattern("SKILL-001-test.md")).toBe(true);
   });
 
@@ -453,7 +442,7 @@ describe("DeprecatedPatterns", () => {
 
   test("old patterns do not match new formats", () => {
     expect(DeprecatedPatterns.oldSkill.test("SKILL-001-test.md")).toBe(false);
-    expect(DeprecatedPatterns.oldSession.test("SESSION-2026-01-15-01-audit.md")).toBe(false);
+    expect(DeprecatedPatterns.oldSession.test("SESSION-2026-01-15_01-audit.md")).toBe(false);
     expect(DeprecatedPatterns.oldThreatModel.test("SEC-001-auth.md")).toBe(false);
   });
 });
@@ -488,7 +477,7 @@ describe("edge cases", () => {
 
   test("handles session with two-digit sequence", () => {
     const result = validateNamingPattern({
-      fileName: "SESSION-2026-12-31-99-test.md",
+      fileName: "SESSION-2026-12-31_99-test.md",
     });
     expect(result.valid).toBe(true);
   });

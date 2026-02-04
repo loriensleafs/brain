@@ -169,7 +169,7 @@ The agent MUST create a session log early in the session.
 
 **Requirements:**
 
-1. The agent MUST create a session log in Brain memory: `mcp__plugin_brain_brain__write_note(title="SESSION-YYYY-MM-DD-NN-topic", folder="sessions", content="...")`
+1. The agent MUST create a session log in Brain memory: `mcp__plugin_brain_brain__write_note(title="SESSION-YYYY-MM-DD_NN-topic", folder="sessions", content="...")`
 2. The session log SHOULD be created within the first 5 tool calls of the session
 3. The session log MUST include the Protocol Compliance section (see template below)
 4. The agent MUST NOT defer session log creation to the end of the session
@@ -311,7 +311,7 @@ The agent MUST update documentation before ending.
 **Requirements:**
 
 1. The agent MUST persist session context to Brain memory:
-   - Update session log: `mcp__plugin_brain_brain__edit_note(identifier="SESSION-YYYY-MM-DD-NN-topic", operation="append", content="...")`
+   - Update session log: `mcp__plugin_brain_brain__edit_note(identifier="SESSION-YYYY-MM-DD_NN-topic", operation="append", content="...")`
    - Update project handoff: `mcp__plugin_brain_brain__edit_note(identifier="handoff", operation="replace_section", section="Current State", content="...")`
 2. The agent MUST complete the session log with:
    - Tasks attempted and outcomes
@@ -489,11 +489,11 @@ Copy this checklist to each session log and verify completion:
 
 ## Session Log Template
 
-Create in Brain memory: `mcp__plugin_brain_brain__write_note(title="SESSION-YYYY-MM-DD-NN-topic", folder="sessions", content="...")`
+Create in Brain memory: `mcp__plugin_brain_brain__write_note(title="SESSION-YYYY-MM-DD_NN-topic", folder="sessions", content="...")`
 
 ```markdown
 ---
-title: SESSION-YYYY-MM-DD-NN-topic
+title: SESSION-YYYY-MM-DD_NN-topic
 type: session
 tags: [session, YYYY-MM-DD]
 ---

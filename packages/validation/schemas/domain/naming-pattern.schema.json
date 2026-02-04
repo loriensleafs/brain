@@ -42,8 +42,8 @@
           "description": "ADR-NNN-kebab-case-title.md"
         },
         "session": {
-          "const": "^SESSION-\\d{4}-\\d{2}-\\d{2}-\\d{2}-[\\w-]+\\.md$",
-          "description": "SESSION-YYYY-MM-DD-NN-description.md"
+          "const": "^SESSION-\\d{4}-\\d{2}-\\d{2}_\\d{2}-[\\w-]+\\.md$",
+          "description": "SESSION-YYYY-MM-DD_NN-description.md"
         },
         "requirement": {
           "const": "^REQ-\\d{3}-[\\w-]+\\.md$",
@@ -82,8 +82,8 @@
           "description": "SEC-NNN-component.md"
         },
         "retrospective": {
-          "const": "^RETRO-\\d{4}-\\d{2}-\\d{2}-[\\w-]+\\.md$",
-          "description": "RETRO-YYYY-MM-DD-topic.md"
+          "const": "^RETRO-\\d{4}-\\d{2}-\\d{2}_[\\w-]+\\.md$",
+          "description": "RETRO-YYYY-MM-DD_topic.md"
         },
         "skill": {
           "const": "^SKILL-\\d{3}-[\\w-]+\\.md$",

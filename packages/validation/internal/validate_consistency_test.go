@@ -3,6 +3,7 @@ package internal_test
 import (
 	"os"
 	"path/filepath"
+	"slices"
 	"testing"
 
 	"github.com/peterkloss/brain/packages/validation/internal"
@@ -188,8 +189,8 @@ func TestValidateNamingConvention_Retrospective(t *testing.T) {
 		filename string
 		expected bool
 	}{
-		{"valid retrospective", "RETRO-2024-01-01-sprint-review.md", true},
-		{"valid retrospective end of year", "RETRO-2024-12-31-year-end.md", true},
+		{"valid retrospective", "RETRO-2024-01-01_sprint-review.md", true},
+		{"valid retrospective end of year", "RETRO-2024-12-31_year-end.md", true},
 		{"invalid retrospective lowercase", "retro-2024-01-01-review.md", false},
 		{"invalid retrospective no prefix", "2024-01-01-review.md", false},
 	}
@@ -232,8 +233,8 @@ func TestValidateNamingConvention_Session(t *testing.T) {
 		filename string
 		expected bool
 	}{
-		{"valid session", "SESSION-2024-01-01-01-initial-setup.md", true},
-		{"valid session higher", "SESSION-2024-12-31-99-year-end.md", true},
+		{"valid session", "SESSION-2024-01-01_01-initial-setup.md", true},
+		{"valid session higher", "SESSION-2024-12-31_99-year-end.md", true},
 		{"invalid session old format", "2024-01-01-session-01.md", false},
 		{"invalid session no prefix", "session-2024-01-01.md", false},
 	}
@@ -473,14 +474,7 @@ References: EPIC-001
 		t.Error("Expected validation to fail when PRD has fewer requirements")
 	}
 
-	foundIssue := false
-	for _, issue := range result.Issues {
-		if issue == "PRD has fewer requirements (1) than Epic success criteria (3)" {
-			foundIssue = true
-			break
-		}
-	}
-	if !foundIssue {
+	if !slices.Contains(result.Issues, "PRD has fewer requirements (1) than Epic success criteria (3)") {
 		t.Errorf("Expected specific issue about fewer requirements, got: %v", result.Issues)
 	}
 }
@@ -940,8 +934,8 @@ func TestValidateArtifactNaming(t *testing.T) {
 		{"CRIT-001-plan-review.md", true, "critique"},
 		{"QA-001-test-report.md", true, "test-report"},
 		{"SEC-001-auth-flow.md", true, "security"},
-		{"SESSION-2024-01-01-01-initial-setup.md", true, "session"},
-		{"RETRO-2024-01-01-sprint-review.md", true, "retrospective"},
+		{"SESSION-2024-01-01_01-initial-setup.md", true, "session"},
+		{"RETRO-2024-01-01_sprint-review.md", true, "retrospective"},
 		{"SKILL-001-git-workflow.md", true, "skill"},
 		{"random-file.md", false, ""},
 	}

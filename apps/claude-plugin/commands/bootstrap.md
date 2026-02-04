@@ -1492,7 +1492,7 @@ You CANNOT claim "session complete", "done", "finished", or any completion langu
 
 | Requirement                    | Evidence                                    | Validator                       |
 | ------------------------------ | ------------------------------------------- | ------------------------------- |
-| Session log exists             | `sessions/SESSION-YYYY-MM-DD-NN-{topic}.md` | File exists                     |
+| Session log exists             | `sessions/SESSION-YYYY-MM-DD_NN-{topic}.md` | File exists                     |
 | Session End checklist complete | All MUST items checked with `[x]`           | `brain validate session`        |
 | Brain note updated             | Cross-session context persisted             | `brain validate session`        |
 | Git worktree clean             | No uncommitted changes                      | `git status --porcelain`        |
@@ -1503,7 +1503,7 @@ You CANNOT claim "session complete", "done", "finished", or any completion langu
 Before claiming completion, run:
 
 ```bash
-brain validate session sessions/SESSION-YYYY-MM-DD-NN-{topic}.md
+brain validate session sessions/SESSION-YYYY-MM-DD_NN-{topic}.md
 ```
 
 ### Gate Outcomes

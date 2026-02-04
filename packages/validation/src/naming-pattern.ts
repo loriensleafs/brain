@@ -44,7 +44,7 @@ export type PatternType =
  */
 export const NamingPatterns: Record<PatternType, RegExp> = {
   decision: /^ADR-\d{3}-[\w-]+\.md$/,
-  session: /^SESSION-\d{4}-\d{2}-\d{2}-\d{2}-[\w-]+\.md$/,
+  session: /^SESSION-\d{4}-\d{2}-\d{2}_\d{2}-[\w-]+\.md$/,
   requirement: /^REQ-\d{3}-[\w-]+\.md$/,
   design: /^DESIGN-\d{3}-[\w-]+\.md$/,
   task: /^TASK-\d{3}-[\w-]+\.md$/,
@@ -54,7 +54,7 @@ export const NamingPatterns: Record<PatternType, RegExp> = {
   critique: /^CRIT-\d{3}-[\w-]+\.md$/,
   "test-report": /^QA-\d{3}-[\w-]+\.md$/,
   security: /^SEC-\d{3}-[\w-]+\.md$/,
-  retrospective: /^RETRO-\d{4}-\d{2}-\d{2}-[\w-]+\.md$/,
+  retrospective: /^RETRO-\d{4}-\d{2}-\d{2}_[\w-]+\.md$/,
   skill: /^SKILL-\d{3}-[\w-]+\.md$/,
 };
 
