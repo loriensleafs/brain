@@ -82,9 +82,11 @@ install-plugin: install-typescript install-go
 	@echo ""
 	@echo "Installing Claude plugin via symlinks..."
 	mkdir -p $(PLUGIN_PATH)
-	@# Remove any existing symlinks before mkdir (prevents following symlink into source)
-	@rm -f $(PLUGIN_PATH)/agents 2>/dev/null || true
-	@rm -f $(PLUGIN_PATH)/commands 2>/dev/null || true
+	@# Remove any existing symlinks/dirs before creating new ones (prevents ln -sfn quirks)
+	@rm -rf $(PLUGIN_PATH)/agents 2>/dev/null || true
+	@rm -rf $(PLUGIN_PATH)/commands 2>/dev/null || true
+	@rm -rf $(PLUGIN_PATH)/skills 2>/dev/null || true
+	@rm -rf $(PLUGIN_PATH)/hooks 2>/dev/null || true
 	mkdir -p $(PLUGIN_PATH)/agents
 	mkdir -p $(PLUGIN_PATH)/commands
 	ln -sfn $(PLUGIN_SRC)/.claude-plugin $(PLUGIN_PATH)/.claude-plugin
@@ -102,6 +104,8 @@ install-plugin: install-typescript install-go
 	@echo "Plugin installed to $(PLUGIN_PATH)"
 	@echo ""
 	@echo "Installing instruction symlinks..."
+	@# Remove and recreate ~/.agents to avoid symlink-following issues
+	@rm -rf $(AGENTS_DIR) 2>/dev/null || true
 	mkdir -p $(AGENTS_DIR)
 	ln -sfn $(INSTRUCTIONS_SRC)/AGENTS.md $(HOME)/AGENTS.md
 	ln -sfn $(INSTRUCTIONS_SRC)/AGENTS.md $(HOME)/CLAUDE.md
