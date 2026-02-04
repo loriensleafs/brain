@@ -167,7 +167,7 @@ See [SESSION-PROTOCOL.md](SESSION-PROTOCOL.md) for full requirements and validat
 - Verify agent is listed in AGENT-SYSTEM.md
 - Confirm delegate relationships are bidirectional
 
-2. **Create Impact Analysis Section**
+1. **Create Impact Analysis Section**
 
 ```markdown
 ## Impact Analysis - [Agent/Feature Name]
@@ -266,13 +266,16 @@ Refs: S-006
 ```markdown
 <!-- ❌ WRONG - triggers MD040 -->
 ```
+
 some code
+
 ```
 
 <!-- ✅ CORRECT -->
 ```text
 some code
 ```
+
 ```
 
 **Common language identifiers:**
@@ -367,7 +370,8 @@ If you need context, read these files in order:
 1. `AGENT-INSTRUCTIONS.md` - Process instructions (this file)
 2. `AGENT-SYSTEM.md` - Agent catalog and workflows
 3. `planning/enhancement-PROJECT-PLAN.md` - Master project plan
-5. `sessions/SESSION-YYYY-MM-DD_NN-{topic}.md` - Last session details
+4. `sessions/SESSION-YYYY-MM-DD_NN-{topic}.md` - Last session details
+
 ```
 
 ---
@@ -424,6 +428,7 @@ For quality-critical outputs:
 | 3 | [any] | Regenerate if score < 70% | Improved artifact |
 
 **Loop termination:**
+
 - Score >= 70%: Accept
 - Score < 70% AND iterations < 3: Regenerate
 - Iterations >= 3: Escalate to user
@@ -453,6 +458,7 @@ analyst → independent-thinker → high-level-advisor → architect
 ```
 
 The critic will:
+
 - Identify gaps in the plan
 - Challenge assumptions
 - Suggest improvements
@@ -580,6 +586,7 @@ After discovering a reusable pattern:
 ### YAML Front Matter Schema
 
 **Requirements:**
+
 ```yaml
 ---
 type: requirement
@@ -594,6 +601,7 @@ updated: YYYY-MM-DD
 ```
 
 **Designs:**
+
 ```yaml
 ---
 type: design
@@ -607,6 +615,7 @@ updated: YYYY-MM-DD
 ```
 
 **Tasks:**
+
 ```yaml
 ---
 type: task

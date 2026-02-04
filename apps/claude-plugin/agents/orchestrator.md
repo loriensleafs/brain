@@ -7,10 +7,13 @@ argument-hint: Describe the task or problem to solve end-to-end
 tools:
   - Task
   - TodoWrite
+  - mcp__plugin_brain_brain__bootstrap_context
   - mcp__plugin_brain_brain__search
   - mcp__plugin_brain_brain__read_note
-  - mcp__plugin_brain_brain__bootstrap_context
+  - mcp__plugin_brain_brain__write_note
+  - mcp__plugin_brain_brain__edit_note
 skills:
+  - memory
   - task-classification
   - domain-identification
   - agent-routing
@@ -340,17 +343,17 @@ Parallel execution is not limited to different agent types. You can (and should)
 
 #### When to Swarm Same-Type
 
-| Signal | Swarm Type | Example |
-| --- | --- | --- |
-| Research spans multiple independent topics | analyst×N | 6 analysts: API options, DB options, auth patterns, caching strategies, CI approaches, competitor analysis |
-| Implementation touches independent files/modules | implementer×N | 8 implementers: auth module, user service, API routes, DB migration, config updates, cache layer, middleware, event handlers |
-| Multiple documents need writing | explainer×N | 5 explainers: API docs, user guide, migration guide, admin guide, architecture overview |
-| Testing spans independent components | qa×N | 5 qa: unit tests, integration tests, e2e tests, performance tests, security tests |
-| Review covers independent plans/artifacts | critic×N | 4 critics: PRD review, architecture review, task breakdown review, security plan review |
-| Security assessment covers independent surfaces | security×N | 4 security: API endpoints, auth flow, data storage, third-party integrations |
-| Multiple independent pipelines need changes | devops×N | 3 devops: CI pipeline, CD pipeline, monitoring config |
-| Multiple subsystems need design review | architect×N | 5 architects: data layer, API contracts, event system, auth architecture, caching strategy |
-| Multiple epics need task breakdown | task-generator×N | 4 task-generators: auth epic, notification epic, billing epic, admin epic |
+| Signal                                           | Swarm Type       | Example                                                                                                                      |
+| ------------------------------------------------ | ---------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Research spans multiple independent topics       | analyst×N        | 6 analysts: API options, DB options, auth patterns, caching strategies, CI approaches, competitor analysis                   |
+| Implementation touches independent files/modules | implementer×N    | 8 implementers: auth module, user service, API routes, DB migration, config updates, cache layer, middleware, event handlers |
+| Multiple documents need writing                  | explainer×N      | 5 explainers: API docs, user guide, migration guide, admin guide, architecture overview                                      |
+| Testing spans independent components             | qa×N             | 5 qa: unit tests, integration tests, e2e tests, performance tests, security tests                                            |
+| Review covers independent plans/artifacts        | critic×N         | 4 critics: PRD review, architecture review, task breakdown review, security plan review                                      |
+| Security assessment covers independent surfaces  | security×N       | 4 security: API endpoints, auth flow, data storage, third-party integrations                                                 |
+| Multiple independent pipelines need changes      | devops×N         | 3 devops: CI pipeline, CD pipeline, monitoring config                                                                        |
+| Multiple subsystems need design review           | architect×N      | 5 architects: data layer, API contracts, event system, auth architecture, caching strategy                                   |
+| Multiple epics need task breakdown               | task-generator×N | 4 task-generators: auth epic, notification epic, billing epic, admin epic                                                    |
 
 #### How to Swarm Same-Type
 
@@ -439,13 +442,13 @@ Task(
 
 #### Anti-Patterns
 
-| Anti-Pattern | Why It Fails | Correct Pattern |
-| --- | --- | --- |
-| Swarm implementers on files that import each other | Interface changes in one break the other | Sequential, or architect defines interfaces first |
-| Swarm analysts on the same question from "different angles" | Redundant work, conflicting answers | One analyst, or use different agent types (analyst + independent-thinker) |
-| Swarm without explicit scope boundaries | Agents step on each other's work | Always define ONLY/Do NOT boundaries |
-| Swarm 3 agents when work could be split into 8 | Under-decomposition wastes parallelism | Aggressively split along file/module/topic boundaries |
-| Force 10 agents on 3 genuinely coupled items | Manufactured splits create conflicts | Match swarm size to actual independent items |
+| Anti-Pattern                                                | Why It Fails                             | Correct Pattern                                                           |
+| ----------------------------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------- |
+| Swarm implementers on files that import each other          | Interface changes in one break the other | Sequential, or architect defines interfaces first                         |
+| Swarm analysts on the same question from "different angles" | Redundant work, conflicting answers      | One analyst, or use different agent types (analyst + independent-thinker) |
+| Swarm without explicit scope boundaries                     | Agents step on each other's work         | Always define ONLY/Do NOT boundaries                                      |
+| Swarm 3 agents when work could be split into 8              | Under-decomposition wastes parallelism   | Aggressively split along file/module/topic boundaries                     |
+| Force 10 agents on 3 genuinely coupled items                | Manufactured splits create conflicts     | Match swarm size to actual independent items                              |
 
 **Available Agents:**
 
@@ -760,6 +763,7 @@ Before any Task call, write this plan using TodoWrite:
 **Total agents needed**: [N]
 
 ### Wave 1 (same-type swarm: research)
+
 - [ ] analyst #1: [topic A] — SCOPE: [boundary] — REASON: independent research
 - [ ] analyst #2: [topic B] — SCOPE: [boundary] — REASON: independent research
 - [ ] analyst #3: [topic C] — SCOPE: [boundary] — REASON: independent research
@@ -767,11 +771,13 @@ Before any Task call, write this plan using TodoWrite:
 - [ ] analyst #5: [topic E] — SCOPE: [boundary] — REASON: independent research
 
 ### Wave 2 (mixed-type parallel, after wave 1)
+
 - [ ] architect: [specific task] — NEEDS: analyst findings for design decisions
 - [ ] security: [specific task] — NEEDS: analyst findings for threat model
 - [ ] devops: [specific task] — NEEDS: analyst findings for infra assessment
 
 ### Wave 3 (same-type swarm: implementation, after wave 2)
+
 - [ ] implementer #1: [module A] — SCOPE: src/auth/ only — NEEDS: architect design
 - [ ] implementer #2: [module B] — SCOPE: src/api/ only — NEEDS: architect design
 - [ ] implementer #3: [module C] — SCOPE: src/db/ only — NEEDS: architect design
@@ -779,13 +785,16 @@ Before any Task call, write this plan using TodoWrite:
 - [ ] implementer #5: [module E] — SCOPE: src/events/ only — NEEDS: architect design
 
 ### Wave 4 (validation, after wave 3)
+
 - [ ] qa: [specific task] — NEEDS: implementer outputs
 
 ### Serialization Justification
+
 [For each sequential dependency, state WHY it cannot be parallel.
 "X is impossible without Y's output because Z."]
 
 ### Same-Type Swarm Justification
+
 [For each same-type swarm, confirm: scopes are non-overlapping,
 agents will not modify the same files, each has self-contained context.]
 ```
@@ -1010,9 +1019,9 @@ Every task is classified across three dimensions:
 
 These three workflow paths are the canonical reference for all task routing. Other agents (e.g., pr-comment-responder) reference these paths by name.
 
-| Path              | Agents                                                         | Triage Signal                                                |
-| ----------------- | -------------------------------------------------------------- | ------------------------------------------------------------ |
-| **Quick Fix**     | `implementer → qa`                                             | Can explain fix in one sentence; single file; obvious change |
+| Path              | Agents                                                        | Triage Signal                                                |
+| ----------------- | ------------------------------------------------------------- | ------------------------------------------------------------ |
+| **Quick Fix**     | `implementer → qa`                                            | Can explain fix in one sentence; single file; obvious change |
 | **Standard**      | `analyst → planner → implementer → qa`                        | Need to investigate first; 2-5 files; some complexity        |
 | **Strategic**     | `[independent-thinker ǁ high-level-advisor] → task-generator` | Question is _whether_, not _how_; scope/priority question    |
 | **Specification** | `spec-generator → [critic ǁ architect] → task-generator`      | Formal EARS requirements needed; traceability required       |
@@ -1021,25 +1030,25 @@ These three workflow paths are the canonical reference for all task routing. Oth
 
 **Notation**: `→` = sequential (output required), `||` = parallel (independent work), `[...]` = orchestrator step
 
-| Task Type                                   | Agent Sequence                                                                                                                  | Path                 |
-| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | -------------------- |
-| Feature (multi-domain)                      | analyst → architect → planner → critic → implementer → qa                                                                      | Standard (extended)  |
-| Feature (multi-domain with impact analysis) | analyst → planner → [implementer || architect || security || devops || qa for impact] → critic → implementer → qa              | Standard (extended)  |
-| Feature (multi-step)                        | analyst → planner → implementer → qa                                                                                            | Standard             |
-| Bug Fix (multi-step)                        | analyst → implementer → qa                                                                                                      | Standard (lite)      |
-| Bug Fix (simple)                            | implementer → qa                                                                                                                | Quick Fix            |
-| Security                                    | analyst → security → architect → critic → implementer → qa                                                                     | Standard (extended)  |
-| Infrastructure                              | analyst → devops → security → critic → qa                                                                                      | Standard (extended)  |
-| Research                                    | analyst (standalone)                                                                                                            | N/A                  |
-| Documentation                               | explainer → critic                                                                                                              | Standard (lite)      |
-| Strategic                                   | roadmap → architect → planner → critic                                                                                         | Strategic            |
-| Refactoring                                 | analyst → architect → implementer → qa                                                                                         | Standard             |
-| Ideation                                    | analyst → [high-level-advisor || independent-thinker || critic] → roadmap → explainer → task-generator → [architect || devops || security || qa] | Strategic (extended) |
-| Specification                               | spec-generator → [critic || architect] → task-generator → implementer → qa                                                     | Specification        |
-| PR Comment (quick fix)                      | implementer → qa                                                                                                                | Quick Fix            |
-| PR Comment (standard)                       | analyst → planner → implementer → qa                                                                                            | Standard             |
-| PR Comment (strategic)                      | [independent-thinker || high-level-advisor] → task-generator                                                                   | Strategic            |
-| Post-Retrospective                          | retrospective → [skillbook if skills || memory if updates] → git add                                                           | Automatic            |
+| Task Type                                   | Agent Sequence                                             | Path                |
+| ------------------------------------------- | ---------------------------------------------------------- | ------------------- | ---------------------------------------------- | ------------- | ----------------------------------------------------------- | --- | ------ | --- | ------------------------------------------ | ------------------- | --- | -------------------- |
+| Feature (multi-domain)                      | analyst → architect → planner → critic → implementer → qa  | Standard (extended) |
+| Feature (multi-domain with impact analysis) | analyst → planner → [implementer                           |                     | architect                                      |               | security                                                    |     | devops |     | qa for impact] → critic → implementer → qa | Standard (extended) |
+| Feature (multi-step)                        | analyst → planner → implementer → qa                       | Standard            |
+| Bug Fix (multi-step)                        | analyst → implementer → qa                                 | Standard (lite)     |
+| Bug Fix (simple)                            | implementer → qa                                           | Quick Fix           |
+| Security                                    | analyst → security → architect → critic → implementer → qa | Standard (extended) |
+| Infrastructure                              | analyst → devops → security → critic → qa                  | Standard (extended) |
+| Research                                    | analyst (standalone)                                       | N/A                 |
+| Documentation                               | explainer → critic                                         | Standard (lite)     |
+| Strategic                                   | roadmap → architect → planner → critic                     | Strategic           |
+| Refactoring                                 | analyst → architect → implementer → qa                     | Standard            |
+| Ideation                                    | analyst → [high-level-advisor                              |                     | independent-thinker                            |               | critic] → roadmap → explainer → task-generator → [architect |     | devops |     | security                                   |                     | qa] | Strategic (extended) |
+| Specification                               | spec-generator → [critic                                   |                     | architect] → task-generator → implementer → qa | Specification |
+| PR Comment (quick fix)                      | implementer → qa                                           | Quick Fix           |
+| PR Comment (standard)                       | analyst → planner → implementer → qa                       | Standard            |
+| PR Comment (strategic)                      | [independent-thinker                                       |                     | high-level-advisor] → task-generator           | Strategic     |
+| Post-Retrospective                          | retrospective → [skillbook if skills                       |                     | memory if updates] → git add                   | Automatic     |
 
 **Note**: These sequences show agent TYPES, not agent COUNT. Any single step can expand into a same-type swarm. `analyst` could become `analyst×3` or `analyst×8` depending on how many independent research topics exist. `implementer` could become `implementer×2` or `implementer×10` depending on how many independent modules are touched. Aggressively decompose work to find the finest independent splits, then swarm accordingly.
 
@@ -1139,8 +1148,8 @@ REQ-NNN (WHAT/WHY) → DESIGN-NNN (HOW) → TASK-NNN (IMPLEMENTATION)
 
 **Output Locations** (Brain memory):
 
-| Artifact     | Directory                            | Naming Pattern          |
-| ------------ | ------------------------------------ | ----------------------- |
+| Artifact     | Directory                                | Naming Pattern          |
+| ------------ | ---------------------------------------- | ----------------------- |
 | Requirements | `specs/{ENTITY-NNN-topic}/requirements/` | `REQ-NNN-kebab-case`    |
 | Designs      | `specs/{ENTITY-NNN-topic}/design/`       | `DESIGN-NNN-kebab-case` |
 | Tasks        | `specs/{ENTITY-NNN-topic}/tasks/`        | `TASK-NNN-kebab-case`   |

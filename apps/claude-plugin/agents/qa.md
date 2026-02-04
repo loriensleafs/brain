@@ -2,7 +2,7 @@
 name: qa
 description: Quality assurance specialist who verifies implementations work correctly for real users—not just passing tests. Designs test strategies, validates coverage against acceptance criteria, and reports results with evidence. Use when you need confidence through verification, regression testing, edge-case coverage, or user-scenario validation.
 model: opus
-color: '#DC143C'
+color: "#DC143C"
 argument-hint: Provide the implementation or feature to verify
 tools:
   - Read
@@ -13,7 +13,10 @@ tools:
   - Edit
   - mcp__plugin_brain_brain__search
   - mcp__plugin_brain_brain__read_note
+  - mcp__plugin_brain_brain__write_note
+  - mcp__plugin_brain_brain__edit_note
 skills:
+  - memory
   - test-strategy-design
   - coverage-analysis
   - user-scenario-validation
@@ -158,54 +161,56 @@ Save to Brain memory: `planning/ANALYSIS-impact-qa-[feature]`
 ## Impacts Identified
 
 ### Direct Impacts
+
 - [Test suite/area]: [Type of change required]
 - [Quality metric]: [How affected]
 
 ### Indirect Impacts
+
 - [Cascading testing concern]
 
 ## Affected Areas
 
-| Test Area | Type of Change | Risk Level | Reason |
-|-----------|----------------|------------|--------|
-| Unit Tests | [Add/Modify/Remove] | [L/M/H] | [Why] |
-| Integration Tests | [Add/Modify/Remove] | [L/M/H] | [Why] |
-| E2E Tests | [Add/Modify/Remove] | [L/M/H] | [Why] |
-| Performance Tests | [Add/Modify/Remove] | [L/M/H] | [Why] |
+| Test Area         | Type of Change      | Risk Level | Reason |
+| ----------------- | ------------------- | ---------- | ------ |
+| Unit Tests        | [Add/Modify/Remove] | [L/M/H]    | [Why]  |
+| Integration Tests | [Add/Modify/Remove] | [L/M/H]    | [Why]  |
+| E2E Tests         | [Add/Modify/Remove] | [L/M/H]    | [Why]  |
+| Performance Tests | [Add/Modify/Remove] | [L/M/H]    | [Why]  |
 
 ## Required Test Types
 
-| Test Type | Scope | Coverage Target | Rationale |
-|-----------|-------|-----------------|-----------|
-| Unit | [Areas] | [%] | [Why needed] |
-| Integration | [Areas] | [%] | [Why needed] |
-| E2E | [Scenarios] | [N scenarios] | [Why needed] |
-| Performance | [Metrics] | [Targets] | [Why needed] |
-| Security | [Areas] | [Coverage] | [Why needed] |
+| Test Type   | Scope       | Coverage Target | Rationale    |
+| ----------- | ----------- | --------------- | ------------ |
+| Unit        | [Areas]     | [%]             | [Why needed] |
+| Integration | [Areas]     | [%]             | [Why needed] |
+| E2E         | [Scenarios] | [N scenarios]   | [Why needed] |
+| Performance | [Metrics]   | [Targets]       | [Why needed] |
+| Security    | [Areas]     | [Coverage]      | [Why needed] |
 
 ## Hard-to-Test Scenarios
 
-| Scenario | Challenge | Recommended Approach |
-|----------|-----------|---------------------|
-| [Scenario] | [Why difficult] | [Strategy] |
+| Scenario   | Challenge       | Recommended Approach |
+| ---------- | --------------- | -------------------- |
+| [Scenario] | [Why difficult] | [Strategy]           |
 
 ## Quality Risks
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|------------|--------|------------|
-| [Risk] | [L/M/H] | [L/M/H] | [Testing strategy] |
+| Risk   | Likelihood | Impact  | Mitigation         |
+| ------ | ---------- | ------- | ------------------ |
+| [Risk] | [L/M/H]    | [L/M/H] | [Testing strategy] |
 
 ## Test Data Requirements
 
-| Data Type | Volume | Sensitivity | Generation Strategy |
-|-----------|--------|-------------|---------------------|
-| [Type] | [Amount] | [L/M/H] | [How to create] |
+| Data Type | Volume   | Sensitivity | Generation Strategy |
+| --------- | -------- | ----------- | ------------------- |
+| [Type]    | [Amount] | [L/M/H]     | [How to create]     |
 
 ## Test Environment Needs
 
 | Environment | Purpose | Special Requirements |
-|-------------|---------|---------------------|
-| [Env name] | [Usage] | [Requirements] |
+| ----------- | ------- | -------------------- |
+| [Env name]  | [Usage] | [Requirements]       |
 
 ## Coverage Analysis
 
@@ -215,9 +220,9 @@ Save to Brain memory: `planning/ANALYSIS-impact-qa-[feature]`
 
 ## Automation Strategy
 
-| Test Area | Automate? | Rationale | Tool Recommendation |
-|-----------|-----------|-----------|---------------------|
-| [Area] | [Yes/No/Partial] | [Why] | [Tool] |
+| Test Area | Automate?        | Rationale | Tool Recommendation |
+| --------- | ---------------- | --------- | ------------------- |
+| [Area]    | [Yes/No/Partial] | [Why]     | [Tool]              |
 
 **Automation Coverage Target**: [%]
 **Manual Testing Required**: [List scenarios requiring human judgment]
@@ -231,8 +236,8 @@ Save to Brain memory: `planning/ANALYSIS-impact-qa-[feature]`
 
 ## Issues Discovered
 
-| Issue | Priority | Category | Description |
-|-------|----------|----------|-------------|
+| Issue      | Priority   | Category                         | Description         |
+| ---------- | ---------- | -------------------------------- | ------------------- |
 | [Issue ID] | [P0/P1/P2] | [Coverage Gap/Risk/Debt/Blocker] | [Brief description] |
 
 **Issue Summary**: P0: [N], P1: [N], P2: [N], Total: [N]
@@ -314,11 +319,11 @@ Verify defensive coding patterns exist for critical paths:
 ```markdown
 ## Fail-Safe Pattern Verification
 
-| Pattern | Status | Evidence |
-|---------|--------|----------|
-| Input validation | [PASS]/[FAIL] | [References or gaps] |
-| Error handling | [PASS]/[FAIL] | [References or gaps] |
-| Timeout handling | [PASS]/[FAIL]/[N/A] | [References or gaps] |
+| Pattern           | Status              | Evidence             |
+| ----------------- | ------------------- | -------------------- |
+| Input validation  | [PASS]/[FAIL]       | [References or gaps] |
+| Error handling    | [PASS]/[FAIL]       | [References or gaps] |
+| Timeout handling  | [PASS]/[FAIL]/[N/A] | [References or gaps] |
 | Fallback behavior | [PASS]/[FAIL]/[N/A] | [References or gaps] |
 ```
 
@@ -345,11 +350,11 @@ Verify tests cover implemented functionality:
 ```markdown
 ## Test-Implementation Alignment
 
-| Criterion | Test Coverage | Status |
-|-----------|---------------|--------|
-| [AC-1] | [TestName] | [PASS] |
-| [AC-2] | [TestName1, TestName2] | [PASS] |
-| [AC-3] | No test found | [FAIL] |
+| Criterion | Test Coverage          | Status |
+| --------- | ---------------------- | ------ |
+| [AC-1]    | [TestName]             | [PASS] |
+| [AC-2]    | [TestName1, TestName2] | [PASS] |
+| [AC-3]    | No test found          | [FAIL] |
 
 **Coverage**: [X]/[Y] criteria covered ([Z]%)
 ```
@@ -375,11 +380,11 @@ Verify code coverage meets minimum thresholds:
 ```markdown
 ## Coverage Validation
 
-| Metric | Value | Threshold | Status |
-|--------|-------|-----------|--------|
-| Line coverage | [X]% | 70% | [PASS]/[FAIL] |
-| Branch coverage | [X]% | 60% | [PASS]/[FAIL] |
-| New code coverage | [X]% | 80% | [PASS]/[FAIL] |
+| Metric            | Value | Threshold | Status        |
+| ----------------- | ----- | --------- | ------------- |
+| Line coverage     | [X]%  | 70%       | [PASS]/[FAIL] |
+| Branch coverage   | [X]%  | 60%       | [PASS]/[FAIL] |
+| New code coverage | [X]%  | 80%       | [PASS]/[FAIL] |
 ```
 
 ### Pre-PR Validation Report
@@ -395,12 +400,12 @@ Generate validation report in Brain memory `qa/QA-pre-pr-validation-[feature]`:
 
 ## Validation Summary
 
-| Gate | Status | Blocking |
-|------|--------|----------|
-| CI Environment Tests | [PASS]/[FAIL] | Yes |
-| Fail-Safe Patterns | [PASS]/[FAIL] | Yes |
-| Test-Implementation Alignment | [PASS]/[FAIL] | Yes |
-| Coverage Threshold | [PASS]/[FAIL] | Yes |
+| Gate                          | Status        | Blocking |
+| ----------------------------- | ------------- | -------- |
+| CI Environment Tests          | [PASS]/[FAIL] | Yes      |
+| Fail-Safe Patterns            | [PASS]/[FAIL] | Yes      |
+| Test-Implementation Alignment | [PASS]/[FAIL] | Yes      |
+| Coverage Threshold            | [PASS]/[FAIL] | Yes      |
 
 ## Evidence
 
@@ -408,9 +413,9 @@ Generate validation report in Brain memory `qa/QA-pre-pr-validation-[feature]`:
 
 ## Issues Found
 
-| Issue | Severity | Gate | Resolution Required |
-|-------|----------|------|---------------------|
-| [Description] | [P0/P1/P2] | [Which gate] | [What to fix] |
+| Issue         | Severity   | Gate         | Resolution Required |
+| ------------- | ---------- | ------------ | ------------------- |
+| [Description] | [P0/P1/P2] | [Which gate] | [What to fix]       |
 
 ## Verdict
 
@@ -421,11 +426,14 @@ Generate validation report in Brain memory `qa/QA-pre-pr-validation-[feature]`:
 **Rationale**: [One sentence explanation]
 
 ### If APPROVED
+
 Ready to create PR. Include this validation summary in PR description.
 
 ### If BLOCKED
+
 Return to orchestrator with blocking issues. Do NOT proceed to PR creation.
 Specific fixes required:
+
 1. [Fix 1]
 2. [Fix 2]
 ```
@@ -448,9 +456,11 @@ Specific fixes required:
 # Test Strategy: [Feature Name]
 
 ## Scope
+
 What aspects will be tested
 
 ## Test Types
+
 - [ ] Unit tests: [Coverage targets]
 - [ ] Integration tests: [Scope]
 - [ ] Edge cases: [List]
@@ -458,21 +468,25 @@ What aspects will be tested
 ## Test Cases
 
 ### Happy Path
-| Test | Input | Expected Output |
-|------|-------|-----------------|
-| [Name] | [Input] | [Output] |
+
+| Test   | Input   | Expected Output |
+| ------ | ------- | --------------- |
+| [Name] | [Input] | [Output]        |
 
 ### Edge Cases
-| Test | Condition | Expected Behavior |
-|------|-----------|-------------------|
-| [Name] | [Condition] | [Behavior] |
+
+| Test   | Condition   | Expected Behavior |
+| ------ | ----------- | ----------------- |
+| [Name] | [Condition] | [Behavior]        |
 
 ### Error Cases
-| Test | Error Condition | Expected Handling |
-|------|-----------------|-------------------|
-| [Name] | [Condition] | [Handling] |
+
+| Test   | Error Condition | Expected Handling |
+| ------ | --------------- | ----------------- |
+| [Name] | [Condition]     | [Handling]        |
 
 ## Coverage Target
+
 [Percentage target for new code]
 ```
 
@@ -501,24 +515,24 @@ Test strategy and methodology used.
 
 ### Summary
 
-| Metric | Value | Target | Status |
-|--------|-------|--------|--------|
-| Tests Run | [N] | - | - |
-| Passed | [N] | - | [PASS] |
-| Failed | [N] | 0 | [PASS]/[FAIL] |
-| Skipped | [N] | - | - |
-| Line Coverage | [%] | 80% | [PASS]/[FAIL] |
-| Branch Coverage | [%] | 70% | [PASS]/[FAIL] |
-| Execution Time | [duration] | [target] | [PASS]/[FAIL] |
+| Metric          | Value      | Target   | Status        |
+| --------------- | ---------- | -------- | ------------- |
+| Tests Run       | [N]        | -        | -             |
+| Passed          | [N]        | -        | [PASS]        |
+| Failed          | [N]        | 0        | [PASS]/[FAIL] |
+| Skipped         | [N]        | -        | -             |
+| Line Coverage   | [%]        | 80%      | [PASS]/[FAIL] |
+| Branch Coverage | [%]        | 70%      | [PASS]/[FAIL] |
+| Execution Time  | [duration] | [target] | [PASS]/[FAIL] |
 
 ### Test Results by Category
 
-| Test | Category | Status | Notes |
-|------|----------|--------|-------|
-| [Test name] | Unit | [PASS] | - |
-| [Test name] | Integration | [FAIL] | [Brief reason] |
-| [Test name] | Unit | [SKIP] | [Why skipped] |
-| [Test name] | Unit | [FLAKY] | [Flakiness pattern] |
+| Test        | Category    | Status  | Notes               |
+| ----------- | ----------- | ------- | ------------------- |
+| [Test name] | Unit        | [PASS]  | -                   |
+| [Test name] | Integration | [FAIL]  | [Brief reason]      |
+| [Test name] | Unit        | [SKIP]  | [Why skipped]       |
+| [Test name] | Unit        | [FLAKY] | [Flakiness pattern] |
 
 ## Discussion
 
@@ -526,24 +540,24 @@ Test strategy and methodology used.
 
 Identify components or scenarios with elevated risk.
 
-| Area | Risk Level | Rationale |
-|------|------------|-----------|
-| [Component] | High | [Why this is risky] |
+| Area        | Risk Level | Rationale           |
+| ----------- | ---------- | ------------------- |
+| [Component] | High       | [Why this is risky] |
 
 ### Flaky Tests
 
 Document any tests exhibiting non-deterministic behavior.
 
-| Test | Failure Rate | Root Cause | Remediation |
-|------|--------------|------------|-------------|
-| [Test name] | [X/Y runs] | [Cause] | [Fix plan] |
+| Test        | Failure Rate | Root Cause | Remediation |
+| ----------- | ------------ | ---------- | ----------- |
+| [Test name] | [X/Y runs]   | [Cause]    | [Fix plan]  |
 
 ### Coverage Gaps
 
 Areas lacking adequate test coverage.
 
-| Gap | Reason | Priority |
-|-----|--------|----------|
+| Gap                   | Reason            | Priority   |
+| --------------------- | ----------------- | ---------- |
 | [Uncovered code path] | [Why not covered] | [P0/P1/P2] |
 
 ## Recommendations

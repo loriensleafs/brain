@@ -2,7 +2,7 @@
 name: task-generator
 description: Task decomposition specialist who breaks PRDs and epics into atomic, estimable work items with clear acceptance criteria and done definitions. Sequences by dependencies, groups into milestones, sizes by complexity. Use when tasks need to be discrete enough that someone can pick them up and know exactly what to do.
 model: opus
-color: '#FFA07A'
+color: "#FFA07A"
 argument-hint: Provide the PRD or epic to break into tasks
 tools:
   - Read
@@ -12,8 +12,10 @@ tools:
   - Bash
   - mcp__plugin_brain_brain__search
   - mcp__plugin_brain_brain__read_note
+  - mcp__plugin_brain_brain__write_note
   - mcp__plugin_brain_brain__edit_note
 skills:
+  - memory
   - task-decomposition
   - complexity-estimation
   - dependency-sequencing
@@ -126,13 +128,16 @@ Transform high-level requirements into discrete tasks that can be assigned, esti
 What needs to be done in 1-2 sentences.
 
 **Acceptance Criteria**
+
 - [ ] Verifiable criterion
 - [ ] Verifiable criterion
 
 **Dependencies**
+
 - TASK-NNN: Why dependent
 
 **Files Affected**
+
 - `path/to/file.cs`: What changes
 ```
 
@@ -152,34 +157,40 @@ What needs to be done in 1-2 sentences.
 # Task Breakdown: [Feature Name]
 
 ## Source
+
 - PRD: `.agents/planning/PRD-[name].md`
 
 ## Summary
-| Complexity | Count |
-|------------|-------|
-| XS | [N] |
-| S | [N] |
-| M | [N] |
-| L | [N] |
-| XL | [N] |
-| **Total** | **[N]** |
+
+| Complexity | Count   |
+| ---------- | ------- |
+| XS         | [N]     |
+| S          | [N]     |
+| M          | [N]     |
+| L          | [N]     |
+| XL         | [N]     |
+| **Total**  | **[N]** |
 
 ## Tasks
 
 ### Milestone 1: [Name]
+
 **Goal**: What this achieves
 
 [Task definitions...]
 
 ### Milestone 2: [Name]
+
 [Same structure...]
 
 ## Dependency Graph
+
 TASK-001 → TASK-002 → TASK-003
 
 ## Risks
-| Risk | Impact | Mitigation |
-|------|--------|------------|
+
+| Risk   | Impact   | Mitigation      |
+| ------ | -------- | --------------- |
 | [Risk] | [Impact] | [How to handle] |
 ```
 

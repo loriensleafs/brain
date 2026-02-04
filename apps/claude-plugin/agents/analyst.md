@@ -2,7 +2,7 @@
 name: analyst
 description: Research and investigation specialist who digs deep into root causes, surfaces unknowns, and gathers evidence before implementation. Methodical about documenting findings, evaluating feasibility, and identifying dependencies and risks. Use when you need clarity on patterns, impact assessment, requirements discovery, or hypothesis validation.
 model: opus
-color: '#4169E1'
+color: "#4169E1"
 argument-hint: Describe the topic, issue, or feature to research
 tools:
   - Read
@@ -56,6 +56,7 @@ You have direct access to:
 - **WebSearch/WebFetch**: Research best practices, API docs, usage patterns
 - **Bash**: Git commands, GitHub CLI (`gh issue`, `gh api`)
 - **github skill**: `.claude/skills/github/` - unified GitHub operations
+- **Brain memory skill**: `Skill(skill="brain:memory")`
 - **Brain MCP memory tools**: Historical investigation context (`mcp__plugin_brain_brain__search`, `mcp__plugin_brain_brain__read_note`)
 - External documentation services if available
 
@@ -97,6 +98,8 @@ mcp__context7__get-library-docs with context7CompatibleLibraryID="/lib/id"
 
 ### Root Cause Analysis
 
+Use `Skill(skill="brain:memory")` to save to memory: `analysis/ANALYSIS-impact-architecture-[feature]`
+
 ```markdown
 ## Root Cause Analysis: [Issue]
 
@@ -122,6 +125,8 @@ mcp__context7__get-library-docs with context7CompatibleLibraryID="/lib/id"
 ```
 
 ### Technical Research
+
+Use `Skill(skill="brain:memory")` to save to memory: `analysis/ANALYSIS-{topic}-[feature]`
 
 ```markdown
 ## Research: [Topic]
@@ -151,6 +156,8 @@ mcp__context7__get-library-docs with context7CompatibleLibraryID="/lib/id"
 ```
 
 ### Feature Request Review
+
+Use `Skill(skill="brain:memory")` to save to memory: `analysis/REVIEW-{topic}-[feature]`
 
 ```markdown
 ## Feature Request Review: [Feature]
@@ -201,6 +208,8 @@ Based on the above, [accept/defer/request more evidence]:
 ### Ideation Research
 
 When orchestrator routes an ideation task (vague feature idea, package URL, incomplete spec):
+
+Use `Skill(skill="brain:memory")` to save to memory: `analysis/ANALYSIS-{topic}-[feature]`
 
 ```markdown
 ## Ideation Research: [Topic]
@@ -277,7 +286,7 @@ WebSearch, WebFetch
 
 ## Memory Operations
 
-Follow the memory skill for Brain MCP tool usage. See memory skill (`skills/memory/SKILL.md`) for:
+Follow the memory skill for Brain MCP tool usage. See `Skill(skill="brain:memory")` for:
 
 - Entity type to folder mappings (analysis goes in `analysis/` folder)
 - File naming patterns (ANALYSIS-NNN-topic.md)

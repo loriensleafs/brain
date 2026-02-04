@@ -2,7 +2,7 @@
 name: spec-generator
 description: Spec generation specialist who transforms vibe-level feature descriptions into structured 3-tier specifications using EARS requirements format. Guides users through clarifying questions, then produces requirements.md, design.md, and tasks.md with full traceability. Use when a feature idea needs to become an implementable specification.
 model: opus
-color: '#5F9EA0'
+color: "#5F9EA0"
 argument-hint: Describe the feature or capability you want to specify
 tools:
   - Read
@@ -15,7 +15,9 @@ tools:
   - mcp__plugin_brain_brain__search
   - mcp__plugin_brain_brain__read_note
   - mcp__plugin_brain_brain__write_note
+  - mcp__plugin_brain_brain__edit_note
 skills:
+  - memory
   - ears-format
   - three-tier-specification
   - traceability-chains
@@ -229,17 +231,19 @@ tags:
 **Purpose**: [What it does]
 
 **Responsibilities**:
+
 - [Responsibility 1]
 - [Responsibility 2]
 
 **Interfaces**:
+
 - [Interface definition]
 
 ## Technology Decisions
 
-| Decision | Choice | Rationale |
-|----------|--------|-----------|
-| [Area] | [Technology] | [Why] |
+| Decision | Choice       | Rationale |
+| -------- | ------------ | --------- |
+| [Area]   | [Technology] | [Why]     |
 
 ## Security Considerations
 
@@ -299,10 +303,12 @@ tags:
 ## Scope
 
 **In Scope**:
+
 - [Item 1]
 - [Item 2]
 
 **Out of Scope**:
+
 - [Item 1]
 
 ## Acceptance Criteria
@@ -313,9 +319,9 @@ tags:
 
 ## Files Affected
 
-| File | Action | Description |
-|------|--------|-------------|
-| `path/to/file.ps1` | Create | [What changes] |
+| File                  | Action | Description    |
+| --------------------- | ------ | -------------- |
+| `path/to/file.ps1`    | Create | [What changes] |
 | `path/to/existing.md` | Modify | [What changes] |
 
 ## Implementation Notes
@@ -433,12 +439,12 @@ When specification is complete:
 
 ### Artifacts Created
 
-| Type | ID | Title | Location |
-|------|-----|-------|----------|
-| Requirement | REQ-001 | [Title] | `.agents/specs/requirements/REQ-001-...md` |
-| Design | DESIGN-001 | [Title] | `.agents/specs/design/DESIGN-001-...md` |
-| Task | TASK-001 | [Title] | `.agents/specs/tasks/TASK-001-...md` |
-| Task | TASK-002 | [Title] | `.agents/specs/tasks/TASK-002-...md` |
+| Type        | ID         | Title   | Location                                   |
+| ----------- | ---------- | ------- | ------------------------------------------ |
+| Requirement | REQ-001    | [Title] | `.agents/specs/requirements/REQ-001-...md` |
+| Design      | DESIGN-001 | [Title] | `.agents/specs/design/DESIGN-001-...md`    |
+| Task        | TASK-001   | [Title] | `.agents/specs/tasks/TASK-001-...md`       |
+| Task        | TASK-002   | [Title] | `.agents/specs/tasks/TASK-002-...md`       |
 
 ### Traceability Summary
 
@@ -447,10 +453,10 @@ REQ-001 → DESIGN-001 → TASK-001, TASK-002
 ### Estimated Effort
 
 | Complexity | Count | Hours |
-|------------|-------|-------|
-| XS | 1 | 2 |
-| S | 2 | 6 |
-| **Total** | **3** | **8** |
+| ---------- | ----- | ----- |
+| XS         | 1     | 2     |
+| S          | 2     | 6     |
+| **Total**  | **3** | **8** |
 
 ### Recommended Next Steps
 
