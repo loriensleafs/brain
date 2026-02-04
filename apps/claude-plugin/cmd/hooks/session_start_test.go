@@ -306,8 +306,12 @@ func TestGetBootstrapContext_Success(t *testing.T) {
 	if err != nil {
 		t.Fatalf("getBootstrapContext() returned error: %v", err)
 	}
-	if result["markdown"] != bootstrapOutput {
+	if result.Markdown != bootstrapOutput {
 		t.Errorf("getBootstrapContext() markdown mismatch")
+	}
+	// Markdown output should not parse as JSON
+	if result.ParsedJSON {
+		t.Error("getBootstrapContext() should not parse markdown as JSON")
 	}
 }
 
@@ -663,7 +667,9 @@ func TestFormatContextMarkdown_NoProject_ReturnsInstructions(t *testing.T) {
 	}
 }
 
-func TestFormatContextMarkdown_WithProject_ReturnsBootstrapMarkdown(t *testing.T) {
+func TestFormatContextMarkdown_WithProject_NoActiveSession(t *testing.T) {
+	// Per FEATURE-001: When project is set but no active session,
+	// hook must provide instructions for session creation via AskUserQuestion
 	bootstrapContent := "## Memory Context\n**Project:** test-project\n\n### Features\n- Feature-Auth"
 	output := &SessionStartOutput{
 		Success: true,
@@ -675,6 +681,8 @@ func TestFormatContextMarkdown_WithProject_ReturnsBootstrapMarkdown(t *testing.T
 		BootstrapInfo: map[string]any{
 			"markdown": bootstrapContent,
 		},
+		ActiveSession: nil,     // No active session
+		OpenSessions:  []OpenSession{}, // No open sessions
 	}
 
 	result := formatContextMarkdown(output)
@@ -686,13 +694,57 @@ func TestFormatContextMarkdown_WithProject_ReturnsBootstrapMarkdown(t *testing.T
 	if !strings.Contains(result, "**Status:** clean") {
 		t.Error("Should contain status info")
 	}
-	// Should contain bootstrap content
-	if !strings.Contains(result, bootstrapContent) {
-		t.Error("Should contain bootstrap markdown")
+	// Should contain bootstrap content in Project Context section
+	if !strings.Contains(result, "### Project Context") {
+		t.Error("Should contain project context section")
 	}
-	// Should NOT contain noProject instructions
-	if strings.Contains(result, "AskUserQuestion") {
-		t.Error("Should NOT contain AskUserQuestion when project is set")
+	// Per FEATURE-001: When no active session, MUST contain AskUserQuestion instructions
+	if !strings.Contains(result, "AskUserQuestion") {
+		t.Error("Should contain AskUserQuestion when no active session exists")
+	}
+	// Should contain session creation instructions
+	if !strings.Contains(result, "### No Active Session") {
+		t.Error("Should contain no active session header")
+	}
+}
+
+func TestFormatContextMarkdown_WithProject_HasActiveSession(t *testing.T) {
+	// Per FEATURE-001: When project is set AND active session exists,
+	// hook passes context WITHOUT AskUserQuestion instructions
+	bootstrapContent := "## Memory Context\n**Project:** test-project\n\n### Features\n- Feature-Auth"
+	output := &SessionStartOutput{
+		Success: true,
+		Project: "test-project",
+		GitContext: &GitContextInfo{
+			Branch: "main",
+			Status: "clean",
+		},
+		BootstrapInfo: map[string]any{
+			"markdown": bootstrapContent,
+		},
+		ActiveSession: &ActiveSession{
+			SessionID: "SESSION-2026-02-04_01-test",
+			Status:    "IN_PROGRESS",
+			Date:      "2026-02-04",
+			IsValid:   true,
+			Checks:    []SessionValidationCheck{},
+		},
+		OpenSessions: []OpenSession{},
+	}
+
+	result := formatContextMarkdown(output)
+
+	// Should contain git context
+	if !strings.Contains(result, "**Branch:** main") {
+		t.Error("Should contain branch info")
+	}
+	// Should contain active session info
+	if !strings.Contains(result, "### Active Session") {
+		t.Error("Should contain active session header")
+	}
+	// Per FEATURE-001: When active session exists, should NOT prompt for session selection
+	if strings.Contains(result, "Use the AskUserQuestion tool") {
+		t.Error("Should NOT contain AskUserQuestion prompt when active session exists")
 	}
 }
 
@@ -912,149 +964,28 @@ func TestHookInput_EmptyJSON(t *testing.T) {
 	}
 }
 
-// === Tests for parseOpenSessions ===
+// === Tests for formatSessionInstructions (NEW - replaces formatResumePrompt) ===
 
-func TestParseOpenSessions_WithOpenSessions(t *testing.T) {
-	markdown := `## Memory Context [v7] (Full)
-
-**Project:** test-project
-**Retrieved:** 2/4/2026, 10:30:00 AM
-
-### Open Sessions
-
-Sessions with work in progress that may need to be resumed:
-
-- [[SESSION-2026-02-04_01-feature-work]] (branch: ` + "`feat/session-resume`" + `)
-- [[SESSION-2026-02-03_02-bug-fix]]
-
-### Active Features
-
-- Feature-Auth`
-
-	sessions := parseOpenSessions(markdown)
-
-	if len(sessions) != 2 {
-		t.Fatalf("parseOpenSessions() returned %d sessions, want 2", len(sessions))
-	}
-
-	// Check first session
-	if sessions[0].Title != "SESSION-2026-02-04_01-feature-work" {
-		t.Errorf("sessions[0].Title = %q, want %q", sessions[0].Title, "SESSION-2026-02-04_01-feature-work")
-	}
-	if sessions[0].Date != "2026-02-04" {
-		t.Errorf("sessions[0].Date = %q, want %q", sessions[0].Date, "2026-02-04")
-	}
-	if sessions[0].Branch != "feat/session-resume" {
-		t.Errorf("sessions[0].Branch = %q, want %q", sessions[0].Branch, "feat/session-resume")
-	}
-
-	// Check second session
-	if sessions[1].Title != "SESSION-2026-02-03_02-bug-fix" {
-		t.Errorf("sessions[1].Title = %q, want %q", sessions[1].Title, "SESSION-2026-02-03_02-bug-fix")
-	}
-	if sessions[1].Date != "2026-02-03" {
-		t.Errorf("sessions[1].Date = %q, want %q", sessions[1].Date, "2026-02-03")
-	}
-	if sessions[1].Branch != "" {
-		t.Errorf("sessions[1].Branch = %q, want empty", sessions[1].Branch)
-	}
-}
-
-func TestParseOpenSessions_NoOpenSessionsSection(t *testing.T) {
-	markdown := `## Memory Context [v7] (Full)
-
-**Project:** test-project
-**Retrieved:** 2/4/2026, 10:30:00 AM
-
-### Active Features
-
-- Feature-Auth`
-
-	sessions := parseOpenSessions(markdown)
-
-	if len(sessions) != 0 {
-		t.Errorf("parseOpenSessions() returned %d sessions, want 0", len(sessions))
-	}
-}
-
-func TestParseOpenSessions_EmptyOpenSessionsSection(t *testing.T) {
-	markdown := `## Memory Context [v7] (Full)
-
-**Project:** test-project
-
-### Open Sessions
-
-Sessions with work in progress that may need to be resumed:
-
-### Active Features
-
-- Feature-Auth`
-
-	sessions := parseOpenSessions(markdown)
-
-	if len(sessions) != 0 {
-		t.Errorf("parseOpenSessions() returned %d sessions, want 0", len(sessions))
-	}
-}
-
-func TestParseOpenSessions_WithBranchNoBackticks(t *testing.T) {
-	markdown := `### Open Sessions
-
-Sessions with work in progress that may need to be resumed:
-
-- [[SESSION-2026-02-04_01-test]] (branch: main)`
-
-	sessions := parseOpenSessions(markdown)
-
-	if len(sessions) != 1 {
-		t.Fatalf("parseOpenSessions() returned %d sessions, want 1", len(sessions))
-	}
-	if sessions[0].Branch != "main" {
-		t.Errorf("sessions[0].Branch = %q, want %q", sessions[0].Branch, "main")
-	}
-}
-
-func TestParseOpenSessions_AtEndOfDocument(t *testing.T) {
-	// Test when Open Sessions is the last section (no following ###)
-	markdown := `## Memory Context
-
-**Project:** test-project
-
-### Open Sessions
-
-Sessions with work in progress that may need to be resumed:
-
-- [[SESSION-2026-02-04_01-final]]`
-
-	sessions := parseOpenSessions(markdown)
-
-	if len(sessions) != 1 {
-		t.Fatalf("parseOpenSessions() returned %d sessions, want 1", len(sessions))
-	}
-	if sessions[0].Title != "SESSION-2026-02-04_01-final" {
-		t.Errorf("sessions[0].Title = %q, want %q", sessions[0].Title, "SESSION-2026-02-04_01-final")
-	}
-}
-
-// === Tests for formatResumePrompt ===
-
-func TestFormatResumePrompt_WithSessions(t *testing.T) {
+func TestFormatSessionInstructions_WithOpenSessions(t *testing.T) {
 	sessions := []OpenSession{
-		{Title: "SESSION-2026-02-04_01-feature-work", Date: "2026-02-04", Branch: "feat/session-resume"},
-		{Title: "SESSION-2026-02-03_02-bug-fix", Date: "2026-02-03"},
+		{SessionID: "SESSION-2026-02-04_01-feature-work", Status: "IN_PROGRESS", Date: "2026-02-04", Branch: "feat/session-resume", Topic: "feature work"},
+		{SessionID: "SESSION-2026-02-03_02-bug-fix", Status: "PAUSED", Date: "2026-02-03", Topic: "bug fix"},
 	}
 
-	result := formatResumePrompt(sessions)
+	result := formatSessionInstructions(sessions)
 
-	// Check required elements
+	// Check required elements per FEATURE-001 spec
+	if !strings.Contains(result, "DO THE FOLLOWING IMMEDIATELY") {
+		t.Error("Should contain immediate action directive")
+	}
 	if !strings.Contains(result, "### Open Sessions Detected") {
 		t.Error("Should contain '### Open Sessions Detected' header")
 	}
-	if !strings.Contains(result, "Found 2 session(s) with status: in_progress") {
+	if !strings.Contains(result, "Found 2 session(s)") {
 		t.Error("Should contain count of sessions")
 	}
-	if !strings.Contains(result, "**SESSION-2026-02-04_01-feature-work**") {
-		t.Error("Should contain first session title")
+	if !strings.Contains(result, "SESSION-2026-02-04_01-feature-work - feature work") {
+		t.Error("Should contain first session ID and topic")
 	}
 	if !strings.Contains(result, "Date: 2026-02-04") {
 		t.Error("Should contain first session date")
@@ -1062,62 +993,139 @@ func TestFormatResumePrompt_WithSessions(t *testing.T) {
 	if !strings.Contains(result, "Branch: feat/session-resume") {
 		t.Error("Should contain first session branch")
 	}
-	if !strings.Contains(result, "**SESSION-2026-02-03_02-bug-fix**") {
-		t.Error("Should contain second session title")
+	if !strings.Contains(result, "SESSION-2026-02-03_02-bug-fix - bug fix") {
+		t.Error("Should contain second session ID and topic")
 	}
-	if !strings.Contains(result, "**Action Required**") {
-		t.Error("Should contain action required prompt")
+	if !strings.Contains(result, "AskUserQuestion") {
+		t.Error("Should contain AskUserQuestion instruction")
 	}
-	if !strings.Contains(result, "Resume one of the above sessions") {
-		t.Error("Should contain resume option")
+	if !strings.Contains(result, "MCP `session` tool") {
+		t.Error("Should reference MCP session tool")
 	}
-	if !strings.Contains(result, "Start a new session") {
-		t.Error("Should contain new session option")
+	if !strings.Contains(result, "operation=`resume`") {
+		t.Error("Should contain resume operation instruction")
+	}
+	if !strings.Contains(result, "operation=`create`") {
+		t.Error("Should contain create operation instruction")
 	}
 }
 
-func TestFormatResumePrompt_NoSessions(t *testing.T) {
+func TestFormatSessionInstructions_NoSessions(t *testing.T) {
 	sessions := []OpenSession{}
 
-	result := formatResumePrompt(sessions)
+	result := formatSessionInstructions(sessions)
 
-	if result != "" {
-		t.Errorf("formatResumePrompt() with no sessions should return empty string, got %q", result)
+	// Should still provide instructions (for new session)
+	if !strings.Contains(result, "DO THE FOLLOWING IMMEDIATELY") {
+		t.Error("Should contain immediate action directive")
+	}
+	if !strings.Contains(result, "### No Active Session") {
+		t.Error("Should contain no active session header")
+	}
+	if !strings.Contains(result, "AskUserQuestion") {
+		t.Error("Should contain AskUserQuestion instruction")
+	}
+	if !strings.Contains(result, "session topic") {
+		t.Error("Should ask about session topic")
+	}
+	if !strings.Contains(result, "operation=`create`") {
+		t.Error("Should contain create operation instruction")
+	}
+	// Should NOT contain resume instructions
+	if strings.Contains(result, "operation=`resume`") {
+		t.Error("Should NOT contain resume operation when no sessions")
 	}
 }
 
-func TestFormatResumePrompt_SingleSession(t *testing.T) {
+func TestFormatSessionInstructions_SingleSession(t *testing.T) {
 	sessions := []OpenSession{
-		{Title: "SESSION-2026-02-04_01-solo", Date: "2026-02-04"},
+		{SessionID: "SESSION-2026-02-04_01-solo", Status: "IN_PROGRESS", Date: "2026-02-04"},
 	}
 
-	result := formatResumePrompt(sessions)
+	result := formatSessionInstructions(sessions)
 
-	if !strings.Contains(result, "Found 1 session(s) with status: in_progress") {
+	if !strings.Contains(result, "Found 1 session(s)") {
 		t.Error("Should contain count of 1 session")
 	}
-	if !strings.Contains(result, "1. **SESSION-2026-02-04_01-solo**") {
-		t.Error("Should contain session with index 1")
+	if !strings.Contains(result, "SESSION-2026-02-04_01-solo") {
+		t.Error("Should contain session ID")
 	}
 }
 
-// === Tests for formatContextMarkdown with open sessions ===
+// === Tests for formatActiveSessionContext ===
 
-func TestFormatContextMarkdown_WithOpenSessions(t *testing.T) {
-	bootstrapContent := `## Memory Context [v7] (Full)
+func TestFormatActiveSessionContext_FullData(t *testing.T) {
+	activeSession := &ActiveSession{
+		SessionID: "SESSION-2026-02-04_01-test",
+		Status:    "IN_PROGRESS",
+		Path:      "sessions/SESSION-2026-02-04_01-test.md",
+		Mode:      "coding",
+		Task:      "Implement feature X",
+		Branch:    "feat/test",
+		Date:      "2026-02-04",
+		Topic:     "test feature",
+		IsValid:   true,
+		Checks:    []SessionValidationCheck{{Name: "brain_init", Passed: true}},
+	}
 
-**Project:** test-project
+	result := formatActiveSessionContext(activeSession)
 
-### Open Sessions
+	if !strings.Contains(result, "### Active Session") {
+		t.Error("Should contain active session header")
+	}
+	if !strings.Contains(result, "SESSION-2026-02-04_01-test - test feature") {
+		t.Error("Should contain session ID and topic")
+	}
+	if !strings.Contains(result, "**Status**: IN_PROGRESS") {
+		t.Error("Should contain status")
+	}
+	if !strings.Contains(result, "**Date**: 2026-02-04") {
+		t.Error("Should contain date")
+	}
+	if !strings.Contains(result, "**Branch**: feat/test") {
+		t.Error("Should contain branch")
+	}
+	if !strings.Contains(result, "**Mode**: coding") {
+		t.Error("Should contain mode")
+	}
+	if !strings.Contains(result, "**Current Task**: Implement feature X") {
+		t.Error("Should contain current task")
+	}
+	if !strings.Contains(result, "All checks passed") {
+		t.Error("Should indicate validation passed")
+	}
+}
 
-Sessions with work in progress that may need to be resumed:
+func TestFormatActiveSessionContext_ValidationFailed(t *testing.T) {
+	activeSession := &ActiveSession{
+		SessionID: "SESSION-2026-02-04_01-test",
+		Status:    "IN_PROGRESS",
+		Path:      "sessions/SESSION-2026-02-04_01-test.md",
+		Date:      "2026-02-04",
+		IsValid:   false,
+		Checks: []SessionValidationCheck{
+			{Name: "brain_init", Passed: true},
+			{Name: "git_branch", Passed: false},
+		},
+	}
 
-- [[SESSION-2026-02-04_01-feature]] (branch: ` + "`feat/test`" + `)
+	result := formatActiveSessionContext(activeSession)
 
-### Active Features
+	if !strings.Contains(result, "Some checks failed") {
+		t.Error("Should indicate validation failed")
+	}
+	if !strings.Contains(result, "brain_init: [PASS]") {
+		t.Error("Should show passed check")
+	}
+	if !strings.Contains(result, "git_branch: [FAIL]") {
+		t.Error("Should show failed check")
+	}
+}
 
-- Feature-Auth`
+// === Tests for formatContextMarkdown with session data (UPDATED for new hook flow) ===
 
+func TestFormatContextMarkdown_WithActiveSession(t *testing.T) {
+	// Per FEATURE-001: When activeSession exists, pass context, DO NOT include openSessions
 	output := &SessionStartOutput{
 		Success: true,
 		Project: "test-project",
@@ -1126,33 +1134,79 @@ Sessions with work in progress that may need to be resumed:
 			Status: "clean",
 		},
 		BootstrapInfo: map[string]any{
-			"markdown": bootstrapContent,
+			"markdown": "## Memory Context\n**Project:** test-project",
+		},
+		ActiveSession: &ActiveSession{
+			SessionID: "SESSION-2026-02-04_01-active",
+			Status:    "IN_PROGRESS",
+			Date:      "2026-02-04",
+			Topic:     "active work",
+			IsValid:   true,
+			Checks:    []SessionValidationCheck{},
+		},
+		OpenSessions: []OpenSession{
+			{SessionID: "SESSION-2026-02-03_01-paused", Status: "PAUSED", Date: "2026-02-03"},
 		},
 	}
 
 	result := formatContextMarkdown(output)
 
-	// Should contain the open sessions detected prompt
+	// Should contain active session context
+	if !strings.Contains(result, "### Active Session") {
+		t.Error("Should contain active session header")
+	}
+	if !strings.Contains(result, "SESSION-2026-02-04_01-active") {
+		t.Error("Should contain active session ID")
+	}
+	// Should NOT contain open sessions prompt (per hook flow spec)
+	if strings.Contains(result, "### Open Sessions Detected") {
+		t.Error("Should NOT contain open sessions when active session exists")
+	}
+	// Should NOT contain AskUserQuestion instructions
+	if strings.Contains(result, "Use the AskUserQuestion tool") {
+		t.Error("Should NOT prompt for session selection when active session exists")
+	}
+}
+
+func TestFormatContextMarkdown_WithOpenSessionsNoActive(t *testing.T) {
+	// Per FEATURE-001: When no activeSession but openSessions exist, include mandatory instructions
+	output := &SessionStartOutput{
+		Success: true,
+		Project: "test-project",
+		GitContext: &GitContextInfo{
+			Branch: "main",
+			Status: "clean",
+		},
+		BootstrapInfo: map[string]any{
+			"markdown": "## Memory Context\n**Project:** test-project",
+		},
+		ActiveSession: nil,
+		OpenSessions: []OpenSession{
+			{SessionID: "SESSION-2026-02-04_01-feature", Status: "IN_PROGRESS", Date: "2026-02-04", Branch: "feat/test"},
+		},
+	}
+
+	result := formatContextMarkdown(output)
+
+	// Should contain open sessions detected prompt
 	if !strings.Contains(result, "### Open Sessions Detected") {
 		t.Error("Should contain open sessions detected header")
 	}
 	if !strings.Contains(result, "Found 1 session(s)") {
 		t.Error("Should contain session count")
 	}
-	if !strings.Contains(result, "**Action Required**") {
-		t.Error("Should contain action required prompt")
+	// Should contain AskUserQuestion instruction
+	if !strings.Contains(result, "AskUserQuestion") {
+		t.Error("Should contain AskUserQuestion instruction")
+	}
+	// Should contain MCP session tool instructions
+	if !strings.Contains(result, "MCP `session` tool") {
+		t.Error("Should reference MCP session tool")
 	}
 }
 
-func TestFormatContextMarkdown_WithoutOpenSessions(t *testing.T) {
-	bootstrapContent := `## Memory Context [v7] (Full)
-
-**Project:** test-project
-
-### Active Features
-
-- Feature-Auth`
-
+func TestFormatContextMarkdown_NoSessions(t *testing.T) {
+	// Per FEATURE-001: When no sessions, provide instructions for new session creation
 	output := &SessionStartOutput{
 		Success: true,
 		Project: "test-project",
@@ -1161,28 +1215,38 @@ func TestFormatContextMarkdown_WithoutOpenSessions(t *testing.T) {
 			Status: "clean",
 		},
 		BootstrapInfo: map[string]any{
-			"markdown": bootstrapContent,
+			"markdown": "## Memory Context\n**Project:** test-project",
 		},
+		ActiveSession: nil,
+		OpenSessions:  []OpenSession{},
 	}
 
 	result := formatContextMarkdown(output)
 
-	// Should NOT contain the open sessions detected prompt
-	if strings.Contains(result, "### Open Sessions Detected") {
-		t.Error("Should NOT contain open sessions detected header when no open sessions")
+	// Should contain new session instructions
+	if !strings.Contains(result, "### No Active Session") {
+		t.Error("Should contain no active session header")
 	}
-	if strings.Contains(result, "**Action Required**") {
-		t.Error("Should NOT contain action required prompt when no open sessions")
+	// Should contain AskUserQuestion instruction
+	if !strings.Contains(result, "AskUserQuestion") {
+		t.Error("Should contain AskUserQuestion instruction")
+	}
+	// Should NOT contain open sessions prompt
+	if strings.Contains(result, "### Open Sessions Detected") {
+		t.Error("Should NOT contain open sessions header when no sessions")
 	}
 }
 
-// === Tests for OpenSession struct JSON serialization ===
+// === Tests for OpenSession struct JSON serialization (UPDATED for new struct) ===
 
 func TestOpenSession_JSONSerialization(t *testing.T) {
 	session := OpenSession{
-		Title:  "SESSION-2026-02-04_01-test",
-		Date:   "2026-02-04",
-		Branch: "feat/test",
+		SessionID: "SESSION-2026-02-04_01-test",
+		Status:    "IN_PROGRESS",
+		Date:      "2026-02-04",
+		Branch:    "feat/test",
+		Topic:     "test feature",
+		Permalink: "sessions/SESSION-2026-02-04_01-test",
 	}
 
 	data, err := json.Marshal(session)
@@ -1195,8 +1259,11 @@ func TestOpenSession_JSONSerialization(t *testing.T) {
 		t.Fatalf("Failed to unmarshal OpenSession: %v", err)
 	}
 
-	if parsed["title"] != "SESSION-2026-02-04_01-test" {
-		t.Errorf("JSON title = %v, want SESSION-2026-02-04_01-test", parsed["title"])
+	if parsed["sessionId"] != "SESSION-2026-02-04_01-test" {
+		t.Errorf("JSON sessionId = %v, want SESSION-2026-02-04_01-test", parsed["sessionId"])
+	}
+	if parsed["status"] != "IN_PROGRESS" {
+		t.Errorf("JSON status = %v, want IN_PROGRESS", parsed["status"])
 	}
 	if parsed["date"] != "2026-02-04" {
 		t.Errorf("JSON date = %v, want 2026-02-04", parsed["date"])
@@ -1206,9 +1273,12 @@ func TestOpenSession_JSONSerialization(t *testing.T) {
 	}
 }
 
-func TestOpenSession_OmitsEmptyFields(t *testing.T) {
+func TestOpenSession_OmitsEmptyOptionalFields(t *testing.T) {
 	session := OpenSession{
-		Title: "SESSION-2026-02-04_01-minimal",
+		SessionID: "SESSION-2026-02-04_01-minimal",
+		Status:    "IN_PROGRESS",
+		Date:      "2026-02-04",
+		Permalink: "sessions/SESSION-2026-02-04_01-minimal",
 	}
 
 	data, err := json.Marshal(session)
@@ -1221,11 +1291,507 @@ func TestOpenSession_OmitsEmptyFields(t *testing.T) {
 		t.Fatalf("Failed to unmarshal OpenSession: %v", err)
 	}
 
-	// date and branch should be omitted when empty
-	if _, exists := parsed["date"]; exists && parsed["date"] != "" {
-		t.Error("JSON should omit or have empty date when not set")
+	// branch and topic should be omitted when empty (omitempty tag)
+	if branch, exists := parsed["branch"]; exists && branch != "" {
+		t.Error("JSON should omit branch when not set")
 	}
-	if _, exists := parsed["branch"]; exists && parsed["branch"] != "" {
-		t.Error("JSON should omit or have empty branch when not set")
+	if topic, exists := parsed["topic"]; exists && topic != "" {
+		t.Error("JSON should omit topic when not set")
+	}
+	// Required fields should be present
+	if parsed["sessionId"] == nil {
+		t.Error("JSON should contain sessionId")
+	}
+	if parsed["status"] == nil {
+		t.Error("JSON should contain status")
+	}
+}
+
+// === Tests for ActiveSession struct JSON serialization ===
+
+func TestActiveSession_JSONSerialization(t *testing.T) {
+	session := ActiveSession{
+		SessionID: "SESSION-2026-02-04_01-test",
+		Status:    "IN_PROGRESS",
+		Path:      "sessions/SESSION-2026-02-04_01-test.md",
+		Mode:      "coding",
+		Task:      "Implement feature",
+		Branch:    "feat/test",
+		Date:      "2026-02-04",
+		Topic:     "test feature",
+		IsValid:   true,
+		Checks:    []SessionValidationCheck{{Name: "brain_init", Passed: true}},
+	}
+
+	data, err := json.Marshal(session)
+	if err != nil {
+		t.Fatalf("Failed to marshal ActiveSession: %v", err)
+	}
+
+	var parsed map[string]any
+	if err := json.Unmarshal(data, &parsed); err != nil {
+		t.Fatalf("Failed to unmarshal ActiveSession: %v", err)
+	}
+
+	if parsed["sessionId"] != "SESSION-2026-02-04_01-test" {
+		t.Errorf("JSON sessionId = %v, want SESSION-2026-02-04_01-test", parsed["sessionId"])
+	}
+	if parsed["status"] != "IN_PROGRESS" {
+		t.Errorf("JSON status = %v, want IN_PROGRESS", parsed["status"])
+	}
+	if parsed["path"] != "sessions/SESSION-2026-02-04_01-test.md" {
+		t.Errorf("JSON path = %v, want sessions/SESSION-2026-02-04_01-test.md", parsed["path"])
+	}
+	if parsed["isValid"] != true {
+		t.Errorf("JSON isValid = %v, want true", parsed["isValid"])
+	}
+}
+
+// === Tests for BootstrapResponse JSON parsing ===
+
+func TestBootstrapResponse_JSONParsing(t *testing.T) {
+	jsonInput := `{
+		"metadata": {
+			"project": "test-project",
+			"generated_at": "2026-02-04T10:30:00Z",
+			"note_count": 5,
+			"timeframe": "5d"
+		},
+		"open_sessions": [
+			{
+				"sessionId": "SESSION-2026-02-04_01-test",
+				"status": "IN_PROGRESS",
+				"date": "2026-02-04",
+				"branch": "feat/test",
+				"permalink": "sessions/SESSION-2026-02-04_01-test"
+			}
+		],
+		"active_session": {
+			"sessionId": "SESSION-2026-02-04_01-test",
+			"status": "IN_PROGRESS",
+			"path": "sessions/SESSION-2026-02-04_01-test.md",
+			"date": "2026-02-04",
+			"isValid": true,
+			"checks": []
+		}
+	}`
+
+	var resp BootstrapResponse
+	err := json.Unmarshal([]byte(jsonInput), &resp)
+
+	if err != nil {
+		t.Fatalf("Failed to unmarshal BootstrapResponse: %v", err)
+	}
+	if resp.Metadata.Project != "test-project" {
+		t.Errorf("Metadata.Project = %q, want %q", resp.Metadata.Project, "test-project")
+	}
+	if len(resp.OpenSessions) != 1 {
+		t.Fatalf("OpenSessions length = %d, want 1", len(resp.OpenSessions))
+	}
+	if resp.OpenSessions[0].SessionID != "SESSION-2026-02-04_01-test" {
+		t.Errorf("OpenSessions[0].SessionID = %q, want %q", resp.OpenSessions[0].SessionID, "SESSION-2026-02-04_01-test")
+	}
+	if resp.ActiveSession == nil {
+		t.Fatal("ActiveSession should not be nil")
+	}
+	if resp.ActiveSession.SessionID != "SESSION-2026-02-04_01-test" {
+		t.Errorf("ActiveSession.SessionID = %q, want %q", resp.ActiveSession.SessionID, "SESSION-2026-02-04_01-test")
+	}
+}
+
+// =============================================================================
+// FEATURE-001 Required Test Scenarios (M6 Hook Integration)
+// =============================================================================
+// These tests cover the 7 required test scenarios from FEATURE-001-session-management:
+// 1. TestHook_ActiveSession_PassesContext - active session exists, pass context
+// 2. TestHook_OpenSessions_ListsOptions - no active, open sessions exist
+// 3. TestHook_NoSessions_PromptNew - no sessions at all
+// 4. TestHook_BootstrapError_GracefulDegradation - bootstrap fails
+// 5. Hook never creates sessions (verified by code review - no create method)
+// 6. Hook never resumes sessions (verified by code review - no resume method)
+// 7. TestHook_MalformedJSON_SafeDefault - malformed JSON handling
+
+func TestHook_ActiveSession_PassesContext(t *testing.T) {
+	// Scenario 1: Active session exists
+	// Expected: Pass context to AI, no AskUserQuestion instructions
+	output := &SessionStartOutput{
+		Success: true,
+		Project: "test-project",
+		GitContext: &GitContextInfo{
+			Branch: "feat/active-work",
+			Status: "clean",
+		},
+		BootstrapInfo: map[string]any{
+			"markdown":   "## Memory Context\n**Project:** test-project",
+			"parsedJSON": true,
+		},
+		ActiveSession: &ActiveSession{
+			SessionID: "SESSION-2026-02-04_01-active",
+			Status:    "IN_PROGRESS",
+			Path:      "sessions/SESSION-2026-02-04_01-active.md",
+			Date:      "2026-02-04",
+			Topic:     "active work",
+			Branch:    "feat/active-work",
+			IsValid:   true,
+			Checks:    []SessionValidationCheck{{Name: "brain_init", Passed: true}},
+		},
+		// Note: openSessions may exist but should NOT be in output per spec
+		OpenSessions: []OpenSession{
+			{SessionID: "SESSION-2026-02-03_01-paused", Status: "PAUSED", Date: "2026-02-03"},
+		},
+	}
+
+	result := formatContextMarkdown(output)
+
+	// PASS criteria: Contains active session context
+	if !strings.Contains(result, "### Active Session") {
+		t.Error("[FAIL] Should contain active session header")
+	}
+	if !strings.Contains(result, "SESSION-2026-02-04_01-active") {
+		t.Error("[FAIL] Should contain active session ID")
+	}
+	if !strings.Contains(result, "**Status**: IN_PROGRESS") {
+		t.Error("[FAIL] Should contain status")
+	}
+
+	// PASS criteria: Does NOT include openSessions or AskUserQuestion
+	if strings.Contains(result, "### Open Sessions Detected") {
+		t.Error("[FAIL] Should NOT include open sessions when active session exists")
+	}
+	if strings.Contains(result, "Use the AskUserQuestion tool") {
+		t.Error("[FAIL] Should NOT prompt for session selection when active session exists")
+	}
+}
+
+func TestHook_OpenSessions_ListsOptions(t *testing.T) {
+	// Scenario 2: No active session, 2 open sessions exist
+	// Expected: Include open sessions, AskUserQuestion instructions
+	output := &SessionStartOutput{
+		Success: true,
+		Project: "test-project",
+		GitContext: &GitContextInfo{
+			Branch: "main",
+			Status: "clean",
+		},
+		BootstrapInfo: map[string]any{
+			"markdown":   "## Memory Context\n**Project:** test-project",
+			"parsedJSON": true,
+		},
+		ActiveSession: nil,
+		OpenSessions: []OpenSession{
+			{SessionID: "SESSION-2026-02-04_01-feature", Status: "IN_PROGRESS", Date: "2026-02-04", Branch: "feat/feature", Topic: "feature work"},
+			{SessionID: "SESSION-2026-02-03_02-bugfix", Status: "PAUSED", Date: "2026-02-03", Topic: "bug fix"},
+		},
+	}
+
+	result := formatContextMarkdown(output)
+
+	// PASS criteria: Contains open sessions list
+	if !strings.Contains(result, "### Open Sessions Detected") {
+		t.Error("[FAIL] Should contain open sessions header")
+	}
+	if !strings.Contains(result, "Found 2 session(s)") {
+		t.Error("[FAIL] Should list 2 sessions")
+	}
+	if !strings.Contains(result, "SESSION-2026-02-04_01-feature") {
+		t.Error("[FAIL] Should contain first session ID")
+	}
+	if !strings.Contains(result, "SESSION-2026-02-03_02-bugfix") {
+		t.Error("[FAIL] Should contain second session ID")
+	}
+
+	// PASS criteria: Contains AskUserQuestion instructions
+	if !strings.Contains(result, "AskUserQuestion") {
+		t.Error("[FAIL] Should contain AskUserQuestion instruction")
+	}
+	if !strings.Contains(result, "MANDATORY ACTION") {
+		t.Error("[FAIL] Should contain mandatory action directive")
+	}
+
+	// PASS criteria: Contains MCP session tool instructions
+	if !strings.Contains(result, "MCP `session` tool") {
+		t.Error("[FAIL] Should reference MCP session tool")
+	}
+	if !strings.Contains(result, "operation=`resume`") {
+		t.Error("[FAIL] Should include resume operation")
+	}
+	if !strings.Contains(result, "operation=`create`") {
+		t.Error("[FAIL] Should include create operation")
+	}
+}
+
+func TestHook_NoSessions_PromptNew(t *testing.T) {
+	// Scenario 3: No active session, no open sessions
+	// Expected: AskUserQuestion for new session only
+	output := &SessionStartOutput{
+		Success: true,
+		Project: "test-project",
+		GitContext: &GitContextInfo{
+			Branch: "main",
+			Status: "clean",
+		},
+		BootstrapInfo: map[string]any{
+			"markdown":   "## Memory Context\n**Project:** test-project",
+			"parsedJSON": true,
+		},
+		ActiveSession: nil,
+		OpenSessions:  []OpenSession{},
+	}
+
+	result := formatContextMarkdown(output)
+
+	// PASS criteria: Contains new session instructions
+	if !strings.Contains(result, "### No Active Session") {
+		t.Error("[FAIL] Should contain no active session header")
+	}
+	if !strings.Contains(result, "AskUserQuestion") {
+		t.Error("[FAIL] Should contain AskUserQuestion instruction")
+	}
+	if !strings.Contains(result, "session topic") {
+		t.Error("[FAIL] Should ask about session topic")
+	}
+
+	// PASS criteria: Only create operation (no resume)
+	if !strings.Contains(result, "operation=`create`") {
+		t.Error("[FAIL] Should include create operation")
+	}
+	if strings.Contains(result, "operation=`resume`") {
+		t.Error("[FAIL] Should NOT include resume when no open sessions")
+	}
+	if strings.Contains(result, "### Open Sessions Detected") {
+		t.Error("[FAIL] Should NOT contain open sessions header")
+	}
+}
+
+func TestHook_BootstrapError_GracefulDegradation(t *testing.T) {
+	// Scenario 4: Bootstrap error response
+	// Expected: Graceful degradation, log warning, continue with available context
+	output := &SessionStartOutput{
+		Success: true,
+		Project: "test-project",
+		GitContext: &GitContextInfo{
+			Branch: "main",
+			Status: "clean",
+		},
+		BootstrapInfo: map[string]any{
+			"warning": "Could not get bootstrap context: connection refused",
+		},
+		ActiveSession: nil,
+		OpenSessions:  []OpenSession{},
+	}
+
+	result := formatContextMarkdown(output)
+
+	// PASS criteria: Contains warning but doesn't fail completely
+	if !strings.Contains(result, "**Warning:**") {
+		t.Error("[FAIL] Should contain warning message")
+	}
+	if !strings.Contains(result, "Could not get bootstrap context") {
+		t.Error("[FAIL] Should include error details in warning")
+	}
+
+	// PASS criteria: Still provides session instructions
+	if !strings.Contains(result, "### No Active Session") {
+		t.Error("[FAIL] Should still contain session instructions on bootstrap error")
+	}
+	if !strings.Contains(result, "AskUserQuestion") {
+		t.Error("[FAIL] Should still prompt for session creation")
+	}
+}
+
+func TestHook_MalformedJSON_SafeDefault(t *testing.T) {
+	// Scenario 7: Malformed JSON from bootstrap
+	// Expected: Log error, return safe default (treat as no session data)
+	// Save and restore original ExecCommandSession
+	origExecCommand := ExecCommandSession
+	defer func() { ExecCommandSession = origExecCommand }()
+
+	// Mock bootstrap to return malformed JSON
+	ExecCommandSession = func(name string, args ...string) *exec.Cmd {
+		cmd := exec.Command(os.Args[0], "-test.run=TestHelperProcessSession", "--")
+		var output string
+		if name == "brain" && len(args) > 0 {
+			switch args[0] {
+			case "bootstrap":
+				// Return malformed JSON mixed with markdown
+				output = "## Memory Context\n{invalid json here}"
+			case "session":
+				output = `{"mode":"coding"}`
+			case "projects":
+				output = ""
+			}
+		} else if name == "git" {
+			output = ""
+		}
+		cmd.Env = append(os.Environ(), "GO_WANT_HELPER_PROCESS=1", "MOCK_OUTPUT="+output)
+		return cmd
+	}
+
+	result, err := getBootstrapContext("test-project")
+
+	// PASS criteria: No error returned (graceful handling)
+	if err != nil {
+		t.Errorf("[FAIL] getBootstrapContext should not return error on malformed JSON: %v", err)
+	}
+	if result == nil {
+		t.Fatal("[FAIL] Result should not be nil")
+	}
+
+	// PASS criteria: JSON parsing failed, falls back to markdown
+	if result.ParsedJSON {
+		t.Error("[FAIL] ParsedJSON should be false for malformed JSON")
+	}
+	// PASS criteria: Markdown content preserved
+	if result.Markdown == "" {
+		t.Error("[FAIL] Markdown should be preserved even when JSON parsing fails")
+	}
+}
+
+// Test: getBootstrapContext with valid structured JSON
+func TestGetBootstrapContext_StructuredJSON_Success(t *testing.T) {
+	// Save and restore original ExecCommandSession
+	origExecCommand := ExecCommandSession
+	defer func() { ExecCommandSession = origExecCommand }()
+
+	// Mock bootstrap to return valid structured JSON
+	validJSON := `{
+		"metadata": {"project": "test-project", "generated_at": "2026-02-04T10:30:00Z", "note_count": 5, "timeframe": "5d"},
+		"open_sessions": [{"sessionId": "SESSION-2026-02-04_01-test", "status": "IN_PROGRESS", "date": "2026-02-04", "permalink": "sessions/SESSION-2026-02-04_01-test"}],
+		"active_session": {"sessionId": "SESSION-2026-02-04_01-test", "status": "IN_PROGRESS", "path": "sessions/SESSION-2026-02-04_01-test.md", "date": "2026-02-04", "isValid": true, "checks": []}
+	}`
+	ExecCommandSession = mockExecCommandForSession(validJSON)
+
+	result, err := getBootstrapContext("test-project")
+
+	if err != nil {
+		t.Fatalf("getBootstrapContext() returned error: %v", err)
+	}
+
+	// PASS criteria: JSON successfully parsed
+	if !result.ParsedJSON {
+		t.Error("[FAIL] ParsedJSON should be true for valid JSON")
+	}
+
+	// PASS criteria: Session data extracted
+	if len(result.OpenSessions) != 1 {
+		t.Errorf("[FAIL] OpenSessions length = %d, want 1", len(result.OpenSessions))
+	}
+	if result.OpenSessions[0].SessionID != "SESSION-2026-02-04_01-test" {
+		t.Errorf("[FAIL] OpenSessions[0].SessionID = %q, want %q", result.OpenSessions[0].SessionID, "SESSION-2026-02-04_01-test")
+	}
+	if result.ActiveSession == nil {
+		t.Error("[FAIL] ActiveSession should not be nil")
+	} else if result.ActiveSession.SessionID != "SESSION-2026-02-04_01-test" {
+		t.Errorf("[FAIL] ActiveSession.SessionID = %q, want %q", result.ActiveSession.SessionID, "SESSION-2026-02-04_01-test")
+	}
+}
+
+// =============================================================================
+// Tests for parseOpenSessionsFromMarkdown (Legacy Fallback)
+// =============================================================================
+// These tests cover the legacy markdown parsing when JSON is not available.
+
+func TestParseOpenSessionsFromMarkdown_SessionStateFormat(t *testing.T) {
+	// Test the new "### Session State" format
+	markdown := `## Memory Context [v7] (Full)
+
+**Project:** test-project
+
+### Session State
+
+**Active Session**: None
+**Open Sessions**: 2 sessions available
+- SESSION-2026-02-04_01-feature - feature work (IN_PROGRESS) (branch: ` + "`feat/test`" + `)
+- SESSION-2026-02-03_02-bugfix (PAUSED)
+
+### Active Features
+
+- Feature-Auth`
+
+	sessions := parseOpenSessionsFromMarkdown(markdown)
+
+	if len(sessions) != 2 {
+		t.Fatalf("parseOpenSessionsFromMarkdown() returned %d sessions, want 2", len(sessions))
+	}
+
+	// Check first session
+	if sessions[0].SessionID != "SESSION-2026-02-04_01-feature" {
+		t.Errorf("sessions[0].SessionID = %q, want %q", sessions[0].SessionID, "SESSION-2026-02-04_01-feature")
+	}
+	if sessions[0].Status != "IN_PROGRESS" {
+		t.Errorf("sessions[0].Status = %q, want %q", sessions[0].Status, "IN_PROGRESS")
+	}
+	if sessions[0].Date != "2026-02-04" {
+		t.Errorf("sessions[0].Date = %q, want %q", sessions[0].Date, "2026-02-04")
+	}
+	if sessions[0].Branch != "feat/test" {
+		t.Errorf("sessions[0].Branch = %q, want %q", sessions[0].Branch, "feat/test")
+	}
+
+	// Check second session
+	if sessions[1].SessionID != "SESSION-2026-02-03_02-bugfix" {
+		t.Errorf("sessions[1].SessionID = %q, want %q", sessions[1].SessionID, "SESSION-2026-02-03_02-bugfix")
+	}
+	if sessions[1].Status != "PAUSED" {
+		t.Errorf("sessions[1].Status = %q, want %q", sessions[1].Status, "PAUSED")
+	}
+}
+
+func TestParseOpenSessionsFromMarkdown_NoSection(t *testing.T) {
+	// Test when no session section exists
+	markdown := `## Memory Context [v7] (Full)
+
+**Project:** test-project
+
+### Active Features
+
+- Feature-Auth`
+
+	sessions := parseOpenSessionsFromMarkdown(markdown)
+
+	if len(sessions) != 0 {
+		t.Errorf("parseOpenSessionsFromMarkdown() returned %d sessions, want 0", len(sessions))
+	}
+}
+
+func TestParseOpenSessionsFromMarkdown_LowercaseStatus(t *testing.T) {
+	// Test that lowercase status values are normalized to uppercase
+	markdown := `### Session State
+
+- SESSION-2026-02-04_01-test (in_progress)
+- SESSION-2026-02-03_02-other (paused)`
+
+	sessions := parseOpenSessionsFromMarkdown(markdown)
+
+	if len(sessions) != 2 {
+		t.Fatalf("parseOpenSessionsFromMarkdown() returned %d sessions, want 2", len(sessions))
+	}
+
+	if sessions[0].Status != "IN_PROGRESS" {
+		t.Errorf("sessions[0].Status = %q, want %q (should be uppercase)", sessions[0].Status, "IN_PROGRESS")
+	}
+	if sessions[1].Status != "PAUSED" {
+		t.Errorf("sessions[1].Status = %q, want %q (should be uppercase)", sessions[1].Status, "PAUSED")
+	}
+}
+
+func TestParseOpenSessionsFromMarkdown_AtEndOfDocument(t *testing.T) {
+	// Test when Session State section is at end of document (no following ###)
+	markdown := `## Memory Context
+
+**Project:** test-project
+
+### Session State
+
+**Open Sessions**: 1 session available
+- SESSION-2026-02-04_01-final (IN_PROGRESS)`
+
+	sessions := parseOpenSessionsFromMarkdown(markdown)
+
+	if len(sessions) != 1 {
+		t.Fatalf("parseOpenSessionsFromMarkdown() returned %d sessions, want 1", len(sessions))
+	}
+	if sessions[0].SessionID != "SESSION-2026-02-04_01-final" {
+		t.Errorf("sessions[0].SessionID = %q, want %q", sessions[0].SessionID, "SESSION-2026-02-04_01-final")
 	}
 }

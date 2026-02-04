@@ -2,15 +2,22 @@
  * Main context template
  *
  * Renders the complete bootstrap context with all sections.
+ * Session data comes from session service with full lifecycle state.
+ *
+ * @see FEATURE-001-session-management for session lifecycle details
  */
 
-import type { ContextNote, OpenSession } from "../sectionQueries";
+import type { ActiveSession, OpenSession } from "../../../services/session/types";
+import type { ContextNote } from "../sectionQueries";
 import type { SessionEnrichment } from "../sessionEnrichment";
 
 export interface ContextData {
   project: string;
   timestamp: string;
+  /** Open sessions from session service (IN_PROGRESS or PAUSED) */
   openSessions: OpenSession[];
+  /** Active session from session service (IN_PROGRESS only), or null */
+  activeSession: ActiveSession | null;
   activeFeatures: ContextNote[];
   recentDecisions: ContextNote[];
   openBugs: ContextNote[];
@@ -39,9 +46,10 @@ export function renderContext(data: ContextData): string {
     sections.push(renderSessionBlock(data.sessionEnrichment));
   }
 
-  // Open Sessions (if any) - shows sessions that need to be resumed
-  if (data.openSessions.length > 0) {
-    sections.push(renderOpenSessionsBlock(data.openSessions));
+  // Session State - shows active session and open sessions
+  // Renders when either activeSession exists OR openSessions array is non-empty
+  if (data.activeSession || data.openSessions.length > 0) {
+    sections.push(renderSessionStateBlock(data.activeSession, data.openSessions));
   }
 
   // Active Features (if any) - expanded with full content
@@ -80,18 +88,43 @@ function renderHeader(project: string, timestamp: string, fullContent: boolean):
 **Retrieved:** ${timestamp}`;
 }
 
-function renderOpenSessionsBlock(sessions: OpenSession[]): string {
+/**
+ * Render session state block showing active session and open sessions.
+ * Uses session service types with sessionId and status fields.
+ */
+function renderSessionStateBlock(
+  activeSession: ActiveSession | null,
+  openSessions: OpenSession[],
+): string {
   const lines: string[] = [];
 
-  lines.push("### Open Sessions");
-  lines.push("");
-  lines.push("Sessions with work in progress that may need to be resumed:");
+  lines.push("### Session State");
   lines.push("");
 
-  sessions.forEach((session) => {
-    const branchInfo = session.branch ? ` (branch: \`${session.branch}\`)` : "";
-    lines.push(`- [[${session.title}]]${branchInfo}`);
-  });
+  // Active session info
+  if (activeSession) {
+    const topicInfo = activeSession.topic ? ` - ${activeSession.topic}` : "";
+    lines.push(
+      `**Active Session**: ${activeSession.sessionId}${topicInfo} (${activeSession.status})`,
+    );
+  } else {
+    lines.push("**Active Session**: None");
+  }
+
+  // Open sessions summary
+  const openCount = openSessions.length;
+  if (openCount > 0) {
+    lines.push(`**Open Sessions**: ${openCount} session${openCount === 1 ? "" : "s"} available`);
+
+    // List each open session with status
+    openSessions.forEach((session) => {
+      const branchInfo = session.branch ? ` (branch: \`${session.branch}\`)` : "";
+      const topicInfo = session.topic ? ` - ${session.topic}` : "";
+      lines.push(`- ${session.sessionId}${topicInfo} (${session.status})${branchInfo}`);
+    });
+  } else {
+    lines.push("**Open Sessions**: None");
+  }
 
   return lines.join("\n");
 }
@@ -100,7 +133,7 @@ function renderSessionBlock(session: SessionEnrichment): string {
   const { sessionState, taskNotes, featureNotes, recentAgentHistory } = session;
   const lines: string[] = [];
 
-  lines.push("### Session State");
+  lines.push("### Workflow Context");
   lines.push("");
   lines.push(`**Mode:** ${sessionState.currentMode}`);
 

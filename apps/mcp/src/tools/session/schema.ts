@@ -35,18 +35,29 @@ export const SessionArgsSchema = {
 
 export const toolDefinition: Tool = {
   name: "session",
-  description: `Manage session state including workflow mode, active task, and feature.
+  description: `Manage session state and lifecycle.
 
-Operations:
-- **get**: Retrieve current session state (mode, task, feature, history)
-- **set**: Update session state (mode, task, feature)
+**Lifecycle Operations:**
+- **get**: Retrieve session state (openSessions, activeSession, mode, task, feature)
+- **create**: Create new session (auto-pauses any active session). Requires: topic
+- **pause**: Pause active session. Requires: sessionId
+- **resume**: Resume paused session (auto-pauses any active session). Requires: sessionId
+- **complete**: Complete active session. Requires: sessionId
 
-Modes control what tools are allowed:
+**Workflow Operations:**
+- **set**: Update workflow mode, task, or feature
+
+**Session Lifecycle:**
+- Only ONE session can be IN_PROGRESS at a time
+- create/resume auto-pause any existing IN_PROGRESS session
+- Status transitions: IN_PROGRESS <-> PAUSED -> COMPLETE
+
+**Modes control what tools are allowed:**
 - **analysis**: Read-only exploration. Blocks Edit, Write, Bash. Default mode.
 - **planning**: Design phase. Blocks Edit, Write. Allows Bash for research.
 - **coding**: Full access. All tools allowed.
 - **disabled**: Mode enforcement disabled. All tools allowed.
 
-Use 'set' with mode='coding' before starting implementation work.`,
+Use 'create' to start a new work session, 'complete' when done.`,
   inputSchema: sessionSchema as Tool["inputSchema"],
 };

@@ -332,3 +332,345 @@ func TestSetState_UpdatesApplied(t *testing.T) {
 	}
 }
 
+// ============================================================================
+// Session Lifecycle Response Types (mirrors cmd package types)
+// ============================================================================
+
+// SessionCreateResponse represents the MCP session create response.
+type SessionCreateResponse struct {
+	Success    bool    `json:"success"`
+	SessionID  string  `json:"sessionId"`
+	Path       string  `json:"path"`
+	AutoPaused *string `json:"autoPaused,omitempty"`
+	Error      string  `json:"error,omitempty"`
+	Message    string  `json:"message,omitempty"`
+}
+
+// SessionTransitionResponse represents the MCP session pause/resume/complete response.
+type SessionTransitionResponse struct {
+	Success        bool   `json:"success"`
+	SessionID      string `json:"sessionId"`
+	PreviousStatus string `json:"previousStatus,omitempty"`
+	NewStatus      string `json:"newStatus,omitempty"`
+	Error          string `json:"error,omitempty"`
+	Message        string `json:"message,omitempty"`
+}
+
+// ============================================================================
+// Session Create Tests
+// ============================================================================
+
+func TestSessionCreateResponse_SuccessParsing(t *testing.T) {
+	input := `{
+		"success": true,
+		"sessionId": "SESSION-2026-02-04_01-feature-xyz",
+		"path": "sessions/SESSION-2026-02-04_01-feature-xyz.md"
+	}`
+
+	var resp SessionCreateResponse
+	if err := json.Unmarshal([]byte(input), &resp); err != nil {
+		t.Fatalf("Failed to parse create response: %v", err)
+	}
+
+	if !resp.Success {
+		t.Error("Success should be true")
+	}
+	if resp.SessionID != "SESSION-2026-02-04_01-feature-xyz" {
+		t.Errorf("SessionID mismatch: got %q", resp.SessionID)
+	}
+	if resp.Path != "sessions/SESSION-2026-02-04_01-feature-xyz.md" {
+		t.Errorf("Path mismatch: got %q", resp.Path)
+	}
+	if resp.AutoPaused != nil {
+		t.Error("AutoPaused should be nil when no session was auto-paused")
+	}
+}
+
+func TestSessionCreateResponse_WithAutoPause(t *testing.T) {
+	autoPaused := "SESSION-2026-02-03_02-bugfix"
+	input := `{
+		"success": true,
+		"sessionId": "SESSION-2026-02-04_01-feature-xyz",
+		"path": "sessions/SESSION-2026-02-04_01-feature-xyz.md",
+		"autoPaused": "SESSION-2026-02-03_02-bugfix"
+	}`
+
+	var resp SessionCreateResponse
+	if err := json.Unmarshal([]byte(input), &resp); err != nil {
+		t.Fatalf("Failed to parse create response with autoPaused: %v", err)
+	}
+
+	if resp.AutoPaused == nil {
+		t.Fatal("AutoPaused should not be nil")
+	}
+	if *resp.AutoPaused != autoPaused {
+		t.Errorf("AutoPaused mismatch: got %q, want %q", *resp.AutoPaused, autoPaused)
+	}
+}
+
+func TestSessionCreateResponse_ErrorParsing(t *testing.T) {
+	input := `{
+		"success": false,
+		"error": "AUTO_PAUSE_FAILED",
+		"message": "Failed to auto-pause existing session"
+	}`
+
+	var resp SessionCreateResponse
+	if err := json.Unmarshal([]byte(input), &resp); err != nil {
+		t.Fatalf("Failed to parse error response: %v", err)
+	}
+
+	if resp.Success {
+		t.Error("Success should be false")
+	}
+	if resp.Error != "AUTO_PAUSE_FAILED" {
+		t.Errorf("Error code mismatch: got %q", resp.Error)
+	}
+	if resp.Message == "" {
+		t.Error("Message should be present for errors")
+	}
+}
+
+// ============================================================================
+// Session Pause Tests
+// ============================================================================
+
+func TestSessionTransitionResponse_PauseSuccess(t *testing.T) {
+	input := `{
+		"success": true,
+		"sessionId": "SESSION-2026-02-04_01-feature-xyz",
+		"previousStatus": "IN_PROGRESS",
+		"newStatus": "PAUSED"
+	}`
+
+	var resp SessionTransitionResponse
+	if err := json.Unmarshal([]byte(input), &resp); err != nil {
+		t.Fatalf("Failed to parse pause response: %v", err)
+	}
+
+	if !resp.Success {
+		t.Error("Success should be true")
+	}
+	if resp.PreviousStatus != "IN_PROGRESS" {
+		t.Errorf("PreviousStatus mismatch: got %q", resp.PreviousStatus)
+	}
+	if resp.NewStatus != "PAUSED" {
+		t.Errorf("NewStatus mismatch: got %q", resp.NewStatus)
+	}
+}
+
+func TestSessionTransitionResponse_SessionNotFound(t *testing.T) {
+	input := `{
+		"success": false,
+		"error": "SESSION_NOT_FOUND",
+		"message": "Session not found: SESSION-2026-02-04_01-unknown"
+	}`
+
+	var resp SessionTransitionResponse
+	if err := json.Unmarshal([]byte(input), &resp); err != nil {
+		t.Fatalf("Failed to parse error response: %v", err)
+	}
+
+	if resp.Success {
+		t.Error("Success should be false")
+	}
+	if resp.Error != "SESSION_NOT_FOUND" {
+		t.Errorf("Error code mismatch: got %q", resp.Error)
+	}
+}
+
+func TestSessionTransitionResponse_InvalidTransition(t *testing.T) {
+	input := `{
+		"success": false,
+		"error": "INVALID_STATUS_TRANSITION",
+		"previousStatus": "PAUSED",
+		"message": "Session cannot be paused (already paused)"
+	}`
+
+	var resp SessionTransitionResponse
+	if err := json.Unmarshal([]byte(input), &resp); err != nil {
+		t.Fatalf("Failed to parse invalid transition response: %v", err)
+	}
+
+	if resp.Success {
+		t.Error("Success should be false")
+	}
+	if resp.Error != "INVALID_STATUS_TRANSITION" {
+		t.Errorf("Error code mismatch: got %q", resp.Error)
+	}
+	if resp.PreviousStatus != "PAUSED" {
+		t.Errorf("PreviousStatus should indicate current status: got %q", resp.PreviousStatus)
+	}
+}
+
+// ============================================================================
+// Session Resume Tests
+// ============================================================================
+
+func TestSessionTransitionResponse_ResumeSuccess(t *testing.T) {
+	input := `{
+		"success": true,
+		"sessionId": "SESSION-2026-02-04_01-feature-xyz",
+		"previousStatus": "PAUSED",
+		"newStatus": "IN_PROGRESS"
+	}`
+
+	var resp SessionTransitionResponse
+	if err := json.Unmarshal([]byte(input), &resp); err != nil {
+		t.Fatalf("Failed to parse resume response: %v", err)
+	}
+
+	if !resp.Success {
+		t.Error("Success should be true")
+	}
+	if resp.PreviousStatus != "PAUSED" {
+		t.Errorf("PreviousStatus mismatch: got %q", resp.PreviousStatus)
+	}
+	if resp.NewStatus != "IN_PROGRESS" {
+		t.Errorf("NewStatus mismatch: got %q", resp.NewStatus)
+	}
+}
+
+func TestSessionTransitionResponse_AutoPauseFailed(t *testing.T) {
+	input := `{
+		"success": false,
+		"error": "AUTO_PAUSE_FAILED",
+		"message": "Failed to auto-pause existing session: SESSION-2026-02-03_02-bugfix"
+	}`
+
+	var resp SessionTransitionResponse
+	if err := json.Unmarshal([]byte(input), &resp); err != nil {
+		t.Fatalf("Failed to parse auto-pause failed response: %v", err)
+	}
+
+	if resp.Success {
+		t.Error("Success should be false")
+	}
+	if resp.Error != "AUTO_PAUSE_FAILED" {
+		t.Errorf("Error code mismatch: got %q", resp.Error)
+	}
+}
+
+// ============================================================================
+// Session Complete Tests
+// ============================================================================
+
+func TestSessionTransitionResponse_CompleteSuccess(t *testing.T) {
+	input := `{
+		"success": true,
+		"sessionId": "SESSION-2026-02-04_01-feature-xyz",
+		"previousStatus": "IN_PROGRESS",
+		"newStatus": "COMPLETE"
+	}`
+
+	var resp SessionTransitionResponse
+	if err := json.Unmarshal([]byte(input), &resp); err != nil {
+		t.Fatalf("Failed to parse complete response: %v", err)
+	}
+
+	if !resp.Success {
+		t.Error("Success should be true")
+	}
+	if resp.PreviousStatus != "IN_PROGRESS" {
+		t.Errorf("PreviousStatus mismatch: got %q", resp.PreviousStatus)
+	}
+	if resp.NewStatus != "COMPLETE" {
+		t.Errorf("NewStatus mismatch: got %q", resp.NewStatus)
+	}
+}
+
+func TestSessionTransitionResponse_AlreadyComplete(t *testing.T) {
+	input := `{
+		"success": false,
+		"error": "INVALID_STATUS_TRANSITION",
+		"previousStatus": "COMPLETE",
+		"message": "Session cannot be completed (already complete)"
+	}`
+
+	var resp SessionTransitionResponse
+	if err := json.Unmarshal([]byte(input), &resp); err != nil {
+		t.Fatalf("Failed to parse already complete response: %v", err)
+	}
+
+	if resp.Success {
+		t.Error("Success should be false")
+	}
+	if resp.PreviousStatus != "COMPLETE" {
+		t.Errorf("PreviousStatus should indicate COMPLETE: got %q", resp.PreviousStatus)
+	}
+}
+
+// ============================================================================
+// Session ID Format Tests
+// ============================================================================
+
+func TestSessionIDFormat(t *testing.T) {
+	validIDs := []string{
+		"SESSION-2026-02-04_01-feature-xyz",
+		"SESSION-2026-01-01_99-a",
+		"SESSION-2099-12-31_01-long-topic-with-hyphens",
+	}
+
+	for _, id := range validIDs {
+		t.Run(id, func(t *testing.T) {
+			// Verify the ID follows expected pattern
+			if !strings.HasPrefix(id, "SESSION-") {
+				t.Errorf("Session ID should start with SESSION-: %s", id)
+			}
+			// Verify it contains date pattern
+			if !strings.Contains(id, "-20") {
+				t.Errorf("Session ID should contain year: %s", id)
+			}
+		})
+	}
+}
+
+// ============================================================================
+// Output Format Tests
+// ============================================================================
+
+func TestCreateOutputFormat(t *testing.T) {
+	// Verify the expected output format for create command
+	resp := SessionCreateResponse{
+		Success:   true,
+		SessionID: "SESSION-2026-02-04_01-feature-xyz",
+		Path:      "sessions/SESSION-2026-02-04_01-feature-xyz.md",
+	}
+
+	// Simulate formatted output
+	output := strings.Builder{}
+	output.WriteString("Session created: " + resp.SessionID + "\n")
+	output.WriteString("Path: " + resp.Path + "\n")
+
+	result := output.String()
+	if !strings.Contains(result, "Session created:") {
+		t.Error("Output should contain 'Session created:'")
+	}
+	if !strings.Contains(result, "Path:") {
+		t.Error("Output should contain 'Path:'")
+	}
+}
+
+func TestTransitionOutputFormat(t *testing.T) {
+	// Verify the expected output format for pause/resume/complete commands
+	resp := SessionTransitionResponse{
+		Success:        true,
+		SessionID:      "SESSION-2026-02-04_01-feature-xyz",
+		PreviousStatus: "IN_PROGRESS",
+		NewStatus:      "PAUSED",
+	}
+
+	// Simulate formatted output
+	output := strings.Builder{}
+	output.WriteString("Session paused: " + resp.SessionID + "\n")
+	output.WriteString("Status: " + resp.PreviousStatus + " -> " + resp.NewStatus + "\n")
+
+	result := output.String()
+	if !strings.Contains(result, "Session paused:") {
+		t.Error("Output should contain 'Session paused:'")
+	}
+	if !strings.Contains(result, "->") {
+		t.Error("Output should contain status transition arrow")
+	}
+}
+

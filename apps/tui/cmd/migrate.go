@@ -338,11 +338,11 @@ func runRollback(cmd *cobra.Command, args []string) error {
 
 	// Parse success response
 	var response struct {
-		Success          bool   `json:"success"`
-		Target           string `json:"target"`
-		RestoredFrom     string `json:"restored_from"`
-		SyncedToBasic    bool   `json:"synced_to_basic_memory"`
-		ReconfigTriggered bool  `json:"reconfiguration_triggered"`
+		Success           bool   `json:"success"`
+		Target            string `json:"target"`
+		RestoredFrom      string `json:"restored_from"`
+		SyncedToBasic     bool   `json:"synced_to_basic_memory"`
+		ReconfigTriggered bool   `json:"reconfiguration_triggered"`
 	}
 	if err := json.Unmarshal([]byte(text), &response); err == nil && response.Success {
 		fmt.Printf("[PASS] Rollback to %s complete\n", response.Target)
@@ -505,14 +505,14 @@ func handleAgentsMigrationError(text string) error {
 // displayAgentsMigrationResult formats and displays agents migration results
 func displayAgentsMigrationResult(text string, dryRun bool) error {
 	var response struct {
-		Success      bool   `json:"success"`
-		DryRun       bool   `json:"dry_run"`
-		Project      string `json:"project"`
-		TotalFiles   int    `json:"total_files"`
-		Migrated     int    `json:"migrated"`
-		Skipped      int    `json:"skipped"`
-		Categories   map[string]int `json:"categories,omitempty"`
-		Files        []struct {
+		Success    bool           `json:"success"`
+		DryRun     bool           `json:"dry_run"`
+		Project    string         `json:"project"`
+		TotalFiles int            `json:"total_files"`
+		Migrated   int            `json:"migrated"`
+		Skipped    int            `json:"skipped"`
+		Categories map[string]int `json:"categories,omitempty"`
+		Files      []struct {
 			Source   string `json:"source"`
 			Title    string `json:"title"`
 			Category string `json:"category"`

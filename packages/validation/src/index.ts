@@ -29,6 +29,15 @@ export {
   validateDirectory,
   validateNamingPattern,
 } from "./naming-pattern";
+// Session status validators
+export {
+  getSessionStatusErrors,
+  isValidSessionStatus,
+  type SessionStatus,
+  type StatusValidation,
+  type ValidationError as SessionValidationError,
+  validateSessionStatus,
+} from "./session-status-validators";
 export {
   // Types - Tool Args
   type ActiveProjectArgs,

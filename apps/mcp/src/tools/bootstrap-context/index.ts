@@ -8,7 +8,12 @@
 
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { resolveProject, setActiveProject } from "../../project/resolve";
-import { createDefaultSessionState, getSession } from "../../services/session";
+import {
+  createDefaultSessionState,
+  getSession,
+  queryActiveSession,
+  queryOpenSessions,
+} from "../../services/session";
 import { logger } from "../../utils/internal/logger";
 import { triggerCatchupEmbedding } from "./catchupTrigger";
 import { buildFormattedOutputWithLimits } from "./formattedOutput";
@@ -17,7 +22,6 @@ import type { BootstrapContextArgs } from "./schema";
 import {
   queryActiveFeatures,
   queryOpenBugs,
-  queryOpenSessions,
   queryRecentActivity,
   queryRecentDecisions,
 } from "./sectionQueries";
@@ -78,19 +82,22 @@ export async function handler(args: BootstrapContextArgs): Promise<CallToolResul
     }
 
     // Query all sections in parallel, including session enrichment
+    // Session queries (queryOpenSessions, queryActiveSession) come from session service
     const [
       recentActivity,
       activeFeatures,
       recentDecisions,
       openBugs,
       openSessions,
+      activeSession,
       sessionEnrichment,
     ] = await Promise.all([
       queryRecentActivity({ project, timeframe }),
       queryActiveFeatures({ project, timeframe }),
       queryRecentDecisions({ project, timeframe: "3d" }),
       queryOpenBugs({ project, timeframe }),
-      queryOpenSessions({ project }),
+      queryOpenSessions(project),
+      queryActiveSession(project),
       buildSessionEnrichment({ project, sessionState }),
     ]);
 
@@ -106,6 +113,7 @@ export async function handler(args: BootstrapContextArgs): Promise<CallToolResul
       project,
       timeframe,
       openSessions,
+      activeSession,
       activeFeatures,
       recentDecisions,
       openBugs,
@@ -123,6 +131,7 @@ export async function handler(args: BootstrapContextArgs): Promise<CallToolResul
       {
         project,
         openSessions,
+        activeSession,
         activeFeatures,
         recentDecisions,
         openBugs,
@@ -139,6 +148,8 @@ export async function handler(args: BootstrapContextArgs): Promise<CallToolResul
         project,
         noteCount: structuredContent.metadata.note_count,
         openSessions: openSessions.length,
+        hasActiveSession: !!activeSession,
+        activeSessionId: activeSession?.sessionId ?? null,
         features: activeFeatures.length,
         decisions: recentDecisions.length,
         bugs: openBugs.length,

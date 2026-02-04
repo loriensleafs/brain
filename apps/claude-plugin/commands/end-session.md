@@ -2,18 +2,53 @@
 
 Complete ALL mandatory steps before ending a session.
 
-## 1. Session Status Update (BLOCKING)
+## Primary Method: MCP Session Tool
 
-**CRITICAL**: Update the session note status before any other end steps.
-
-Use `edit_note` to change status from `in_progress` to `complete`:
+Use the MCP `session` tool with `operation: complete` to end a session.
 
 ```text
-mcp__plugin_brain_brain__edit_note
-  identifier: SESSION-YYYY-MM-DD_NN-topic
-  operation: find_replace
-  find: "status: in_progress"
-  replace: "status: complete"
+mcp__plugin_brain_brain__session
+  operation: complete
+  sessionId: <session-id>
+```
+
+**Parameters:**
+
+| Parameter | Required | Description                                       |
+| --------- | -------- | ------------------------------------------------- |
+| operation | Yes      | Must be `complete`                                |
+| sessionId | Yes      | Session ID (e.g., `SESSION-2026-02-04_01-topic`)  |
+| project   | No       | Project name/path to scope the session            |
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "sessionId": "SESSION-2026-02-04_01-feature-implementation",
+  "previousStatus": "in_progress",
+  "newStatus": "complete"
+}
+```
+
+**Terminal status:** COMPLETE is a terminal status. A completed session cannot
+be resumed. If you need to pause work temporarily, use `/pause-session` instead.
+
+## Alternative: CLI Command
+
+```bash
+brain session complete SESSION-2026-02-04_01-feature-implementation
+brain session complete SESSION-2026-02-04_01-feature-implementation -p myproject
+```
+
+## 1. Session Status Update (BLOCKING)
+
+**CRITICAL**: Update the session status before any other end steps.
+
+```text
+mcp__plugin_brain_brain__session
+  operation: complete
+  sessionId: SESSION-YYYY-MM-DD_NN-topic
 ```
 
 Verify the update succeeded before continuing.
@@ -147,10 +182,30 @@ The session resume capability depends on:
 
 ## Status Lifecycle Reference
 
-| Status        | Set By        | Meaning               |
-|---------------|---------------|-----------------------|
-| `in_progress` | start-session | Session active        |
-| `complete`    | end-session   | Session ended normally|
+```text
+              create
+                |
+                v
+         +--------------+
+         | IN_PROGRESS  |<----+
+         +--------------+     |
+            |       |         |
+     pause  |       | complete|  resume
+            v       |         |
+         +--------+ |     +--------+
+         | PAUSED |-+---->| COMPLETE|
+         +--------+       +--------+
+                              ^
+                              |
+                          (terminal)
+```
 
-Sessions with `status: in_progress` indicate work that was interrupted and
-may need resumption.
+| Status        | Set By          | Meaning         | Can Transition To     |
+| ------------- | --------------- | --------------- | --------------------- |
+| `in_progress` | start, resume   | Session active  | PAUSED, COMPLETE      |
+| `paused`      | pause           | Suspended       | IN_PROGRESS, COMPLETE |
+| `complete`    | end             | Terminal        | None                  |
+
+Sessions with `status: in_progress` or `status: paused` indicate work that
+may need resumption. Use `/pause-session` if you need to switch contexts
+temporarily. Use `/end-session` when work is truly complete.

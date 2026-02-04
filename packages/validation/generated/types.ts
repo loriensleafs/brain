@@ -7,7 +7,7 @@
  * To regenerate: bun run generate:types
  * Source schemas: packages/validation/schemas/*.schema.json
  *
- * Generated: 2026-02-04T12:42:48.302Z
+ * Generated: 2026-02-04T19:23:50.801Z
  */
 
 // Source: schemas/config/brain-config.schema.json
@@ -1054,13 +1054,13 @@ export interface SendWorkflowEventArgs {
 
 // Source: schemas/tools/session.schema.json
 /**
- * Schema for session tool arguments. Unified session management with get/set operations for workflow mode, active task, and feature.
+ * Schema for session tool arguments. Unified session management with get/set/create/pause/resume/complete operations for workflow mode, active task, feature, and session lifecycle.
  */
 export interface SessionArgs {
   /**
-   * Operation: 'get' retrieves session state, 'set' updates it
+   * Operation: 'get' retrieves session state, 'set' updates it, 'create' starts new session, 'pause' pauses active session, 'resume' resumes paused session, 'complete' completes active session
    */
-  operation: "get" | "set";
+  operation: "get" | "set" | "create" | "pause" | "resume" | "complete";
   /**
    * Workflow mode (for set operation): analysis (read-only), planning (design), coding (full access), disabled (no restrictions)
    */
@@ -1073,6 +1073,14 @@ export interface SessionArgs {
    * Active feature slug/path (for set operation)
    */
   feature?: string;
+  /**
+   * Session identifier (required for pause/resume/complete operations)
+   */
+  sessionId?: string;
+  /**
+   * Session topic (required for create operation)
+   */
+  topic?: string;
 }
 
 // Source: schemas/validators/batch-pr-review.schema.json

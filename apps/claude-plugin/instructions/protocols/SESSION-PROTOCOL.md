@@ -24,6 +24,56 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 
 ---
 
+## Session Status Lifecycle
+
+Session notes track status through a state machine. Status is computed from note frontmatter, not persisted separately.
+
+### Status State Machine
+
+```text
+IN_PROGRESS <--> PAUSED --> COMPLETE
+```
+
+| Status | Description | Allowed Transitions |
+| ------ | ----------- | ------------------- |
+| IN_PROGRESS | Active session, work ongoing | PAUSED, COMPLETE |
+| PAUSED | Session suspended, can resume later | IN_PROGRESS, COMPLETE |
+| COMPLETE | Session finished (terminal state) | None |
+
+### Constraint: Single Active Session
+
+Only ONE session can have status IN_PROGRESS at a time. This ensures clear context about which session is active.
+
+**Auto-pause behavior**: When you create or resume a session, any existing IN_PROGRESS session is automatically paused.
+
+### MCP Session Operations
+
+Use the Brain MCP session tool for status transitions:
+
+| Operation | Command | Action |
+| --------- | ------- | ------ |
+| Get current | `brain session get` | Returns current IN_PROGRESS session (if any) |
+| Create | `brain session create -t "topic"` | Creates session with IN_PROGRESS, auto-pauses existing |
+| Pause | `brain session pause` | IN_PROGRESS -> PAUSED |
+| Resume | `brain session resume -i "identifier"` | PAUSED -> IN_PROGRESS, auto-pauses existing |
+| Complete | `brain session complete` | IN_PROGRESS -> COMPLETE (terminal) |
+
+### Session Note Frontmatter
+
+```yaml
+---
+title: SESSION-YYYY-MM-DD_NN-topic
+type: session
+status: IN_PROGRESS
+date: YYYY-MM-DD
+tags: [session]
+---
+```
+
+**Backward Compatibility**: Notes missing the status field are treated as COMPLETE.
+
+---
+
 ## Protocol Enforcement Model
 
 ### Trust-Based vs Verification-Based
@@ -45,6 +95,7 @@ Labels like "MANDATORY" or "NON-NEGOTIABLE" are insufficient. Each requirement M
 | File writes          | File exists with expected content        |
 | Git operations       | Git log/status shows expected state      |
 | Checklist completion | Session log contains completed checklist |
+| Session status       | Frontmatter contains expected status     |
 
 ---
 
@@ -170,17 +221,19 @@ The agent MUST create a session log early in the session.
 
 **Requirements:**
 
-1. The agent MUST create a session log file at `.agents/sessions/YYYY-MM-DD-session-NN.md`
+1. The agent MUST create a session using `brain session create -t "topic"` which:
+   - Creates session note at `sessions/SESSION-YYYY-MM-DD_NN-topic.md`
+   - Sets `status: IN_PROGRESS` automatically
+   - Auto-pauses any existing IN_PROGRESS session
 2. The session log SHOULD be created within the first 5 tool calls of the session
 3. The session log MUST include the Protocol Compliance section (see template below)
-4. The agent MUST set `status: in_progress` in the session frontmatter
-5. The agent MUST NOT defer session log creation to the end of the session
+4. The agent MUST NOT defer session log creation to the end of the session
 
 **Verification:**
 
 - Session log file exists with correct naming pattern
 - File contains Protocol Compliance section
-- Frontmatter contains `status: in_progress`
+- Frontmatter contains `status: IN_PROGRESS`
 - Timestamp shows early creation, not late
 
 **Rationale:** Late session log creation reduces traceability and often results in incomplete documentation when sessions end unexpectedly.
@@ -224,7 +277,7 @@ Copy this checklist to each session log and verify completion:
 | MUST   | Initialize Brain: `mcp__plugin_brain_brain__build_context`                   | [ ]    | Tool output present         |
 | MUST   | Load initial context: `mcp__plugin_brain_brain__read_note`                   | [ ]    | Tool output present         |
 | MUST   | Read `.agents/HANDOFF.md`                                                    | [ ]    | Content in context          |
-| MUST   | Create this session log with `status: in_progress`                           | [ ]    | Frontmatter verified        |
+| MUST   | Create session: `brain session create -t "topic"`                            | [ ]    | Status: IN_PROGRESS         |
 | MUST   | List skill scripts in `.claude/skills/github/scripts/`                       | [ ]    | Output documented below     |
 | MUST   | Read usage-mandatory note                                                    | [ ]    | Content in context          |
 | MUST   | Read PROJECT-CONSTRAINTS.md                                                  | [ ]    | Content in context          |
@@ -313,7 +366,7 @@ The agent MUST update documentation before ending.
 
 **Requirements:**
 
-1. The agent MUST update the session frontmatter to set `status: complete`
+1. The agent MUST complete the session using `brain session complete` which sets `status: COMPLETE`
 2. The agent MUST NOT update `.agents/HANDOFF.md` directly. Session context MUST go to:
 
    - Your session log at `.agents/sessions/YYYY-MM-DD-session-NN.md`
@@ -488,7 +541,7 @@ Copy this checklist to each session log and verify completion:
 | SHOULD   | Export session notes: `pwsh .claude-mem/scripts/Export-ClaudeMemMemories.ps1 -Query "[query]" -SessionNumber NNN -Topic "topic"` | [ ]      | Export file: [path] (or "Skipped")                                   |
 | MUST     | Security review export (if exported): `grep -iE "api[_-]?key                                                                     | password | token                                                                | secret | credential | private[_-]?key" [file].json` | [ ] | Scan result: "Clean" or "Redacted" |
 | MUST     | Complete session log (all sections filled)                                                                                       | [ ]      | File complete                                                        |
-| MUST     | Edit session to set `status: complete`                                                                                           | [ ]      | Frontmatter verified                                                 |
+| MUST     | Complete session: `brain session complete`                                                                                       | [ ]      | Status: COMPLETE                                                     |
 | MUST     | Update Brain note (cross-session context)                                                                                        | [ ]      | Note write confirmed                                                 |
 | MUST     | Run markdown lint                                                                                                                | [ ]      | Lint output clean                                                    |
 | MUST     | Route to qa agent (feature implementation)                                                                                       | [ ]      | QA report: `.agents/qa/[report].md` OR `SKIPPED: investigation-only` |
@@ -514,7 +567,7 @@ Create at: `.agents/sessions/YYYY-MM-DD-session-NN.md`
 ---
 title: SESSION-YYYY-MM-DD_NN-topic
 type: session
-status: in_progress
+status: IN_PROGRESS
 date: YYYY-MM-DD
 tags: [session]
 ---
@@ -537,7 +590,7 @@ tags: [session]
 | MUST   | Initialize Brain: `mcp__plugin_brain_brain__build_context`                   | [ ]    | Tool output present         |
 | MUST   | Load initial context: `mcp__plugin_brain_brain__read_note`                   | [ ]    | Tool output present         |
 | MUST   | Read `.agents/HANDOFF.md`                                                    | [ ]    | Content in context          |
-| MUST   | Create this session log with `status: in_progress`                           | [ ]    | Frontmatter verified        |
+| MUST   | Create session: `brain session create -t "topic"`                            | [ ]    | Status: IN_PROGRESS         |
 | MUST   | List skill scripts in `.claude/skills/github/scripts/`                       | [ ]    | Output documented below     |
 | MUST   | Read usage-mandatory note                                                    | [ ]    | Content in context          |
 | MUST   | Read PROJECT-CONSTRAINTS.md                                                  | [ ]    | Content in context          |
@@ -602,7 +655,7 @@ All MUST requirements above are marked complete.
 | SHOULD   | Export session notes: `pwsh .claude-mem/scripts/Export-ClaudeMemMemories.ps1 -Query "[query]" -SessionNumber NNN -Topic "topic"` | [ ]      | Export file: [path] (or "Skipped")                                   |
 | MUST     | Security review export (if exported): `grep -iE "api[_-]?key                                                                     | password | token                                                                | secret | credential | private[_-]?key" [file].json` | [ ] | Scan result: "Clean" or "Redacted" |
 | MUST     | Complete session log (all sections filled)                                                                                       | [ ]      | File complete                                                        |
-| MUST     | Edit session to set `status: complete`                                                                                           | [ ]      | Frontmatter verified                                                 |
+| MUST     | Complete session: `brain session complete`                                                                                       | [ ]      | Status: COMPLETE                                                     |
 | MUST     | Update Brain note (cross-session context)                                                                                        | [ ]      | Note write confirmed                                                 |
 | MUST     | Run markdown lint                                                                                                                | [ ]      | Output below                                                         |
 | MUST     | Route to qa agent (feature implementation)                                                                                       | [ ]      | QA report: `.agents/qa/[report].md` OR `SKIPPED: investigation-only` |

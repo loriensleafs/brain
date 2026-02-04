@@ -332,7 +332,7 @@ func TestTruncateString(t *testing.T) {
 // Tests for main validation functions
 
 func TestValidateSessionProtocol_FileNotFound(t *testing.T) {
-	result := internal.ValidateSessionProtocol("/nonexistent/path/2024-01-01-session-01.md")
+	result := internal.ValidateSessionProtocol("/nonexistent/path/SESSION-2024-01-01_01-test-session.md")
 
 	if result.Valid {
 		t.Error("Expected validation to fail for nonexistent file")
@@ -405,7 +405,7 @@ func TestValidateSessionProtocol_InvalidFilename(t *testing.T) {
 
 func TestValidateSessionProtocol_ValidSession(t *testing.T) {
 	tmpDir := t.TempDir()
-	validPath := filepath.Join(tmpDir, "2024-01-01-session-01.md")
+	validPath := filepath.Join(tmpDir, "SESSION-2024-01-01_01-test-session.md")
 
 	content := `# Session 01 - 2024-01-01
 
@@ -504,7 +504,7 @@ Nothing to commit, working tree clean
 
 func TestValidateSessionProtocol_MissingMustItems(t *testing.T) {
 	tmpDir := t.TempDir()
-	validPath := filepath.Join(tmpDir, "2024-01-01-session-01.md")
+	validPath := filepath.Join(tmpDir, "SESSION-2024-01-01_01-test-session.md")
 
 	content := `# Session 01 - 2024-01-01
 
@@ -586,7 +586,7 @@ func TestValidateSessionProtocolFromContent_AllChecks(t *testing.T) {
 | MUST | Commit all changes | [x] | Commit SHA: abc1234 |
 `
 
-	result := internal.ValidateSessionProtocolFromContent(content, "2024-01-01-session-01.md")
+	result := internal.ValidateSessionProtocolFromContent(content, "SESSION-2024-01-01_01-test-session.md")
 
 	if result.StartChecklist.TotalMustItems != 1 {
 		t.Errorf("Expected 1 Session Start MUST item, got %d", result.StartChecklist.TotalMustItems)

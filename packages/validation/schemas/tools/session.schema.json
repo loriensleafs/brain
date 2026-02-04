@@ -2,13 +2,13 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://brain.dev/schemas/tools/session.json",
   "title": "SessionArgs",
-  "description": "Schema for session tool arguments. Unified session management with get/set operations for workflow mode, active task, and feature.",
+  "description": "Schema for session tool arguments. Unified session management with get/set/create/pause/resume/complete operations for workflow mode, active task, feature, and session lifecycle.",
   "type": "object",
   "properties": {
     "operation": {
       "type": "string",
-      "enum": ["get", "set"],
-      "description": "Operation: 'get' retrieves session state, 'set' updates it"
+      "enum": ["get", "set", "create", "pause", "resume", "complete"],
+      "description": "Operation: 'get' retrieves session state, 'set' updates it, 'create' starts new session, 'pause' pauses active session, 'resume' resumes paused session, 'complete' completes active session"
     },
     "mode": {
       "type": "string",
@@ -22,6 +22,14 @@
     "feature": {
       "type": "string",
       "description": "Active feature slug/path (for set operation)"
+    },
+    "sessionId": {
+      "type": "string",
+      "description": "Session identifier (required for pause/resume/complete operations)"
+    },
+    "topic": {
+      "type": "string",
+      "description": "Session topic (required for create operation)"
     }
   },
   "required": ["operation"],

@@ -28,7 +28,7 @@ type SessionProtocolConfig struct {
 // DefaultSessionProtocolConfig returns the default configuration values.
 // These match the schema defaults in session-protocol.schema.json.
 var DefaultSessionProtocolConfig = SessionProtocolConfig{
-	FilenamePattern: `^\d{4}-\d{2}-\d{2}-session-\d+\.md$`,
+	FilenamePattern: `^SESSION-\d{4}-\d{2}-\d{2}_\d{2}-.+\.md$`,
 	RequiredSections: []string{
 		"Session Info",
 		"Protocol Compliance",
@@ -202,7 +202,7 @@ func ValidateSessionProtocolWithConfig(sessionLogPath string, config SessionProt
 		checks = append(checks, Check{
 			Name:    "filename_format",
 			Passed:  true,
-			Message: "Filename matches YYYY-MM-DD-session-NN.md pattern",
+			Message: "Filename matches SESSION-YYYY-MM-DD_NN-topic.md pattern",
 		})
 	} else {
 		checks = append(checks, Check{
@@ -669,7 +669,7 @@ func ValidateSessionProtocolFromContentWithConfig(content string, sessionLogPath
 			checks = append(checks, Check{
 				Name:    "filename_format",
 				Passed:  true,
-				Message: "Filename matches YYYY-MM-DD-session-NN.md pattern",
+				Message: "Filename matches SESSION-YYYY-MM-DD_NN-topic.md pattern",
 			})
 		} else {
 			checks = append(checks, Check{

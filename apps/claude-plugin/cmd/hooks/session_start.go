@@ -25,6 +25,8 @@ type SessionStartOutput struct {
 	GitContext    *GitContextInfo    `json:"gitContext,omitempty"`
 	BootstrapInfo map[string]any     `json:"bootstrapInfo,omitempty"`
 	WorkflowState *WorkflowStateInfo `json:"workflowState,omitempty"`
+	OpenSessions  []OpenSession      `json:"openSessions,omitempty"`
+	ActiveSession *ActiveSession     `json:"activeSession,omitempty"`
 	Error         string             `json:"error,omitempty"`
 }
 
@@ -55,11 +57,54 @@ type WorkflowStateInfo struct {
 	Task        string `json:"task,omitempty"`
 }
 
-// OpenSession represents a session with status: in_progress
+// OpenSession represents a session with status: IN_PROGRESS or PAUSED
+// Matches TypeScript type from apps/mcp/src/services/session/types.ts
 type OpenSession struct {
-	Title  string `json:"title"`
-	Date   string `json:"date,omitempty"`
-	Branch string `json:"branch,omitempty"`
+	SessionID string `json:"sessionId"`
+	Status    string `json:"status"` // "IN_PROGRESS" or "PAUSED"
+	Date      string `json:"date"`
+	Branch    string `json:"branch,omitempty"`
+	Topic     string `json:"topic,omitempty"`
+	Permalink string `json:"permalink"`
+}
+
+// ActiveSession represents the currently active session (status: IN_PROGRESS)
+// Only ONE session can be active at a time.
+// Matches TypeScript type from apps/mcp/src/services/session/types.ts
+type ActiveSession struct {
+	SessionID string                   `json:"sessionId"`
+	Status    string                   `json:"status"` // Always "IN_PROGRESS"
+	Path      string                   `json:"path"`
+	Mode      string                   `json:"mode,omitempty"`
+	Task      string                   `json:"task,omitempty"`
+	Branch    string                   `json:"branch,omitempty"`
+	Date      string                   `json:"date"`
+	Topic     string                   `json:"topic,omitempty"`
+	IsValid   bool                     `json:"isValid"`
+	Checks    []SessionValidationCheck `json:"checks"`
+}
+
+// SessionValidationCheck represents a single validation check result
+type SessionValidationCheck struct {
+	Name   string `json:"name"`
+	Passed bool   `json:"passed"`
+}
+
+// BootstrapMetadata contains metadata about the bootstrap context
+type BootstrapMetadata struct {
+	Project     string `json:"project"`
+	GeneratedAt string `json:"generated_at"`
+	NoteCount   int    `json:"note_count"`
+	Timeframe   string `json:"timeframe"`
+}
+
+// BootstrapResponse represents the structured JSON output from bootstrap_context
+// Matches the StructuredContent interface from structuredOutput.ts
+type BootstrapResponse struct {
+	Metadata      BootstrapMetadata `json:"metadata"`
+	OpenSessions  []OpenSession     `json:"open_sessions"`
+	ActiveSession *ActiveSession    `json:"active_session"`
+	// Other fields omitted - we only need session data
 }
 
 // ExecCommandSession is a variable holding the exec.Command function.
@@ -130,8 +175,17 @@ func getGitContext() (*GitContextInfo, error) {
 	return context, nil
 }
 
+// BootstrapContextResult contains both raw markdown and parsed session data
+type BootstrapContextResult struct {
+	Markdown      string
+	OpenSessions  []OpenSession
+	ActiveSession *ActiveSession
+	ParsedJSON    bool // true if structured JSON was successfully parsed
+}
+
 // getBootstrapContext calls the brain CLI bootstrap command to get semantic context.
-func getBootstrapContext(project string) (map[string]any, error) {
+// Returns both raw markdown and parsed session data (if JSON parsing succeeds).
+func getBootstrapContext(project string) (*BootstrapContextResult, error) {
 	// Build command args - include project if specified
 	args := []string{"bootstrap"}
 	if project != "" {
@@ -144,25 +198,38 @@ func getBootstrapContext(project string) (map[string]any, error) {
 		return nil, fmt.Errorf("brain bootstrap failed: %w", err)
 	}
 
-	// brain bootstrap returns Markdown, not JSON
-	// Return the raw markdown content for Claude to parse
-	result := map[string]any{
-		"markdown": string(output),
+	result := &BootstrapContextResult{
+		Markdown: string(output),
+	}
+
+	// Try to parse as JSON first (new bootstrap_context format)
+	// If JSON parsing fails, fall back to markdown parsing
+	var bootstrapResp BootstrapResponse
+	if err := json.Unmarshal(output, &bootstrapResp); err == nil {
+		// Successfully parsed as JSON
+		result.OpenSessions = bootstrapResp.OpenSessions
+		result.ActiveSession = bootstrapResp.ActiveSession
+		result.ParsedJSON = true
 	}
 
 	return result, nil
 }
 
-// parseOpenSessions extracts open sessions from bootstrap markdown output.
-// Looks for the "### Open Sessions" section and parses session entries.
-// Format: - [[SESSION-YYYY-MM-DD_NN-topic]] (branch: `branch-name`)
-func parseOpenSessions(markdown string) []OpenSession {
+// parseOpenSessionsFromMarkdown extracts open sessions from bootstrap markdown output.
+// LEGACY: Used as fallback when JSON parsing fails.
+// Looks for the "### Session State" section and parses session entries.
+// Format: - SESSION-YYYY-MM-DD_NN-topic (STATUS) (branch: `branch-name`)
+func parseOpenSessionsFromMarkdown(markdown string) []OpenSession {
 	var sessions []OpenSession
 
-	// Find the Open Sessions section
-	sectionStart := strings.Index(markdown, "### Open Sessions")
+	// Find the Session State section (new format)
+	sectionStart := strings.Index(markdown, "### Session State")
 	if sectionStart == -1 {
-		return sessions
+		// Try legacy format
+		sectionStart = strings.Index(markdown, "### Open Sessions")
+		if sectionStart == -1 {
+			return sessions
+		}
 	}
 
 	// Find the end of the section (next ### or end of string)
@@ -172,30 +239,38 @@ func parseOpenSessions(markdown string) []OpenSession {
 		sectionContent = sectionContent[:nextSection+3]
 	}
 
-	// Parse session entries: - [[SESSION-YYYY-MM-DD_NN-topic]] (branch: `branch-name`)
-	// The title is inside [[ ]], optional branch in parentheses
-	sessionPattern := regexp.MustCompile(`-\s*\[\[([^\]]+)\]\](?:\s*\(branch:\s*` + "`" + `?([^` + "`" + `\)]+)` + "`" + `?\))?`)
+	// Parse session entries (new format): - SESSION-ID - topic (STATUS) (branch: `branch-name`)
+	// Also supports: - [[SESSION-ID]] (branch: `branch-name`)
+	sessionPattern := regexp.MustCompile(`-\s*(?:\[\[)?([^\]\s(]+(?:\s*-\s*[^\](\s]+)?)(?:\]\])?\s*(?:-\s*([^(]+))?\s*\((IN_PROGRESS|PAUSED|in_progress|paused)\)(?:\s*\(branch:\s*` + "`" + `?([^` + "`" + `\)]+)` + "`" + `?\))?`)
 	matches := sessionPattern.FindAllStringSubmatch(sectionContent, -1)
 
 	for _, match := range matches {
-		if len(match) < 2 {
+		if len(match) < 4 {
 			continue
 		}
 
-		title := strings.TrimSpace(match[1])
+		sessionID := strings.TrimSpace(match[1])
+		topic := ""
+		if len(match) > 2 && match[2] != "" {
+			topic = strings.TrimSpace(match[2])
+		}
+		status := strings.ToUpper(strings.TrimSpace(match[3]))
+
 		session := OpenSession{
-			Title: title,
+			SessionID: sessionID,
+			Status:    status,
+			Topic:     topic,
 		}
 
-		// Extract date from title (SESSION-YYYY-MM-DD pattern)
+		// Extract date from session ID (SESSION-YYYY-MM-DD pattern)
 		datePattern := regexp.MustCompile(`(\d{4}-\d{2}-\d{2})`)
-		if dateMatch := datePattern.FindStringSubmatch(title); len(dateMatch) > 1 {
+		if dateMatch := datePattern.FindStringSubmatch(sessionID); len(dateMatch) > 1 {
 			session.Date = dateMatch[1]
 		}
 
 		// Extract branch if present
-		if len(match) > 2 && match[2] != "" {
-			session.Branch = strings.TrimSpace(match[2])
+		if len(match) > 4 && match[4] != "" {
+			session.Branch = strings.TrimSpace(match[4])
 		}
 
 		sessions = append(sessions, session)
@@ -204,30 +279,108 @@ func parseOpenSessions(markdown string) []OpenSession {
 	return sessions
 }
 
-// formatResumePrompt generates instructions for Claude when open sessions are detected.
-func formatResumePrompt(sessions []OpenSession) string {
-	if len(sessions) == 0 {
-		return ""
-	}
-
+// formatSessionInstructions generates mandatory instructions for Claude when no active session exists.
+// Per FEATURE-001-session-management: Hooks CANNOT create or resume sessions directly.
+// Hook provides instructions to AI, AI uses AskUserQuestion and MCP session tools.
+func formatSessionInstructions(openSessions []OpenSession) string {
 	var sb strings.Builder
 
-	sb.WriteString("\n### Open Sessions Detected\n\n")
-	sb.WriteString(fmt.Sprintf("Found %d session(s) with status: in_progress\n\n", len(sessions)))
+	sb.WriteString("DO THE FOLLOWING IMMEDIATELY, without waiting for user input, BEFORE anything else:\n\n")
 
-	for i, session := range sessions {
-		sb.WriteString(fmt.Sprintf("%d. **%s**\n", i+1, session.Title))
-		if session.Date != "" {
-			sb.WriteString(fmt.Sprintf("   - Date: %s\n", session.Date))
+	if len(openSessions) > 0 {
+		// Open sessions exist - present options to user
+		sb.WriteString("### Open Sessions Detected\n\n")
+		sb.WriteString(fmt.Sprintf("Found %d session(s) that can be resumed:\n\n", len(openSessions)))
+
+		for i, session := range openSessions {
+			displayName := session.SessionID
+			if session.Topic != "" {
+				displayName = fmt.Sprintf("%s - %s", session.SessionID, session.Topic)
+			}
+			sb.WriteString(fmt.Sprintf("%d. **%s** (%s)\n", i+1, displayName, session.Status))
+			if session.Date != "" {
+				sb.WriteString(fmt.Sprintf("   - Date: %s\n", session.Date))
+			}
+			if session.Branch != "" {
+				sb.WriteString(fmt.Sprintf("   - Branch: %s\n", session.Branch))
+			}
 		}
-		if session.Branch != "" {
-			sb.WriteString(fmt.Sprintf("   - Branch: %s\n", session.Branch))
+
+		sb.WriteString("\n**MANDATORY ACTION**: Use the AskUserQuestion tool to ask the user:\n\n")
+		sb.WriteString("```\n")
+		sb.WriteString("I found open sessions. Would you like to:\n")
+		sb.WriteString("1. Start a new session\n")
+		for i, session := range openSessions {
+			displayName := session.SessionID
+			if session.Topic != "" {
+				displayName = fmt.Sprintf("%s - %s", session.SessionID, session.Topic)
+			}
+			sb.WriteString(fmt.Sprintf("%d. Continue session: %s\n", i+2, displayName))
+		}
+		sb.WriteString("```\n\n")
+
+		sb.WriteString("**AFTER user responds**:\n\n")
+		sb.WriteString("- If user selects existing session: Use MCP `session` tool with operation=`resume` and sessionId=`<selected session ID>`\n")
+		sb.WriteString("- If user selects new session: Use AskUserQuestion to ask about the session topic, then use MCP `session` tool with operation=`create` and topic=`<user's response>`\n\n")
+	} else {
+		// No open sessions - create new session
+		sb.WriteString("### No Active Session\n\n")
+		sb.WriteString("**MANDATORY ACTION**: Use the AskUserQuestion tool to ask the user:\n\n")
+		sb.WriteString("```\n")
+		sb.WriteString("What would you like to work on in this session? (This will be the session topic)\n")
+		sb.WriteString("```\n\n")
+		sb.WriteString("**AFTER user responds**: Use MCP `session` tool with operation=`create` and topic=`<user's response>`\n\n")
+	}
+
+	sb.WriteString("**THEN** complete the session start protocol:\n")
+	sb.WriteString("- Call bootstrap_context to load full project context\n")
+	sb.WriteString("- Verify git branch with `git branch --show-current`\n")
+	sb.WriteString("- Load and acknowledge session state\n")
+
+	return sb.String()
+}
+
+// formatActiveSessionContext formats context when an active session already exists.
+// In this case, openSessions are NOT included in output per hook flow spec.
+func formatActiveSessionContext(activeSession *ActiveSession) string {
+	var sb strings.Builder
+
+	sb.WriteString("### Active Session\n\n")
+
+	displayName := activeSession.SessionID
+	if activeSession.Topic != "" {
+		displayName = fmt.Sprintf("%s - %s", activeSession.SessionID, activeSession.Topic)
+	}
+
+	sb.WriteString(fmt.Sprintf("**Session**: %s\n", displayName))
+	sb.WriteString(fmt.Sprintf("**Status**: %s\n", activeSession.Status))
+	sb.WriteString(fmt.Sprintf("**Date**: %s\n", activeSession.Date))
+
+	if activeSession.Branch != "" {
+		sb.WriteString(fmt.Sprintf("**Branch**: %s\n", activeSession.Branch))
+	}
+	if activeSession.Mode != "" {
+		sb.WriteString(fmt.Sprintf("**Mode**: %s\n", activeSession.Mode))
+	}
+	if activeSession.Task != "" {
+		sb.WriteString(fmt.Sprintf("**Current Task**: %s\n", activeSession.Task))
+	}
+
+	// Show validation status
+	if activeSession.IsValid {
+		sb.WriteString("\n**Validation**: All checks passed\n")
+	} else {
+		sb.WriteString("\n**Validation**: Some checks failed\n")
+		for _, check := range activeSession.Checks {
+			status := "PASS"
+			if !check.Passed {
+				status = "FAIL"
+			}
+			sb.WriteString(fmt.Sprintf("- %s: [%s]\n", check.Name, status))
 		}
 	}
 
-	sb.WriteString("\n**Action Required**: Ask the user if they want to:\n")
-	sb.WriteString("- Resume one of the above sessions\n")
-	sb.WriteString("- Start a new session (open sessions will remain in_progress)\n")
+	sb.WriteString("\n**Continue with session start protocol**: Load context and verify state.\n")
 
 	return sb.String()
 }
@@ -321,14 +474,26 @@ func buildSessionOutput(cwd string) *SessionStartOutput {
 	}
 
 	// Get bootstrap context from brain CLI with project
-	bootstrapInfo, err := getBootstrapContext(project)
+	bootstrapResult, err := getBootstrapContext(project)
 	if err != nil {
 		// Graceful degradation - don't fail the hook
 		output.BootstrapInfo = map[string]any{
 			"warning": fmt.Sprintf("Could not get bootstrap context: %v", err),
 		}
 	} else {
-		output.BootstrapInfo = bootstrapInfo
+		output.BootstrapInfo = map[string]any{
+			"markdown":   bootstrapResult.Markdown,
+			"parsedJSON": bootstrapResult.ParsedJSON,
+		}
+
+		// Use parsed session data if available from JSON
+		if bootstrapResult.ParsedJSON {
+			output.OpenSessions = bootstrapResult.OpenSessions
+			output.ActiveSession = bootstrapResult.ActiveSession
+		} else {
+			// Fall back to markdown parsing for legacy bootstrap output
+			output.OpenSessions = parseOpenSessionsFromMarkdown(bootstrapResult.Markdown)
+		}
 	}
 
 	// Get workflow state from brain CLI
@@ -344,7 +509,12 @@ func buildSessionOutput(cwd string) *SessionStartOutput {
 }
 
 // formatContextMarkdown formats the session output as a single markdown string
-// for Claude Code's additionalContext field
+// for Claude Code's additionalContext field.
+//
+// Implements hook flow logic per FEATURE-001-session-management:
+// - IF activeSession exists: pass context, DO NOT include openSessions in output
+// - IF no activeSession but openSessions exist: include mandatory AskUserQuestion instructions
+// - IF no sessions: instructions for new session creation via AskUserQuestion
 func formatContextMarkdown(output *SessionStartOutput) string {
 	var sb strings.Builder
 
@@ -372,11 +542,33 @@ func formatContextMarkdown(output *SessionStartOutput) string {
 		sb.WriteString("\n")
 	}
 
-	// Bootstrap markdown (main content)
-	var bootstrapMarkdown string
+	// HOOK FLOW LOGIC: Handle session state per FEATURE-001 specification
+	//
+	// IF activeSession exists:
+	//   - Pass context to AI (active session info)
+	//   - DO NOT include openSessions in output
+	//   - AI does complete session start protocol
+	//
+	// IF no activeSession:
+	//   - Provide mandatory instructions via additionalContext
+	//   - Include openSessions list if any exist
+	//   - Tell AI to use AskUserQuestion for user interaction
+	//   - AI uses MCP session tool to create/resume based on user response
+	if output.ActiveSession != nil {
+		// Active session exists - pass context, skip openSessions
+		sb.WriteString(formatActiveSessionContext(output.ActiveSession))
+	} else {
+		// No active session - provide mandatory instructions
+		sb.WriteString(formatSessionInstructions(output.OpenSessions))
+	}
+
+	sb.WriteString("\n")
+
+	// Bootstrap markdown (main content) - include if available
 	if output.BootstrapInfo != nil {
 		if markdown, ok := output.BootstrapInfo["markdown"].(string); ok && markdown != "" {
-			bootstrapMarkdown = markdown
+			sb.WriteString("\n---\n\n")
+			sb.WriteString("### Project Context\n\n")
 			sb.WriteString(markdown)
 			sb.WriteString("\n")
 		}
@@ -385,15 +577,7 @@ func formatContextMarkdown(output *SessionStartOutput) string {
 		}
 	}
 
-	// Parse and format open sessions resume prompt
-	if bootstrapMarkdown != "" {
-		openSessions := parseOpenSessions(bootstrapMarkdown)
-		if len(openSessions) > 0 {
-			sb.WriteString(formatResumePrompt(openSessions))
-		}
-	}
-
-	// Workflow state
+	// Workflow state (additional context, does not affect hook flow)
 	if output.WorkflowState != nil && output.WorkflowState.Mode != "" {
 		sb.WriteString("\n### Workflow State\n")
 		sb.WriteString(fmt.Sprintf("**Mode:** %s\n", output.WorkflowState.Mode))

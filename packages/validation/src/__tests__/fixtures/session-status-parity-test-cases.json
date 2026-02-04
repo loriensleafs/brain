@@ -1,0 +1,331 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Test fixtures for session status validation cross-language parity. TypeScript and Go validators must produce identical results for all test cases.",
+  "session-status": {
+    "valid": [
+      {
+        "name": "minimal valid IN_PROGRESS",
+        "data": {
+          "title": "SESSION-2026-02-04_01-feature-implementation",
+          "type": "session",
+          "status": "IN_PROGRESS",
+          "date": "2026-02-04"
+        }
+      },
+      {
+        "name": "minimal valid PAUSED",
+        "data": {
+          "title": "SESSION-2026-02-04_01-feature-implementation",
+          "type": "session",
+          "status": "PAUSED",
+          "date": "2026-02-04"
+        }
+      },
+      {
+        "name": "minimal valid COMPLETE",
+        "data": {
+          "title": "SESSION-2026-02-04_01-feature-implementation",
+          "type": "session",
+          "status": "COMPLETE",
+          "date": "2026-02-04"
+        }
+      },
+      {
+        "name": "with optional tags",
+        "data": {
+          "title": "SESSION-2026-01-15_03-bugfix-auth",
+          "type": "session",
+          "status": "IN_PROGRESS",
+          "date": "2026-01-15",
+          "tags": ["session", "auth", "bugfix"]
+        }
+      },
+      {
+        "name": "two digit session number",
+        "data": {
+          "title": "SESSION-2026-12-31_99-year-end-cleanup",
+          "type": "session",
+          "status": "COMPLETE",
+          "date": "2026-12-31"
+        }
+      },
+      {
+        "name": "single digit session number",
+        "data": {
+          "title": "SESSION-2024-06-15_01-initial-setup",
+          "type": "session",
+          "status": "PAUSED",
+          "date": "2024-06-15"
+        }
+      },
+      {
+        "name": "hyphenated topic with numbers",
+        "data": {
+          "title": "SESSION-2026-02-04_05-feature-123-implementation",
+          "type": "session",
+          "status": "IN_PROGRESS",
+          "date": "2026-02-04"
+        }
+      },
+      {
+        "name": "extra fields allowed",
+        "data": {
+          "title": "SESSION-2026-02-04_01-test",
+          "type": "session",
+          "status": "IN_PROGRESS",
+          "date": "2026-02-04",
+          "permalink": "sessions/SESSION-2026-02-04_01-test",
+          "customField": "allowed"
+        }
+      }
+    ],
+    "invalid": [
+      {
+        "name": "missing status field",
+        "data": {
+          "title": "SESSION-2026-02-04_01-feature",
+          "type": "session",
+          "date": "2026-02-04"
+        },
+        "expectedError": "status_required"
+      },
+      {
+        "name": "invalid status value lowercase",
+        "data": {
+          "title": "SESSION-2026-02-04_01-feature",
+          "type": "session",
+          "status": "in_progress",
+          "date": "2026-02-04"
+        },
+        "expectedError": "status_invalid"
+      },
+      {
+        "name": "invalid status value mixed case",
+        "data": {
+          "title": "SESSION-2026-02-04_01-feature",
+          "type": "session",
+          "status": "In_Progress",
+          "date": "2026-02-04"
+        },
+        "expectedError": "status_invalid"
+      },
+      {
+        "name": "invalid status value unknown",
+        "data": {
+          "title": "SESSION-2026-02-04_01-feature",
+          "type": "session",
+          "status": "ACTIVE",
+          "date": "2026-02-04"
+        },
+        "expectedError": "status_invalid"
+      },
+      {
+        "name": "empty status value",
+        "data": {
+          "title": "SESSION-2026-02-04_01-feature",
+          "type": "session",
+          "status": "",
+          "date": "2026-02-04"
+        },
+        "expectedError": "status_invalid"
+      },
+      {
+        "name": "null status value",
+        "data": {
+          "title": "SESSION-2026-02-04_01-feature",
+          "type": "session",
+          "status": null,
+          "date": "2026-02-04"
+        },
+        "expectedError": "status_required"
+      },
+      {
+        "name": "missing type field",
+        "data": {
+          "title": "SESSION-2026-02-04_01-feature",
+          "status": "IN_PROGRESS",
+          "date": "2026-02-04"
+        },
+        "expectedError": "type_required"
+      },
+      {
+        "name": "invalid type value",
+        "data": {
+          "title": "SESSION-2026-02-04_01-feature",
+          "type": "note",
+          "status": "IN_PROGRESS",
+          "date": "2026-02-04"
+        },
+        "expectedError": "type_invalid"
+      },
+      {
+        "name": "type is decision not session",
+        "data": {
+          "title": "SESSION-2026-02-04_01-feature",
+          "type": "decision",
+          "status": "IN_PROGRESS",
+          "date": "2026-02-04"
+        },
+        "expectedError": "type_invalid"
+      },
+      {
+        "name": "missing title field",
+        "data": {
+          "type": "session",
+          "status": "IN_PROGRESS",
+          "date": "2026-02-04"
+        },
+        "expectedError": "title_required"
+      },
+      {
+        "name": "title wrong format no SESSION prefix",
+        "data": {
+          "title": "2026-02-04_01-feature",
+          "type": "session",
+          "status": "IN_PROGRESS",
+          "date": "2026-02-04"
+        },
+        "expectedError": "title_invalid"
+      },
+      {
+        "name": "title wrong format old session format",
+        "data": {
+          "title": "2026-02-04-session-01",
+          "type": "session",
+          "status": "IN_PROGRESS",
+          "date": "2026-02-04"
+        },
+        "expectedError": "title_invalid"
+      },
+      {
+        "name": "title wrong format lowercase prefix",
+        "data": {
+          "title": "session-2026-02-04_01-feature",
+          "type": "session",
+          "status": "IN_PROGRESS",
+          "date": "2026-02-04"
+        },
+        "expectedError": "title_invalid"
+      },
+      {
+        "name": "title wrong format missing underscore",
+        "data": {
+          "title": "SESSION-2026-02-04-01-feature",
+          "type": "session",
+          "status": "IN_PROGRESS",
+          "date": "2026-02-04"
+        },
+        "expectedError": "title_invalid"
+      },
+      {
+        "name": "title wrong format missing topic",
+        "data": {
+          "title": "SESSION-2026-02-04_01",
+          "type": "session",
+          "status": "IN_PROGRESS",
+          "date": "2026-02-04"
+        },
+        "expectedError": "title_invalid"
+      },
+      {
+        "name": "missing date field",
+        "data": {
+          "title": "SESSION-2026-02-04_01-feature",
+          "type": "session",
+          "status": "IN_PROGRESS"
+        },
+        "expectedError": "date_required"
+      },
+      {
+        "name": "invalid date format slash separator",
+        "data": {
+          "title": "SESSION-2026-02-04_01-feature",
+          "type": "session",
+          "status": "IN_PROGRESS",
+          "date": "2026/02/04"
+        },
+        "expectedError": "date_invalid"
+      },
+      {
+        "name": "invalid date format US style",
+        "data": {
+          "title": "SESSION-2026-02-04_01-feature",
+          "type": "session",
+          "status": "IN_PROGRESS",
+          "date": "02-04-2026"
+        },
+        "expectedError": "date_invalid"
+      },
+      {
+        "name": "invalid date format no leading zeros",
+        "data": {
+          "title": "SESSION-2026-02-04_01-feature",
+          "type": "session",
+          "status": "IN_PROGRESS",
+          "date": "2026-2-4"
+        },
+        "expectedError": "date_invalid"
+      },
+      {
+        "name": "invalid date format timestamp",
+        "data": {
+          "title": "SESSION-2026-02-04_01-feature",
+          "type": "session",
+          "status": "IN_PROGRESS",
+          "date": "2026-02-04T10:30:00Z"
+        },
+        "expectedError": "date_invalid"
+      },
+      {
+        "name": "empty frontmatter object",
+        "data": {},
+        "expectedError": "title_required"
+      },
+      {
+        "name": "null frontmatter",
+        "data": null,
+        "expectedError": "frontmatter_required"
+      },
+      {
+        "name": "string instead of object",
+        "data": "SESSION-2026-02-04_01-feature",
+        "expectedError": "frontmatter_required"
+      },
+      {
+        "name": "array instead of object",
+        "data": ["title", "type", "status", "date"],
+        "expectedError": "frontmatter_required"
+      },
+      {
+        "name": "status wrong type number",
+        "data": {
+          "title": "SESSION-2026-02-04_01-feature",
+          "type": "session",
+          "status": 1,
+          "date": "2026-02-04"
+        },
+        "expectedError": "status_invalid"
+      },
+      {
+        "name": "title wrong type number",
+        "data": {
+          "title": 12345,
+          "type": "session",
+          "status": "IN_PROGRESS",
+          "date": "2026-02-04"
+        },
+        "expectedError": "title_invalid"
+      },
+      {
+        "name": "date wrong type number",
+        "data": {
+          "title": "SESSION-2026-02-04_01-feature",
+          "type": "session",
+          "status": "IN_PROGRESS",
+          "date": 20260204
+        },
+        "expectedError": "date_invalid"
+      }
+    ]
+  }
+}

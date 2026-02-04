@@ -2,6 +2,45 @@
 
 Initialize a new session with proper context and tracking.
 
+## Primary Method: MCP Session Tool
+
+Use the MCP `session` tool with `operation: create` to create a new session.
+
+```text
+mcp__plugin_brain_brain__session
+  operation: create
+  topic: <session-topic>
+```
+
+**Parameters:**
+
+| Parameter | Required | Description                             |
+| --------- | -------- | --------------------------------------- |
+| operation | Yes      | Must be `create`                        |
+| topic     | Yes      | Session topic in kebab-case             |
+| project   | No       | Project name/path to scope the session  |
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "sessionId": "SESSION-2026-02-04_01-feature-implementation",
+  "path": "sessions/SESSION-2026-02-04_01-feature-implementation.md",
+  "autoPaused": "SESSION-2026-02-04_01-previous-topic"
+}
+```
+
+**Auto-pause behavior:** If another session is currently IN_PROGRESS, it will be
+automatically paused before the new session is created.
+
+## Alternative: CLI Command
+
+```bash
+brain session create --topic "feature-implementation"
+brain session create --topic "bugfix" -p myproject
+```
+
 ## Blocking Gate: Complete Before ANY Work
 
 ### Step 1: Initialize Brain MCP
@@ -10,33 +49,33 @@ Initialize a new session with proper context and tracking.
 mcp__plugin_brain_brain__bootstrap_context with project path
 ```
 
-### Step 2: Search for In-Progress Sessions
+### Step 2: Search for Open Sessions
 
 Check for sessions that need resumption:
 
 ```text
 mcp__plugin_brain_brain__search
-  query: "status: in_progress type: session"
+  query: "status: in_progress OR status: paused type: session"
   folder: "sessions"
   limit: 5
 ```
 
-If in-progress sessions exist:
+If open sessions exist:
 
 - Read each session note to understand context
-- Ask user: "Found in-progress session(s). Resume or start new?"
-- If resuming, skip to Step 5 with existing session
+- Ask user: "Found open session(s). Resume existing or start new?"
+- If resuming, use `/resume-session` command instead
+- If starting new, the create operation will auto-pause any IN_PROGRESS session
 
-### Step 3: Create Session Note in Brain
-
-Use `write_note` to create the session with status tracking:
+### Step 3: Create Session via MCP Tool
 
 ```text
-mcp__plugin_brain_brain__write_note
-  title: SESSION-YYYY-MM-DD_NN-topic
-  folder: sessions
-  content: [see template below]
+mcp__plugin_brain_brain__session
+  operation: create
+  topic: <user-provided-topic>
 ```
+
+The MCP tool creates a session note with this structure:
 
 **Session Note Template:**
 
@@ -124,10 +163,29 @@ Examples:
 
 ## Status Lifecycle
 
-| Status        | Meaning                      |
-|---------------|------------------------------|
-| `in_progress` | Session active, work ongoing |
-| `complete`    | Session ended normally       |
+```text
+              create
+                |
+                v
+         +--------------+
+         | IN_PROGRESS  |<----+
+         +--------------+     |
+            |       |         |
+     pause  |       | complete|  resume
+            v       |         |
+         +--------+ |     +--------+
+         | PAUSED |-+---->| COMPLETE|
+         +--------+       +--------+
+                              ^
+                              |
+                          (terminal)
+```
 
-Sessions start with `status: in_progress`. The end-session command updates
-to `complete`.
+| Status        | Meaning                       | Transitions To         |
+| ------------- | ----------------------------- | ---------------------- |
+| `in_progress` | Session active, work ongoing  | PAUSED, COMPLETE       |
+| `paused`      | Session suspended, can resume | IN_PROGRESS, COMPLETE  |
+| `complete`    | Session ended (terminal)      | None                   |
+
+Sessions start with `status: in_progress`. Use `/pause-session` to pause,
+`/resume-session` to resume, or `/end-session` to complete.

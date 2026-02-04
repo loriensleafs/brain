@@ -24,12 +24,12 @@ import (
 )
 
 var (
-	projectsActiveProject string
-	projectsCodePath      string
-	projectsMemoriesPath  string // New flag name (ADR-020)
-	projectsNotesPath     string // Deprecated, kept for backward compatibility
-	projectsName          string
-	projectsDeleteProject string
+	projectsActiveProject  string
+	projectsCodePath       string
+	projectsMemoriesPath   string // New flag name (ADR-020)
+	projectsNotesPath      string // Deprecated, kept for backward compatibility
+	projectsName           string
+	projectsDeleteProject  string
 	projectsDeleteMemories bool // New flag name (ADR-020)
 	projectsDeleteNotes    bool // Deprecated, kept for backward compatibility
 )

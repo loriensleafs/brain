@@ -3,9 +3,13 @@
  *
  * Generates human-readable markdown output using templates.
  * Returns TextContent for display in Claude Code terminal.
+ *
+ * Session data comes from session service, computed just-in-time.
+ * @see FEATURE-001-session-management for session lifecycle details
  */
 
-import type { ContextNote, OpenSession } from "./sectionQueries";
+import type { ActiveSession, OpenSession } from "../../services/session/types";
+import type { ContextNote } from "./sectionQueries";
 import type { SessionEnrichment } from "./sessionEnrichment";
 import { type ContextData, renderContext } from "./templates";
 
@@ -14,7 +18,10 @@ import { type ContextData, renderContext } from "./templates";
  */
 export interface FormattedOutputInput {
   project: string;
+  /** Open sessions from session service (IN_PROGRESS or PAUSED) */
   openSessions: OpenSession[];
+  /** Active session from session service (IN_PROGRESS only), or null */
+  activeSession: ActiveSession | null;
   activeFeatures: ContextNote[];
   recentDecisions: ContextNote[];
   openBugs: ContextNote[];
@@ -35,6 +42,7 @@ export function buildFormattedOutput(input: FormattedOutputInput, fullContent = 
   const {
     project,
     openSessions,
+    activeSession,
     activeFeatures,
     recentDecisions,
     openBugs,
@@ -48,6 +56,7 @@ export function buildFormattedOutput(input: FormattedOutputInput, fullContent = 
     project,
     timestamp: new Date().toLocaleString(),
     openSessions,
+    activeSession,
     activeFeatures,
     recentDecisions,
     openBugs,
@@ -87,6 +96,7 @@ export function buildFormattedOutputWithLimits(
     {
       project: input.project,
       openSessions: input.openSessions,
+      activeSession: input.activeSession,
       activeFeatures: input.activeFeatures.slice(0, features),
       recentDecisions: input.recentDecisions.slice(0, decisions),
       openBugs: input.openBugs.slice(0, bugs),

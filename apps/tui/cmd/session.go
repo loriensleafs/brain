@@ -40,32 +40,32 @@ type ModeHistoryEntry struct {
 
 // OrchestratorWorkflow tracks the full state of an orchestrator-managed workflow.
 type OrchestratorWorkflow struct {
-	ActiveAgent      *string `json:"activeAgent"`
-	WorkflowPhase    string  `json:"workflowPhase"`
-	AgentHistory     []any   `json:"agentHistory"`
-	Decisions        []any   `json:"decisions"`
-	Verdicts         []any   `json:"verdicts"`
-	PendingHandoffs  []any   `json:"pendingHandoffs"`
-	CompactionHist   []any   `json:"compactionHistory"`
-	StartedAt        string  `json:"startedAt"`
-	LastAgentChange  string  `json:"lastAgentChange"`
+	ActiveAgent     *string `json:"activeAgent"`
+	WorkflowPhase   string  `json:"workflowPhase"`
+	AgentHistory    []any   `json:"agentHistory"`
+	Decisions       []any   `json:"decisions"`
+	Verdicts        []any   `json:"verdicts"`
+	PendingHandoffs []any   `json:"pendingHandoffs"`
+	CompactionHist  []any   `json:"compactionHistory"`
+	StartedAt       string  `json:"startedAt"`
+	LastAgentChange string  `json:"lastAgentChange"`
 }
 
 // SessionState represents the full session state from Brain MCP.
 // This matches the TypeScript SessionState interface from apps/mcp/src/services/session/types.ts.
 type SessionState struct {
-	CurrentMode            WorkflowMode          `json:"currentMode"`
-	ModeHistory            []ModeHistoryEntry    `json:"modeHistory"`
-	ProtocolStartComplete  bool                  `json:"protocolStartComplete"`
-	ProtocolEndComplete    bool                  `json:"protocolEndComplete"`
-	ProtocolStartEvidence  map[string]string     `json:"protocolStartEvidence"`
-	ProtocolEndEvidence    map[string]string     `json:"protocolEndEvidence"`
-	OrchestratorWorkflow   *OrchestratorWorkflow `json:"orchestratorWorkflow"`
-	ActiveFeature          string                `json:"activeFeature,omitempty"`
-	ActiveTask             string                `json:"activeTask,omitempty"`
-	Version                int                   `json:"version"`
-	CreatedAt              string                `json:"createdAt"`
-	UpdatedAt              string                `json:"updatedAt"`
+	CurrentMode           WorkflowMode          `json:"currentMode"`
+	ModeHistory           []ModeHistoryEntry    `json:"modeHistory"`
+	ProtocolStartComplete bool                  `json:"protocolStartComplete"`
+	ProtocolEndComplete   bool                  `json:"protocolEndComplete"`
+	ProtocolStartEvidence map[string]string     `json:"protocolStartEvidence"`
+	ProtocolEndEvidence   map[string]string     `json:"protocolEndEvidence"`
+	OrchestratorWorkflow  *OrchestratorWorkflow `json:"orchestratorWorkflow"`
+	ActiveFeature         string                `json:"activeFeature,omitempty"`
+	ActiveTask            string                `json:"activeTask,omitempty"`
+	Version               int                   `json:"version"`
+	CreatedAt             string                `json:"createdAt"`
+	UpdatedAt             string                `json:"updatedAt"`
 }
 
 // LegacySessionState represents the simplified session state for backward compatibility.
@@ -123,6 +123,10 @@ When called with -p/--project flag, returns complete SessionState JSON
 that can be passed directly to validation functions.
 
 Subcommands:
+  create     Create a new session with a topic
+  pause      Pause an active session
+  resume     Resume a paused session
+  complete   Complete an active session
   get-state  Get current session state as JSON (for hooks)
   set-state  Update session state from JSON input
 
@@ -131,6 +135,10 @@ session state stored in Brain MCP notes without direct MCP access.
 
 Example:
   brain session -p myproject
+  brain session create --topic "implement feature"
+  brain session pause SESSION-2026-02-04_01-feature
+  brain session resume SESSION-2026-02-04_01-feature
+  brain session complete SESSION-2026-02-04_01-feature
   brain session get-state
   echo '{"mode":"coding"}' | brain session set-state`,
 	RunE: runSessionRoot,

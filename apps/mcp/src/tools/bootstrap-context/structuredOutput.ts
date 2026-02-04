@@ -3,11 +3,16 @@
  *
  * Builds the structuredContent response per MCP specification.
  * Returns JSON-serializable data for programmatic consumption.
+ *
+ * Session data (openSessions, activeSession) comes from session service,
+ * computed just-in-time from Brain notes. Never persisted.
+ *
+ * @see FEATURE-001-session-management for session lifecycle details
  */
 
-import type { WorkflowMode } from "../../services/session/types";
+import type { ActiveSession, OpenSession, WorkflowMode } from "../../services/session/types";
 import type { NoteType } from "./noteType";
-import type { ContextNote, OpenSession } from "./sectionQueries";
+import type { ContextNote } from "./sectionQueries";
 import type { AgentHistorySummary, SessionEnrichment } from "./sessionEnrichment";
 import type { NoteStatus } from "./statusParser";
 
@@ -88,7 +93,10 @@ export interface StructuredSessionContext {
 export interface StructuredContent {
   metadata: ContextMetadata;
   session_context?: StructuredSessionContext;
+  /** Open sessions (IN_PROGRESS or PAUSED) computed from session notes */
   open_sessions: OpenSession[];
+  /** Currently active session (IN_PROGRESS only), or null if none */
+  active_session: ActiveSession | null;
   active_features: StructuredFeature[];
   recent_decisions: StructuredDecision[];
   open_bugs: StructuredBug[];
@@ -102,7 +110,10 @@ export interface StructuredContent {
 export interface StructuredOutputInput {
   project: string;
   timeframe: string;
+  /** Open sessions from session service (IN_PROGRESS or PAUSED) */
   openSessions: OpenSession[];
+  /** Active session from session service (IN_PROGRESS only), or null */
+  activeSession: ActiveSession | null;
   activeFeatures: ContextNote[];
   recentDecisions: ContextNote[];
   openBugs: ContextNote[];
@@ -119,6 +130,7 @@ export function buildStructuredOutput(input: StructuredOutputInput): StructuredC
     project,
     timeframe,
     openSessions,
+    activeSession,
     activeFeatures,
     recentDecisions,
     openBugs,
@@ -148,6 +160,7 @@ export function buildStructuredOutput(input: StructuredOutputInput): StructuredC
     },
     session_context: sessionContext,
     open_sessions: openSessions,
+    active_session: activeSession,
     active_features: activeFeatures.map(toStructuredFeature),
     recent_decisions: recentDecisions.map(toStructuredDecision),
     open_bugs: openBugs.map(toStructuredBug),
