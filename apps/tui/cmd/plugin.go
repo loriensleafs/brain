@@ -3,10 +3,10 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -95,76 +95,64 @@ func claudeDir() string {
 	return filepath.Join(home, ".claude")
 }
 
-// copyDir recursively copies src to dst, skipping node_modules and following symlinks.
-func copyDir(src, dst string) error {
+// pluginDirs lists directories Claude Code reads from a plugin.
+var pluginDirs = []string{".claude-plugin", "commands", "skills", "agents", "hooks", "instructions"}
+
+// symlinkPluginContent creates a directory tree at target with symlinks back to source files.
+// Files containing "-agent-teams" in their name are skipped — they are variant files
+// swapped in by "brain claude --agent-teams".
+func symlinkPluginContent(source, target string) error {
+	os.RemoveAll(target)
+	if err := os.MkdirAll(target, 0755); err != nil {
+		return err
+	}
+
+	for _, name := range pluginDirs {
+		src := filepath.Join(source, name)
+		if _, err := os.Stat(src); os.IsNotExist(err) {
+			continue
+		}
+		if err := symlinkDir(src, filepath.Join(target, name)); err != nil {
+			return fmt.Errorf("symlink %s: %w", name, err)
+		}
+	}
+
+	mcpSrc := filepath.Join(source, ".mcp.json")
+	if _, err := os.Stat(mcpSrc); err == nil {
+		if err := os.Symlink(mcpSrc, filepath.Join(target, ".mcp.json")); err != nil {
+			return fmt.Errorf("symlink .mcp.json: %w", err)
+		}
+	}
+
+	return nil
+}
+
+// symlinkDir mirrors the directory structure from src into dst,
+// creating symlinks for files. Skips *-agent-teams* variant files.
+func symlinkDir(src, dst string) error {
 	return filepath.WalkDir(src, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
-			return nil // skip errors (broken symlinks, permission issues)
+			return nil
 		}
-		// Skip node_modules, .git, etc.
 		if d.IsDir() && (d.Name() == "node_modules" || d.Name() == ".git") {
 			return fs.SkipDir
 		}
 		rel, _ := filepath.Rel(src, path)
 		target := filepath.Join(dst, rel)
 
-		// Resolve symlinks
 		info, err := os.Stat(path)
 		if err != nil {
-			return nil // skip unresolvable symlinks
+			return nil
 		}
 		if info.IsDir() {
 			return os.MkdirAll(target, 0755)
 		}
-		return copyFile(path, target)
+		// Skip agent-teams variant files
+		if strings.Contains(d.Name(), "-agent-teams") {
+			return nil
+		}
+		return os.Symlink(path, target)
 	})
-}
-
-func copyFile(src, dst string) error {
-	in, err := os.Open(src)
-	if err != nil {
-		return err
-	}
-	defer in.Close()
-
-	out, err := os.Create(dst)
-	if err != nil {
-		return err
-	}
-	defer out.Close()
-
-	_, err = io.Copy(out, in)
-	return err
-}
-
-// copyPluginContent copies all plugin dirs into target (real copies, not symlinks).
-func copyPluginContent(source, target string) error {
-	// Wipe and recreate target to ensure clean state
-	os.RemoveAll(target)
-	if err := os.MkdirAll(target, 0755); err != nil {
-		return err
-	}
-
-	dirs := []string{".claude-plugin", "commands", "skills", "agents", "hooks"}
-	for _, name := range dirs {
-		src := filepath.Join(source, name)
-		if _, err := os.Stat(src); os.IsNotExist(err) {
-			continue
-		}
-		if err := copyDir(src, filepath.Join(target, name)); err != nil {
-			return fmt.Errorf("copy %s: %w", name, err)
-		}
-	}
-
-	// Copy .mcp.json if it exists
-	mcpSrc := filepath.Join(source, ".mcp.json")
-	if _, err := os.Stat(mcpSrc); err == nil {
-		if err := copyFile(mcpSrc, filepath.Join(target, ".mcp.json")); err != nil {
-			return fmt.Errorf("copy .mcp.json: %w", err)
-		}
-	}
-
-	return nil
 }
 
 func runPluginInstall(_ *cobra.Command, _ []string) error {
@@ -179,17 +167,17 @@ func runPluginInstall(_ *cobra.Command, _ []string) error {
 	// The mangled path Claude Code creates for the emoji name.
 	cacheDir := filepath.Join(pluginsDir, "cache", "brain", "--", "unknown")
 
-	// Copy into marketplace dir (for Discover tab)
-	if err := copyPluginContent(source, marketplaceDir); err != nil {
+	// Symlink into marketplace dir (for Discover tab)
+	if err := symlinkPluginContent(source, marketplaceDir); err != nil {
 		return fmt.Errorf("marketplace: %w", err)
 	}
-	fmt.Println("  Copied: marketplaces/brain/")
+	fmt.Println("  Symlinked: marketplaces/brain/")
 
-	// Copy into cache dir (for actual loading)
-	if err := copyPluginContent(source, cacheDir); err != nil {
+	// Symlink into cache dir (for actual loading)
+	if err := symlinkPluginContent(source, cacheDir); err != nil {
 		return fmt.Errorf("cache: %w", err)
 	}
-	fmt.Println("  Copied: cache/brain/--/unknown/")
+	fmt.Println("  Symlinked: cache/brain/--/unknown/")
 
 	// Register marketplace
 	if err := registerMarketplace(pluginsDir, marketplaceDir); err != nil {
