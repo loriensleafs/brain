@@ -120,7 +120,7 @@ Applied 31 distinct edits matching the original conversation chronologically:
 - [x] [updated] [[memory]] SKILL.md canonical entity mapping: features/ replaces specs/ and planning/ #skill-alignment
 - [x] [updated] [[memory]].md agent entity types, storage categories, folder organization, folder selection tables #agent-alignment
 - [x] [updated] [[memory]].md FEATURE-001 examples to FEAT-001 naming convention #naming
-- [x] [committed] TBD #git
+- [x] [committed] e9d5f6c `feat(agents): align agent docs and memory skill to ADR-001 feature workflow` #git
 
 ### Remaining Work
 
@@ -151,10 +151,10 @@ Applied 31 distinct edits matching the original conversation chronologically:
 | apps/claude-plugin/commands/[[end-session]].md | Acceptance criteria verification, 7-part finalization | 08b0ca6 |
 | apps/claude-plugin/commands/[[pause-session]].md | Context-to-reload list for resume | 08b0ca6 |
 | apps/claude-plugin/commands/[[resume-session]].md | Rehydrate step from pause point | 08b0ca6 |
-| apps/claude-plugin/agents/[[roadmap]].md | Added Observations and Relations sections | TBD |
-| apps/claude-plugin/agents/[[explainer]].md | Added Observations and Relations sections | TBD |
-| apps/claude-plugin/agents/[[memory]].md | Entity types, folders aligned to ADR-001 | TBD |
-| apps/claude-plugin/skills/[[memory]]/SKILL.md | Canonical entity mapping aligned to ADR-001 | TBD |
+| apps/claude-plugin/agents/[[roadmap]].md | Added Observations and Relations sections | e9d5f6c |
+| apps/claude-plugin/agents/[[explainer]].md | Added Observations and Relations sections | e9d5f6c |
+| apps/claude-plugin/agents/[[memory]].md | Entity types, folders aligned to ADR-001 | e9d5f6c |
+| apps/claude-plugin/skills/[[memory]]/SKILL.md | Canonical entity mapping aligned to ADR-001 | e9d5f6c |
 
 ### Code Files Referenced
 
@@ -175,7 +175,7 @@ Applied 31 distinct edits matching the original conversation chronologically:
 | 2026-02-06 | ADR-001 fully reconstructed with 31 edits | All conversation edits applied chronologically |
 | 2026-02-06 | Session commands updated (start, end, pause, resume) | Richer templates for semantic hub pattern |
 | 2026-02-06 | 08b0ca6 committed | Session command enrichment |
-| 2026-02-06 | Agent docs aligned to ADR-001 | roadmap, explainer, memory agent+skill |
+| 2026-02-06 | e9d5f6c Agent docs aligned to ADR-001 | roadmap, explainer, memory agent+skill |
 
 ---
 
