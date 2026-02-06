@@ -3,7 +3,7 @@
   "owner": { "name": "Peter Kloss" },
   "plugins": [
     {
-      "name": "brain",
+      "name": "🧠",
       "source": "./",
       "description": "Brain knowledge graph + workflow mode management"
     }
