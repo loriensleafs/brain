@@ -12,7 +12,7 @@ tags:
 
 # SESSION Project Edit Config Sync Bugfix
 
-**Status:** IN_PROGRESS
+**Status:** COMPLETE
 **Branch:** main
 **Starting Commit:** aec5142 Fast and diryt commit.
 **Objective:** Fix 3 bugs in project edit flow: CLI --memories-path flag ignored without --code-path, edit_project MCP tool not syncing to v2 config, and remove legacy edit_project in favor of config_update_project
@@ -21,20 +21,20 @@ tags:
 
 ## Acceptance Criteria
 
-- [ ] `brain projects oncall --memories-path CODE` updates memories mode without requiring --code-path
-- [ ] CLI uses [[config_update_project]] instead of legacy [[edit_project]]
-- [ ] Legacy edit_project MCP tool removed from tool registration
-- [ ] Both config files stay in sync after edits
-- [ ] code_path is optional for project edits (memory-only projects supported)
-- [ ] Session note kept current with inline relations to every touched artifact
+- [x] `brain projects oncall --memories-path CODE` updates memories mode without requiring --code-path
+- [x] CLI uses [[config_update_project]] instead of legacy [[edit_project]]
+- [x] Legacy edit_project MCP tool removed from tool registration
+- [x] Both config files stay in sync after edits
+- [x] code_path is optional for project edits (memory-only projects supported)
+- [x] Session note kept current with inline relations to every touched artifact
 
 ---
 
 ## Verification Checklist
 
-- [ ] Session start protocol complete
-- [ ] Work completed
-- [ ] Session end protocol complete
+- [x] Session start protocol complete
+- [x] Work completed
+- [x] Session end protocol complete
 
 ---
 
@@ -95,9 +95,9 @@ tags:
 
 | Action | Note | Status |
 |---|---|---|
-| created | [[SESSION-2026-02-06_02-project-edit-config-sync-bugfix]] | IN_PROGRESS |
+| created | [[SESSION-2026-02-06_02-project-edit-config-sync-bugfix]] | COMPLETE |
 
-### Code Files (to be modified)
+### Code Files Modified
 
 | File | Context |
 |---|---|
@@ -106,6 +106,26 @@ tags:
 | apps/mcp/src/tools/projects/index.ts | Remove editProject export |
 | apps/mcp/src/tools/projects/edit/ | Remove entire directory (legacy tool) |
 | apps/mcp/src/tools/projects/create/index.ts | Update error messages |
+
+---
+
+## Session End Protocol (BLOCKING)
+
+| Req Level | Step | Status | Evidence |
+|---|---|---|---|
+| MUST | Update session status to complete | [x] | Status set to COMPLETE |
+| MUST | Update Brain memory | [x] | Session note updated via edit_note |
+| MUST | Run markdownlint | [x] | d04f14b style: fix markdown lint issues |
+| MUST | Commit all changes | [x] | f8a5651, d6b901b, 7bbf6ce, d04f14b |
+
+## Commits
+
+| SHA | Message |
+|---|---|
+| f8a5651 | fix(projects): resolve --memories-path standalone flag and remove legacy edit_project tool |
+| d6b901b | chore(agents): update agent model identifiers and memory persistence paths |
+| 7bbf6ce | feat(plugin): add agent-teams mode to CLI with symlink-based plugin staging |
+| d04f14b | style: fix markdown lint issues across docs and commands |
 
 ---
 
