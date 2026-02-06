@@ -47,17 +47,6 @@ brain session pause SESSION-2026-02-04_01-feature-implementation -p myproject
 | Work is done, session complete          | Complete | `/end-session`   |
 | Context switching to urgent issue       | Pause    | `/pause-session` |
 
-## Status Transition
-
-```text
-IN_PROGRESS --pause--> PAUSED
-```
-
-A paused session can be:
-
-- Resumed with `/resume-session` (PAUSED -> IN_PROGRESS)
-- Completed with `/end-session` (PAUSED -> COMPLETE)
-
 ## Pause Workflow
 
 ### Step 1: Identify Current Session
@@ -71,24 +60,59 @@ mcp__plugin_brain_brain__search
   limit: 1
 ```
 
-### Step 2: Document Current State
+### Step 2: Update Session Note (CRITICAL)
 
-Before pausing, update the session note with current progress:
+Before pausing, bring the session note fully current. The session note is the
+**only context** available when resuming. Anything not captured here is lost.
+
+**Update these sections:**
+
+1. **Work Log**: Check off completed items, add any new work done since last update
+
+```text
+- [x] [completed] Description of finished work linking to [[entity]] #tag
+- [ ] [in-progress] Where you left off on [[current-task]] #tag
+```
+
+2. **Acceptance Criteria**: Check off any criteria met during this segment
+
+3. **Observations**: Add any new insights, decisions, or facts
+
+```text
+- [insight] Discovery made while working on [[entity]] #tag
+- [decision] Choice made about [[topic]] and why #tag
+```
+
+4. **Relations**: Add links to any new entities created or referenced
+
+```text
+- created [[New-Entity-Name]]
+- modified [[Existing-Entity]]
+```
+
+5. **Files Touched**: Update tables with any new notes or code files
+
+6. **Append a Pause Point**:
 
 ```text
 mcp__plugin_brain_brain__edit_note
   identifier: SESSION-YYYY-MM-DD_NN-topic
   operation: append
   content: |
-    ## Pause Point - [timestamp]
+    ### Pause Point - YYYY-MM-DD
 
-    **Current State:**
-    - [What was being worked on]
-    - [Where you left off]
+    **Pausing because:** [reason for pause]
+    **Last working on:** [[entity-in-progress]] - [what was being done]
+    **Resume from:** [specific next step]
 
-    **Next Steps When Resumed:**
-    - [What to do next]
+    **Context to reload on resume:**
+    - [context] Read [[entity-1]] for [reason] #resume
+    - [context] Read [[entity-2]] for [reason] #resume
+    - [context] Check status of [[pending-item]] #resume
 ```
+
+The "Context to reload" list is what makes resume efficient. Be specific about
+what the agent needs to read to reconstruct working state.
 
 ### Step 3: Pause the Session
 

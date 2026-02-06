@@ -53,42 +53,64 @@ mcp__plugin_brain_brain__session
 
 Verify the update succeeded before continuing.
 
-## 2. Task Completion Verification
+## 2. Acceptance Criteria Verification
 
-- [ ] All attempted tasks marked in PROJECT-PLAN.md:
-  - `[x]` for completed
-  - `[ ]` with note for incomplete (document why)
-- [ ] Acceptance criteria validated for completed tasks
+Review the session note's **Acceptance Criteria** section:
+
+- [ ] All criteria checked or documented why incomplete
+- [ ] Uncompleted criteria have `[BLOCKED]` or `[DEFERRED]` with reason
 - [ ] No uncommitted changes remain
 
-## 3. Documentation Updates
+## 3. Session Note Final Update (CRITICAL)
 
-Update the session note with final observations:
+The session note is the **permanent record** of this session. Bring it fully
+current before completing. Future agents depend on this for context.
+
+**Finalize these sections:**
+
+1. **Acceptance Criteria**: Check off all met criteria
+
+2. **Work Log**: Check off all completed items, mark remaining as `[deferred]`
+
+3. **Files Touched**: Verify all Brain notes and code files are listed
+
+4. **Observations**: Add final session-end observations
+
+```text
+- [outcome] What was accomplished linking to [[produced-artifacts]] #session-end
+- [outcome] What was NOT completed and why #session-end
+- [decision] Any final decisions made #session-end
+```
+
+5. **Relations**: Add any missing links to entities created or modified
+
+6. **Session End Protocol table**: Fill in evidence column
 
 ```text
 mcp__plugin_brain_brain__edit_note
   identifier: SESSION-YYYY-MM-DD_NN-topic
-  operation: append
+  operation: replace_section
+  section: "Session End Protocol (BLOCKING)"
   content: |
-    ## Session Outcomes
+    ## Session End Protocol (BLOCKING)
 
-    - [outcome] [Description of what was accomplished] #session-end
-    - [decision] [Any decisions made] #session-end
-
-    ## Session End Checklist
-
-    | Step | Status | Evidence |
-    |------|--------|----------|
-    | Status updated to complete | [x] | edit_note confirmed |
-    | Brain memory updated | [ ] | |
-    | Markdown lint passed | [ ] | |
-    | Changes committed | [ ] | SHA: |
+    | Req Level | Step | Status | Evidence |
+    |-----------|------|--------|----------|
+    | MUST | Update session status to complete | [x] | session tool confirmed |
+    | MUST | Update Brain memory | [x] | Session note finalized |
+    | MUST | Run markdownlint | [x] | npx markdownlint-cli2 output clean |
+    | MUST | Commit all changes | [x] | SHA: [commit hash] |
 ```
 
-Additional updates:
+7. **Update frontmatter**: Set updated date
 
-- [ ] Brain notes capture cross-session context
-- [ ] PROJECT-PLAN.md metrics updated (if applicable)
+```text
+mcp__plugin_brain_brain__edit_note
+  identifier: SESSION-YYYY-MM-DD_NN-topic
+  operation: find_replace
+  find_text: "updated: YYYY-MM-DD"
+  content: "updated: [today's date]"
+```
 
 ## 4. Retrospective (For Significant Sessions)
 
@@ -151,22 +173,22 @@ git push origin [branch-name]
 
 ## 7. Final Session Note Update
 
-Update the session end checklist in the Brain note:
+Update the Verification Checklist at the top of the session note:
 
 ```text
 mcp__plugin_brain_brain__edit_note
   identifier: SESSION-YYYY-MM-DD_NN-topic
-  operation: replace_section
-  section: "Session End Checklist"
-  content: |
-    ## Session End Checklist
+  operation: find_replace
+  find_text: "- [ ] Work completed"
+  content: "- [x] Work completed"
+```
 
-    | Step | Status | Evidence |
-    |------|--------|----------|
-    | Status updated to complete | [x] | edit_note confirmed |
-    | Brain memory updated | [x] | Cross-session context written |
-    | Markdown lint passed | [x] | Tool output clean |
-    | Changes committed | [x] | SHA: [commit SHA] |
+```text
+mcp__plugin_brain_brain__edit_note
+  identifier: SESSION-YYYY-MM-DD_NN-topic
+  operation: find_replace
+  find_text: "- [ ] Session end protocol complete"
+  content: "- [x] Session end protocol complete"
 ```
 
 ## Critical Reminder

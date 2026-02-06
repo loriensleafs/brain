@@ -64,22 +64,41 @@ mcp__plugin_brain_brain__search
   limit: 10
 ```
 
-### Step 2: Review Session Context
+### Step 2: Read Session Note (CRITICAL)
 
-Read the session note to understand where work left off:
+Read the full session note to reconstruct working context:
 
 ```text
 mcp__plugin_brain_brain__read_note
   identifier: SESSION-YYYY-MM-DD_NN-topic
 ```
 
-Look for:
+**Extract from the session note:**
 
-- Work Log entries
-- Pause Point documentation
-- Next Steps When Resumed
+1. **Objective**: What this session is working toward
+2. **Acceptance Criteria**: What remains unchecked
+3. **Pause Point**: Where work stopped and what to do next
+4. **Context to reload**: Specific entities to read for state recovery
+5. **Work Log**: What was completed vs what is pending
+6. **Relations**: All entities this session touches
 
-### Step 3: Resume the Session
+### Step 3: Rehydrate Context
+
+Follow the "Context to reload" list from the Pause Point. Read each referenced
+entity to rebuild working state:
+
+```text
+mcp__plugin_brain_brain__read_note
+  identifier: [each entity from Context to reload list]
+```
+
+Also read:
+
+- Any `[[wikilinked]]` entities from unchecked Acceptance Criteria
+- The ADR/FEAT referenced in frontmatter (if applicable)
+- Recent entries in the Work Log that have `[in-progress]` status
+
+### Step 4: Resume the Session
 
 ```text
 mcp__plugin_brain_brain__session
@@ -87,13 +106,29 @@ mcp__plugin_brain_brain__session
   sessionId: SESSION-YYYY-MM-DD_NN-topic
 ```
 
-### Step 4: Verify Resume
+### Step 5: Verify Resume and Update Note
 
-Confirm the session status changed to IN_PROGRESS.
+Confirm the session status changed to IN_PROGRESS, then update the session note:
 
-### Step 5: Continue Work
+```text
+mcp__plugin_brain_brain__edit_note
+  identifier: SESSION-YYYY-MM-DD_NN-topic
+  operation: find_replace
+  find_text: "updated: YYYY-MM-DD"
+  content: "updated: [today's date]"
+```
 
-Resume work where you left off based on session context.
+Add a resume entry to the Work Log:
+
+```text
+- [x] [resumed] Session resumed from [[Pause Point]] #session-lifecycle
+```
+
+### Step 6: Continue Work
+
+Pick up from the "Resume from" instruction in the Pause Point. The session note
+should have all the context needed to continue without asking the user to repeat
+themselves.
 
 ## Error Handling
 
@@ -118,7 +153,7 @@ This ensures only one session is IN_PROGRESS at a time.
 If multiple paused sessions exist:
 
 1. List all paused sessions
-2. Read each session note to understand context
+2. Read each session note - check Objective and Acceptance Criteria
 3. Ask user which session to resume
 4. Resume the selected session
 
