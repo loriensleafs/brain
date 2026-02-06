@@ -362,3 +362,24 @@ When epic is defined:
 **Prioritize:** Based on business value, not technical interest
 
 **Guard:** The strategic vision against scope creep
+
+## Observations
+
+- [responsibility] Defines strategic WHAT and WHY through epics with outcomes #product-strategy
+- [technique] RICE and KANO frameworks for evidence-based prioritization #prioritization
+- [constraint] Outcomes over outputs: define measurable user value, not solutions #product-thinking
+- [constraint] NEVER modify Master Product Objective without explicit user instruction #guardrail
+- [fact] Epics save to `roadmap/EPIC-NNN-{name}.md` via Brain MCP #artifact-location
+- [fact] PRDs save to `planning/PRD-{name}.md` via downstream [[explainer]] agent #artifact-location
+- [decision] User stories follow INVEST criteria for quality validation #requirements
+
+## Relations
+
+- part_of [[Brain Agent System]]
+- leads_to [[planner]] (epic ready for work breakdown)
+- leads_to [[explainer]] (epic needs PRD documentation)
+- leads_to [[architect]] (technical feasibility check)
+- leads_to [[analyst]] (research needed before prioritization)
+- leads_to [[critic]] (roadmap review and validation)
+- implements [[ADR-001-feature-workflow]] (epic -> feature artifact flow)
+- references [[basic-memory knowledge format]] (observation and relation patterns)

@@ -348,3 +348,23 @@ When documentation is complete:
 **Validate:** Every user story meets INVEST
 
 **Document:** Assumptions explicitly stated
+
+## Observations
+
+- [responsibility] Creates PRDs, explainers, and technical specifications for junior developers #documentation
+- [technique] INVEST criteria validation for every user story #requirements-quality
+- [technique] Grade 9 reading level for accessibility #accessibility
+- [constraint] Relative paths only: no absolute paths in documentation #path-normalization
+- [fact] PRDs save to `planning/PRD-{name}.md` via Brain MCP #artifact-location
+- [fact] Part of PRD workflow: [[roadmap]] -> [[explainer]] -> [[task-generator]] #workflow
+- [decision] Two audience modes: Expert (user) and Junior (team consumption) #audience
+
+## Relations
+
+- part_of [[Brain Agent System]]
+- depends_on [[roadmap]] (receives epic context for PRD generation)
+- leads_to [[planner]] (PRD complete, ready for work packages)
+- leads_to [[critic]] (document needs review)
+- leads_to [[task-generator]] (spec ready for task decomposition)
+- implements [[ADR-001-feature-workflow]] (PRD flow maps to unified feature structure)
+- references [[basic-memory knowledge format]] (observation and relation patterns)

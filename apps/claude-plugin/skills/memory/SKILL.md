@@ -334,29 +334,30 @@ Before calling `write_note` or `edit_note`, you MUST complete this checklist:
 
 **File names MUST match the File Pattern exactly.** The entity prefix MUST be ALL CAPS — `ADR-`, `SESSION-`, `REQ-`, etc. Never lowercase (`adr-`, `session-`, `req-`). This is non-negotiable; lowercase prefixes are malformed and will break lookups.
 
-| Entity Type   | Folder                     | File Pattern                       |
-| :------------ | :------------------------- | :--------------------------------- |
-| decision      | decisions/                 | `ADR-{NNN}-{topic}.md`             |
-| session       | sessions/                  | `SESSION-YYYY-MM-DD_NN-{topic}.md` |
-| requirement   | specs/{ENTITY-NNN-topic}/requirements/ | `REQ-{NNN}-{topic}.md`             |
-| design        | specs/{ENTITY-NNN-topic}/design/       | `DESIGN-{NNN}-{topic}.md`          |
-| task          | specs/{ENTITY-NNN-topic}/tasks/        | `TASK-{NNN}-{topic}.md`            |
-| analysis      | analysis/                  | `ANALYSIS-{NNN}-{topic}.md`        |
-| feature       | planning/                  | `FEATURE-{NNN}-{topic}.md`         |
-| epic          | roadmap/                   | `EPIC-{NNN}-{name}.md`             |
-| critique      | critique/                  | `CRIT-{NNN}-{topic}.md`            |
-| test-report   | qa/                        | `QA-{NNN}-{topic}.md`              |
-| security      | security/                  | `SEC-{NNN}-{component}.md`         |
-| retrospective | retrospective/             | `RETRO-YYYY-MM-DD_{topic}.md`      |
-| skill         | skills/                    | `SKILL-{NNN}-{topic}.md`           |
+| Entity Type   | Folder                                          | File Pattern                       |
+| :------------ | :---------------------------------------------- | :--------------------------------- |
+| decision      | decisions/                                      | `ADR-{NNN}-{topic}.md`             |
+| session       | sessions/                                       | `SESSION-YYYY-MM-DD_NN-{topic}.md` |
+| feature       | features/FEAT-{NNN}-{name}/                     | `FEAT-{NNN}-{name}.md`             |
+| requirement   | features/FEAT-{NNN}-{name}/requirements/        | `REQ-{NNN}-{topic}.md`             |
+| design        | features/FEAT-{NNN}-{name}/design/              | `DESIGN-{NNN}-{topic}.md`          |
+| task          | features/FEAT-{NNN}-{name}/tasks/               | `TASK-{NNN}-{topic}.md`            |
+| analysis      | analysis/                                       | `ANALYSIS-{NNN}-{topic}.md`        |
+| epic          | roadmap/                                        | `EPIC-{NNN}-{name}.md`             |
+| critique      | critique/                                       | `CRIT-{NNN}-{topic}.md`            |
+| test-report   | qa/                                             | `QA-{NNN}-{topic}.md`              |
+| security      | security/                                       | `SEC-{NNN}-{component}.md`         |
+| retrospective | retrospective/                                  | `RETRO-YYYY-MM-DD_{topic}.md`      |
+| skill         | skills/                                         | `SKILL-{NNN}-{topic}.md`           |
 
 **No generic `NOTE-*` type allowed.** Forces proper categorization.
 
-**Specs folder naming**: `{ENTITY-NNN-topic}` is the canonical name of the parent entity the spec belongs to. Use the parent's ALL CAPS prefix and kebab-case topic. Examples:
+**Feature folder naming** (per [[ADR-001-feature-workflow]]): `FEAT-{NNN}-{name}` uses kebab-case name, max 50 characters, validated by `FEAT-\d{3}-[a-z0-9-]+`. Examples:
 
-- `specs/ADR-015-auth-strategy/requirements/REQ-001-token-validation.md`
-- `specs/FEATURE-003-oauth/design/DESIGN-001-auth-flow.md`
-- `specs/EPIC-001-authentication/tasks/TASK-001-implement-jwt.md`
+- `features/FEAT-001-feature-workflow/FEAT-001-feature-workflow.md`
+- `features/FEAT-001-feature-workflow/requirements/REQ-001-agent-prompts.md`
+- `features/FEAT-001-feature-workflow/design/DESIGN-001-implementation-plan.md`
+- `features/FEAT-001-feature-workflow/tasks/TASK-001-create-templates.md`
 
 ### Valid Observation Categories
 

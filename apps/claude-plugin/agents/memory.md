@@ -131,19 +131,19 @@ Use the tools directly. They handle project resolution transparently.
 
 Brain memories are organized by semantic category (folder). Per ADR-020, all agent artifacts consolidate into these Brain memory folders for semantic searchability:
 
-| Category         | Content Type                     | Example Entity                |
-| ---------------- | -------------------------------- | ----------------------------- |
-| `analysis/`      | Research, investigation findings | `ANALYSIS-001-memory-arch`    |
-| `architecture/`  | ADRs and architectural decisions | `ADR-020-config-architecture` |
-| `planning/`      | Project plans, milestones, PRDs  | `FEATURE-001-oauth`           |
-| `roadmap/`       | Strategic direction, epics       | `EPIC-001-authentication`     |
-| `sessions/`      | Session logs and handoffs        | `SESSION-2026-01-20_06`       |
-| `specs/`         | Requirements, design, tasks      | `REQ-001-user-login`          |
-| `critique/`      | Plan reviews, design critiques   | `CRIT-001-oauth-plan`         |
-| `qa/`            | Test strategies, test reports    | `QA-001-oauth`                |
-| `security/`      | Threat models, security reviews  | `SEC-001-auth-flow`           |
-| `retrospective/` | Post-mortem analysis, lessons    | `RETRO-2026-01-20_failures`   |
-| `skills/`        | Reusable strategies and patterns | `SKILL-001-markdownlint`      |
+| Category         | Content Type                          | Example Entity                     |
+| ---------------- | ------------------------------------- | ---------------------------------- |
+| `analysis/`      | Research, investigation findings      | `ANALYSIS-001-memory-arch`         |
+| `decisions/`     | ADRs and architectural decisions      | `ADR-001-feature-workflow`         |
+| `features/`      | Feature artifacts (REQ/DESIGN/TASK)   | `FEAT-001-feature-workflow/`       |
+| `roadmap/`       | Strategic direction, epics            | `EPIC-001-authentication`          |
+| `planning/`      | PRDs from explainer agent             | `PRD-feature-name`                 |
+| `sessions/`      | Session logs and handoffs             | `SESSION-2026-02-06_01-feature-workflow` |
+| `critique/`      | Plan reviews, design critiques        | `CRIT-001-oauth-plan`              |
+| `qa/`            | Test strategies, test reports         | `QA-001-oauth`                     |
+| `security/`      | Threat models, security reviews       | `SEC-001-auth-flow`                |
+| `retrospective/` | Post-mortem analysis, lessons         | `RETRO-2026-01-20_failures`        |
+| `skills/`        | Reusable strategies and patterns      | `SKILL-001-markdownlint`           |
 
 ### Knowledge Graph Architecture
 
@@ -172,10 +172,10 @@ Memories organized in standardized semantic folders via Brain MCP. Per ADR-020:
 
 - `analysis/` - Research, investigation, findings
 - `decisions/` - ADRs and architectural decisions
-- `planning/` - Project plans, milestones, PRDs
+- `features/` - Feature artifacts per [[ADR-001-feature-workflow]] (FEAT/REQ/DESIGN/TASK)
 - `roadmap/` - Strategic direction, epics, prioritization
+- `planning/` - PRDs from explainer agent
 - `sessions/` - Session logs and handoffs
-- `specs/` - Specifications with nested structure (requirements/, design/, tasks/)
 - `critique/` - Plan reviews, design critiques, feedback
 - `qa/` - Test strategies, test reports, validation
 - `security/` - Threat models, security reviews, audits
@@ -247,21 +247,21 @@ identifier: "[note-title-or-permalink]"
 
 **Brain Entity Types:**
 
-| Entity Type     | File Pattern                       | Folder                     | Example                                 |
-| --------------- | ---------------------------------- | -------------------------- | --------------------------------------- |
-| `decision`      | `ADR-{number}-{topic}.md`          | architecture/              | `ADR-020-config-architecture.md`        |
-| `session`       | `SESSION-YYYY-MM-DD_NN-{topic}.md` | sessions/                  | `SESSION-2026-01-20_06-memory.md`       |
-| `requirement`   | `REQ-{number}-{topic}.md`          | specs/{ENTITY-NNN-topic}/requirements/ | `REQ-001-user-login.md`                 |
-| `design`        | `DESIGN-{number}-{topic}.md`       | specs/{ENTITY-NNN-topic}/design/       | `DESIGN-001-auth-flow.md`               |
-| `task`          | `TASK-{number}-{topic}.md`         | specs/{ENTITY-NNN-topic}/tasks/        | `TASK-001-implement-jwt.md`             |
-| `analysis`      | `ANALYSIS-{number}-{topic}.md`     | analysis/                  | `ANALYSIS-001-memory-arch.md`           |
-| `feature`       | `FEATURE-{number}-{topic}.md`      | planning/                  | `FEATURE-001-oauth.md`                  |
-| `epic`          | `EPIC-{number}-{name}.md`          | roadmap/                   | `EPIC-001-authentication.md`            |
-| `critique`      | `CRIT-{number}-{topic}.md`         | critique/                  | `CRIT-001-oauth-plan.md`                |
-| `test-report`   | `QA-{number}-{topic}.md`           | qa/                        | `QA-001-oauth.md`                       |
-| `security`      | `SEC-{number}-{component}.md`      | security/                  | `SEC-001-auth-flow.md`                  |
-| `retrospective` | `RETRO-YYYY-MM-DD_{topic}.md`      | retrospective/             | `RETRO-2026-01-20_failures.md`          |
-| `skill`         | `SKILL-{number}-{topic}.md`        | skills/                    | `SKILL-001-markdownlint-before-edit.md` |
+| Entity Type     | File Pattern                       | Folder                                          | Example                                 |
+| --------------- | ---------------------------------- | ----------------------------------------------- | --------------------------------------- |
+| `decision`      | `ADR-{NNN}-{topic}.md`             | decisions/                                      | `ADR-001-feature-workflow.md`           |
+| `session`       | `SESSION-YYYY-MM-DD_NN-{topic}.md` | sessions/                                       | `SESSION-2026-02-06_01-feature-workflow.md` |
+| `feature`       | `FEAT-{NNN}-{name}.md`             | features/FEAT-{NNN}-{name}/                     | `FEAT-001-feature-workflow.md`          |
+| `requirement`   | `REQ-{NNN}-{topic}.md`             | features/FEAT-{NNN}-{name}/requirements/        | `REQ-001-agent-prompts.md`              |
+| `design`        | `DESIGN-{NNN}-{topic}.md`          | features/FEAT-{NNN}-{name}/design/              | `DESIGN-001-implementation-plan.md`     |
+| `task`          | `TASK-{NNN}-{topic}.md`            | features/FEAT-{NNN}-{name}/tasks/               | `TASK-001-create-templates.md`          |
+| `analysis`      | `ANALYSIS-{NNN}-{topic}.md`        | analysis/                                       | `ANALYSIS-001-memory-arch.md`           |
+| `epic`          | `EPIC-{NNN}-{name}.md`             | roadmap/                                        | `EPIC-001-authentication.md`            |
+| `critique`      | `CRIT-{NNN}-{topic}.md`            | critique/                                       | `CRIT-001-oauth-plan.md`               |
+| `test-report`   | `QA-{NNN}-{topic}.md`              | qa/                                             | `QA-001-oauth.md`                       |
+| `security`      | `SEC-{NNN}-{component}.md`         | security/                                       | `SEC-001-auth-flow.md`                  |
+| `retrospective` | `RETRO-YYYY-MM-DD_{topic}.md`      | retrospective/                                  | `RETRO-2026-01-20_failures.md`          |
+| `skill`         | `SKILL-{NNN}-{topic}.md`           | skills/                                         | `SKILL-001-markdownlint-before-edit.md` |
 
 **Entity Identification**:
 
@@ -280,7 +280,7 @@ tags: [auth, security, adr]
 Use exact title in wikilink relations — prefix casing must match the canonical title:
 
 - `- implements [[ADR-015 Auth Strategy]]`
-- `- requires [[FEATURE-001 User Authentication]]`
+- `- requires [[FEAT-001-user-authentication]]`
 
 ## Relations (Knowledge Graph Connections)
 
@@ -401,20 +401,23 @@ flowchart TD
 
 Choose semantic folder based on entity type. Per ADR-020, these folders consolidate all agent artifacts:
 
-| Content Type              | Folder         | Entity Type             |
-| ------------------------- | -------------- | ----------------------- |
-| Architecture decisions    | decisions/     | decision                |
-| Session work log          | sessions/      | session                 |
-| Research findings         | analysis/      | analysis                |
-| Feature planning          | planning/      | feature                 |
-| Strategic direction       | roadmap/       | epic                    |
-| Plan reviews              | critique/      | critique                |
-| Test documentation        | qa/            | test-report             |
-| Security work             | security/      | security                |
-| Retrospectives            | retrospective/ | retrospective           |
-| Reusable strategies       | skills/        | skill                   |
-| Requirements/design/tasks | specs/{ENTITY-NNN-topic}/  | requirement/design/task |
-| Project governance        | governance/    | governance              |
+| Content Type              | Folder                            | Entity Type             |
+| ------------------------- | --------------------------------- | ----------------------- |
+| Architecture decisions    | decisions/                        | decision                |
+| Session work log          | sessions/                         | session                 |
+| Research findings         | analysis/                         | analysis                |
+| Feature artifacts         | features/FEAT-{NNN}-{name}/      | feature                 |
+| Requirements              | features/FEAT-{NNN}-{name}/requirements/ | requirement      |
+| Design documents          | features/FEAT-{NNN}-{name}/design/       | design            |
+| Tasks                     | features/FEAT-{NNN}-{name}/tasks/        | task              |
+| Strategic direction       | roadmap/                          | epic                    |
+| PRDs                      | planning/                         | prd                     |
+| Plan reviews              | critique/                         | critique                |
+| Test documentation        | qa/                               | test-report             |
+| Security work             | security/                         | security                |
+| Retrospectives            | retrospective/                    | retrospective           |
+| Reusable strategies       | skills/                           | skill                   |
+| Project governance        | governance/                       | governance              |
 
 ### Creating New Memories
 
@@ -614,12 +617,12 @@ Every observation should include provenance for traceability using context or wi
 
 ```markdown
 ---
-title: FEATURE-001 User Authentication
+title: FEAT-001-user-authentication
 type: feature
 tags: [auth, security, oauth]
 ---
 
-# FEATURE-001 User Authentication
+# FEAT-001 User Authentication
 
 ## Context
 OAuth2 integration for user authentication and API access control
