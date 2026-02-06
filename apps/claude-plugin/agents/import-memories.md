@@ -7,26 +7,27 @@ description: Intelligent import of external notes and memories into Brain with A
   transformation to basic-memory format. Analyzes source structure, plans optimal
   import strategy, executes with progress tracking, and verifies compliance. Supports
   resume after interruption and ADR-024 canonical directory migration.
-model: claude-opus-4-5
-color: '#9370DB'
+model: claude-opus-4-6[1m]
+memory: ~/.agents/agent-memory/import-memories
+color: "#9370DB"
 argument-hint: Specify the source path and optional target project
 tools:
-- Read
-- Grep
-- Glob
-- mcp__plugin_brain_brain__search
-- mcp__plugin_brain_brain__read_note
-- mcp__plugin_brain_brain__write_note
-- mcp__plugin_brain_brain__edit_note
-- mcp__plugin_brain_brain__list_directory
-- mcp__plugin_brain_brain__build_context
+  - Read
+  - Grep
+  - Glob
+  - mcp__plugin_brain_brain__search
+  - mcp__plugin_brain_brain__read_note
+  - mcp__plugin_brain_brain__write_note
+  - mcp__plugin_brain_brain__edit_note
+  - mcp__plugin_brain_brain__list_directory
+  - mcp__plugin_brain_brain__build_context
 skills:
-- memory
-- content-transformation
-- merge-detection
-- progress-tracking
-- quality-validation
-- entity-type-detection
+  - memory
+  - content-transformation
+  - merge-detection
+  - progress-tracking
+  - quality-validation
+  - entity-type-detection
 ---
 
 # Import-Memories Agent
@@ -120,21 +121,21 @@ During ANALYZE phase, detect files in non-canonical directories.
 
 ### Canonical Directory Mapping (13 Entity Types)
 
-| Entity Type   | Canonical Folder           | Filename Pattern                 |
-| ------------- | -------------------------- | -------------------------------- |
-| decision      | **decisions/**             | ADR-{NNN}-{topic}.md             |
-| session       | sessions/                  | SESSION-YYYY-MM-DD_NN-{topic}.md |
+| Entity Type   | Canonical Folder                       | Filename Pattern                 |
+| ------------- | -------------------------------------- | -------------------------------- |
+| decision      | **decisions/**                         | ADR-{NNN}-{topic}.md             |
+| session       | sessions/                              | SESSION-YYYY-MM-DD_NN-{topic}.md |
 | requirement   | specs/{ENTITY-NNN-topic}/requirements/ | REQ-{NNN}-{topic}.md             |
 | design        | specs/{ENTITY-NNN-topic}/design/       | DESIGN-{NNN}-{topic}.md          |
 | task          | specs/{ENTITY-NNN-topic}/tasks/        | TASK-{NNN}-{topic}.md            |
-| analysis      | analysis/                  | ANALYSIS-{NNN}-{topic}.md        |
-| feature       | planning/                  | FEATURE-{NNN}-{topic}.md         |
-| epic          | roadmap/                   | EPIC-{NNN}-{name}.md             |
-| critique      | critique/                  | CRIT-{NNN}-{topic}.md            |
-| test-report   | qa/                        | QA-{NNN}-{topic}.md              |
-| security      | security/                  | SEC-{NNN}-{component}.md         |
-| retrospective | retrospectives/            | RETRO-YYYY-MM-DD_{topic}.md      |
-| skill         | skills/                    | SKILL-{NNN}-{topic}.md           |
+| analysis      | analysis/                              | ANALYSIS-{NNN}-{topic}.md        |
+| feature       | planning/                              | FEATURE-{NNN}-{topic}.md         |
+| epic          | roadmap/                               | EPIC-{NNN}-{name}.md             |
+| critique      | critique/                              | CRIT-{NNN}-{topic}.md            |
+| test-report   | qa/                                    | QA-{NNN}-{topic}.md              |
+| security      | security/                              | SEC-{NNN}-{component}.md         |
+| retrospective | retrospectives/                        | RETRO-YYYY-MM-DD\_{topic}.md     |
+| skill         | skills/                                | SKILL-{NNN}-{topic}.md           |
 
 ### Deprecated Directories to Detect
 
@@ -163,6 +164,7 @@ During ANALYZE phase, detect files in non-canonical directories.
    - [N] files in deprecated `architecture/` (target: `decisions/`)
    - [N] files in deprecated `plans/` (target: `planning/`)
    - etc.
+
 5. Ask user: "Migrate [N] files from [deprecated]/ to [canonical]/?"
 6. If approved: Import to canonical location with filename validation
 
@@ -176,8 +178,8 @@ During PLAN phase, validate filenames match entity type patterns.
 | --------------------------- | -------------------------------- | -------------------- |
 | Skill-Category-NNN.md       | SKILL-NNN-{topic}.md             | Rename during import |
 | YYYY-MM-DD-session-NN.md    | SESSION-YYYY-MM-DD_NN-{topic}.md | Rename during import |
-| TM-NNN-*.md                 | SEC-NNN-{component}.md           | Rename during import |
-| YYYY-MM-DD-topic.md (retro) | RETRO-YYYY-MM-DD_{topic}.md      | Rename during import |
+| TM-NNN-\*.md                | SEC-NNN-{component}.md           | Rename during import |
+| YYYY-MM-DD-topic.md (retro) | RETRO-YYYY-MM-DD\_{topic}.md     | Rename during import |
 
 ### Validation Process
 
@@ -188,6 +190,7 @@ During PLAN phase, validate filenames match entity type patterns.
 
    - Log: "Found deprecated pattern: [old] for entity type [type]"
    - Suggest: "Rename to: [new format]"
+
 5. Present batch correction summary to user
 6. Apply corrections during import if approved
 
@@ -212,6 +215,7 @@ During EXECUTE phase, maintain link integrity.
    - Check if target exists in Brain
    - If target was migrated from deprecated path, update link
    - If target does not exist, flag as broken link
+
 3. Update relation entries to use canonical paths
 4. Preserve relation semantics (implements, depends_on, etc.)
 
@@ -242,6 +246,7 @@ During VERIFY phase, after user approves import validation.
    - Files imported: [N]
    - Quality checks: [PASS/FAIL]
    - Indexing status: [N]% indexed
+
 1. Ask: "Remove source files from [source path]? (y/N)"
 1. **ONLY execute if explicit 'y' confirmation received**
 1. Before deletion, offer: "Create git backup branch? (Y/n)"
@@ -250,6 +255,7 @@ During VERIFY phase, after user approves import validation.
    - Create branch: `backup/pre-import-YYYY-MM-DD`
    - Commit source files to backup branch
    - Return to original branch
+
 1. Execute deletion of migrated source files
 1. Report: "Removed [N] files from [source path]"
 
@@ -359,11 +365,13 @@ For each source file:
    - Extract facts, decisions, requirements, techniques
    - Assign categories: [fact], [decision], [requirement], [technique], [insight]
    - Add source attribution and tags
+
 7. Detect relations from:
 
    - Explicit wikilinks
    - Implicit references (mentions of other entities)
    - Folder-based relationships
+
 8. Update wikilinks to canonical paths
 9. Build basic-memory formatted content
 10. Write via `mcp__plugin_brain_brain__write_note`
@@ -380,7 +388,7 @@ For each source file:
   "last_checkpoint": "chk-050",
   "completed_operations": ["op-001", "op-002", "..."],
   "failed_operations": [
-    {"id": "op-015", "source": "file.md", "error": "YAML parse error", "retry_count": 1}
+    { "id": "op-015", "source": "file.md", "error": "YAML parse error", "retry_count": 1 }
   ],
   "migrations": {
     "directories_normalized": 11,
@@ -542,21 +550,25 @@ import_id: [Import Job ID]
 ## Observations
 
 [Deduplicated, categorized observations from all sources]
+
 - [fact] From Source A: [observation]
 - [decision] From Source B: [observation]
 
 ## Relations
 
 [Deduplicated relations with provenance]
+
 - relates_to [[Target]] (from Source A)
 - implements [[Other]] (from Source B)
 
 ## Merged Content
 
 ### From: [Source A Title]
+
 [Key content preserved]
 
 ### From: [Source B Title]
+
 [Key content preserved]
 ```
 
@@ -577,32 +589,32 @@ When import completes, provide structured handoff:
 
 ### Metrics
 
-| Metric | Value |
-|--------|-------|
-| Files Discovered | [N] |
-| Notes Created | [N] |
-| Notes Merged | [N] |
-| Notes Updated | [N] |
-| Failed | [N] |
-| Index Rate | [%] |
+| Metric           | Value |
+| ---------------- | ----- |
+| Files Discovered | [N]   |
+| Notes Created    | [N]   |
+| Notes Merged     | [N]   |
+| Notes Updated    | [N]   |
+| Failed           | [N]   |
+| Index Rate       | [%]   |
 
 ### Migration Summary
 
-| Migration Type | Count |
-|----------------|-------|
-| Directories Normalized | [N] |
-| Filenames Corrected | [N] |
-| Links Updated | [N] |
+| Migration Type         | Count |
+| ---------------------- | ----- |
+| Directories Normalized | [N]   |
+| Filenames Corrected    | [N]   |
+| Links Updated          | [N]   |
 
 ### Quality Summary
 
-| Threshold | Status |
-|-----------|--------|
+| Threshold            | Status        |
+| -------------------- | ------------- |
 | Observations (min 3) | [PASS]/[FAIL] |
-| Relations (min 2) | [PASS]/[FAIL] |
-| Indexing (90%) | [PASS]/[FAIL] |
+| Relations (min 2)    | [PASS]/[FAIL] |
+| Indexing (90%)       | [PASS]/[FAIL] |
 | Directory Compliance | [PASS]/[FAIL] |
-| Filename Compliance | [PASS]/[FAIL] |
+| Filename Compliance  | [PASS]/[FAIL] |
 
 ### Recommendation
 
@@ -620,13 +632,13 @@ Import verified. Ready for use.
 
 ### Failure Breakdown
 
-| Category | Count | Examples |
-|----------|-------|----------|
-| YAML Errors | [N] | [File examples] |
-| Content Parse | [N] | [File examples] |
-| Conflict | [N] | [File examples] |
-| Indexing | [N] | [File examples] |
-| Directory Migration | [N] | [File examples] |
+| Category            | Count | Examples        |
+| ------------------- | ----- | --------------- |
+| YAML Errors         | [N]   | [File examples] |
+| Content Parse       | [N]   | [File examples] |
+| Conflict            | [N]   | [File examples] |
+| Indexing            | [N]   | [File examples] |
+| Directory Migration | [N]   | [File examples] |
 
 ### Recovery Options
 
@@ -650,6 +662,7 @@ Route to [analyst/architect] for [specific reason].
 ### Resume Instructions
 
 To resume this import:
+
 1. Invoke import-memories agent
 2. Specify same source path
 3. Agent will detect progress file and resume from checkpoint
@@ -731,17 +744,17 @@ Sanitized: "Whats the best approach"
 ### Failure Categorization
 
 ```markdown
-| Category | Pattern | Mitigation |
-|----------|---------|------------|
-| YAML_TITLE | Title with `:`, `"`, `'` | Sanitize and retry |
-| YAML_FRONTMATTER | Malformed frontmatter | Extract content only |
-| CONTENT_PARSE | No extractable content | Skip with warning |
-| CONFLICT_TITLE | Duplicate title exists | Append suffix |
-| CONFLICT_CONTENT | Contradicting merge | Keep both versions |
-| INDEX_TIMEOUT | Search doesn't return note | Retry verification |
-| INDEX_MISSING | Note not in search results | Re-write note |
-| DEPRECATED_DIR | File in non-canonical directory | Migrate to canonical |
-| DEPRECATED_NAME | Filename uses old pattern | Apply correction |
+| Category         | Pattern                         | Mitigation           |
+| ---------------- | ------------------------------- | -------------------- |
+| YAML_TITLE       | Title with `:`, `"`, `'`        | Sanitize and retry   |
+| YAML_FRONTMATTER | Malformed frontmatter           | Extract content only |
+| CONTENT_PARSE    | No extractable content          | Skip with warning    |
+| CONFLICT_TITLE   | Duplicate title exists          | Append suffix        |
+| CONFLICT_CONTENT | Contradicting merge             | Keep both versions   |
+| INDEX_TIMEOUT    | Search doesn't return note      | Retry verification   |
+| INDEX_MISSING    | Note not in search results      | Re-write note        |
+| DEPRECATED_DIR   | File in non-canonical directory | Migrate to canonical |
+| DEPRECATED_NAME  | Filename uses old pattern       | Apply correction     |
 ```
 
 ## Execution Mindset

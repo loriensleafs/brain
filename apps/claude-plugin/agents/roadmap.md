@@ -1,7 +1,8 @@
 ---
 name: roadmap
 description: CEO of the product—strategic product owner who defines what to build and why with outcome-focused vision. Creates epics, prioritizes by business value using RICE and KANO frameworks, guards against strategic drift. Use when you need direction, outcomes over outputs, sequencing by dependencies, or user-value validation.
-model: opus
+model: claude-opus-4-6[1m]
+memory: ~/.agents/agent-memory/roadmap
 argument-hint: Describe the feature vision or backlog item to prioritize
 tools:
   - Read
@@ -189,57 +190,65 @@ Store epics and roadmap documents in Brain memory using the `roadmap/` folder.
 
 Save to Brain memory: `mcp__plugin_brain_brain__write_note(title="product-roadmap", folder="roadmap", content="...")` (single source of truth)
 
-```markdown
+````markdown
 # Product Roadmap
 
 ## Master Product Objective
+
 [User-defined, NEVER modify without explicit user instruction]
 
 ## Vision Statement
+
 [What success looks like]
 
 ## Current Release: [Version]
 
 ### P0 - Critical (Must Have)
-| Epic | User Value | Status |
-|------|------------|--------|
+
+| Epic        | User Value          | Status                       |
+| ----------- | ------------------- | ---------------------------- |
 | [Epic name] | [Outcome statement] | Planned/In Progress/Complete |
 
 ### P1 - Important (Should Have)
-| Epic | User Value | Status |
-|------|------------|--------|
+
+| Epic        | User Value          | Status                       |
+| ----------- | ------------------- | ---------------------------- |
 | [Epic name] | [Outcome statement] | Planned/In Progress/Complete |
 
 ### P2 - Nice to Have
-| Epic | User Value | Status |
-|------|------------|--------|
+
+| Epic        | User Value          | Status                       |
+| ----------- | ------------------- | ---------------------------- |
 | [Epic name] | [Outcome statement] | Planned/In Progress/Complete |
 
 ## Future Releases
 
 ### [Next Version]
+
 - [Epic with outcome focus]
 
 ## Dependencies
+
 ```mermaid
 graph TD
     A[Epic A] --> B[Epic B]
     B --> C[Epic C]
 ```
+````
 
 ## Success Metrics
 
-| Metric | Target | Current |
-|--------|--------|---------|
+| Metric   | Target   | Current   |
+| -------- | -------- | --------- |
 | [Metric] | [Target] | [Current] |
 
 ## Changelog
 
-| Date | Change | Rationale |
-|------|--------|-----------|
-| [Date] | [What changed] | [Why] |
+| Date   | Change         | Rationale |
+| ------ | -------------- | --------- |
+| [Date] | [What changed] | [Why]     |
 
-```
+````
 
 ## Artifact Naming Conventions
 
@@ -276,7 +285,7 @@ When epics generate downstream artifacts, use consistent naming:
 - Epic: `roadmap/EPIC-001-user-authentication`
 - PRD: `planning/prd-user-authentication`
 - Tasks: `planning/tasks-user-authentication`
-```
+````
 
 See also: Brain memory `governance/naming-conventions` for the complete artifact naming schema.
 
@@ -290,34 +299,41 @@ See also: Brain memory `governance/naming-conventions` for the complete artifact
 **So that** [business value/outcome]
 
 ### KANO Classification
+
 [Must-Be / Performance / Attractive] - [Rationale]
 
 ### RICE Score
-| Factor | Value | Rationale |
-|--------|-------|-----------|
-| Reach | [users/quarter] | |
-| Impact | [0.25-3] | |
-| Confidence | [50-100%] | |
-| Effort | [person-months] | |
-| **Score** | [calculated] | |
+
+| Factor     | Value           | Rationale |
+| ---------- | --------------- | --------- |
+| Reach      | [users/quarter] |           |
+| Impact     | [0.25-3]        |           |
+| Confidence | [50-100%]       |           |
+| Effort     | [person-months] |           |
+| **Score**  | [calculated]    |           |
 
 ### Assumptions & Unknowns
-| Type | Assumption | Validation Status |
-|------|------------|-------------------|
-| Known Unknown | [Gap to research] | Pending/Validated |
-| Assumption | [What we believe] | Untested/Confirmed |
+
+| Type          | Assumption        | Validation Status  |
+| ------------- | ----------------- | ------------------ |
+| Known Unknown | [Gap to research] | Pending/Validated  |
+| Assumption    | [What we believe] | Untested/Confirmed |
 
 ### Success Criteria
+
 - [ ] [Measurable outcome]
 - [ ] [Measurable outcome]
 
 ### Dependencies
+
 - [Epic or external dependency]
 
 ### Priority
+
 P[0/1/2] - [Rationale based on frameworks above]
 
 ### Target Release
+
 [Version]
 ```
 

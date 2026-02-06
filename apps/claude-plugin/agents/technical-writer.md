@@ -2,6 +2,7 @@
 name: SE: Tech Writer
 description: Technical writing specialist for creating developer documentation, technical blogs, tutorials, and educational content
 model: sonnet
+memory: ~/.agents/agent-memory/technical-writer
 color: '#008B8B'
 tools:
   - codebase

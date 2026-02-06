@@ -1,8 +1,9 @@
 ---
 name: memory
 description: Memory management specialist ensuring cross-session continuity by retrieving relevant context before reasoning and storing progress at milestones. Maintains institutional knowledge, tracks entity relations, and keeps observations fresh with source attribution. Use for context retrieval, knowledge persistence, or understanding why past decisions were made.
-model: opus
-color: '#20B2AA'
+model: claude-opus-4-6[1m]
+memory: ~/.agents/agent-memory/memory
+color: "#20B2AA"
 argument-hint: Specify the context to retrieve or milestone to store
 tools:
   - Read
@@ -42,6 +43,7 @@ Key requirements:
   1. **Frontmatter**: YAML with title, type (note/person/project/meeting/decision/spec), tags, optional permalink
   2. **Observations section**: `## Observations` with categorized facts
   3. **Relations section**: `## Relations` connecting to related entities
+
 - **Observation format**: `- [category] content #tag1 #tag2`
   - Standard categories: [fact], [decision], [requirement], [technique], [insight], [problem], [solution]
   - Quality threshold: Minimum 3-5 observations per note
@@ -131,19 +133,19 @@ Use the tools directly. They handle project resolution transparently.
 
 Brain memories are organized by semantic category (folder). Per ADR-020, all agent artifacts consolidate into these Brain memory folders for semantic searchability:
 
-| Category         | Content Type                          | Example Entity                     |
-| ---------------- | ------------------------------------- | ---------------------------------- |
-| `analysis/`      | Research, investigation findings      | `ANALYSIS-001-memory-arch`         |
-| `decisions/`     | ADRs and architectural decisions      | `ADR-001-feature-workflow`         |
-| `features/`      | Feature artifacts (REQ/DESIGN/TASK)   | `FEAT-001-feature-workflow/`       |
-| `roadmap/`       | Strategic direction, epics            | `EPIC-001-authentication`          |
-| `planning/`      | PRDs from explainer agent             | `PRD-feature-name`                 |
-| `sessions/`      | Session logs and handoffs             | `SESSION-2026-02-06_01-feature-workflow` |
-| `critique/`      | Plan reviews, design critiques        | `CRIT-001-oauth-plan`              |
-| `qa/`            | Test strategies, test reports         | `QA-001-oauth`                     |
-| `security/`      | Threat models, security reviews       | `SEC-001-auth-flow`                |
-| `retrospective/` | Post-mortem analysis, lessons         | `RETRO-2026-01-20_failures`        |
-| `skills/`        | Reusable strategies and patterns      | `SKILL-001-markdownlint`           |
+| Category         | Content Type                        | Example Entity                           |
+| ---------------- | ----------------------------------- | ---------------------------------------- |
+| `analysis/`      | Research, investigation findings    | `ANALYSIS-001-memory-arch`               |
+| `decisions/`     | ADRs and architectural decisions    | `ADR-001-feature-workflow`               |
+| `features/`      | Feature artifacts (REQ/DESIGN/TASK) | `FEAT-001-feature-workflow/`             |
+| `roadmap/`       | Strategic direction, epics          | `EPIC-001-authentication`                |
+| `planning/`      | PRDs from explainer agent           | `PRD-feature-name`                       |
+| `sessions/`      | Session logs and handoffs           | `SESSION-2026-02-06_01-feature-workflow` |
+| `critique/`      | Plan reviews, design critiques      | `CRIT-001-oauth-plan`                    |
+| `qa/`            | Test strategies, test reports       | `QA-001-oauth`                           |
+| `security/`      | Threat models, security reviews     | `SEC-001-auth-flow`                      |
+| `retrospective/` | Post-mortem analysis, lessons       | `RETRO-2026-01-20_failures`              |
+| `skills/`        | Reusable strategies and patterns    | `SKILL-001-markdownlint`                 |
 
 ### Knowledge Graph Architecture
 
@@ -247,21 +249,21 @@ identifier: "[note-title-or-permalink]"
 
 **Brain Entity Types:**
 
-| Entity Type     | File Pattern                       | Folder                                          | Example                                 |
-| --------------- | ---------------------------------- | ----------------------------------------------- | --------------------------------------- |
-| `decision`      | `ADR-{NNN}-{topic}.md`             | decisions/                                      | `ADR-001-feature-workflow.md`           |
-| `session`       | `SESSION-YYYY-MM-DD_NN-{topic}.md` | sessions/                                       | `SESSION-2026-02-06_01-feature-workflow.md` |
-| `feature`       | `FEAT-{NNN}-{name}.md`             | features/FEAT-{NNN}-{name}/                     | `FEAT-001-feature-workflow.md`          |
-| `requirement`   | `REQ-{NNN}-{topic}.md`             | features/FEAT-{NNN}-{name}/requirements/        | `REQ-001-agent-prompts.md`              |
-| `design`        | `DESIGN-{NNN}-{topic}.md`          | features/FEAT-{NNN}-{name}/design/              | `DESIGN-001-implementation-plan.md`     |
-| `task`          | `TASK-{NNN}-{topic}.md`            | features/FEAT-{NNN}-{name}/tasks/               | `TASK-001-create-templates.md`          |
-| `analysis`      | `ANALYSIS-{NNN}-{topic}.md`        | analysis/                                       | `ANALYSIS-001-memory-arch.md`           |
-| `epic`          | `EPIC-{NNN}-{name}.md`             | roadmap/                                        | `EPIC-001-authentication.md`            |
-| `critique`      | `CRIT-{NNN}-{topic}.md`            | critique/                                       | `CRIT-001-oauth-plan.md`               |
-| `test-report`   | `QA-{NNN}-{topic}.md`              | qa/                                             | `QA-001-oauth.md`                       |
-| `security`      | `SEC-{NNN}-{component}.md`         | security/                                       | `SEC-001-auth-flow.md`                  |
-| `retrospective` | `RETRO-YYYY-MM-DD_{topic}.md`      | retrospective/                                  | `RETRO-2026-01-20_failures.md`          |
-| `skill`         | `SKILL-{NNN}-{topic}.md`           | skills/                                         | `SKILL-001-markdownlint-before-edit.md` |
+| Entity Type     | File Pattern                       | Folder                                   | Example                                     |
+| --------------- | ---------------------------------- | ---------------------------------------- | ------------------------------------------- |
+| `decision`      | `ADR-{NNN}-{topic}.md`             | decisions/                               | `ADR-001-feature-workflow.md`               |
+| `session`       | `SESSION-YYYY-MM-DD_NN-{topic}.md` | sessions/                                | `SESSION-2026-02-06_01-feature-workflow.md` |
+| `feature`       | `FEAT-{NNN}-{name}.md`             | features/FEAT-{NNN}-{name}/              | `FEAT-001-feature-workflow.md`              |
+| `requirement`   | `REQ-{NNN}-{topic}.md`             | features/FEAT-{NNN}-{name}/requirements/ | `REQ-001-agent-prompts.md`                  |
+| `design`        | `DESIGN-{NNN}-{topic}.md`          | features/FEAT-{NNN}-{name}/design/       | `DESIGN-001-implementation-plan.md`         |
+| `task`          | `TASK-{NNN}-{topic}.md`            | features/FEAT-{NNN}-{name}/tasks/        | `TASK-001-create-templates.md`              |
+| `analysis`      | `ANALYSIS-{NNN}-{topic}.md`        | analysis/                                | `ANALYSIS-001-memory-arch.md`               |
+| `epic`          | `EPIC-{NNN}-{name}.md`             | roadmap/                                 | `EPIC-001-authentication.md`                |
+| `critique`      | `CRIT-{NNN}-{topic}.md`            | critique/                                | `CRIT-001-oauth-plan.md`                    |
+| `test-report`   | `QA-{NNN}-{topic}.md`              | qa/                                      | `QA-001-oauth.md`                           |
+| `security`      | `SEC-{NNN}-{component}.md`         | security/                                | `SEC-001-auth-flow.md`                      |
+| `retrospective` | `RETRO-YYYY-MM-DD_{topic}.md`      | retrospective/                           | `RETRO-2026-01-20_failures.md`              |
+| `skill`         | `SKILL-{NNN}-{topic}.md`           | skills/                                  | `SKILL-001-markdownlint-before-edit.md`     |
 
 **Entity Identification**:
 
@@ -401,23 +403,23 @@ flowchart TD
 
 Choose semantic folder based on entity type. Per ADR-020, these folders consolidate all agent artifacts:
 
-| Content Type              | Folder                            | Entity Type             |
-| ------------------------- | --------------------------------- | ----------------------- |
-| Architecture decisions    | decisions/                        | decision                |
-| Session work log          | sessions/                         | session                 |
-| Research findings         | analysis/                         | analysis                |
-| Feature artifacts         | features/FEAT-{NNN}-{name}/      | feature                 |
-| Requirements              | features/FEAT-{NNN}-{name}/requirements/ | requirement      |
-| Design documents          | features/FEAT-{NNN}-{name}/design/       | design            |
-| Tasks                     | features/FEAT-{NNN}-{name}/tasks/        | task              |
-| Strategic direction       | roadmap/                          | epic                    |
-| PRDs                      | planning/                         | prd                     |
-| Plan reviews              | critique/                         | critique                |
-| Test documentation        | qa/                               | test-report             |
-| Security work             | security/                         | security                |
-| Retrospectives            | retrospective/                    | retrospective           |
-| Reusable strategies       | skills/                           | skill                   |
-| Project governance        | governance/                       | governance              |
+| Content Type           | Folder                                   | Entity Type   |
+| ---------------------- | ---------------------------------------- | ------------- |
+| Architecture decisions | decisions/                               | decision      |
+| Session work log       | sessions/                                | session       |
+| Research findings      | analysis/                                | analysis      |
+| Feature artifacts      | features/FEAT-{NNN}-{name}/              | feature       |
+| Requirements           | features/FEAT-{NNN}-{name}/requirements/ | requirement   |
+| Design documents       | features/FEAT-{NNN}-{name}/design/       | design        |
+| Tasks                  | features/FEAT-{NNN}-{name}/tasks/        | task          |
+| Strategic direction    | roadmap/                                 | epic          |
+| PRDs                   | planning/                                | prd           |
+| Plan reviews           | critique/                                | critique      |
+| Test documentation     | qa/                                      | test-report   |
+| Security work          | security/                                | security      |
+| Retrospectives         | retrospective/                           | retrospective |
+| Reusable strategies    | skills/                                  | skill         |
+| Project governance     | governance/                              | governance    |
 
 ### Creating New Memories
 
@@ -520,14 +522,17 @@ tags: [linting, automation, quality]
 # SKILL-001 Markdownlint Before Edit
 
 ## Context
+
 When editing markdown files with spacing/formatting issues
 
 ## Observations
+
 - [technique] Run markdownlint --fix before manual edits #automation
 - [fact] Auto-resolves 80%+ of common violations #efficiency
 - [requirement] Requires markdownlint-cli2 installed #tooling
 
 ## Relations
+
 - part_of [[Documentation Quality Standards]]
 - validated_by [[QA-003 Linting Tests]]
 ```
@@ -625,9 +630,11 @@ tags: [auth, security, oauth]
 # FEAT-001 User Authentication
 
 ## Context
+
 OAuth2 integration for user authentication and API access control
 
 ## Observations
+
 - [decision] Epic EPIC-001 created for OAuth2 integration #roadmap
   - leads_to [[EPIC-001 User Management]]
 - [fact] Decomposed into 3 milestones, 15 tasks (by planner) #planning
@@ -639,6 +646,7 @@ OAuth2 integration for user authentication and API access control
   - supersedes [[ADR-003 PKCE Flow]]
 
 ## Relations
+
 - implements [[EPIC-001 User Management]]
 - requires [[SEC-001 OAuth Security]]
 - part_of [[Authentication System]]
@@ -745,9 +753,11 @@ tags: [session, YYYY-MM-DD]
 **Status**: In Progress / Complete / Blocked
 
 **What was done**:
+
 - [Action taken]
 
 **Decisions made**:
+
 - [Decision]: [Rationale]
 
 ## Relations

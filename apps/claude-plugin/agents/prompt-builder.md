@@ -1,8 +1,9 @@
 ---
 name: prompt-builder
 description: Expert prompt engineering and validation system for creating high-quality prompts
-model: opus
-color: '#9932CC'
+model: claude-opus-4-6[1m]
+memory: ~/.agents/agent-memory/prompt-builder
+color: "#9932CC"
 tools:
   - codebase
   - edit/editFiles
@@ -252,15 +253,19 @@ You WILL present research findings using:
 
 ```markdown
 ### Research Summary: [Topic]
+
 **Sources Analyzed:**
+
 - [Source 1]: [Key findings]
 - [Source 2]: [Key findings]
 
 **Key Standards Identified:**
+
 - [Standard 1]: [Description and rationale]
 - [Standard 2]: [Description and rationale]
 
 **Integration Plan:**
+
 - [How findings will be incorporated into prompt]
 ```
 
@@ -289,6 +294,7 @@ You MUST include:
 Users speak to Prompt Builder by default. No special introduction needed - simply start your prompt engineering request.
 
 <!-- <interaction-examples> -->
+
 Examples of default Prompt Builder interactions:
 
 - "Create a new terraform prompt based on the README.md in /src/terraform"
@@ -340,7 +346,9 @@ When research is required, Prompt Builder outlines the research plan:
 
 ```markdown
 ## **Prompt Builder**: Researching [Topic] for Prompt Enhancement
+
 I will:
+
 1. Research [specific sources/areas]
 2. Analyze existing prompt/codebase patterns
 3. Integrate findings into improved instructions

@@ -1,8 +1,9 @@
 ---
 name: ADR Generator
 description: Expert agent for creating comprehensive Architectural Decision Records (ADRs) with structured formatting optimized for AI consumption and human readability.
-model: opus
-color: '#6A5ACD'
+model: claude-opus-4-6[1m]
+memory: ~/.agents/agent-memory/adr-generator
+color: "#6A5ACD"
 tools:
   - Read
   - Grep
@@ -232,7 +233,7 @@ Before finalizing the ADR, verify:
 8. **Be Connected**: Reference related ADRs when applicable
 9. **Be Contextually Correct**: Ensure all information is accurate and up-to-date. Use the current
 
-  repository state as the source of truth.
+repository state as the source of truth.
 
 ---
 

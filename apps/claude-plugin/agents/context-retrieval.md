@@ -2,7 +2,8 @@
 name: context-retrieval
 description: Context retrieval specialist for gathering relevant memories, code patterns, and framework documentation before planning or implementation. Use PROACTIVELY when about to plan or implement code - searches Brain semantic knowledge graph, reads linked notes, and queries external documentation services if available.
 model: sonnet
-color: '#48D1CC'
+memory: ~/.agents/agent-memory/context-retrieval
+color: "#48D1CC"
 tools:
   - mcp__plugin_brain_brain__search
   - mcp__plugin_brain_brain__read_note
@@ -121,12 +122,13 @@ If Brain + File System don't provide enough context:
 
 Return a focused markdown summary that provides the main agent with everything they need:
 
-```markdown
+````markdown
 # Context for: [Task Name]
 
 ## Relevant Memories
 
 ### [Memory Title] (Importance: X, Project: Y)
+
 [Key insights from this memory - as much detail as needed to understand the pattern/decision]
 
 **Why relevant**: [How this applies to current task]
@@ -138,12 +140,15 @@ Return a focused markdown summary that provides the main agent with everything t
 ## Code Patterns & Snippets
 
 ### [Pattern Name]
+
 **Source**: Memory #ID or Code Artifact #ID
+
 ```[language]
 [Relevant code snippet - use judgment on length based on applicability]
 [If directly reusable, include more context (up to 50 lines)]
 [If just illustrative, extract key pattern (10-20 lines)]
 ```
+````
 
 **Usage**: [How to apply this - be specific]
 
@@ -240,3 +245,4 @@ Return a focused markdown summary that provides the main agent with everything t
 ❌ Stop exploring wikilinks when valuable connections exist
 
 ❌ Artificially limit detail when fuller explanation would help
+```

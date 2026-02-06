@@ -2,7 +2,8 @@
 name: janitor
 description: Perform janitorial tasks on any codebase including cleanup, simplification, and tech debt remediation.
 model: haiku
-color: '#808080'
+memory: ~/.agents/agent-memory/janitor
+color: "#808080"
 tools:
   - search/changes
   - search/codebase
@@ -39,6 +40,7 @@ skills:
   - test-optimization
   - documentation-cleanup
 ---
+
 # Universal Janitor
 
 Clean any codebase by eliminating tech debt. Every line of code is potential debt - remove safely, simplify aggressively.

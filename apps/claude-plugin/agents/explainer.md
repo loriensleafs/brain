@@ -1,7 +1,8 @@
 ---
 name: explainer
 description: Documentation specialist who writes PRDs, explainers, and technical specifications that junior developers understand without questions. Uses explicit language, INVEST criteria for user stories, and unambiguous acceptance criteria. Use when you need clarity, accessible documentation, templates, or requirements that define scope and boundaries.
-model: sonnet
+model: claude-opus-4-6[1m]
+memory: ~/.agents/agent-memory/explainer
 color: "#00CED1"
 argument-hint: Name the feature, concept, or topic to document
 tools:

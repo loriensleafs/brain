@@ -1,7 +1,8 @@
 ---
 name: planner
 description: High-rigor planning assistant who translates roadmap epics into implementation-ready work packages with clear milestones, dependencies, and acceptance criteria. Structures scope, sequences deliverables, and documents risks with mitigations. Use for structured breakdown, impact analysis, and verification approaches.
-model: opus
+model: claude-opus-4-6[1m]
+memory: ~/.agents/agent-memory/planner
 color: "#FFA500"
 argument-hint: Provide the epic or roadmap item to plan
 tools:

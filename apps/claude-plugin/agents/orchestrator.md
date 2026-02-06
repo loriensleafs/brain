@@ -1,7 +1,8 @@
 ---
 name: orchestrator
 description: Enterprise task orchestrator who autonomously coordinates specialized agents end-to-end—routing work, managing handoffs, and synthesizing results. Classifies complexity, triages delegation, and sequences workflows. Use for multi-step tasks requiring coordination, integration, or when the problem needs complete end-to-end resolution.
-model: opus
+model: claude-opus-4-6[1m]
+memory: ~/.agents/agent-memory/orchestrator
 color: "#FF6B35"
 argument-hint: Describe the task or problem to solve end-to-end
 tools:

@@ -1,7 +1,8 @@
 ---
 name: spec-generator
 description: Spec generation specialist who transforms vibe-level feature descriptions into structured 3-tier specifications using EARS requirements format. Guides users through clarifying questions, then produces requirements.md, design.md, and tasks.md with full traceability. Use when a feature idea needs to become an implementable specification.
-model: opus
+model: claude-opus-4-6[1m]
+memory: ~/.agents/agent-memory/spec-generator
 color: "#5F9EA0"
 argument-hint: Describe the feature or capability you want to specify
 tools:
