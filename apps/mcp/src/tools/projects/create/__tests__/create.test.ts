@@ -323,15 +323,15 @@ describe("create_project tool", () => {
       expect(result.isError).toBe(true);
       const response = JSON.parse(getResponseText(result.content as ToolResultContent[]));
       expect(response.error).toContain("already exists");
-      expect(response.error).toContain("edit_project");
+      expect(response.error).toContain("config_update_project");
       expect(response.error).toContain("delete_project");
-      expect(response.suggestion).toBe("Use edit_project to update configuration");
+      expect(response.suggestion).toBe("Use config_update_project to update configuration");
       expect(response.existing_memories_path).toBe("/existing/notes/path");
       // Note: getCodePath mock may not work due to module caching, verify behavior
       // The important assertion is that the error message and suggestion are correct
     });
 
-    test("returns error with suggestion and includes edit_project guidance", async () => {
+    test("returns error with suggestion and includes config_update_project guidance", async () => {
       // Set up @brain/utils mock
       mockState.projects["duplicate-project"] = "/some/notes/path";
 
@@ -365,9 +365,9 @@ describe("create_project tool", () => {
 
       // Verify actionable error message format per M4 acceptance criteria
       expect(response.error).toBe(
-        'Project "duplicate-project" already exists. Use edit_project to modify it, or delete_project to remove it first.',
+        'Project "duplicate-project" already exists. Use config_update_project to modify it, or delete_project to remove it first.',
       );
-      expect(response.suggestion).toBe("Use edit_project to update configuration");
+      expect(response.suggestion).toBe("Use config_update_project to update configuration");
       expect(response.existing_memories_path).toBe("/some/notes/path");
     });
   });

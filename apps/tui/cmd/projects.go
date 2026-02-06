@@ -199,8 +199,8 @@ func runProjectsRoot(cmd *cobra.Command, args []string) error {
 		project := args[0]
 
 		// If editing flags provided, edit the project
-		if projectsCodePath != "" {
-			return editProject(project, projectsCodePath)
+		if projectsCodePath != "" || getEffectiveMemoriesPath() != "" {
+			return editProject(project)
 		}
 
 		// Otherwise get project details
@@ -443,8 +443,9 @@ func getProjectDetails(project string) error {
 	return nil
 }
 
-// editProject updates project configuration
-func editProject(project, codePath string) error {
+// editProject updates project configuration via config_update_project.
+// code_path is optional (memory-only projects are valid).
+func editProject(project string) error {
 	// Get effective memories path (handles deprecated flag)
 	effectiveMemoriesPath := getEffectiveMemoriesPath()
 
@@ -460,16 +461,20 @@ func editProject(project, codePath string) error {
 	}
 
 	args := map[string]any{
-		"name":      project,
-		"code_path": codePath,
+		"project": project,
 	}
 
-	// Add memories_path if provided (MCP tool accepts both old and new names)
+	// Only include code_path if provided (it's optional for config_update_project)
+	if projectsCodePath != "" {
+		args["code_path"] = projectsCodePath
+	}
+
+	// Add memories_path if provided
 	if effectiveMemoriesPath != "" {
 		args["memories_path"] = effectiveMemoriesPath
 	}
 
-	result, err := brainClient.CallTool("edit_project", args)
+	result, err := brainClient.CallTool("config_update_project", args)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		return err

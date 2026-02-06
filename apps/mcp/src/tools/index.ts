@@ -188,15 +188,6 @@ const WRAPPER_TOOLS: Map<string, WrapperTool> = new Map([
     },
   ],
   [
-    "edit_project",
-    {
-      definition: projects.editProject.toolDefinition,
-      handler: projects.editProject.handler as unknown as (
-        args: Record<string, unknown>,
-      ) => Promise<CallToolResult>,
-    },
-  ],
-  [
     "create_project",
     {
       definition: projects.createProject.toolDefinition,

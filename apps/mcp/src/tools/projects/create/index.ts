@@ -131,8 +131,8 @@ export async function handler(args: CreateProjectArgs): Promise<CallToolResult> 
           type: "text" as const,
           text: JSON.stringify(
             {
-              error: `Project "${name}" already exists. Use edit_project to modify it, or delete_project to remove it first.`,
-              suggestion: "Use edit_project to update configuration",
+              error: `Project "${name}" already exists. Use config_update_project to modify it, or delete_project to remove it first.`,
+              suggestion: "Use config_update_project to update configuration",
               existing_memories_path: existingMemoriesPath,
               existing_code_path: getCodePath(name) || null,
             },
@@ -154,8 +154,8 @@ export async function handler(args: CreateProjectArgs): Promise<CallToolResult> 
           type: "text" as const,
           text: JSON.stringify(
             {
-              error: `Project "${name}" already exists. Use edit_project to modify it, or delete_project to remove it first.`,
-              suggestion: "Use edit_project to update configuration",
+              error: `Project "${name}" already exists. Use config_update_project to modify it, or delete_project to remove it first.`,
+              suggestion: "Use config_update_project to update configuration",
               existing_memories_path: null,
               existing_code_path: existingCodePath,
             },
