@@ -7,7 +7,7 @@
  * To regenerate: bun run generate:types
  * Source schemas: packages/validation/schemas/*.schema.json
  *
- * Generated: 2026-02-04T20:59:20.763Z
+ * Generated: 2026-02-06T09:38:16.274Z
  */
 
 // Source: schemas/config/brain-config.schema.json

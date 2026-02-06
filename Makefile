@@ -35,9 +35,12 @@
 
 INSTALL_PATH = $(HOME)/.local/bin
 BINARY_NAME = brain
-PLUGIN_PATH = $(HOME)/.claude/plugins/brain
+PLUGIN_PATH = $(HOME)/.claude/plugins/marketplaces/brain
 PLUGIN_SRC = $(PWD)/apps/claude-plugin
 PLUGIN_CACHE_PATH = $(HOME)/.claude/plugins/cache/brain
+OLD_PLUGIN_PATH = $(HOME)/.claude/plugins/brain
+KNOWN_MARKETPLACES = $(HOME)/.claude/plugins/known_marketplaces.json
+INSTALLED_PLUGINS = $(HOME)/.claude/plugins/installed_plugins.json
 INSTRUCTIONS_SRC = $(PLUGIN_SRC)/instructions
 AGENTS_DIR = $(HOME)/.agents
 
@@ -80,6 +83,8 @@ install-plugin: install-typescript install-go
 	@echo "Building plugin hooks binary..."
 	cd apps/claude-plugin && go build -o hooks/scripts/brain-hooks ./cmd/hooks
 	@echo ""
+	@# Clean up old plugin location if it exists
+	@rm -rf $(OLD_PLUGIN_PATH) 2>/dev/null || true
 	@echo "Installing Claude plugin via symlinks..."
 	mkdir -p $(PLUGIN_PATH)
 	@# Remove any existing symlinks/dirs before creating new ones (prevents ln -sfn quirks)
@@ -118,6 +123,32 @@ install-plugin: install-typescript install-go
 	@echo "  ~/CLAUDE.md -> $(INSTRUCTIONS_SRC)/AGENTS.md"
 	@echo "  ~/.agents/*.md -> $(INSTRUCTIONS_SRC)/protocols/*.md"
 	@echo ""
+	@echo "Registering brain marketplace in Claude Code..."
+	@if [ -f $(KNOWN_MARKETPLACES) ]; then \
+		jq --arg path "$(PLUGIN_PATH)" \
+			'.brain = { "source": { "source": "directory", "path": $$path }, "installLocation": $$path, "lastUpdated": (now | strftime("%Y-%m-%dT%H:%M:%S.000Z")) }' \
+			$(KNOWN_MARKETPLACES) > $(KNOWN_MARKETPLACES).tmp && \
+			mv $(KNOWN_MARKETPLACES).tmp $(KNOWN_MARKETPLACES); \
+		echo "  Marketplace registered in $(KNOWN_MARKETPLACES)"; \
+	else \
+		echo '{}' | jq --arg path "$(PLUGIN_PATH)" \
+			'.brain = { "source": { "source": "directory", "path": $$path }, "installLocation": $$path, "lastUpdated": (now | strftime("%Y-%m-%dT%H:%M:%S.000Z")) }' \
+			> $(KNOWN_MARKETPLACES); \
+		echo "  Created $(KNOWN_MARKETPLACES) with brain marketplace"; \
+	fi
+	@if [ -f $(INSTALLED_PLUGINS) ]; then \
+		jq --arg path "$(PLUGIN_PATH)" \
+			'.plugins["brain@brain"] = [{ "scope": "user", "installPath": $$path, "version": "local", "installedAt": (now | strftime("%Y-%m-%dT%H:%M:%S.000Z")), "lastUpdated": (now | strftime("%Y-%m-%dT%H:%M:%S.000Z")) }]' \
+			$(INSTALLED_PLUGINS) > $(INSTALLED_PLUGINS).tmp && \
+			mv $(INSTALLED_PLUGINS).tmp $(INSTALLED_PLUGINS); \
+		echo "  Plugin registered in $(INSTALLED_PLUGINS)"; \
+	else \
+		echo '{"version":2,"plugins":{}}' | jq --arg path "$(PLUGIN_PATH)" \
+			'.plugins["brain@brain"] = [{ "scope": "user", "installPath": $$path, "version": "local", "installedAt": (now | strftime("%Y-%m-%dT%H:%M:%S.000Z")), "lastUpdated": (now | strftime("%Y-%m-%dT%H:%M:%S.000Z")) }]' \
+			> $(INSTALLED_PLUGINS); \
+		echo "  Created $(INSTALLED_PLUGINS) with brain plugin"; \
+	fi
+	@echo ""
 	@echo "Restarting MCP server..."
 	-brain mcp restart 2>/dev/null || echo "Warning: Could not restart MCP (brain command may not be installed)"
 	@echo "Plugin installation complete"
@@ -153,6 +184,15 @@ uninstall-plugin:
 	@echo "Uninstalling plugin..."
 	rm -rf $(PLUGIN_PATH)
 	rm -rf $(PLUGIN_CACHE_PATH)
+	@echo "Removing marketplace registration..."
+	@if [ -f $(KNOWN_MARKETPLACES) ]; then \
+		jq 'del(.brain)' $(KNOWN_MARKETPLACES) > $(KNOWN_MARKETPLACES).tmp && \
+		mv $(KNOWN_MARKETPLACES).tmp $(KNOWN_MARKETPLACES); \
+	fi
+	@if [ -f $(INSTALLED_PLUGINS) ]; then \
+		jq 'del(.plugins["brain@brain"])' $(INSTALLED_PLUGINS) > $(INSTALLED_PLUGINS).tmp && \
+		mv $(INSTALLED_PLUGINS).tmp $(INSTALLED_PLUGINS); \
+	fi
 	@echo "Removing instruction symlinks..."
 	rm -f $(HOME)/AGENTS.md
 	rm -f $(HOME)/CLAUDE.md
