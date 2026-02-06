@@ -37,6 +37,7 @@ The architecture caches configuration at startup in an immutable container patte
 ## 5. What project sync-config Actually Does
 
 Calls /v2/projects/config/sync which invokes ProjectService.synchronize_projects():
+
 1. Normalizes project names to permalinks
 2. Creates projects in DB that exist in config.json but not DB
 3. Deletes projects from DB that were removed from config.json

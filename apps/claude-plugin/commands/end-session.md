@@ -82,9 +82,9 @@ current before completing. Future agents depend on this for context.
 - [decision] Any final decisions made #session-end
 ```
 
-5. **Relations**: Add any missing links to entities created or modified
+1. **Relations**: Add any missing links to entities created or modified
 
-6. **Session End Protocol table**: Fill in evidence column
+2. **Session End Protocol table**: Fill in evidence column
 
 ```text
 mcp__plugin_brain_brain__edit_note
@@ -102,7 +102,7 @@ mcp__plugin_brain_brain__edit_note
     | MUST | Commit all changes | [x] | SHA: [commit hash] |
 ```
 
-7. **Update frontmatter**: Set updated date
+1. **Update frontmatter**: Set updated date
 
 ```text
 mcp__plugin_brain_brain__edit_note

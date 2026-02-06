@@ -61,6 +61,7 @@ This created ambiguity about whether "changes" includes config file changes (pro
 **sync_changes controls ONLY markdown file content synchronization.** It does not affect configuration changes.
 
 Configuration changes (project paths, settings) are handled through a separate mechanism:
+
 1. Config is loaded once and cached at module level
 2. No hot-reload mechanism exists for config.json
 3. MCP client restart is required for config changes to take effect

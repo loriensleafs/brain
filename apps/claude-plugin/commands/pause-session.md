@@ -74,25 +74,25 @@ Before pausing, bring the session note fully current. The session note is the
 - [ ] [in-progress] Where you left off on [[current-task]] #tag
 ```
 
-2. **Acceptance Criteria**: Check off any criteria met during this segment
+1. **Acceptance Criteria**: Check off any criteria met during this segment
 
-3. **Observations**: Add any new insights, decisions, or facts
+2. **Observations**: Add any new insights, decisions, or facts
 
 ```text
 - [insight] Discovery made while working on [[entity]] #tag
 - [decision] Choice made about [[topic]] and why #tag
 ```
 
-4. **Relations**: Add links to any new entities created or referenced
+1. **Relations**: Add links to any new entities created or referenced
 
 ```text
 - created [[New-Entity-Name]]
 - modified [[Existing-Entity]]
 ```
 
-5. **Files Touched**: Update tables with any new notes or code files
+1. **Files Touched**: Update tables with any new notes or code files
 
-6. **Append a Pause Point**:
+2. **Append a Pause Point**:
 
 ```text
 mcp__plugin_brain_brain__edit_note

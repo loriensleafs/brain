@@ -191,11 +191,11 @@ Track ALL work with inline observations and wikilinks:
 
 **During the session**, keep current:
 
-6. **Key Decisions**: Add decisions as they happen
-7. **Work Log**: Check off items, add new ones with `[category]` tags and `[[wikilinks]]`
-8. **Files Touched**: Track every Brain note and code file
-9. **Observations**: Add insights, facts, techniques as they emerge
-10. **Relations**: Add links to every new entity created or referenced
+1. **Key Decisions**: Add decisions as they happen
+2. **Work Log**: Check off items, add new ones with `[category]` tags and `[[wikilinks]]`
+3. **Files Touched**: Track every Brain note and code file
+4. **Observations**: Add insights, facts, techniques as they emerge
+5. **Relations**: Add links to every new entity created or referenced
 
 The session note acts as a **semantic hub**. Rich `[[wikilinks]]` and `#tags`
 

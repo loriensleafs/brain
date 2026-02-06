@@ -66,11 +66,13 @@ File creation timestamp analysis confirms the session file was NOT created by th
 The Brain MCP has two code paths for write operations:
 
 **Path A - MCP Tool Interface (Works)**:
+
 ```
 Claude -> Brain MCP -> callProxiedTool() -> injectProject() -> basic-memory
 ```
 
 **Path B - Internal Service (Broken)**:
+
 ```
 Session Tool -> Session Service -> client.callTool() -> basic-memory (no project)
 ```

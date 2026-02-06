@@ -108,12 +108,14 @@ The architecture assumes basic-memory will pick up config changes automatically.
 Two approaches exist to fix this:
 
 **Option A: Restart basic-memory subprocess after config changes**
+
 - Simplest implementation
 - Call `closeBasicMemoryClient()` after `syncConfigToBasicMemory()`
 - Next tool call will spawn fresh subprocess with new config
 - Downside: brief interruption, potential in-flight operation issues
 
 **Option B: Send reload signal to basic-memory**
+
 - Requires basic-memory to support config reload (SIGHUP, file watch, or MCP tool)
 - More elegant, no interruption
 - Requires basic-memory changes (external project)
@@ -139,6 +141,7 @@ await closeBasicMemoryClient();
 ```
 
 This should also be added to:
+
 - `trySyncConfigToBasicMemory()` (lines 457-468)
 - Any other code paths that modify basic-memory config
 

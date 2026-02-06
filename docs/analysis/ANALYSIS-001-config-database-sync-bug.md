@@ -36,7 +36,8 @@ This causes notes to be written to the old path because basic-memory reads proje
 
 ## 3. Approach
 
-**Methodology**: 
+**Methodology**:
+
 1. Traced code path from `config_update_project` through translation layer
 2. Examined basic-memory's config loading and database synchronization code
 3. Identified where config-to-database synchronization should occur
@@ -75,8 +76,9 @@ This causes notes to be written to the old path because basic-memory reads proje
 ### Root Cause
 
 The translation layer syncs Brain config to basic-memory's JSON config file, but basic-memory:
+
 1. Caches config at module load time (`_CONFIG_CACHE`)
-2. Only synchronizes config-to-database during `initialize_app()` 
+2. Only synchronizes config-to-database during `initialize_app()`
 3. Never re-reads config while MCP subprocess is running
 
 ### Code Flow
@@ -103,6 +105,7 @@ All five config tools call `syncConfigToBasicMemory()` and share this bug:
 | config_migrate | `apps/mcp/src/config/config-migration.ts` | 538 |
 
 ## 6. Discussion
+
 ### Why Basic-Memory Doesn't Pick Up Config Changes
 
 Basic-memory is designed for single-process operation where config is read once at startup. The config file is NOT watched for changes. The `watch_project_reload_interval` setting (default 30s) controls how often the watch service checks for new projects, but this runs in a separate process from the MCP server.
@@ -148,16 +151,19 @@ Brain's translation layer writes directly to `~/.basic-memory/config.json` bypas
 After writing to Brain config, call basic-memory's `POST /projects/config/sync` endpoint via the subprocess client.
 
 Pros:
+
 - Uses basic-memory's own reconciliation logic
 - No direct database access from Brain
 - Respects basic-memory's internal architecture
 - Single point of truth for sync logic
 
 Cons:
+
 - Requires the basic-memory subprocess to be running
 - API call adds latency
 
 Implementation:
+
 ```typescript
 // In syncConfigToBasicMemory() after writing config.json:
 const client = await getBasicMemoryClient();
@@ -172,11 +178,13 @@ await client.callTool({
 Create `sync_project_config` MCP tool in basic-memory that wraps the existing `/projects/config/sync` endpoint.
 
 Pros:
+
 - Clean MCP interface
 - Could be contributed upstream
 - Brain calls MCP tool like any other
 
 Cons:
+
 - Requires basic-memory code change
 - May need PR approval
 
@@ -185,10 +193,12 @@ Cons:
 Translation layer also updates basic-memory's SQLite database directly.
 
 Pros:
+
 - Immediate fix, no dependency on basic-memory changes
 - Brain already has database path knowledge
 
 Cons:
+
 - Tight coupling between Brain and basic-memory internals
 - Risk of schema version mismatch
 - Database locking issues if basic-memory is writing
@@ -199,10 +209,12 @@ Cons:
 After config changes, restart the basic-memory MCP subprocess to force re-initialization.
 
 Pros:
+
 - Works with existing basic-memory code
 - Forces full reconciliation
 
 Cons:
+
 - Disrupts ongoing operations
 - Performance cost of restart
 - May lose in-flight requests
@@ -222,11 +234,13 @@ Brain MCP assumes config file changes will be picked up by basic-memory. This as
 Brain MCP signals the running basic-memory subprocess to invalidate its cache and re-sync. Requires exposing a reload endpoint or mechanism in basic-memory.
 
 Pros:
+
 - Clean separation of concerns
 - No direct database manipulation from Brain
 - Works with future basic-memory architecture changes
 
 Cons:
+
 - Requires basic-memory code changes
 - May not be possible if basic-memory is closed-source or slow to update
 
@@ -235,10 +249,12 @@ Cons:
 Translation layer also updates basic-memory's SQLite database directly using SQL.
 
 Pros:
+
 - Immediate fix, no dependency on basic-memory changes
 - Brain already has database path knowledge
 
 Cons:
+
 - Tight coupling between Brain and basic-memory internals
 - Risk of schema version mismatch
 - Database locking issues if basic-memory is writing
@@ -248,15 +264,18 @@ Cons:
 After config changes, restart the basic-memory MCP subprocess to force re-initialization.
 
 Pros:
+
 - Works with existing basic-memory code
 - Forces full reconciliation
 
 Cons:
+
 - Disrupts ongoing operations
 - Performance cost of restart
 - May lose in-flight requests
 
 ## 7. Recommendations
+
 | Priority | Recommendation | Rationale | Effort |
 |----------|---------------|-----------|--------|
 | P0 | **Option A: Call POST /projects/config/sync** | Uses basic-memory's existing sync logic. Cleanest fix. | 2-3 hours |
@@ -303,6 +322,7 @@ The fix should be in `/apps/mcp/src/config/translation-layer.ts` in the `syncCon
 1. Integration test: Update project path via config_update_project, verify notes write to new path
 2. Unit test: Mock REST API call in translation layer
 3. Manual test: Change DEFAULT to CODE mode, verify immediate effect
+
 ### Recommended Implementation (Option B)
 
 Add to `syncConfigToBasicMemory()`:
@@ -320,6 +340,7 @@ for (const [projectName, projectPath] of Object.entries(translatedConfig.project
 ```
 
 ## 8. Conclusion
+
 **Verdict**: Proceed with Option A (call basic-memory's `/projects/config/sync` endpoint)
 
 **Confidence**: High
@@ -338,6 +359,7 @@ for (const [projectName, projectPath] of Object.entries(translatedConfig.project
 2. Call this function at end of `syncConfigToBasicMemory()`
 3. Handle errors gracefully (log warning, don't fail the config update)
 4. Add integration test covering the full flow
+
 ### User Impact
 
 - **What changes for you**: Config changes via MCP tools will immediately take effect without requiring basic-memory restart
@@ -367,7 +389,6 @@ for (const [projectName, projectPath] of Object.entries(translatedConfig.project
 - relates_to [[ADR-020 Configuration Architecture Refactoring]]
 - caused_by [[Translation Layer Architecture]]
 
-
 ---
 
 ## Investigation Update: 2026-02-05
@@ -386,6 +407,7 @@ for (const [projectName, projectPath] of Object.entries(translatedConfig.project
 ### Key Insight
 
 Basic-memory's architecture separates concerns:
+
 - **Config file** (`~/.basic-memory/config.json`): User-editable, source of truth for project definitions
 - **Database** (`~/.basic-memory/memory.db`): Runtime cache, synced from config at startup
 - **`synchronize_projects()`**: The bridge that reconciles the two
@@ -405,7 +427,6 @@ Brain's translation layer only updates the config file. It needs to also trigger
 - [fact] `POST /projects/config/sync` endpoint exists and works (used by CLI) #api
 - [fact] No MCP tool wraps the sync endpoint currently #gap
 - [technique] Brain can use same ASGI transport pattern to call sync endpoint #implementation
-
 
 ---
 
@@ -435,6 +456,7 @@ Basic-memory provides these configuration options (from [docs.basicmemory.com/re
 | `skip_initialization_sync` | Boolean | false | Skips startup sync for cloud/stateless environments |
 
 **Key Finding**: `sync_changes` and `watch_project_reload_interval` do NOT solve our bug. These settings control:
+
 - `sync_changes`: File content synchronization to knowledge graph
 - `watch_project_reload_interval`: Detection of newly added projects
 
@@ -513,12 +535,14 @@ basic-memory cloud sync          # Cloud bidirectional sync
 ### Data Transparency
 
 **Found**:
+
 - Comprehensive documentation at docs.basicmemory.com
 - All configuration options and their purposes
 - Version history and changelogs
 - Confirmation that no native reload exists
 
 **Not Found**:
+
 - No hidden config reload mechanism
 - No undocumented CLI commands for this purpose
 - No GitHub issues requesting this feature (search returned empty)

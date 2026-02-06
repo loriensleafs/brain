@@ -60,15 +60,18 @@ tags:
 ## Bug Analysis (Reconnaissance)
 
 ### Bug 1: CLI --memories-path silently ignored
+
 - Location: `apps/tui/cmd/projects.go:202`
 - `runProjectsRoot` only calls `editProject` when `projectsCodePath != ""`
 - Passing `--memories-path CODE` alone falls through to display mode
 
 ### Bug 2: MCP schema requires code_path
+
 - Location: `apps/mcp/src/tools/projects/edit/schema.ts:82`
 - `required: ["name", "code_path"]` prevents memories-only edits
 
 ### Bug 3: edit_project doesn't sync v2 config
+
 - `setCodePath()` writes ONLY to legacy `~/.basic-memory/brain-config.json`
 - v2 config at `~/.config/brain/config.json` never updated
 - `config_update_project` already handles this correctly
@@ -79,12 +82,12 @@ tags:
 
 - [x] [fact] Reconnaissance complete: identified 3 bugs in project edit flow #bug-analysis
 - [x] [fact] Found config_update_project already exists with correct v2 sync #existing-tool
-- [ ] [pending] Fix CLI to use config_update_project and handle --memories-path standalone
-- [ ] [pending] Remove legacy edit_project tool from MCP registration
-- [ ] [pending] Update error messages in create_project referencing edit_project
-- [ ] [pending] Run tests and validate
-
----
+- [x] [complete] Fix CLI to use config_update_project and handle --memories-path standalone #cli
+- [x] [complete] Remove legacy edit_project tool from MCP registration #mcp
+- [x] [complete] Update error messages in create_project referencing config_update_project #mcp
+- [x] [complete] Code review by 4 parallel analysts: all PASS #review
+- [x] [complete] QA validation: all tests pass, all 5 acceptance criteria PASS #qa
+- [x] [complete] 3 atomic commits: f8a5651 (bugfix), d6b901b (agent config), 7bbf6ce (agent-teams) #git
 
 ## Files Touched
 
