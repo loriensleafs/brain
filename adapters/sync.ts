@@ -17,7 +17,7 @@
  *   --json      Output generated file list as JSON to stdout (for Go CLI consumption)
  */
 
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { transform as claudeCodeTransform } from "./claude-code.js";
 import type { GeneratedFile } from "./shared.js";
@@ -99,7 +99,7 @@ async function writeGeneratedFiles(
     const fullPath = join(outputDir, file.relativePath);
     try {
       await mkdir(dirname(fullPath), { recursive: true });
-      await writeFile(fullPath, file.content, "utf-8");
+      await Bun.write(fullPath, file.content);
       written++;
     } catch (err) {
       errors.push(
@@ -166,7 +166,7 @@ async function main(): Promise<void> {
     target: opts.target,
     files: allFiles.map((f) => ({
       relativePath: f.relativePath,
-      size: new TextEncoder().encode(f.content).length,
+      size: Buffer.byteLength(f.content),
     })),
     totalFiles: allFiles.length,
     errors: [],
