@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.7](https://github.com/loriensleafs/brain/compare/v0.1.6...v0.1.7) (2026-02-10)
+
+
+### Bug Fixes
+
+* unify orchestrator agent config to match composable directory ([#18](https://github.com/loriensleafs/brain/issues/18)) ([5f3faba](https://github.com/loriensleafs/brain/commit/5f3faba4a537b64bd6a011aec41f35556dd450ea))
+
 ## [0.1.6](https://github.com/loriensleafs/brain/compare/v0.1.5...v0.1.6) (2026-02-10)
 
 
