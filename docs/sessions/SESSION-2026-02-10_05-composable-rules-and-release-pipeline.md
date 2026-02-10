@@ -159,3 +159,11 @@ tags:
 | MUST | Update Brain memory | ✅ | Session note finalized |
 | MUST | Run markdownlint | ✅ | Pre-existing issues only |
 | MUST | Commit all changes | ✅ | See commits table |
+
+
+## Next Session Work Items
+
+- [pending] Embed templates in Go binary via go:embed so brain install works from anywhere #go-embed
+- [pending] brain install: check for existing install, prompt to update/skip #install-check
+- [pending] brain upgrade: self-update mechanism (check GitHub Releases for newer version, download + replace binary) #self-update
+- [pending] Research on CLI self-update patterns in progress (bun upgrade, gh upgrade, go-selfupdate library) #research
