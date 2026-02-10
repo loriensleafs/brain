@@ -9,7 +9,8 @@
  */
 import { execCommand } from "./exec";
 import { resolveProjectWithCwd } from "./project-resolve";
-import { normalizeEvent } from "./normalize";
+import { normalizeEvent, formatOutput, detectPlatform } from "./normalize";
+import type { NormalizedHookEvent } from "./normalize";
 import type {
   ActiveSession,
   BootstrapContextResult,
@@ -432,19 +433,21 @@ export function formatContextMarkdown(output: SessionStartOutput): string {
 /**
  * Read hook input from stdin and normalize.
  */
-async function readHookInput(): Promise<HookInput> {
+async function readHookInput(): Promise<{ hookInput: HookInput; event: NormalizedHookEvent | null }> {
   try {
     const data = await Bun.file("/dev/stdin").text();
-    if (!data) return {};
+    if (!data) return { hookInput: {}, event: null };
     const parsed = JSON.parse(data) as Record<string, unknown>;
-    // Normalize to extract cwd/session_id consistently
     const event = normalizeEvent(parsed, "SessionStart");
     return {
-      session_id: event.sessionId || undefined,
-      cwd: event.workspaceRoot || undefined,
+      hookInput: {
+        session_id: event.sessionId || undefined,
+        cwd: event.workspaceRoot || undefined,
+      },
+      event,
     };
   } catch {
-    return {};
+    return { hookInput: {}, event: null };
   }
 }
 
@@ -452,17 +455,27 @@ async function readHookInput(): Promise<HookInput> {
  * Main entry point for session-start hook.
  */
 export async function runSessionStart(): Promise<void> {
-  const hookInput = await readHookInput();
+  const { hookInput, event } = await readHookInput();
   const output = await buildSessionOutput(hookInput.cwd ?? "");
+  const contextMarkdown = formatContextMarkdown(output);
 
-  const hookOutput: HookOutput = {
-    hookSpecificOutput: {
-      hookEventName: "SessionStart",
-      additionalContext: formatContextMarkdown(output),
-    },
-  };
-
-  process.stdout.write(JSON.stringify(hookOutput, null, 2) + "\n");
+  if (event && event.platform === "cursor") {
+    // Cursor format: {additional_context, continue, env}
+    const cursorOutput = formatOutput(event, {
+      additionalContext: contextMarkdown,
+      continue: true,
+    });
+    process.stdout.write(cursorOutput + "\n");
+  } else {
+    // Claude Code format: {hookSpecificOutput: {hookEventName, additionalContext}}
+    const hookOutput: HookOutput = {
+      hookSpecificOutput: {
+        hookEventName: "SessionStart",
+        additionalContext: contextMarkdown,
+      },
+    };
+    process.stdout.write(JSON.stringify(hookOutput, null, 2) + "\n");
+  }
 }
 
 // Run if invoked directly
