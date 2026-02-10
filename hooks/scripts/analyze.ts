@@ -4,9 +4,8 @@
  * Ported from apps/claude-plugin/cmd/hooks/analyze.go.
  * Step-by-step codebase analysis workflow with file-based state.
  */
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
-import { join } from "node:path";
-import { tmpdir } from "node:os";
+import { join } from "path";
+import { tmpdir } from "os";
 import type {
   AnalyzeInput,
   AnalyzeOutput,
@@ -41,7 +40,7 @@ function getStatus(step: number, totalSteps: number): string {
 function getDefaultStateFile(): string {
   const brainDir = join(tmpdir(), "brain-analyze");
   try {
-    mkdirSync(brainDir, { recursive: true });
+    Bun.spawnSync(["mkdir", "-p", brainDir]);
   } catch {
     // Directory exists
   }
@@ -50,13 +49,13 @@ function getDefaultStateFile(): string {
 }
 
 /** Load or create analysis state. */
-function loadOrCreateState(
+async function loadOrCreateState(
   input: AnalyzeInput,
-): { state: AnalyzeState; stateFile: string } {
+): Promise<{ state: AnalyzeState; stateFile: string }> {
   const stateFile = input.stateFile || getDefaultStateFile();
 
   try {
-    const data = readFileSync(stateFile, "utf-8");
+    const data = await Bun.file(stateFile).text();
     const state = JSON.parse(data) as AnalyzeState;
     return { state, stateFile };
   } catch {
@@ -76,8 +75,8 @@ function loadOrCreateState(
 }
 
 /** Save analysis state to file. */
-function saveState(path: string, state: AnalyzeState): void {
-  writeFileSync(path, JSON.stringify(state, null, 2));
+async function saveState(path: string, state: AnalyzeState): Promise<void> {
+  await Bun.write(path, JSON.stringify(state, null, 2));
 }
 
 /** Get a brief summary of the current state. */
@@ -336,7 +335,7 @@ export async function runAnalyze(): Promise<void> {
   }
 
   // Load or create state
-  const { state, stateFile } = loadOrCreateState(analyzeInput);
+  const { state, stateFile } = await loadOrCreateState(analyzeInput);
 
   // Update state with current step
   state.stepNumber = analyzeInput.stepNumber;

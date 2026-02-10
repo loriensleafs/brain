@@ -12,9 +12,8 @@
  * 5. CWD matching against Brain config code_paths
  * 6. Empty string (caller shows error)
  */
-import { readFileSync } from "node:fs";
-import { join, resolve, sep, normalize } from "node:path";
-import { homedir } from "node:os";
+import { join, resolve, sep, normalize } from "path";
+import { homedir } from "os";
 import type { BrainConfig, BrainProjectConfig } from "./types.js";
 
 /**
@@ -45,15 +44,16 @@ export function setBrainConfigPath(fn: () => string): void {
  * Load Brain configuration from disk.
  * Returns empty config (not error) if file does not exist.
  */
-export function loadBrainConfig(): BrainConfig | null {
+export async function loadBrainConfig(): Promise<BrainConfig | null> {
   const configPath = getBrainConfigPath();
   if (!configPath) {
     return { version: "2.0.0", projects: {} };
   }
 
   try {
-    const data = readFileSync(configPath, "utf-8");
-    const config = JSON.parse(data) as BrainConfig;
+    const configFile = Bun.file(configPath);
+    if (!configFile.size) return { version: "2.0.0", projects: {} };
+    const config = await configFile.json() as BrainConfig;
     if (!config.projects) {
       config.projects = {};
     }
@@ -119,8 +119,8 @@ function matchCwdToProject(
  * Resolve project from CWD matching only (no env vars).
  * Low-level function for directory matching.
  */
-export function resolveProjectFromCwd(cwd: string): string {
-  const config = loadBrainConfig();
+export async function resolveProjectFromCwd(cwd: string): Promise<string> {
+  const config = await loadBrainConfig();
   if (!config) return "";
 
   const resolvedCwd = cwd || process.cwd();
@@ -131,10 +131,10 @@ export function resolveProjectFromCwd(cwd: string): string {
  * Resolve project with CWD matching as fallback.
  * First tries env vars, then CWD matching.
  */
-export function resolveProjectWithCwd(
+export async function resolveProjectWithCwd(
   explicit: string,
   cwd: string,
-): string {
+): Promise<string> {
   const project = resolveProjectFromEnv(explicit);
   if (project) return project;
 

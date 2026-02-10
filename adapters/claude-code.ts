@@ -10,8 +10,7 @@
  * NEVER modifies user's existing CLAUDE.md, hooks, or MCP config.
  */
 
-import { readdir, stat } from "node:fs/promises";
-import { join } from "node:path";
+import { join } from "path";
 import type {
   AgentPlatformConfig,
   BrainConfig,
@@ -22,7 +21,6 @@ import {
   brainPrefix,
   collectFiles,
   readCanonicalAgents,
-  readTextFile,
   withFrontmatter,
 } from "./shared.js";
 
@@ -100,34 +98,28 @@ export async function transformAgents(
 
 /**
  * Collect skills for Claude Code. Skills are copied as-is with emoji prefix on directory name.
+ * Uses Bun.Glob to scan skill directories and Bun.file() for reading content.
  */
 export async function transformSkills(
   skillsDir: string,
 ): Promise<GeneratedFile[]> {
   const results: GeneratedFile[] = [];
+  const glob = new Bun.Glob("*/**");
 
-  let entries: string[];
   try {
-    entries = await readdir(skillsDir);
-  } catch {
-    return results;
-  }
+    for await (const relPath of glob.scan({ cwd: skillsDir })) {
+      const [skillDir, ...rest] = relPath.split("/");
+      if (skillDir === ".gitkeep" || skillDir === ".DS_Store") continue;
 
-  for (const entry of entries) {
-    if (entry === ".gitkeep" || entry === ".DS_Store") continue;
-    const skillPath = join(skillsDir, entry);
-    const fileStat = await stat(skillPath);
-    if (!fileStat.isDirectory()) continue;
-
-    const files = await collectFiles(skillPath);
-    for (const file of files) {
-      const fullPath = join(skillPath, file);
-      const content = await readTextFile(fullPath);
+      const file = rest.join("/");
+      const content = await Bun.file(join(skillsDir, relPath)).text();
       results.push({
-        relativePath: `skills/${brainPrefix(entry)}/${file}`,
+        relativePath: `skills/${brainPrefix(skillDir)}/${file}`,
         content,
       });
     }
+  } catch {
+    // skillsDir doesn't exist
   }
 
   return results;
@@ -137,30 +129,30 @@ export async function transformSkills(
 
 /**
  * Collect commands for Claude Code. Commands are copied as-is with emoji prefix.
+ * Uses Bun.Glob to scan for .md files.
  */
 export async function transformCommands(
   commandsDir: string,
 ): Promise<GeneratedFile[]> {
   const results: GeneratedFile[] = [];
+  const glob = new Bun.Glob("*.md");
 
-  let entries: string[];
   try {
-    entries = await readdir(commandsDir);
+    for await (const entry of glob.scan({ cwd: commandsDir })) {
+      if (entry === ".gitkeep") continue;
+
+      const content = await Bun.file(join(commandsDir, entry)).text();
+      const prefixed = entry.startsWith("\u{1F9E0}-")
+        ? entry
+        : `${brainPrefix(entry.replace(/\.md$/, ""))}.md`;
+
+      results.push({
+        relativePath: `commands/${prefixed}`,
+        content,
+      });
+    }
   } catch {
     return results;
-  }
-
-  for (const entry of entries) {
-    if (!entry.endsWith(".md") || entry === ".gitkeep") continue;
-    const fullPath = join(commandsDir, entry);
-    const content = await readTextFile(fullPath);
-    const prefixed = entry.startsWith("\u{1F9E0}-")
-      ? entry
-      : `${brainPrefix(entry.replace(/\.md$/, ""))}.md`;
-    results.push({
-      relativePath: `commands/${prefixed}`,
-      content,
-    });
   }
 
   return results;
@@ -171,28 +163,28 @@ export async function transformCommands(
 /**
  * Transform protocols into Claude Code composable rules (.claude/rules/).
  * Each protocol file becomes a rule file with emoji prefix.
+ * Uses Bun.Glob to scan for .md files.
  */
 export async function transformProtocols(
   protocolsDir: string,
 ): Promise<GeneratedFile[]> {
   const results: GeneratedFile[] = [];
+  const glob = new Bun.Glob("*.md");
 
-  let entries: string[];
   try {
-    entries = await readdir(protocolsDir);
+    for await (const entry of glob.scan({ cwd: protocolsDir })) {
+      if (entry === ".gitkeep") continue;
+
+      const content = await Bun.file(join(protocolsDir, entry)).text();
+      const prefixed = `${brainPrefix(entry.replace(/\.md$/, ""))}.md`;
+
+      results.push({
+        relativePath: `rules/${prefixed}`,
+        content,
+      });
+    }
   } catch {
     return results;
-  }
-
-  for (const entry of entries) {
-    if (!entry.endsWith(".md") || entry === ".gitkeep") continue;
-    const fullPath = join(protocolsDir, entry);
-    const content = await readTextFile(fullPath);
-    const prefixed = `${brainPrefix(entry.replace(/\.md$/, ""))}.md`;
-    results.push({
-      relativePath: `rules/${prefixed}`,
-      content,
-    });
   }
 
   return results;
@@ -202,7 +194,7 @@ export async function transformProtocols(
 
 /**
  * Generate Claude Code hooks.json from brain.config.json hook mappings
- * and hook script files.
+ * and hook script files. Uses Bun.Glob for script discovery.
  */
 export async function transformHooks(
   hooksDir: string,
@@ -244,15 +236,13 @@ export async function transformHooks(
 
   // Copy hook scripts with emoji prefix
   const scriptsDir = join(hooksDir, "scripts");
-  try {
-    const scriptEntries = await readdir(scriptsDir);
-    for (const entry of scriptEntries) {
-      if (entry === ".gitkeep" || entry === ".DS_Store") continue;
-      const fullPath = join(scriptsDir, entry);
-      const fileStat = await stat(fullPath);
-      if (fileStat.isDirectory()) continue;
+  const scriptGlob = new Bun.Glob("*");
 
-      const content = await readTextFile(fullPath);
+  try {
+    for await (const entry of scriptGlob.scan({ cwd: scriptsDir })) {
+      if (entry === ".gitkeep" || entry === ".DS_Store") continue;
+
+      const content = await Bun.file(join(scriptsDir, entry)).text();
       results.push({
         relativePath: `hooks/scripts/${entry}`,
         content,
@@ -270,16 +260,18 @@ export async function transformHooks(
 /**
  * Transform canonical mcp.json into Claude Code .mcp.json format.
  * Resolves relative paths to absolute paths for the MCP server binary.
+ * Uses Bun.file() for reading and existence checks.
  */
 export async function transformMcp(
   projectRoot: string,
 ): Promise<GeneratedFile[]> {
   const results: GeneratedFile[] = [];
-  const mcpPath = join(projectRoot, "mcp.json");
+  const mcpFile = Bun.file(join(projectRoot, "mcp.json"));
+
+  if (!(await mcpFile.exists())) return results;
 
   try {
-    const raw = await readTextFile(mcpPath);
-    const mcpConfig = JSON.parse(raw);
+    const mcpConfig = await mcpFile.json();
 
     // Resolve relative paths in args to absolute paths from project root
     if (mcpConfig.mcpServers) {
@@ -299,7 +291,7 @@ export async function transformMcp(
       content: JSON.stringify(mcpConfig, null, 2) + "\n",
     });
   } catch {
-    // No mcp.json
+    // Invalid mcp.json
   }
 
   return results;

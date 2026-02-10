@@ -24,9 +24,9 @@ import type {
 /**
  * Identify the active project for session start.
  */
-export function identifyProject(cwd: string): string | null {
+export async function identifyProject(cwd: string): Promise<string | null> {
   const resolvedCwd = cwd || process.cwd();
-  const project = resolveProjectWithCwd("", resolvedCwd);
+  const project = await resolveProjectWithCwd("", resolvedCwd);
   return project || null;
 }
 
@@ -307,11 +307,11 @@ Available projects can be found with: list_projects
 /**
  * Build the complete session start output.
  */
-export function buildSessionOutput(cwd: string): SessionStartOutput {
+export async function buildSessionOutput(cwd: string): Promise<SessionStartOutput> {
   const output: SessionStartOutput = { success: true };
 
   // Identify project
-  const project = identifyProject(cwd);
+  const project = await identifyProject(cwd);
   if (!project) {
     output.success = true;
     output.bootstrapInfo = { noProject: true };
@@ -431,9 +431,9 @@ export function formatContextMarkdown(output: SessionStartOutput): string {
 /**
  * Read hook input from stdin.
  */
-function readHookInput(): HookInput {
+async function readHookInput(): Promise<HookInput> {
   try {
-    const data = readFileSync("/dev/stdin", "utf-8");
+    const data = await Bun.file("/dev/stdin").text();
     if (!data) return {};
     return JSON.parse(data) as HookInput;
   } catch {
@@ -441,15 +441,14 @@ function readHookInput(): HookInput {
   }
 }
 
-// Lazy import readFileSync to avoid import at module level for testing
-import { readFileSync } from "node:fs";
+// Bun.file() used for file reads (no node:fs import needed)
 
 /**
  * Main entry point for session-start hook.
  */
-export function runSessionStart(): void {
-  const hookInput = readHookInput();
-  const output = buildSessionOutput(hookInput.cwd ?? "");
+export async function runSessionStart(): Promise<void> {
+  const hookInput = await readHookInput();
+  const output = await buildSessionOutput(hookInput.cwd ?? "");
 
   const hookOutput: HookOutput = {
     hookSpecificOutput: {

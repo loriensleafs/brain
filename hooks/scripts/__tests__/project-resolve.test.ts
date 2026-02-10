@@ -4,9 +4,8 @@
  * Ported from apps/claude-plugin/cmd/hooks/project_resolve_test.go (209 LOC).
  */
 import { describe, expect, it, beforeEach, afterEach } from "vitest";
-import { writeFileSync, mkdirSync } from "node:fs";
-import { join } from "node:path";
-import { tmpdir } from "node:os";
+import { join } from "path";
+import { tmpdir } from "os";
 import {
   resolveProjectFromEnv,
   resolveProjectWithCwd,
@@ -21,9 +20,9 @@ let origConfigPath: typeof import("../project-resolve.js").getBrainConfigPath;
 
 function createTempConfig(content: string): string {
   const dir = join(tmpdir(), `brain-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
-  mkdirSync(dir, { recursive: true });
+  Bun.spawnSync(["mkdir", "-p", dir]);
   const configPath = join(dir, "config.json");
-  writeFileSync(configPath, content, "utf-8");
+  await Bun.write(configPath, content);
   return configPath;
 }
 
@@ -111,7 +110,7 @@ describe("resolveProjectFromCwd", () => {
 
   it("matches exact project path", () => {
     const projectDir = join(tmpdir(), `brain-test-proj-${Date.now()}`);
-    mkdirSync(projectDir, { recursive: true });
+    Bun.spawnSync(["mkdir", "-p", projectDir]);
 
     const configPath = createTempConfig(
       JSON.stringify({
@@ -129,7 +128,7 @@ describe("resolveProjectFromCwd", () => {
   it("matches subdirectory of project path", () => {
     const projectDir = join(tmpdir(), `brain-test-proj-${Date.now()}`);
     const subDir = join(projectDir, "src", "lib");
-    mkdirSync(subDir, { recursive: true });
+    Bun.spawnSync(["mkdir", "-p", subDir]);
 
     const configPath = createTempConfig(
       JSON.stringify({

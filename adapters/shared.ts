@@ -3,15 +3,11 @@
  * Provides frontmatter parsing, file generation, and common transform helpers.
  */
 
-import { readFile as nodeReadFile, readdir, stat } from "node:fs/promises";
-import { join, relative } from "node:path";
+import { join } from "path";
 
-/** Read a text file using Bun.file() when available, node:fs otherwise. */
+/** Read a text file using Bun.file(). */
 export async function readTextFile(path: string): Promise<string> {
-  if (typeof globalThis.Bun !== "undefined") {
-    return Bun.file(path).text();
-  }
-  return nodeReadFile(path, "utf-8");
+  return Bun.file(path).text();
 }
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -254,24 +250,18 @@ export async function readCanonicalAgents(
   agentsDir: string,
 ): Promise<CanonicalAgent[]> {
   const agents: CanonicalAgent[] = [];
+  const glob = new Bun.Glob("*.md");
 
-  let entries: string[];
   try {
-    entries = await readdir(agentsDir);
+    for await (const entry of glob.scan({ cwd: agentsDir })) {
+      if (entry === ".gitkeep") continue;
+      const raw = await Bun.file(join(agentsDir, entry)).text();
+      const { frontmatter, body } = parseFrontmatter(raw);
+      const name = entry.replace(/\.md$/, "");
+      agents.push({ name, body, frontmatter });
+    }
   } catch {
-    return agents;
-  }
-
-  for (const entry of entries) {
-    if (!entry.endsWith(".md")) continue;
-    const filePath = join(agentsDir, entry);
-    const fileStat = await stat(filePath);
-    if (!fileStat.isFile()) continue;
-
-    const raw = await readTextFile(filePath);
-    const { frontmatter, body } = parseFrontmatter(raw);
-    const name = entry.replace(/\.md$/, "");
-    agents.push({ name, body, frontmatter });
+    // agentsDir doesn't exist
   }
 
   return agents;
@@ -283,38 +273,28 @@ export async function readCanonicalAgents(
 export async function readBrainConfig(
   projectRoot: string,
 ): Promise<BrainConfig> {
-  const configPath = join(projectRoot, "brain.config.json");
-  const raw = await readTextFile(configPath);
-  return JSON.parse(raw) as BrainConfig;
+  const configFile = Bun.file(join(projectRoot, "brain.config.json"));
+  return configFile.json() as Promise<BrainConfig>;
 }
 
 /**
  * Recursively collect all files in a directory, returning relative paths.
+ * Uses Bun.Glob for recursive traversal.
  */
 export async function collectFiles(
   dir: string,
-  base?: string,
 ): Promise<string[]> {
   const result: string[] = [];
-  const baseDir = base ?? dir;
+  const glob = new Bun.Glob("**/*");
 
-  let entries: string[];
   try {
-    entries = await readdir(dir);
-  } catch {
-    return result;
-  }
-
-  for (const entry of entries) {
-    if (entry === "node_modules" || entry === ".git" || entry === ".DS_Store")
-      continue;
-    const fullPath = join(dir, entry);
-    const fileStat = await stat(fullPath);
-    if (fileStat.isDirectory()) {
-      result.push(...(await collectFiles(fullPath, baseDir)));
-    } else {
-      result.push(relative(baseDir, fullPath));
+    for await (const entry of glob.scan({ cwd: dir })) {
+      if (entry.includes("node_modules") || entry.includes(".git") || entry.includes(".DS_Store"))
+        continue;
+      result.push(entry);
     }
+  } catch {
+    // dir doesn't exist
   }
 
   return result;

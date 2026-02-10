@@ -3,9 +3,9 @@
  *
  * Ported from apps/claude-plugin/cmd/hooks/load_skills.go.
  * Loads skill markdown files from the skills/ directory.
+ * Uses Bun.file() and Bun.Glob for all file operations.
  */
-import { readFileSync, readdirSync, statSync } from "node:fs";
-import { join, dirname } from "node:path";
+import { join, dirname } from "path";
 import type { LoadSkillsInput, LoadSkillsOutput, SkillInfo } from "./types.js";
 
 /** Map of scenarios to relevant skill names. */
@@ -30,72 +30,77 @@ function getPluginRoot(): string {
 }
 
 /** Resolve the skills directory path. */
-function resolveSkillsPath(): string {
+async function resolveSkillsPath(): Promise<string> {
   const root = getPluginRoot();
   if (!root) {
-    try {
-      statSync("skills");
+    if (await Bun.file("skills/.gitkeep").exists() || await Bun.file("skills").exists()) {
       return "skills";
-    } catch {
-      return "";
     }
+    return "";
   }
   return join(root, "skills");
 }
 
+/** Read a file's text content, returns null if it doesn't exist. */
+async function readFileIfExists(path: string): Promise<string | null> {
+  const file = Bun.file(path);
+  if (await file.exists()) {
+    return file.text();
+  }
+  return null;
+}
+
 /** Load a single skill and all its markdown files. */
-function loadSkill(
+async function loadSkill(
   skillsDir: string,
   skillName: string,
-): { content: string; files: string[] } | null {
+): Promise<{ content: string; files: string[] } | null> {
   const skillPath = join(skillsDir, skillName);
+
+  // Check skill directory exists by scanning for any files
+  const dirGlob = new Bun.Glob("*");
+  let hasFiles = false;
   try {
-    statSync(skillPath);
+    for await (const _ of dirGlob.scan({ cwd: skillPath })) {
+      hasFiles = true;
+      break;
+    }
   } catch {
     return null;
   }
+  if (!hasFiles) return null;
 
   const parts: string[] = [];
   const filesLoaded: string[] = [];
 
   // Load main SKILL.md first
   const mainFile = join(skillPath, "SKILL.md");
-  try {
-    const content = readFileSync(mainFile, "utf-8");
-    parts.push(`# Skill: ${skillName}\n\n${content}\n\n`);
+  const mainContent = await readFileIfExists(mainFile);
+  if (mainContent) {
+    parts.push(`# Skill: ${skillName}\n\n${mainContent}\n\n`);
     filesLoaded.push(mainFile);
-  } catch {
-    // No SKILL.md
   }
 
   // Load other top-level markdown files
   for (const fileName of ["ANALYSIS.md", "PLANNING.md", "CODING.md"]) {
     const filePath = join(skillPath, fileName);
-    try {
-      const content = readFileSync(filePath, "utf-8");
+    const content = await readFileIfExists(filePath);
+    if (content) {
       parts.push(`## ${fileName.replace(".md", "")}\n\n${content}\n\n`);
       filesLoaded.push(filePath);
-    } catch {
-      // File doesn't exist
     }
   }
 
   // Load scenarios subdirectory
   const scenariosDir = join(skillPath, "scenarios");
+  const scenarioGlob = new Bun.Glob("*.md");
   try {
-    const entries = readdirSync(scenariosDir);
-    for (const entry of entries) {
-      if (!entry.endsWith(".md")) continue;
+    for await (const entry of scenarioGlob.scan({ cwd: scenariosDir })) {
       const filePath = join(scenariosDir, entry);
-      try {
-        if (!statSync(filePath).isFile()) continue;
-        const content = readFileSync(filePath, "utf-8");
-        const name = entry.replace(".md", "");
-        parts.push(`## Scenario: ${name}\n\n${content}\n\n`);
-        filesLoaded.push(filePath);
-      } catch {
-        // Skip
-      }
+      const content = await Bun.file(filePath).text();
+      const name = entry.replace(".md", "");
+      parts.push(`## Scenario: ${name}\n\n${content}\n\n`);
+      filesLoaded.push(filePath);
     }
   } catch {
     // No scenarios dir
@@ -103,23 +108,19 @@ function loadSkill(
 
   // Load templates subdirectory
   const templatesDir = join(skillPath, "templates");
+  const templateGlob = new Bun.Glob("*.md");
+  let hasTemplates = false;
   try {
-    const entries = readdirSync(templatesDir);
-    if (entries.some((e) => e.endsWith(".md"))) {
-      parts.push("## Templates\n\n");
-      for (const entry of entries) {
-        if (!entry.endsWith(".md")) continue;
-        const filePath = join(templatesDir, entry);
-        try {
-          if (!statSync(filePath).isFile()) continue;
-          const content = readFileSync(filePath, "utf-8");
-          const name = entry.replace(".md", "");
-          parts.push(`### Template: ${name}\n\n${content}\n\n`);
-          filesLoaded.push(filePath);
-        } catch {
-          // Skip
-        }
+    for await (const entry of templateGlob.scan({ cwd: templatesDir })) {
+      if (!hasTemplates) {
+        parts.push("## Templates\n\n");
+        hasTemplates = true;
       }
+      const filePath = join(templatesDir, entry);
+      const content = await Bun.file(filePath).text();
+      const name = entry.replace(".md", "");
+      parts.push(`### Template: ${name}\n\n${content}\n\n`);
+      filesLoaded.push(filePath);
     }
   } catch {
     // No templates dir
@@ -134,6 +135,23 @@ function getSkillsForScenario(scenario: string): string[] {
     "coding-workflow",
     "writing-notes",
   ];
+}
+
+/** List all skill directories using Bun.Glob. */
+async function listSkillDirs(skillsDir: string): Promise<string[]> {
+  const dirs: string[] = [];
+  const glob = new Bun.Glob("*/SKILL.md");
+  try {
+    for await (const entry of glob.scan({ cwd: skillsDir })) {
+      const skillName = entry.split("/")[0];
+      if (!dirs.includes(skillName)) {
+        dirs.push(skillName);
+      }
+    }
+  } catch {
+    // skillsDir doesn't exist
+  }
+  return dirs;
 }
 
 export async function runLoadSkills(): Promise<void> {
@@ -153,7 +171,7 @@ export async function runLoadSkills(): Promise<void> {
   }
 
   // Resolve skills directory
-  let skillsDir = loadInput.skillsDir || resolveSkillsPath();
+  const skillsDir = loadInput.skillsDir || await resolveSkillsPath();
   if (!skillsDir) {
     process.stdout.write(
       JSON.stringify(
@@ -183,15 +201,8 @@ export async function runLoadSkills(): Promise<void> {
     skillNames = getSkillsForScenario(loadInput.scenario);
   } else {
     // Load all skills
-    try {
-      skillNames = readdirSync(skillsDir).filter((entry) => {
-        try {
-          return statSync(join(skillsDir, entry)).isDirectory();
-        } catch {
-          return false;
-        }
-      });
-    } catch {
+    skillNames = await listSkillDirs(skillsDir);
+    if (skillNames.length === 0) {
       process.stdout.write(
         JSON.stringify(
           {
@@ -207,7 +218,7 @@ export async function runLoadSkills(): Promise<void> {
   }
 
   for (const skillName of skillNames) {
-    const result = loadSkill(skillsDir, skillName);
+    const result = await loadSkill(skillsDir, skillName);
     if (!result) continue;
 
     skills.push({

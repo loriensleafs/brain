@@ -17,8 +17,7 @@
  *   --json      Output generated file list as JSON to stdout (for Go CLI consumption)
  */
 
-import { mkdir } from "node:fs/promises";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join, resolve } from "path";
 import { transform as claudeCodeTransform } from "./claude-code.js";
 import type { GeneratedFile } from "./shared.js";
 import { readBrainConfig } from "./shared.js";
@@ -98,7 +97,8 @@ async function writeGeneratedFiles(
   for (const file of files) {
     const fullPath = join(outputDir, file.relativePath);
     try {
-      await mkdir(dirname(fullPath), { recursive: true });
+      const dir = dirname(fullPath);
+      await Bun.$`mkdir -p ${dir}`.quiet();
       await Bun.write(fullPath, file.content);
       written++;
     } catch (err) {

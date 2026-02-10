@@ -1,6 +1,11 @@
-import { mkdtemp, mkdir, writeFile, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
+/** Create a unique temp directory using Bun shell. */
+async function makeTempDir(prefix: string): Promise<string> {
+  const dir = `${prefix}${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  await Bun.$`mkdir -p ${dir}`.quiet();
+  return dir;
+}
+import { tmpdir } from "os";
+import { join } from "path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { transform, transformAgent } from "../claude-code.js";
 import type { BrainConfig, CanonicalAgent } from "../shared.js";
@@ -75,46 +80,46 @@ describe("transform (integration)", () => {
   let tempDir: string;
 
   beforeEach(async () => {
-    tempDir = await mkdtemp(join(tmpdir(), "brain-adapter-test-"));
+    tempDir = await makeTempDir(join(tmpdir(), "brain-adapter-test-"));
     // Create minimal project structure
-    await mkdir(join(tempDir, "agents"), { recursive: true });
-    await mkdir(join(tempDir, "skills", "memory"), { recursive: true });
-    await mkdir(join(tempDir, "commands"), { recursive: true });
-    await mkdir(join(tempDir, "protocols"), { recursive: true });
-    await mkdir(join(tempDir, "hooks", "scripts"), { recursive: true });
+    await Bun.$`mkdir -p ${join(tempDir, "agents")}`.quiet();
+    await Bun.$`mkdir -p ${join(tempDir, "skills", "memory")}`.quiet();
+    await Bun.$`mkdir -p ${join(tempDir, "commands")}`.quiet();
+    await Bun.$`mkdir -p ${join(tempDir, "protocols")}`.quiet();
+    await Bun.$`mkdir -p ${join(tempDir, "hooks", "scripts")}`.quiet();
   });
 
   afterEach(async () => {
-    await rm(tempDir, { recursive: true, force: true });
+    await Bun.$`rm -rf ${tempDir}`.quiet();
   });
 
   it("transforms a minimal project", async () => {
     // Create canonical agent
-    await writeFile(
+    await Bun.write(
       join(tempDir, "agents", "architect.md"),
       "# Architect Agent\n\nYou design systems.",
     );
 
     // Create command
-    await writeFile(
+    await Bun.write(
       join(tempDir, "commands", "start-session.md"),
       "Start a new session.",
     );
 
     // Create protocol
-    await writeFile(
+    await Bun.write(
       join(tempDir, "protocols", "memory-architecture.md"),
       "# Memory Architecture\n\nRules for memory.",
     );
 
     // Create skill file
-    await writeFile(
+    await Bun.write(
       join(tempDir, "skills", "memory", "SKILL.md"),
       "# Memory Skill\n\nInstructions.",
     );
 
     // Create mcp.json
-    await writeFile(
+    await Bun.write(
       join(tempDir, "mcp.json"),
       JSON.stringify({
         mcpServers: {
@@ -145,7 +150,7 @@ describe("transform (integration)", () => {
         },
       },
     };
-    await writeFile(
+    await Bun.write(
       join(tempDir, "brain.config.json"),
       JSON.stringify(config),
     );
@@ -204,7 +209,7 @@ describe("transform (integration)", () => {
   });
 
   it("skips agents with null claude-code config", async () => {
-    await writeFile(
+    await Bun.write(
       join(tempDir, "agents", "orchestrator-cursor.md"),
       "# Cursor Orchestrator",
     );
@@ -218,7 +223,7 @@ describe("transform (integration)", () => {
         },
       },
     };
-    await writeFile(
+    await Bun.write(
       join(tempDir, "brain.config.json"),
       JSON.stringify(config),
     );
@@ -228,7 +233,7 @@ describe("transform (integration)", () => {
   });
 
   it("handles agents not in config (no config entry)", async () => {
-    await writeFile(
+    await Bun.write(
       join(tempDir, "agents", "unlisted.md"),
       "# Unlisted Agent",
     );
@@ -237,7 +242,7 @@ describe("transform (integration)", () => {
       targets: ["claude-code"],
       agents: {},
     };
-    await writeFile(
+    await Bun.write(
       join(tempDir, "brain.config.json"),
       JSON.stringify(config),
     );

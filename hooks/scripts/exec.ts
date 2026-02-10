@@ -1,10 +1,9 @@
 /**
  * Command execution utilities for brain-hooks.
  *
- * Provides a testable wrapper around child_process.execFileSync
+ * Provides a testable wrapper around Bun.spawnSync
  * that mirrors the Go pattern of replaceable exec.Command variables.
  */
-import { execFileSync } from "node:child_process";
 
 export interface ExecResult {
   stdout: string;
@@ -20,12 +19,16 @@ function defaultExecCommand(
   command: string,
   args: string[],
 ): string {
-  const result = execFileSync(command, args, {
-    encoding: "utf-8",
+  const result = Bun.spawnSync([command, ...args], {
+    stdout: "pipe",
+    stderr: "pipe",
     timeout: 10_000,
-    stdio: ["pipe", "pipe", "pipe"],
   });
-  return result;
+  if (result.exitCode !== 0) {
+    const stderr = result.stderr.toString();
+    throw new Error(`Command failed with exit code ${result.exitCode}: ${stderr}`);
+  }
+  return result.stdout.toString();
 }
 
 /**
