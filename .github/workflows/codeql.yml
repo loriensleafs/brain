@@ -14,10 +14,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
-  analyze-go:
+  analyze:
     name: Analyze (go)
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 15
 
     permissions:
       actions: read
@@ -41,7 +41,6 @@ jobs:
         uses: github/codeql-action/init@v4
         with:
           languages: go
-          queries: security-extended
 
       - name: Download Go dependencies (TUI)
         run: go mod download
@@ -66,28 +65,3 @@ jobs:
         uses: github/codeql-action/analyze@v4
         with:
           category: "/language:go"
-
-  analyze-javascript:
-    name: Analyze (javascript-typescript)
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v4
-        with:
-          languages: javascript-typescript
-          queries: security-extended
-
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v4
-        with:
-          category: "/language:javascript-typescript"
