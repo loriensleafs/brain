@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 
 	"github.com/charmbracelet/huh"
+	"github.com/peterkloss/brain-tui/internal/adapters"
 	"github.com/spf13/cobra"
 )
 
@@ -132,12 +132,34 @@ func readManifest(tool string) (*installManifest, error) {
 
 // ─── Adapter Invocation ──────────────────────────────────────────────────────
 
-func runAdapterWrite(projectRoot, target, outputDir string) error {
-	syncScript := filepath.Join(projectRoot, "adapters", "sync.ts")
-	cmd := exec.Command("bun", syncScript, "--target", target, "--output", outputDir, "--project", projectRoot)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
+func runAdapterStage(projectRoot, target, outputDir string) error {
+	brainConfig, err := adapters.ReadBrainConfig(projectRoot)
+	if err != nil {
+		return fmt.Errorf("read config: %w", err)
+	}
+
+	var files []adapters.GeneratedFile
+	switch target {
+	case "claude-code":
+		output, err := adapters.TransformClaudeCode(projectRoot, brainConfig)
+		if err != nil {
+			return fmt.Errorf("transform claude-code: %w", err)
+		}
+		files = output.AllFiles()
+	case "cursor":
+		output, err := adapters.CursorTransform(projectRoot, brainConfig)
+		if err != nil {
+			return fmt.Errorf("transform cursor: %w", err)
+		}
+		files = append(files, output.Agents...)
+		files = append(files, output.Rules...)
+		files = append(files, output.Hooks...)
+		files = append(files, output.MCP...)
+	default:
+		return fmt.Errorf("unknown target: %s", target)
+	}
+
+	return adapters.WriteGeneratedFiles(files, outputDir)
 }
 
 // ─── Claude Code Install ─────────────────────────────────────────────────────
@@ -154,7 +176,7 @@ func installClaudeCode(projectRoot string) error {
 	if err := os.RemoveAll(stagingDir); err != nil {
 		return fmt.Errorf("clean staging: %w", err)
 	}
-	if err := runAdapterWrite(projectRoot, "claude-code", stagingDir); err != nil {
+	if err := runAdapterStage(projectRoot, "claude-code", stagingDir); err != nil {
 		return fmt.Errorf("adapter: %w", err)
 	}
 
@@ -228,7 +250,7 @@ func installCursor(projectRoot string) error {
 	if err := os.RemoveAll(stagingDir); err != nil {
 		return fmt.Errorf("clean staging: %w", err)
 	}
-	if err := runAdapterWrite(projectRoot, "cursor", stagingDir); err != nil {
+	if err := runAdapterStage(projectRoot, "cursor", stagingDir); err != nil {
 		return fmt.Errorf("adapter: %w", err)
 	}
 

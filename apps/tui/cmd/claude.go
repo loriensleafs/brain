@@ -15,8 +15,8 @@ var claudeCmd = &cobra.Command{
 	Short:              "Launch Claude Code with the Brain plugin loaded",
 	Long: `Wraps 'claude --plugin-dir <path>' so the Brain plugin is always available.
 
-Uses the TS adapter (adapters/sync.ts) to generate a fresh plugin staging
-directory on each launch from canonical content + brain.config.json.
+Uses Go adapters to generate a fresh plugin staging directory on each
+launch from canonical content + brain.config.json.
 
 Use --agent-teams to swap in the Agent Teams orchestrator variant.`,
 	DisableFlagParsing: true, // pass all args through to claude
@@ -59,7 +59,7 @@ func runClaude(_ *cobra.Command, args []string) error {
 	if err := os.RemoveAll(pluginDir); err != nil {
 		return fmt.Errorf("clean staging: %w", err)
 	}
-	if err := runAdapterWrite(projectRoot, "claude-code", pluginDir); err != nil {
+	if err := runAdapterStage(projectRoot, "claude-code", pluginDir); err != nil {
 		return fmt.Errorf("staging plugin via adapter: %w", err)
 	}
 

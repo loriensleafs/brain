@@ -1,7 +1,7 @@
 ---
 title: FEAT-001 Cross-Platform Portability
 type: feature
-status: complete
+status: in-progress
 source-refs:
 - ADR-002
 permalink: features/feat-001-cross-platform-portability/feat-001-cross-platform-portability
@@ -50,6 +50,7 @@ permalink: features/feat-001-cross-platform-portability/feat-001-cross-platform-
 - [fact] Phase 1: Extract and Canonicalize -- move content to root, create brain.config.json, port Go binaries to JS/TS, create TS adapters, implement brain install/uninstall, refactor brain claude, remove apps/claude-plugin/. HIGH risk. #phase-1
 - [fact] Phase 2: Add Cursor Target -- create Cursor adapter, generate .cursor/ output, extend brain install for Cursor, implement brain cursor launcher. MEDIUM risk. #phase-2
 - [fact] Phase 3: Hook Normalization -- build normalize.ts shim, refactor hooks to use normalized events, generate per-tool hook configs, add CI validation. MEDIUM risk. #phase-3
+- [fact] Phase 4: Adapter Migration to Go -- rewrite TS adapters as native Go packages, wire into CLI, remove bun subprocess dependency, clean up TS adapter files. LOW risk. #phase-4
 
 ## Effort Summary
 
@@ -82,6 +83,11 @@ permalink: features/feat-001-cross-platform-portability/feat-001-cross-platform-
 | TASK-018 Build Hook Normalization Shim | 3 | T2 | 6h | 3h |
 | TASK-019 Refactor Hook Scripts for Normalization | 3 | T2 | 6h | 3h |
 | TASK-020 Add CI Validation and Golden Files | 3 | T1 | 4h | 2h |
+| TASK-021 Write Go Claude Code Adapter | 4 | T2 | 6h | 3h |
+| TASK-022 Write Go Cursor Adapter | 4 | T2 | 6h | 3h |
+| TASK-023 Wire Go Adapters into CLI Commands | 4 | T2 | 4h | 2h |
+| TASK-024 Remove TS Adapter Files and Update Tests | 4 | T1 | 2h | 1h |
+| TASK-025 Verify Build and Tests Pass | 4 | T1 | 2h | 1h |
 
 ## Success Criteria
 
@@ -135,6 +141,11 @@ permalink: features/feat-001-cross-platform-portability/feat-001-cross-platform-
 - [x] [task] [[TASK-018-build-hook-normalization-shim]] #status-complete
 - [x] [task] [[TASK-019-refactor-hook-scripts-for-normalization]] #status-complete
 - [x] [task] [[TASK-020-add-ci-validation-and-golden-files]] #status-complete
+- [ ] [task] [[TASK-021-write-go-claude-code-adapter]] #status-pending
+- [ ] [task] [[TASK-022-write-go-cursor-adapter]] #status-pending
+- [ ] [task] [[TASK-023-wire-go-adapters-into-cli]] #status-pending
+- [ ] [task] [[TASK-024-remove-ts-adapter-files]] #status-pending
+- [ ] [task] [[TASK-025-verify-build-and-tests]] #status-pending
 
 ## Observations
 
@@ -144,6 +155,7 @@ permalink: features/feat-001-cross-platform-portability/feat-001-cross-platform-
 - [decision] brain.config.json with explicit per-agent per-tool values (no abstract model tiers) #config
 - [decision] Clean break from old structure; no backward compatibility #clean-break
 - [decision] Claude Code + Cursor only; Gemini descoped #scope
+- [decision] Phase 4 added: migrate TS adapters to native Go to eliminate bun subprocess dependency #adapter-migration
 - [decision] All Brain content uses 🧠 emoji prefix universally (skills, agents, commands, rules, hooks) #naming
 - [decision] Non-destructive install: never modify user's existing instruction, hook, or MCP files #non-destructive
 - [decision] Claude Code uses plugin isolation; Cursor uses 🧠-prefixed file placement + JSON merge with manifest #per-tool-install

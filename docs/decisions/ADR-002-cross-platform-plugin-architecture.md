@@ -82,14 +82,13 @@ brain/
       analyze.ts             # Step-by-step analysis workflow
     claude-code.json         # Generated: CC hooks config
     cursor.json              # Generated: Cursor hooks.json
-  adapters/
-    sync.ts                  # Main sync/transform orchestrator (invoked by Go CLI via bun)
-    claude-code.ts           # CC-specific transforms
-    cursor.ts                # Cursor-specific transforms
-    shared.ts                # Shared transform utilities
-    __tests__/               # Golden file snapshot tests
   apps/mcp/                  # Unchanged (MCP server)
-  apps/tui/                  # Go CLI (shells out to bun for transforms)
+  apps/tui/                  # Go CLI with built-in adapter transforms
+    internal/adapters/       # Go adapters (install-time transforms)
+      claude_code.go         # CC-specific transforms
+      cursor.go              # Cursor-specific transforms
+      shared.go              # Shared transform utilities
+      adapters_test.go       # Golden file snapshot tests
   mcp.json                   # Canonical MCP server config
   AGENTS.md                  # Canonical project rules (cross-platform)
   brain.config.json          # Declarative per-agent, per-tool mapping
@@ -107,7 +106,7 @@ brain install
   -> huh multi-select: [Claude Code, Cursor]
   -> huh confirm: "Install Brain for: Claude Code, Cursor?"
   -> bubbletea inline: progress per tool
-     -> Shell out to bun: run TS adapters (adapters/sync.ts) for transforms
+     -> Go adapters: transform canonical content to tool-specific format
      -> Claude Code: symlink to ~/.claude/
      -> Cursor: copy to .cursor/
   -> Summary: installed/skipped/failed
@@ -118,7 +117,7 @@ brain uninstall
   -> Summary
 ```
 
-Transforms are **TypeScript only** (`adapters/sync.ts`, `adapters/claude-code.ts`, `adapters/cursor.ts`). The Go CLI shells out to `bun` at install time. Users already need bun for the MCP server, so there is no "no bun dependency" advantage to a Go adapter reimplementation. One implementation, one language, no parity testing burden.
+Transforms are **Go adapters** in `apps/tui/internal/adapters/`. Adapters are CLI concerns (install-time transforms like frontmatter injection, file placement, JSON merge) and belong in Go where the entire CLI lives. No bun subprocess needed at install time. Having 4 TS files that Go shells out to is inconsistent when the CLI is Go and the transform logic is straightforward.
 
 ### 3. Orchestrator Strategy: Two Versions
 
@@ -281,14 +280,14 @@ Not worth abstracting:
 - Port or consolidate brain-skills Go binary (3 subcommands with Python equivalents)
 - Port Go shared packages (packages/utils, packages/validation) to TS equivalents
 - Create `brain.config.json` with per-agent, per-tool mapping
-- Create TS adapters (`adapters/sync.ts`, `adapters/claude-code.ts`)
-- Implement `brain install` and `brain uninstall` commands (Go CLI shells out to bun for transforms)
+- Create Go adapters in `apps/tui/internal/adapters/` (claude_code.go, shared.go)
+- Implement `brain install` and `brain uninstall` commands (Go CLI with built-in adapter transforms)
 - Validate: everything still works identically in Claude Code
 - Remove `apps/claude-plugin/` entirely
 
 ### Phase 2: Add Cursor Target
 
-- Create Cursor TS adapter (`adapters/cursor.ts`)
+- Create Cursor Go adapter (`apps/tui/internal/adapters/cursor.go`)
 - Write agent frontmatter transformer for Cursor format
 - Generate `.cursor/rules/*.mdc` from protocols
 - Generate `.cursor/hooks.json` from hook config
@@ -311,9 +310,9 @@ Not worth abstracting:
 
 Support Claude Code + Cursor + Gemini CLI from Phase 1. **Rejected**: Gemini has the most divergence (TOML commands, blocked symlinks, no parallel, missing hook events). Adding Gemini triples the adapter surface for a tool with the smallest user base. Descoped to contain risk.
 
-### B. Dual TS+Go Adapter Implementation (ADR-002 r4)
+### B. TypeScript-Only Adapters (ADR-002 r6 initial decision)
 
-TS adapters for CI/test + Go adapters for install-time with golden file parity tests. **Rejected**: maintenance burden of keeping two implementations in sync is high. Users already need bun for the MCP server, so the "no bun dependency" argument for Go adapters does not hold. Single TS implementation; Go CLI shells out to bun.
+TS adapters at root `adapters/` directory with Go CLI shelling out to bun at install time. **Reversed**: adapters are CLI concerns (install-time transforms), not runtime concerns. Having 4 TS files that Go shells out to is inconsistent when the entire CLI is Go. The transform logic (frontmatter injection, file placement, JSON merge) is straightforward Go. Users needing bun for MCP server does not justify adding a bun subprocess dependency to the install path. Go adapters in `apps/tui/internal/adapters/` are simpler and self-contained.
 
 ### C. XDG Staging Directory (ADR-002 r3)
 
@@ -335,7 +334,7 @@ Abstract model tiers (default/large/fast) mapped by adapters to tool-specific mo
 - Single install command with per-tool strategy hidden behind `brain install`
 - Two orchestrators match each tool's native parallel execution model
 - Hook normalization makes logic portable while respecting tool differences
-- Single TS adapter implementation eliminates dual-language parity testing burden
+- Go adapters in CLI eliminate bun subprocess dependency for install; adapters are self-contained CLI concerns
 - Community-aligned (root-level content, Open Agent Skills, AGENTS.md standard)
 - Dramatically simpler than ADR-002 r5 (which estimated 120-176h; this approach is closer to 60-90h)
 
@@ -362,7 +361,7 @@ Abstract model tiers (default/large/fast) mapped by adapters to tool-specific mo
 - [decision] Hook normalization shim (normalize.ts) for platform-agnostic hook logic #hooks
 - [decision] Hooks stay as hooks with normalization layer; no MCP migration for hook logic #hooks
 - [decision] Clean break from apps/claude-plugin/ -- no backward compatibility #clean-break
-- [decision] TypeScript-only adapters; Go CLI shells out to bun at install time. Users already need bun for MCP server #adapters
+- [decision] Go adapters in apps/tui/internal/adapters/; no bun subprocess for install. Adapters are CLI concerns (install-time transforms) and belong in Go where the CLI lives #adapters
 - [decision] protocols/ at root for tool-neutral content; AGENTS.md generated from protocols + tool-specific injection #protocols
 - [fact] 85% of Brain content needs zero transformation (skills, commands, MCP config are format-identical) #portability
 - [fact] AGENTS.md standard has 60,000+ project adoption; Vercel Skills CLI supports 40+ tools #ecosystem
@@ -373,6 +372,7 @@ Abstract model tiers (default/large/fast) mapped by adapters to tool-specific mo
 - [fact] Brain Agent Teams has inter-agent messaging that no other tool provides -- unique differentiator #differentiation
 - [fact] Cursor symlinks broken as of Feb 2026; file copy required #blocker
 - [risk] Go binary porting scope includes shared package dependencies (packages/utils, packages/validation) #porting
+- [decision] Reversed TS-only adapter decision: adapters are CLI concerns (install-time transforms) not runtime concerns; Go is the right language for CLI internals #adapters #reversal
 - [risk] Hook normalization must handle different blocking semantics (CC Stop blocks, Cursor stop is info-only) #hooks
 - [insight] Ecosystem consensus is "simplicity wins" -- Brain's adapter complexity must justify itself against convergence #convergence
 - [insight] Hooks with no Cursor equivalent (SessionStart, Notification, SubagentStop) remain Claude Code-only; Cursor adapter skips them #hooks

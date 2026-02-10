@@ -15,9 +15,9 @@ var cursorCmd = &cobra.Command{
 	Short: "Launch Cursor with Brain rules and MCP loaded",
 	Long: `Stages Brain content for Cursor and launches the editor.
 
-Uses the TS adapter (adapters/sync.ts) to generate fresh .mdc rules and
-JSON merge payloads, then file-copies rules to .cursor/rules/ and
-additively merges hooks.json and mcp.json.
+Uses Go adapters to generate fresh .mdc rules and JSON merge payloads,
+then file-copies rules to .cursor/rules/ and additively merges
+hooks.json and mcp.json.
 
 All extra arguments are passed through to the cursor binary.`,
 	DisableFlagParsing: true,
@@ -44,7 +44,7 @@ func runCursor(_ *cobra.Command, args []string) error {
 	if err := os.RemoveAll(stagingDir); err != nil {
 		return fmt.Errorf("clean staging: %w", err)
 	}
-	if err := runAdapterWrite(projectRoot, "cursor", stagingDir); err != nil {
+	if err := runAdapterStage(projectRoot, "cursor", stagingDir); err != nil {
 		return fmt.Errorf("staging via adapter: %w", err)
 	}
 
