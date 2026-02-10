@@ -134,7 +134,7 @@ describe("transform (integration)", () => {
 
     // Create brain.config.json
     const config: BrainConfig = {
-      targets: ["claude-code"],
+      targets: { "claude-code": {} },
       agents: {
         architect: {
           "claude-code": {
@@ -215,7 +215,7 @@ describe("transform (integration)", () => {
     );
 
     const config: BrainConfig = {
-      targets: ["claude-code", "cursor"],
+      targets: { "claude-code": {}, "cursor": {} },
       agents: {
         "orchestrator-cursor": {
           "claude-code": null,
@@ -239,7 +239,7 @@ describe("transform (integration)", () => {
     );
 
     const config: BrainConfig = {
-      targets: ["claude-code"],
+      targets: { "claude-code": {} },
       agents: {},
     };
     await Bun.write(

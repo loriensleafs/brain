@@ -129,9 +129,9 @@ async function main(): Promise<void> {
   }
 
   // Validate target
-  if (!brainConfig.targets.includes(opts.target)) {
+  if (!(opts.target in brainConfig.targets)) {
     console.error(
-      `Error: target "${opts.target}" not in brain.config.json targets: [${brainConfig.targets.join(", ")}]`,
+      `Error: target "${opts.target}" not in brain.config.json targets: [${Object.keys(brainConfig.targets).join(", ")}]`,
     );
     process.exit(1);
   }

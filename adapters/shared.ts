@@ -12,8 +12,14 @@ export async function readTextFile(path: string): Promise<string> {
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
+export interface TargetConfig {
+  adapter?: string;
+  outputDir?: string;
+  agentFrontmatter?: Record<string, unknown>;
+}
+
 export interface BrainConfig {
-  targets: string[];
+  targets: Record<string, TargetConfig>;
   agents: Record<string, AgentToolConfig>;
   hooks?: Record<string, HookToolConfig>;
 }

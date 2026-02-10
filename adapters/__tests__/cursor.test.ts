@@ -139,7 +139,7 @@ describe("transform (Cursor integration)", () => {
     );
 
     const config: BrainConfig = {
-      targets: ["cursor"],
+      targets: { "cursor": {} },
       agents: {
         architect: {
           cursor: {
@@ -188,7 +188,7 @@ describe("transform (Cursor integration)", () => {
     );
 
     const config: BrainConfig = {
-      targets: ["claude-code", "cursor"],
+      targets: { "claude-code": {}, "cursor": {} },
       agents: {
         "orchestrator-claude": {
           "claude-code": {
@@ -215,7 +215,7 @@ describe("transform (Cursor integration)", () => {
     );
 
     const config: BrainConfig = {
-      targets: ["cursor"],
+      targets: { "cursor": {} },
       agents: {},
     };
     await Bun.write(
@@ -229,7 +229,7 @@ describe("transform (Cursor integration)", () => {
 
   it("produces hooks merge payload with managed keys", async () => {
     const config: BrainConfig = {
-      targets: ["cursor"],
+      targets: { "cursor": {} },
       agents: {},
       hooks: {
         "stop-validator": {
@@ -259,7 +259,7 @@ describe("transform (Cursor integration)", () => {
 
   it("does not produce skills, commands, or plugin manifest", async () => {
     const config: BrainConfig = {
-      targets: ["cursor"],
+      targets: { "cursor": {} },
       agents: {},
     };
     await Bun.write(
@@ -277,7 +277,7 @@ describe("transform (Cursor integration)", () => {
 
   it("handles empty project gracefully", async () => {
     const config: BrainConfig = {
-      targets: ["cursor"],
+      targets: { "cursor": {} },
       agents: {},
     };
     await Bun.write(
