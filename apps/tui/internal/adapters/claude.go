@@ -100,9 +100,9 @@ func TransformClaudeAgents(agentsDir string, brainConfig *BrainConfig) ([]Genera
 
 // ─── Skills Transform ────────────────────────────────────────────────────────
 
-// TransformClaudeSkills collects skills for Claude Code.
+// TransformSkills collects skills for Claude Code.
 // Skills are copied as-is with emoji prefix on directory name.
-func TransformClaudeSkills(skillsDir string) ([]GeneratedFile, error) {
+func TransformSkills(skillsDir string) ([]GeneratedFile, error) {
 	// Read top-level skill directories
 	entries, err := os.ReadDir(skillsDir)
 	if err != nil {
@@ -144,9 +144,9 @@ func TransformClaudeSkills(skillsDir string) ([]GeneratedFile, error) {
 
 // ─── Commands Transform ──────────────────────────────────────────────────────
 
-// TransformClaudeCommands collects commands for Claude Code.
+// TransformCommands collects commands for Claude Code.
 // Commands are copied as-is with emoji prefix.
-func TransformClaudeCommands(commandsDir string) ([]GeneratedFile, error) {
+func TransformCommands(commandsDir string) ([]GeneratedFile, error) {
 	files, err := ScanMarkdownFiles(commandsDir)
 	if err != nil {
 		return nil, nil
@@ -376,12 +376,12 @@ func TransformClaudeCode(projectRoot string, brainConfig *BrainConfig) (*ClaudeC
 		return nil, fmt.Errorf("transform agents: %w", err)
 	}
 
-	skills, err := TransformClaudeSkills(skillsDir)
+	skills, err := TransformSkills(skillsDir)
 	if err != nil {
 		return nil, fmt.Errorf("transform skills: %w", err)
 	}
 
-	commands, err := TransformClaudeCommands(commandsDir)
+	commands, err := TransformCommands(commandsDir)
 	if err != nil {
 		return nil, fmt.Errorf("transform commands: %w", err)
 	}

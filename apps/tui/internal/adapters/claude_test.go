@@ -363,7 +363,7 @@ func TestTransformClaudeMCP_NoMCPFile(t *testing.T) {
 	}
 }
 
-func TestTransformClaudeSkills_NestedFiles(t *testing.T) {
+func TestTransformSkills_NestedFiles(t *testing.T) {
 	dir := t.TempDir()
 
 	// Create skill with nested subdirectory
@@ -374,7 +374,7 @@ func TestTransformClaudeSkills_NestedFiles(t *testing.T) {
 	writeFile(t, filepath.Join(dir, "memory", "SKILL.md"), "# Memory")
 	writeFile(t, filepath.Join(dir, "memory", "scripts", "extract.ps1"), "Write-Host ok")
 
-	results, err := TransformClaudeSkills(dir)
+	results, err := TransformSkills(dir)
 	if err != nil {
 		t.Fatalf("error: %v", err)
 	}
@@ -391,12 +391,12 @@ func TestTransformClaudeSkills_NestedFiles(t *testing.T) {
 	}
 }
 
-func TestTransformClaudeCommands_AlreadyPrefixed(t *testing.T) {
+func TestTransformCommands_AlreadyPrefixed(t *testing.T) {
 	dir := t.TempDir()
 
 	writeFile(t, filepath.Join(dir, "\U0001F9E0-bootstrap.md"), "Bootstrap command")
 
-	results, err := TransformClaudeCommands(dir)
+	results, err := TransformCommands(dir)
 	if err != nil {
 		t.Fatalf("error: %v", err)
 	}

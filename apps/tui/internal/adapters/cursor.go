@@ -12,16 +12,19 @@ import (
 
 // CursorOutput holds all generated files grouped by category.
 type CursorOutput struct {
-	Agents []GeneratedFile
-	Rules  []GeneratedFile
-	Hooks  []GeneratedFile
-	MCP    []GeneratedFile
+	Agents   []GeneratedFile
+	Skills   []GeneratedFile
+	Commands []GeneratedFile
+	Rules    []GeneratedFile
+	Hooks    []GeneratedFile
+	MCP      []GeneratedFile
 }
 
 // ─── Agent Transform ────────────────────────────────────────────────────────
 
 // CursorTransformAgent transforms a canonical agent into Cursor format.
 // Cursor agents use description-only frontmatter (no model, memory, color, tools).
+// Output goes to agents/🧠-*.md (Cursor supports .cursor/agents/*.md natively).
 // Returns nil if the agent has no Cursor config (e.g., claude-only agents).
 func CursorTransformAgent(agent CanonicalAgent, config *AgentPlatformConfig) *GeneratedFile {
 	if config == nil {
@@ -30,14 +33,14 @@ func CursorTransformAgent(agent CanonicalAgent, config *AgentPlatformConfig) *Ge
 
 	frontmatter := make(map[string]any)
 
-	// Cursor only supports the description field
+	// Cursor agent frontmatter
 	if config.Description != "" {
 		frontmatter["description"] = config.Description
 	}
 
 	content := WithFrontmatter(frontmatter, agent.Body)
 	return &GeneratedFile{
-		RelativePath: "rules/" + BrainPrefix(agent.Name) + ".mdc",
+		RelativePath: "agents/" + BrainPrefix(agent.Name) + ".md",
 		Content:      content,
 	}
 }
@@ -63,6 +66,26 @@ func CursorTransformAgents(agentsDir string, brainConfig *BrainConfig) ([]Genera
 	}
 
 	return results, nil
+}
+
+// ─── Skills Transform ───────────────────────────────────────────────────────
+
+// CursorTransformSkills collects skills for Cursor.
+// Skills are copied as-is with emoji prefix on directory name.
+// Cursor supports .cursor/skills/*/SKILL.md natively (Open Agent Skills standard).
+// Uses the same logic as Claude Code -- skills are format-identical.
+func CursorTransformSkills(skillsDir string) ([]GeneratedFile, error) {
+	return TransformSkills(skillsDir)
+}
+
+// ─── Commands Transform ─────────────────────────────────────────────────────
+
+// CursorTransformCommands collects commands for Cursor.
+// Commands are copied as-is with emoji prefix.
+// Cursor supports .cursor/commands/*.md natively.
+// Uses the same logic as Claude Code -- commands are format-identical.
+func CursorTransformCommands(commandsDir string) ([]GeneratedFile, error) {
+	return TransformCommands(commandsDir)
 }
 
 // ─── Rules Transform ────────────────────────────────────────────────────────
@@ -268,18 +291,31 @@ func CursorTransformMCP(projectRoot string) ([]GeneratedFile, error) {
 // This is the main entry point for the Cursor adapter.
 //
 // Cursor differences from Claude Code:
-//   - Agents become .mdc rules (description-only frontmatter)
-//   - Protocols become .mdc rules (not .md)
-//   - No separate skills, commands, or plugin manifest
+//   - Agents use description-only frontmatter (.cursor/agents/🧠-*.md)
+//   - Skills and commands are format-identical (🧠 prefix applied)
+//   - Protocols become .mdc rules (.cursor/rules/🧠-*.mdc)
+//   - No plugin manifest (Cursor has no plugin system)
 //   - Hooks and MCP use JSON merge payloads (not direct files)
 func CursorTransform(projectRoot string, brainConfig *BrainConfig) (*CursorOutput, error) {
 	agentsDir := filepath.Join(projectRoot, "templates", "agents")
+	skillsDir := filepath.Join(projectRoot, "templates", "skills")
+	commandsDir := filepath.Join(projectRoot, "templates", "commands")
 	protocolsDir := filepath.Join(projectRoot, "templates", "protocols")
 	hooksDir := filepath.Join(projectRoot, "templates", "hooks")
 
 	agents, err := CursorTransformAgents(agentsDir, brainConfig)
 	if err != nil {
 		return nil, fmt.Errorf("transform agents: %w", err)
+	}
+
+	skills, err := CursorTransformSkills(skillsDir)
+	if err != nil {
+		return nil, fmt.Errorf("transform skills: %w", err)
+	}
+
+	commands, err := CursorTransformCommands(commandsDir)
+	if err != nil {
+		return nil, fmt.Errorf("transform commands: %w", err)
 	}
 
 	rules, err := CursorTransformProtocols(protocolsDir)
@@ -298,10 +334,12 @@ func CursorTransform(projectRoot string, brainConfig *BrainConfig) (*CursorOutpu
 	}
 
 	return &CursorOutput{
-		Agents: agents,
-		Rules:  rules,
-		Hooks:  hooks,
-		MCP:    mcp,
+		Agents:   agents,
+		Skills:   skills,
+		Commands: commands,
+		Rules:    rules,
+		Hooks:    hooks,
+		MCP:      mcp,
 	}, nil
 }
 

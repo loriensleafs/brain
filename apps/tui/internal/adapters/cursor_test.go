@@ -32,8 +32,8 @@ func TestCursorTransformAgent_DescriptionOnly(t *testing.T) {
 		t.Fatal("expected non-nil result")
 	}
 
-	// Check path uses .mdc extension and brain prefix
-	expectedPath := "rules/\U0001F9E0-analyst.mdc"
+	// Check path uses .md extension and brain prefix in agents/ dir
+	expectedPath := "agents/\U0001F9E0-analyst.md"
 	if result.RelativePath != expectedPath {
 		t.Errorf("path = %q, want %q", result.RelativePath, expectedPath)
 	}
@@ -412,8 +412,8 @@ func TestCursorTransform_FullIntegration(t *testing.T) {
 	// Verify agent output
 	if len(output.Agents) > 0 {
 		agent := output.Agents[0]
-		if !strings.HasSuffix(agent.RelativePath, ".mdc") {
-			t.Errorf("agent should use .mdc extension, got %q", agent.RelativePath)
+		if !strings.HasSuffix(agent.RelativePath, ".md") {
+			t.Errorf("agent should use .md extension, got %q", agent.RelativePath)
 		}
 		if !strings.Contains(agent.Content, "System designer") {
 			t.Error("agent content should contain description")
