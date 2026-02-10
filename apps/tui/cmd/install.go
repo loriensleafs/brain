@@ -1236,11 +1236,13 @@ func runInstall(_ *cobra.Command, _ []string) error {
 	}
 
 	if hasNew {
-		var confirm bool
+		confirm := true
 		confirmForm := huh.NewForm(
 			huh.NewGroup(
 				huh.NewConfirm().
 					Title(fmt.Sprintf("Install Brain for: %s?", strings.Join(confirmed, ", "))).
+					Affirmative("Yes").
+					Negative("No").
 					Value(&confirm),
 			),
 		)
