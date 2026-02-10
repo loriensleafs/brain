@@ -13,8 +13,12 @@ import (
 var claudeCmd = &cobra.Command{
 	Use:                "claude",
 	Short:              "Launch Claude Code with the Brain plugin loaded",
-	Long:               `Wraps 'claude --plugin-dir <path>' so the 🧠 plugin is always available.
-Use --agent-teams to swap in the agent-teams variant files.`,
+	Long: `Wraps 'claude --plugin-dir <path>' so the Brain plugin is always available.
+
+Uses the TS adapter (adapters/sync.ts) to generate a fresh plugin staging
+directory on each launch from canonical content + brain.config.json.
+
+Use --agent-teams to swap in the Agent Teams orchestrator variant.`,
 	DisableFlagParsing: true, // pass all args through to claude
 	RunE:               runClaude,
 }
@@ -37,19 +41,12 @@ func extractFlag(args []string, flag string) ([]string, bool) {
 	return filtered, found
 }
 
-// variantSwaps defines which symlinks to repoint for agent-teams mode.
-var variantSwaps = []struct{ dir, standard, agentTeams string }{
-	{"commands", "bootstrap.md", "bootstrap-agent-teams.md"},
-	{"agents", "orchestrator.md", "orchestrator-agent-teams.md"},
-	{"instructions", "AGENTS.md", "AGENTS-agent-teams.md"},
-}
-
 func runClaude(_ *cobra.Command, args []string) error {
 	args, agentTeams := extractFlag(args, "--agent-teams")
 
-	source, err := findPluginSource()
+	projectRoot, err := findProjectRoot()
 	if err != nil {
-		return fmt.Errorf("cannot find plugin source: %w", err)
+		return fmt.Errorf("cannot find project root: %w", err)
 	}
 
 	home, err := os.UserHomeDir()
@@ -58,26 +55,32 @@ func runClaude(_ *cobra.Command, args []string) error {
 	}
 	pluginDir := filepath.Join(home, ".cache", "brain", "claude-plugin")
 
-	// Fresh symlink install every launch
-	if err := symlinkPluginContent(source, pluginDir); err != nil {
-		return fmt.Errorf("staging plugin: %w", err)
+	// Fresh adapter-based staging every launch
+	if err := os.RemoveAll(pluginDir); err != nil {
+		return fmt.Errorf("clean staging: %w", err)
+	}
+	if err := runAdapterWrite(projectRoot, "claude-code", pluginDir); err != nil {
+		return fmt.Errorf("staging plugin via adapter: %w", err)
 	}
 
 	env := os.Environ()
 
 	if agentTeams {
-		// Repoint 3 symlinks to the agent-teams variants
-		for _, v := range variantSwaps {
-			link := filepath.Join(pluginDir, v.dir, v.standard)
-			target := filepath.Join(source, v.dir, v.agentTeams)
-			if _, err := os.Stat(target); err != nil {
-				continue
-			}
-			os.Remove(link)
-			if err := os.Symlink(target, link); err != nil {
-				return fmt.Errorf("swap %s/%s: %w", v.dir, v.standard, err)
+		// Swap to agent-teams orchestrator variant.
+		// The canonical agents/ directory contains both orchestrator-claude.md (standard)
+		// and orchestrator-claude-teams.md (Agent Teams variant).
+		// Replace the standard orchestrator symlink with the teams variant.
+		standardOrch := filepath.Join(pluginDir, "agents", "\xf0\x9f\xa7\xa0-orchestrator-claude.md")
+		teamsOrch := filepath.Join(projectRoot, "agents", "orchestrator-claude-teams.md")
+		if _, err := os.Stat(teamsOrch); err == nil {
+			os.Remove(standardOrch)
+			// Write the teams variant through the adapter would be ideal,
+			// but for now directly symlink the source file.
+			if err := os.Symlink(teamsOrch, standardOrch); err != nil {
+				return fmt.Errorf("swap orchestrator variant: %w", err)
 			}
 		}
+
 		env = append(env, "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1")
 		fmt.Println("Agent Teams mode enabled")
 	}
