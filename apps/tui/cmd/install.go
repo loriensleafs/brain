@@ -801,8 +801,16 @@ func installDependency(dep dependency) error {
 	return nil
 }
 
-// initBasicMemory writes the Brain-recommended config and initializes the database.
-func initBasicMemory() {
+// brainRequiredSettings defines basic-memory config values that Brain requires.
+// Only includes settings where Brain needs a specific non-default value.
+var brainRequiredSettings = map[string]any{
+	"env": "user", // basic-memory defaults to "dev"
+}
+
+// configureBasicMemory ensures basic-memory config has Brain-required settings.
+// For fresh installs, writes the full recommended config.
+// For existing installs, checks for conflicts and asks before changing.
+func configureBasicMemory(freshInstall bool) {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return
@@ -811,57 +819,166 @@ func initBasicMemory() {
 	configDir := filepath.Join(home, ".basic-memory")
 	configPath := filepath.Join(configDir, "config.json")
 
-	// Only write config if it doesn't exist yet
-	if _, err := os.Stat(configPath); err == nil {
-		fmt.Println("  basic-memory config already exists, skipping")
+	if freshInstall {
+		// Fresh install: write full config
+		if err := os.MkdirAll(configDir, 0755); err != nil {
+			fmt.Printf("  Warning: could not create config dir: %v\n", err)
+			return
+		}
+		config := map[string]any{
+			"env":                           "user",
+			"default_project_mode":          false,
+			"log_level":                     "info",
+			"database_backend":              "sqlite",
+			"database_url":                  nil,
+			"db_pool_size":                  20,
+			"db_pool_overflow":              40,
+			"db_pool_recycle":               180,
+			"sync_delay":                    500,
+			"watch_project_reload_interval": 30,
+			"update_permalinks_on_move":     true,
+			"sync_changes":                  true,
+			"sync_thread_pool_size":         4,
+			"sync_max_concurrent_files":     10,
+			"kebab_filenames":               false,
+			"disable_permalinks":            false,
+			"skip_initialization_sync":      false,
+			"format_on_save":                false,
+			"formatter_command":             nil,
+			"formatters":                    map[string]any{},
+			"formatter_timeout":             5,
+			"project_root":                  nil,
+			"cloud_mode":                    false,
+		}
+		data, err := json.MarshalIndent(config, "", "  ")
+		if err != nil {
+			fmt.Printf("  Warning: could not marshal config: %v\n", err)
+			return
+		}
+		data = append(data, '\n')
+		if err := os.WriteFile(configPath, data, 0644); err != nil {
+			fmt.Printf("  Warning: could not write config: %v\n", err)
+			return
+		}
+		fmt.Println("  [COMPLETE] basic-memory configured")
 		return
 	}
 
-	fmt.Println("  Configuring basic-memory...")
-	if err := os.MkdirAll(configDir, 0755); err != nil {
-		fmt.Printf("  Warning: could not create config dir: %v\n", err)
+	// Existing install: read config and check for conflicts
+	raw, err := os.ReadFile(configPath)
+	if err != nil {
+		// No config file — nothing to conflict with, write defaults
+		configureBasicMemory(true)
 		return
 	}
 
-	config := map[string]any{
-		"env":                          "user",
-		"default_project_mode":         false,
-		"log_level":                    "info",
-		"database_backend":             "sqlite",
-		"database_url":                 nil,
-		"db_pool_size":                 20,
-		"db_pool_overflow":             40,
-		"db_pool_recycle":              180,
-		"sync_delay":                   500,
-		"watch_project_reload_interval": 30,
-		"update_permalinks_on_move":    true,
-		"sync_changes":                 true,
-		"sync_thread_pool_size":        4,
-		"sync_max_concurrent_files":    10,
-		"kebab_filenames":              false,
-		"disable_permalinks":           false,
-		"skip_initialization_sync":     false,
-		"format_on_save":               false,
-		"formatter_command":            nil,
-		"formatters":                   map[string]any{},
-		"formatter_timeout":            5,
-		"project_root":                 nil,
-		"cloud_mode":                   false,
+	var existing map[string]any
+	if err := json.Unmarshal(raw, &existing); err != nil {
+		fmt.Printf("  Warning: could not parse basic-memory config: %v\n", err)
+		return
 	}
 
-	data, err := json.MarshalIndent(config, "", "  ")
+	// Find settings that conflict with Brain's requirements
+	var conflicts []string
+	for key, required := range brainRequiredSettings {
+		current, exists := existing[key]
+		if !exists || fmt.Sprintf("%v", current) != fmt.Sprintf("%v", required) {
+			conflicts = append(conflicts, fmt.Sprintf(
+				"  %s: current=%v, required=%v", key, current, required,
+			))
+		}
+	}
+
+	if len(conflicts) == 0 {
+		fmt.Println("  basic-memory config is compatible")
+		return
+	}
+
+	fmt.Println("\n  basic-memory config has settings that need to change for Brain:")
+	for _, c := range conflicts {
+		fmt.Println(c)
+	}
+	fmt.Println()
+
+	var autoFix bool
+	form := huh.NewForm(
+		huh.NewGroup(
+			huh.NewConfirm().
+				Title("Update these settings automatically?").
+				Description("Your projects and other settings will not be modified.").
+				Affirmative("Yes, update").
+				Negative("No, I'll do it manually").
+				Value(&autoFix),
+		),
+	)
+	if err := form.Run(); err != nil {
+		return
+	}
+
+	if !autoFix {
+		fmt.Println("  Please update the settings above in ~/.basic-memory/config.json")
+		return
+	}
+
+	// Apply only the required changes, preserving everything else
+	for key, required := range brainRequiredSettings {
+		existing[key] = required
+	}
+
+	data, err := json.MarshalIndent(existing, "", "  ")
 	if err != nil {
 		fmt.Printf("  Warning: could not marshal config: %v\n", err)
 		return
 	}
 	data = append(data, '\n')
-
 	if err := os.WriteFile(configPath, data, 0644); err != nil {
 		fmt.Printf("  Warning: could not write config: %v\n", err)
 		return
 	}
+	fmt.Println("  [COMPLETE] basic-memory config updated")
+}
 
-	fmt.Println("  [COMPLETE] basic-memory configured")
+// ensureBrainConfig creates ~/.config/brain/config.json if it doesn't exist.
+// The Brain MCP server manages this file at runtime, but we seed it on
+// first install so the MCP server has a valid starting point.
+func ensureBrainConfig() {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return
+	}
+
+	configDir := filepath.Join(home, ".config", "brain")
+	configPath := filepath.Join(configDir, "config.json")
+
+	if _, err := os.Stat(configPath); err == nil {
+		return // already exists
+	}
+
+	if err := os.MkdirAll(configDir, 0700); err != nil {
+		fmt.Printf("  Warning: could not create Brain config dir: %v\n", err)
+		return
+	}
+
+	config := map[string]any{
+		"$schema": "https://brain.dev/schemas/config-v2.json",
+		"version": "2.0.0",
+		"defaults": map[string]any{
+			"memories_location": "~/memories",
+			"memories_mode":     "DEFAULT",
+		},
+		"projects": map[string]any{},
+	}
+
+	data, err := json.MarshalIndent(config, "", "  ")
+	if err != nil {
+		return
+	}
+	data = append(data, '\n')
+	if err := os.WriteFile(configPath, data, 0600); err != nil {
+		fmt.Printf("  Warning: could not write Brain config: %v\n", err)
+		return
+	}
+	fmt.Println("  [COMPLETE] Brain config initialized")
 }
 
 // ensureDependencies checks for missing deps and offers to install them.
@@ -912,10 +1029,17 @@ func ensureDependencies() error {
 		}
 	}
 
-	// Configure basic-memory after fresh install
+	// Configure basic-memory (fresh install writes full config,
+	// existing install checks for conflicts without touching projects/memories)
 	if installedBasicMemory {
-		initBasicMemory()
+		configureBasicMemory(true)
+	} else if _, err := exec.LookPath("basic-memory"); err == nil {
+		// basic-memory was already installed, check config compatibility
+		configureBasicMemory(false)
 	}
+
+	// Seed Brain config if it doesn't exist
+	ensureBrainConfig()
 
 	fmt.Println()
 	return nil
