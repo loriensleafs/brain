@@ -7,9 +7,9 @@
  * resolves project, gets git context, bootstrap context, and workflow state.
  * Outputs Claude Code hook JSON to stdout.
  */
-import { execCommand } from "./exec.ts";
-import { resolveProjectWithCwd } from "./project-resolve.ts";
-import { normalizeEvent } from "./normalize.ts";
+import { execCommand } from "./exec";
+import { resolveProjectWithCwd } from "./project-resolve";
+import { normalizeEvent } from "./normalize";
 import type {
   ActiveSession,
   BootstrapContextResult,
@@ -20,7 +20,7 @@ import type {
   OpenSession,
   SessionStartOutput,
   WorkflowStateInfo,
-} from "./types.ts";
+} from "./types";
 
 /**
  * Identify the active project for session start.

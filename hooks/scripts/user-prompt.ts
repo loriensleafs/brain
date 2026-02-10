@@ -11,11 +11,11 @@ import type {
   UserPromptOutput,
   ScenarioDetectionResult,
   WorkflowStateInfo,
-} from "./types.ts";
-import type { NormalizedHookEvent } from "./normalize.ts";
-import { normalizeEvent } from "./normalize.ts";
-import { detectScenario } from "./detect-scenario.ts";
-import { execCommand } from "./exec.ts";
+} from "./types";
+import type { NormalizedHookEvent } from "./normalize";
+import { normalizeEvent } from "./normalize";
+import { detectScenario } from "./detect-scenario";
+import { execCommand } from "./exec";
 
 /** Keywords that trigger workflow state injection. */
 const planningKeywords = [

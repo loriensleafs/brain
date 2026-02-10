@@ -9,7 +9,7 @@ import type {
   AnalyzeInput,
   AnalyzeOutput,
   AnalyzeState,
-} from "./types.ts";
+} from "./types";
 
 interface StepGuidance {
   phase: string;

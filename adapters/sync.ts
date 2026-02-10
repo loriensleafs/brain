@@ -18,10 +18,10 @@
  */
 
 import { dirname, join, resolve } from "path";
-import { transform as claudeCodeTransform } from "./claude-code.ts";
-import { transform as cursorTransform } from "./cursor.ts";
-import type { GeneratedFile } from "./shared.ts";
-import { readBrainConfig } from "./shared.ts";
+import { transform as claudeCodeTransform } from "./claude-code";
+import { transform as cursorTransform } from "./cursor";
+import type { GeneratedFile } from "./shared";
+import { readBrainConfig } from "./shared";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 

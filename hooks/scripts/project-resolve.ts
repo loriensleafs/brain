@@ -18,7 +18,7 @@ import { join, resolve, sep, normalize } from "path";
 function homedir(): string {
   return Bun.env.HOME || "/tmp";
 }
-import type { BrainConfig, BrainProjectConfig } from "./types.ts";
+import type { BrainConfig, BrainProjectConfig } from "./types";
 
 /**
  * Testable wrapper for process.env access.

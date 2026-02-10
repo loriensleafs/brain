@@ -7,10 +7,10 @@
  * Cross-platform: works with both Claude Code (PreToolUse) and
  * Cursor (beforeShellExecution, beforeMCPExecution) via normalization.
  */
-import type { PreToolUseOutput } from "./types.ts";
-import type { NormalizedHookEvent } from "./normalize.ts";
-import { normalizeEvent } from "./normalize.ts";
-import { performGateCheck } from "./gate-check.ts";
+import type { PreToolUseOutput } from "./types";
+import type { NormalizedHookEvent } from "./normalize";
+import { normalizeEvent } from "./normalize";
+import { performGateCheck } from "./gate-check";
 
 /**
  * Extract tool name from a normalized event.

@@ -6,7 +6,7 @@
  */
 
 // Shared utilities
-export { execCommand, setExecCommand, resetExecCommand } from "./exec.ts";
+export { execCommand, setExecCommand, resetExecCommand } from "./exec";
 export {
   resolveProjectFromEnv,
   resolveProjectFromCwd,
@@ -14,38 +14,38 @@ export {
   loadBrainConfig,
   getEnv,
   setGetEnv,
-} from "./project-resolve.ts";
+} from "./project-resolve";
 export {
   performGateCheck,
   checkToolBlocked,
   isReadOnlyTool,
   getBrainSessionState,
   formatBlockMessage,
-} from "./gate-check.ts";
-export { detectScenario } from "./detect-scenario.ts";
-export { validateStopReadiness, validateSession } from "./validate.ts";
+} from "./gate-check";
+export { detectScenario } from "./detect-scenario";
+export { validateStopReadiness, validateSession } from "./validate";
 export {
   normalizeEvent,
   detectPlatform,
   getBlockingSemantics,
   readAndNormalize,
-} from "./normalize.ts";
+} from "./normalize";
 
 // Hook handlers
-export { runSessionStart } from "./session-start.ts";
-export { runUserPrompt, processUserPrompt } from "./user-prompt.ts";
-export { runPreToolUse, processPreToolUse } from "./pre-tool-use.ts";
-export { runStop, processStop } from "./stop.ts";
-export { runDetectScenario } from "./detect-scenario-cmd.ts";
-export { runLoadSkills } from "./load-skills.ts";
-export { runAnalyze } from "./analyze.ts";
-export { runValidateSession } from "./validate-session.ts";
+export { runSessionStart } from "./session-start";
+export { runUserPrompt, processUserPrompt } from "./user-prompt";
+export { runPreToolUse, processPreToolUse } from "./pre-tool-use";
+export { runStop, processStop } from "./stop";
+export { runDetectScenario } from "./detect-scenario-cmd";
+export { runLoadSkills } from "./load-skills";
+export { runAnalyze } from "./analyze";
+export { runValidateSession } from "./validate-session";
 
 // Types
-export type * from "./types.ts";
+export type * from "./types";
 export type {
   Platform,
   NormalizedEventName,
   NormalizedHookEvent,
   BlockingSemantics,
-} from "./normalize.ts";
+} from "./normalize";

@@ -4,7 +4,7 @@
  * Ported from packages/validation/internal/detect_scenario.go.
  * Detects scenario type from a prompt based on keyword matching.
  */
-import type { ScenarioConfig, ScenarioResult } from "./types.ts";
+import type { ScenarioConfig, ScenarioResult } from "./types";
 
 /** Scenario configurations keyed by scenario name. */
 const scenarioConfigs: Record<string, ScenarioConfig> = {
