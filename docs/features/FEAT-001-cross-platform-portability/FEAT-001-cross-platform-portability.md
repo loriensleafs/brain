@@ -101,14 +101,14 @@ permalink: features/feat-001-cross-platform-portability/feat-001-cross-platform-
 
 - [x] [requirement] [[REQ-001-canonical-content-extraction]] #status-implemented
 - [x] [requirement] [[REQ-002-cross-platform-agent-adaptation]] #status-implemented
-- [ ] [requirement] [[REQ-003-hook-normalization]] #status-implemented
+- [x] [requirement] [[REQ-003-hook-normalization]] #status-implemented
 - [x] [requirement] [[REQ-004-unified-install]] #status-implemented
 - [x] [requirement] [[REQ-005-orchestrator-portability]] #status-implemented
 
 ### Designs
 
 - [x] [design] [[DESIGN-001-adapter-architecture]] #status-implemented
-- [ ] [design] [[DESIGN-002-hook-normalization-layer]] #status-implemented
+- [x] [design] [[DESIGN-002-hook-normalization-layer]] #status-implemented
 - [x] [design] [[DESIGN-003-install-tui-flow]] #status-implemented
 - [x] [design] [[DESIGN-004-orchestrator-strategy]] #status-implemented
 - [x] [design] [[DESIGN-005-composable-orchestrator-rules]] #status-implemented
