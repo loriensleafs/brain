@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.10](https://github.com/loriensleafs/brain/compare/v0.1.9...v0.1.10) (2026-02-10)
+
+
+### Bug Fixes
+
+* **hooks:** add sessionStart hook to Cursor config ([04d9de7](https://github.com/loriensleafs/brain/commit/04d9de735bf563d3bf84b0f369ef45b13f38213a))
+* **hooks:** add sessionStart hook to Cursor hooks config ([45704fa](https://github.com/loriensleafs/brain/commit/45704fabd1447eee09b483e4cef6b954d73caf87))
+
 ## [0.1.9](https://github.com/loriensleafs/brain/compare/v0.1.8...v0.1.9) (2026-02-10)
 
 
