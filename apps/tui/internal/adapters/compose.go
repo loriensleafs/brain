@@ -298,6 +298,124 @@ func ComposeCommand(commandDir, variant string) (*GeneratedFile, error) {
 	}, nil
 }
 
+// ─── Source-Aware Compose Functions ──────────────────────────────────────────
+
+// ComposeFromSource composes content from a TemplateSource for the given variant.
+// relDir is relative to the templates root (e.g., "agents/orchestrator").
+func ComposeFromSource(src *TemplateSource, relDir, variant string, extraVars map[string]string) (string, error) {
+	orderData, err := src.ReadFile(relDir + "/_order.yaml")
+	if err != nil {
+		return "", fmt.Errorf("directory %s is not composable (no _order.yaml)", relDir)
+	}
+
+	order := parseOrderYAML(string(orderData))
+
+	// Parse variables (optional)
+	variables := make(map[string]map[string]string)
+	variablesData, err := src.ReadFile(relDir + "/_variables.yaml")
+	if err == nil {
+		variables = parseVariablesYAML(string(variablesData))
+	}
+
+	// Build variable map
+	vars := make(map[string]string)
+	if variantVars, ok := variables[variant]; ok {
+		for k, v := range variantVars {
+			vars[k] = v
+		}
+	}
+	for k, v := range extraVars {
+		vars[k] = v
+	}
+
+	// Compose sections in order
+	var sections []string
+	for _, entry := range order {
+		resolved := strings.ReplaceAll(entry, "{tool}", variant)
+		content, err := src.ReadFile(relDir + "/" + resolved)
+		if err != nil {
+			// Variant-specific files are optional
+			continue
+		}
+		section := string(content)
+		section = substituteVariables(section, vars)
+		sections = append(sections, strings.TrimRight(section, "\n"))
+	}
+
+	return strings.Join(sections, "\n\n") + "\n", nil
+}
+
+// ComposeAgentFromSource composes an agent using a TemplateSource.
+func ComposeAgentFromSource(src *TemplateSource, relDir, variant string, config *BrainConfig) (*GeneratedFile, error) {
+	agentName := filepath.Base(relDir)
+
+	agentConfig, ok := config.Agents[agentName]
+	if !ok {
+		return nil, nil
+	}
+	platformConfig := GetAgentPlatformConfig(agentConfig, variant)
+	if platformConfig == nil {
+		return nil, nil
+	}
+
+	content, err := ComposeFromSource(src, relDir, variant, nil)
+	if err != nil {
+		return nil, fmt.Errorf("compose agent %s: %w", agentName, err)
+	}
+
+	var result string
+	switch variant {
+	case "claude-code":
+		fm := buildClaudeAgentFrontmatter(agentName, platformConfig)
+		result = WithFrontmatter(fm, content)
+	case "cursor":
+		fm := make(map[string]any)
+		if platformConfig.Description != "" {
+			fm["description"] = platformConfig.Description
+		}
+		result = WithFrontmatter(fm, content)
+	default:
+		result = content
+	}
+
+	relPath := "agents/" + BrainPrefix(agentName) + ".md"
+
+	return &GeneratedFile{
+		RelativePath: relPath,
+		Content:      result,
+	}, nil
+}
+
+// ComposeInstructionsFromSource composes instructions using a TemplateSource.
+func ComposeInstructionsFromSource(src *TemplateSource, relDir, variant string) (*GeneratedFile, error) {
+	content, err := ComposeFromSource(src, relDir, variant, nil)
+	if err != nil {
+		return nil, fmt.Errorf("compose instructions: %w", err)
+	}
+
+	return &GeneratedFile{
+		RelativePath: "AGENTS.md",
+		Content:      content,
+	}, nil
+}
+
+// ComposeCommandFromSource composes a command using a TemplateSource.
+func ComposeCommandFromSource(src *TemplateSource, relDir, variant string) (*GeneratedFile, error) {
+	commandName := filepath.Base(relDir)
+
+	content, err := ComposeFromSource(src, relDir, variant, nil)
+	if err != nil {
+		return nil, fmt.Errorf("compose command %s: %w", commandName, err)
+	}
+
+	prefixed := BrainPrefix(commandName) + ".md"
+
+	return &GeneratedFile{
+		RelativePath: "commands/" + prefixed,
+		Content:      content,
+	}, nil
+}
+
 // ─── Directory Detection ────────────────────────────────────────────────────
 
 // IsComposableDir returns true if the directory contains an _order.yaml file,

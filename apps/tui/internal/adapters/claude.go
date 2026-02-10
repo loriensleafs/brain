@@ -422,6 +422,299 @@ func GenerateClaudePluginManifest() []GeneratedFile {
 	}
 }
 
+// ─── Source-Aware Transforms ─────────────────────────────────────────────────
+
+// TransformClaudeAgentsFromSource transforms agents using a TemplateSource.
+func TransformClaudeAgentsFromSource(src *TemplateSource, brainConfig *BrainConfig) ([]GeneratedFile, error) {
+	var results []GeneratedFile
+
+	// Phase 1: Composable agent directories
+	entries, err := src.ReadDir("agents")
+	if err != nil {
+		return nil, nil
+	}
+	composedNames := make(map[string]bool)
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+		// Check for _order.yaml in subdirectory
+		if !src.Exists("agents/" + entry.Name() + "/_order.yaml") {
+			continue
+		}
+		// For composable dirs, fall back to filesystem if available
+		if !src.IsEmbedded() {
+			subDir := filepath.Join(src.TemplatesDir(), "agents", entry.Name())
+			gen, err := ComposeAgent(subDir, "claude-code", brainConfig)
+			if err != nil {
+				return nil, fmt.Errorf("compose agent %s: %w", entry.Name(), err)
+			}
+			if gen != nil {
+				results = append(results, *gen)
+				composedNames[entry.Name()] = true
+			}
+		} else {
+			gen, err := ComposeAgentFromSource(src, "agents/"+entry.Name(), "claude-code", brainConfig)
+			if err != nil {
+				return nil, fmt.Errorf("compose agent %s: %w", entry.Name(), err)
+			}
+			if gen != nil {
+				results = append(results, *gen)
+				composedNames[entry.Name()] = true
+			}
+		}
+	}
+
+	// Phase 2: Single-file agents
+	agents, err := ReadCanonicalAgentsFromSource(src, "agents")
+	if err != nil {
+		return nil, err
+	}
+
+	for _, agent := range agents {
+		if composedNames[agent.Name] {
+			continue
+		}
+		agentConfig, ok := brainConfig.Agents[agent.Name]
+		if !ok {
+			continue
+		}
+		platformConfig := GetAgentPlatformConfig(agentConfig, "claude-code")
+		gen := TransformClaudeAgent(agent, platformConfig)
+		if gen != nil {
+			results = append(results, *gen)
+		}
+	}
+
+	return results, nil
+}
+
+// TransformSkillsFromSource collects skills using a TemplateSource.
+func TransformSkillsFromSource(src *TemplateSource) ([]GeneratedFile, error) {
+	entries, err := src.ReadDir("skills")
+	if err != nil {
+		return nil, nil
+	}
+
+	var results []GeneratedFile
+	for _, entry := range entries {
+		if !entry.IsDir() || entry.Name() == ".gitkeep" || entry.Name() == ".DS_Store" {
+			continue
+		}
+
+		skillDir := entry.Name()
+		relSkillDir := "skills/" + skillDir
+
+		files, err := CollectFilesFromSource(src, relSkillDir)
+		if err != nil {
+			continue
+		}
+
+		for _, relFile := range files {
+			content, err := src.ReadFile(relSkillDir + "/" + relFile)
+			if err != nil {
+				continue
+			}
+			results = append(results, GeneratedFile{
+				RelativePath: "skills/" + BrainPrefix(skillDir) + "/" + relFile,
+				Content:      string(content),
+			})
+		}
+	}
+
+	return results, nil
+}
+
+// TransformCommandsFromSource collects commands using a TemplateSource.
+func TransformCommandsFromSource(src *TemplateSource, variant string) ([]GeneratedFile, error) {
+	var results []GeneratedFile
+
+	entries, err := src.ReadDir("commands")
+	if err != nil {
+		return nil, nil
+	}
+
+	composedNames := make(map[string]bool)
+
+	// Phase 1: Composable command directories
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+		if !src.Exists("commands/" + entry.Name() + "/_order.yaml") {
+			continue
+		}
+		if !src.IsEmbedded() {
+			subDir := filepath.Join(src.TemplatesDir(), "commands", entry.Name())
+			gen, err := ComposeCommand(subDir, variant)
+			if err != nil {
+				return nil, fmt.Errorf("compose command %s: %w", entry.Name(), err)
+			}
+			if gen != nil {
+				results = append(results, *gen)
+				composedNames[entry.Name()] = true
+			}
+		} else {
+			gen, err := ComposeCommandFromSource(src, "commands/"+entry.Name(), variant)
+			if err != nil {
+				return nil, fmt.Errorf("compose command %s: %w", entry.Name(), err)
+			}
+			if gen != nil {
+				results = append(results, *gen)
+				composedNames[entry.Name()] = true
+			}
+		}
+	}
+
+	// Phase 2: Single-file commands
+	files, err := ScanMarkdownFilesFromSource(src, "commands")
+	if err != nil {
+		return results, nil
+	}
+
+	for _, file := range files {
+		content, err := src.ReadFile("commands/" + file)
+		if err != nil {
+			continue
+		}
+
+		prefixed := file
+		if !strings.HasPrefix(file, brainEmoji+"-") {
+			prefixed = BrainPrefix(strings.TrimSuffix(file, ".md")) + ".md"
+		}
+
+		results = append(results, GeneratedFile{
+			RelativePath: "commands/" + prefixed,
+			Content:      string(content),
+		})
+	}
+
+	return results, nil
+}
+
+// TransformClaudeProtocolsFromSource transforms protocols using a TemplateSource.
+func TransformClaudeProtocolsFromSource(src *TemplateSource) ([]GeneratedFile, error) {
+	files, err := ScanMarkdownFilesFromSource(src, "protocols")
+	if err != nil {
+		return nil, nil
+	}
+
+	var results []GeneratedFile
+	for _, file := range files {
+		content, err := src.ReadFile("protocols/" + file)
+		if err != nil {
+			continue
+		}
+
+		prefixed := BrainPrefix(strings.TrimSuffix(file, ".md")) + ".md"
+
+		results = append(results, GeneratedFile{
+			RelativePath: "rules/" + prefixed,
+			Content:      string(content),
+		})
+	}
+
+	return results, nil
+}
+
+// TransformClaudeHooksFromSource generates hooks using a TemplateSource.
+func TransformClaudeHooksFromSource(src *TemplateSource, brainConfig *BrainConfig) ([]GeneratedFile, error) {
+	var results []GeneratedFile
+
+	hookRaw, ok := brainConfig.Hooks["claude-code"]
+	if !ok {
+		return results, nil
+	}
+
+	var hookConfig struct {
+		Source  string `json:"source"`
+		Scripts string `json:"scripts"`
+	}
+	if err := json.Unmarshal(hookRaw, &hookConfig); err != nil {
+		return results, nil
+	}
+
+	if hookConfig.Source != "" {
+		data, err := src.ReadFile(hookConfig.Source)
+		if err == nil {
+			var parsed map[string]any
+			if json.Unmarshal(data, &parsed) == nil {
+				results = append(results, GeneratedFile{
+					RelativePath: "hooks/hooks.json",
+					Content:      string(data),
+				})
+			}
+		}
+	}
+
+	// Copy hook scripts
+	files, err := ScanAllFilesFromSource(src, "hooks/scripts")
+	if err != nil {
+		return results, nil
+	}
+
+	for _, file := range files {
+		content, err := src.ReadFile("hooks/scripts/" + file)
+		if err != nil {
+			continue
+		}
+		results = append(results, GeneratedFile{
+			RelativePath: "hooks/scripts/" + file,
+			Content:      string(content),
+		})
+	}
+
+	return results, nil
+}
+
+// TransformClaudeMCPFromSource transforms MCP config using a TemplateSource.
+func TransformClaudeMCPFromSource(src *TemplateSource) ([]GeneratedFile, error) {
+	data, err := src.ReadFile("configs/mcp.json")
+	if err != nil {
+		return nil, nil
+	}
+
+	var mcpConfig map[string]any
+	if err := json.Unmarshal(data, &mcpConfig); err != nil {
+		return nil, nil
+	}
+
+	// Resolve relative paths in mcpServers args
+	if servers, ok := mcpConfig["mcpServers"].(map[string]any); ok {
+		for _, serverRaw := range servers {
+			server, ok := serverRaw.(map[string]any)
+			if !ok {
+				continue
+			}
+			argsRaw, ok := server["args"].([]any)
+			if !ok {
+				continue
+			}
+			for i, argRaw := range argsRaw {
+				arg, ok := argRaw.(string)
+				if !ok {
+					continue
+				}
+				if strings.HasPrefix(arg, "./") {
+					argsRaw[i] = filepath.Join(src.ProjectRoot(), arg)
+				}
+			}
+		}
+	}
+
+	content, err := json.MarshalIndent(mcpConfig, "", "  ")
+	if err != nil {
+		return nil, nil
+	}
+
+	return []GeneratedFile{
+		{
+			RelativePath: ".mcp.json",
+			Content:      string(content) + "\n",
+		},
+	}, nil
+}
+
 // ─── Main Transform ──────────────────────────────────────────────────────────
 
 // TransformClaudeCode runs all Claude Code transforms and returns generated files.
@@ -473,6 +766,73 @@ func TransformClaudeCode(projectRoot string, brainConfig *BrainConfig) (*ClaudeC
 	}
 
 	mcp, err := TransformClaudeMCP(projectRoot)
+	if err != nil {
+		return nil, fmt.Errorf("transform mcp: %w", err)
+	}
+
+	return &ClaudeCodeOutput{
+		Agents:   agents,
+		Skills:   skills,
+		Commands: commands,
+		Rules:    rules,
+		Hooks:    hooks,
+		MCP:      mcp,
+		Plugin:   GenerateClaudePluginManifest(),
+	}, nil
+}
+
+// TransformClaudeCodeFromSource runs all Claude Code transforms using a TemplateSource.
+// This is the embedded-aware entry point.
+func TransformClaudeCodeFromSource(src *TemplateSource, brainConfig *BrainConfig) (*ClaudeCodeOutput, error) {
+	agents, err := TransformClaudeAgentsFromSource(src, brainConfig)
+	if err != nil {
+		return nil, fmt.Errorf("transform agents: %w", err)
+	}
+
+	skills, err := TransformSkillsFromSource(src)
+	if err != nil {
+		return nil, fmt.Errorf("transform skills: %w", err)
+	}
+
+	commands, err := TransformCommandsFromSource(src, "claude-code")
+	if err != nil {
+		return nil, fmt.Errorf("transform commands: %w", err)
+	}
+
+	rules, err := TransformClaudeProtocolsFromSource(src)
+	if err != nil {
+		return nil, fmt.Errorf("transform protocols: %w", err)
+	}
+
+	// Compose instructions if the directory is composable
+	if src.Exists("rules/_order.yaml") {
+		if !src.IsEmbedded() {
+			gen, err := ComposeInstructions(filepath.Join(src.TemplatesDir(), "rules"), "claude-code")
+			if err != nil {
+				return nil, fmt.Errorf("compose instructions: %w", err)
+			}
+			if gen != nil {
+				gen.RelativePath = "instructions/AGENTS.md"
+				rules = append(rules, *gen)
+			}
+		} else {
+			gen, err := ComposeInstructionsFromSource(src, "rules", "claude-code")
+			if err != nil {
+				return nil, fmt.Errorf("compose instructions: %w", err)
+			}
+			if gen != nil {
+				gen.RelativePath = "instructions/AGENTS.md"
+				rules = append(rules, *gen)
+			}
+		}
+	}
+
+	hooks, err := TransformClaudeHooksFromSource(src, brainConfig)
+	if err != nil {
+		return nil, fmt.Errorf("transform hooks: %w", err)
+	}
+
+	mcp, err := TransformClaudeMCPFromSource(src)
 	if err != nil {
 		return nil, fmt.Errorf("transform mcp: %w", err)
 	}

@@ -65,6 +65,9 @@ jobs:
         run: go mod download
         working-directory: packages/validation
 
+      - name: Copy templates for embedding
+        run: make embed
+
       - name: Build TUI
         run: go build -v ./...
         working-directory: apps/tui

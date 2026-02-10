@@ -29,10 +29,7 @@ func init() {
 }
 
 func runCursor(_ *cobra.Command, args []string) error {
-	projectRoot, err := findProjectRoot()
-	if err != nil {
-		return fmt.Errorf("cannot find project root: %w", err)
-	}
+	src := resolveTemplateSource()
 
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -44,7 +41,7 @@ func runCursor(_ *cobra.Command, args []string) error {
 	if err := os.RemoveAll(stagingDir); err != nil {
 		return fmt.Errorf("clean staging: %w", err)
 	}
-	if err := runAdapterStage(projectRoot, "cursor", stagingDir); err != nil {
+	if err := runAdapterStageFromSource(src, "cursor", stagingDir); err != nil {
 		return fmt.Errorf("staging via adapter: %w", err)
 	}
 

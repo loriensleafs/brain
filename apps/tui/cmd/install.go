@@ -9,6 +9,7 @@ import (
 
 	"github.com/charmbracelet/huh"
 	"github.com/peterkloss/brain-tui/internal/adapters"
+	"github.com/peterkloss/brain-tui/embedded"
 	"github.com/spf13/cobra"
 )
 
@@ -130,6 +131,23 @@ func readManifest(tool string) (*installManifest, error) {
 	return &m, nil
 }
 
+// ─── Template Source ─────────────────────────────────────────────────────────
+
+// resolveTemplateSource returns a TemplateSource for reading templates.
+// Prefers the real filesystem (development), falls back to embedded templates.
+func resolveTemplateSource() *adapters.TemplateSource {
+	// Try to find project root on the filesystem first
+	projectRoot, err := findProjectRoot()
+	if err == nil {
+		return adapters.NewFilesystemSource(projectRoot)
+	}
+
+	// Fall back to embedded templates
+	// Use a reasonable default for projectRoot (used for path resolution in MCP config)
+	home, _ := os.UserHomeDir()
+	return adapters.NewEmbeddedSource(embedded.FS(), filepath.Join(home, "Dev", "brain"))
+}
+
 // ─── Adapter Invocation ──────────────────────────────────────────────────────
 
 func runAdapterStage(projectRoot, target, outputDir string) error {
@@ -162,9 +180,40 @@ func runAdapterStage(projectRoot, target, outputDir string) error {
 	return adapters.WriteGeneratedFiles(files, outputDir)
 }
 
+// runAdapterStageFromSource runs adapter transforms using a TemplateSource.
+func runAdapterStageFromSource(src *adapters.TemplateSource, target, outputDir string) error {
+	brainConfig, err := adapters.ReadBrainConfigFromSource(src)
+	if err != nil {
+		return fmt.Errorf("read config: %w", err)
+	}
+
+	var files []adapters.GeneratedFile
+	switch target {
+	case "claude-code":
+		output, err := adapters.TransformClaudeCodeFromSource(src, brainConfig)
+		if err != nil {
+			return fmt.Errorf("transform claude-code: %w", err)
+		}
+		files = output.AllFiles()
+	case "cursor":
+		output, err := adapters.CursorTransformFromSource(src, brainConfig)
+		if err != nil {
+			return fmt.Errorf("transform cursor: %w", err)
+		}
+		files = append(files, output.Agents...)
+		files = append(files, output.Rules...)
+		files = append(files, output.Hooks...)
+		files = append(files, output.MCP...)
+	default:
+		return fmt.Errorf("unknown target: %s", target)
+	}
+
+	return adapters.WriteGeneratedFiles(files, outputDir)
+}
+
 // ─── Claude Code Install ─────────────────────────────────────────────────────
 
-func installClaudeCode(projectRoot string) error {
+func installClaudeCode(src *adapters.TemplateSource) error {
 	home, _ := os.UserHomeDir()
 	pluginsDir := filepath.Join(home, ".claude", "plugins")
 	marketplaceDir := filepath.Join(pluginsDir, "marketplaces", "brain")
@@ -176,7 +225,7 @@ func installClaudeCode(projectRoot string) error {
 	if err := os.RemoveAll(stagingDir); err != nil {
 		return fmt.Errorf("clean staging: %w", err)
 	}
-	if err := runAdapterStage(projectRoot, "claude-code", stagingDir); err != nil {
+	if err := runAdapterStageFromSource(src, "claude-code", stagingDir); err != nil {
 		return fmt.Errorf("adapter: %w", err)
 	}
 
@@ -241,7 +290,7 @@ func uninstallClaudeCode() error {
 
 // ─── Cursor Install ─────────────────────────────────────────────────────────
 
-func installCursor(projectRoot string) error {
+func installCursor(src *adapters.TemplateSource) error {
 	home, _ := os.UserHomeDir()
 	cursorDir := filepath.Join(home, ".cursor")
 
@@ -250,7 +299,7 @@ func installCursor(projectRoot string) error {
 	if err := os.RemoveAll(stagingDir); err != nil {
 		return fmt.Errorf("clean staging: %w", err)
 	}
-	if err := runAdapterStage(projectRoot, "cursor", stagingDir); err != nil {
+	if err := runAdapterStageFromSource(src, "cursor", stagingDir); err != nil {
 		return fmt.Errorf("adapter: %w", err)
 	}
 
@@ -485,6 +534,107 @@ func jsonUnmerge(targetPath string) error {
 	return nil
 }
 
+// ─── Install Detection ──────────────────────────────────────────────────────
+
+// isBrainInstalledClaude checks if Brain is already installed for Claude Code.
+func isBrainInstalledClaude() bool {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return false
+	}
+
+	// Check for plugin marketplace directory
+	marketplaceDir := filepath.Join(home, ".claude", "plugins", "marketplaces", "brain")
+	if _, err := os.Stat(marketplaceDir); err == nil {
+		return true
+	}
+
+	// Check for Brain manifest
+	if _, err := readManifest("claude-code"); err == nil {
+		return true
+	}
+
+	// Check for Brain rules files (🧠-*.md)
+	rulesDir := filepath.Join(home, ".claude", "rules")
+	if hasBrainPrefixedFiles(rulesDir, ".md") {
+		return true
+	}
+
+	return false
+}
+
+// isBrainInstalledCursor checks if Brain is already installed for Cursor.
+func isBrainInstalledCursor() bool {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return false
+	}
+
+	// Check for Brain manifest
+	if _, err := readManifest("cursor"); err == nil {
+		return true
+	}
+
+	// Check for Brain agent files (🧠-*.md)
+	agentsDir := filepath.Join(home, ".cursor", "agents")
+	if hasBrainPrefixedFiles(agentsDir, ".md") {
+		return true
+	}
+
+	// Check for Brain rules files (🧠-*.mdc)
+	rulesDir := filepath.Join(home, ".cursor", "rules")
+	if hasBrainPrefixedFiles(rulesDir, ".mdc") {
+		return true
+	}
+
+	return false
+}
+
+// hasBrainPrefixedFiles checks if a directory contains files with the Brain emoji prefix.
+func hasBrainPrefixedFiles(dir, ext string) bool {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return false
+	}
+
+	prefix := "\xf0\x9f\xa7\xa0-" // 🧠-
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		name := entry.Name()
+		if strings.HasPrefix(name, prefix) && strings.HasSuffix(name, ext) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// isBrainInstalled checks if Brain is already installed for a given tool.
+func isBrainInstalled(tool string) bool {
+	switch tool {
+	case "claude-code":
+		return isBrainInstalledClaude()
+	case "cursor":
+		return isBrainInstalledCursor()
+	default:
+		return false
+	}
+}
+
+// toolDisplayName converts a tool slug to a display name.
+func toolDisplayName(tool string) string {
+	switch tool {
+	case "claude-code":
+		return "Claude Code"
+	case "cursor":
+		return "Cursor"
+	default:
+		return tool
+	}
+}
+
 // ─── Install Command ─────────────────────────────────────────────────────────
 
 func runInstall(_ *cobra.Command, _ []string) error {
@@ -519,40 +669,83 @@ func runInstall(_ *cobra.Command, _ []string) error {
 		return nil
 	}
 
-	// Confirmation
-	var confirm bool
-	confirmForm := huh.NewForm(
-		huh.NewGroup(
-			huh.NewConfirm().
-				Title(fmt.Sprintf("Install Brain for: %s?", strings.Join(selected, ", "))).
-				Value(&confirm),
-		),
-	)
-
-	if err := confirmForm.Run(); err != nil {
-		return err
+	// Check for existing installations and prompt for update
+	var confirmed []string
+	for _, tool := range selected {
+		if isBrainInstalled(tool) {
+			var update bool
+			updateForm := huh.NewForm(
+				huh.NewGroup(
+					huh.NewConfirm().
+						Title(fmt.Sprintf("Brain is already installed for %s. Update?", toolDisplayName(tool))).
+						Affirmative("Yes").
+						Negative("No").
+						Value(&update),
+				),
+			)
+			if err := updateForm.Run(); err != nil {
+				return err
+			}
+			if update {
+				confirmed = append(confirmed, tool)
+			} else {
+				fmt.Printf("Skipping %s.\n", toolDisplayName(tool))
+			}
+		} else {
+			confirmed = append(confirmed, tool)
+		}
 	}
-	if !confirm {
-		fmt.Println("Cancelled.")
+
+	if len(confirmed) == 0 {
+		fmt.Println("Nothing to install.")
 		return nil
 	}
 
-	projectRoot, err := findProjectRoot()
-	if err != nil {
-		return err
+	// Confirmation for new installations
+	var hasNew bool
+	for _, tool := range confirmed {
+		if !isBrainInstalled(tool) {
+			hasNew = true
+			break
+		}
 	}
-	fmt.Printf("Project: %s\n\n", projectRoot)
 
-	// Install each selected tool
-	for _, tool := range selected {
+	if hasNew {
+		var confirm bool
+		confirmForm := huh.NewForm(
+			huh.NewGroup(
+				huh.NewConfirm().
+					Title(fmt.Sprintf("Install Brain for: %s?", strings.Join(confirmed, ", "))).
+					Value(&confirm),
+			),
+		)
+
+		if err := confirmForm.Run(); err != nil {
+			return err
+		}
+		if !confirm {
+			fmt.Println("Cancelled.")
+			return nil
+		}
+	}
+
+	src := resolveTemplateSource()
+	if src.IsEmbedded() {
+		fmt.Println("Using embedded templates (no project root found)")
+	} else {
+		fmt.Printf("Project: %s\n\n", src.ProjectRoot())
+	}
+
+	// Install each confirmed tool
+	for _, tool := range confirmed {
 		fmt.Printf("Installing for %s...\n", tool)
 		switch tool {
 		case "claude-code":
-			if err := installClaudeCode(projectRoot); err != nil {
+			if err := installClaudeCode(src); err != nil {
 				fmt.Printf("  [FAIL] %v\n", err)
 			}
 		case "cursor":
-			if err := installCursor(projectRoot); err != nil {
+			if err := installCursor(src); err != nil {
 				fmt.Printf("  [FAIL] %v\n", err)
 			}
 		default:

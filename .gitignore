@@ -98,3 +98,4 @@ venv/
 *.tmp
 temp/
 tmp/
+apps/tui/brain
