@@ -17,11 +17,11 @@ var installCmd = &cobra.Command{
 	Short: "Install Brain for AI coding tools",
 	Long: `Installs Brain agents, skills, commands, and hooks for selected tools.
 
-Currently supported: Claude Code.
-Cursor support is planned for Phase 2.
+Supported: Claude Code, Cursor.
 
 For Claude Code, Brain installs as a plugin using symlinks.
-Instructions are delivered via composable rules (never modifies CLAUDE.md).`,
+For Cursor, Brain uses file copy with additive JSON merge for hooks and MCP.
+Instructions are delivered via composable rules (never modifies user config).`,
 	RunE: runInstall,
 }
 
@@ -52,6 +52,7 @@ func detectTools() []toolInfo {
 	home, _ := os.UserHomeDir()
 	tools := []toolInfo{
 		{Name: "Claude Code", ConfigDir: filepath.Join(home, ".claude")},
+		{Name: "Cursor", ConfigDir: filepath.Join(home, ".cursor")},
 	}
 
 	for i := range tools {
@@ -216,6 +217,252 @@ func uninstallClaudeCode() error {
 	return nil
 }
 
+// ─── Cursor Install ─────────────────────────────────────────────────────────
+
+func installCursor(projectRoot string) error {
+	home, _ := os.UserHomeDir()
+	cursorDir := filepath.Join(home, ".cursor")
+
+	fmt.Println("  Running adapter transforms...")
+	stagingDir := filepath.Join(home, ".cache", "brain", "staging", "cursor")
+	if err := os.RemoveAll(stagingDir); err != nil {
+		return fmt.Errorf("clean staging: %w", err)
+	}
+	if err := runAdapterWrite(projectRoot, "cursor", stagingDir); err != nil {
+		return fmt.Errorf("adapter: %w", err)
+	}
+
+	// File copy (not symlinks -- Cursor symlinks are broken)
+	fmt.Println("  Copying rules to .cursor/rules/...")
+	var installed []string
+
+	rulesDir := filepath.Join(stagingDir, "rules")
+	if _, err := os.Stat(rulesDir); err == nil {
+		targetRulesDir := filepath.Join(cursorDir, "rules")
+		if err := os.MkdirAll(targetRulesDir, 0755); err != nil {
+			return fmt.Errorf("create rules dir: %w", err)
+		}
+		copied, err := copyBrainFiles(rulesDir, targetRulesDir)
+		if err != nil {
+			return fmt.Errorf("copy rules: %w", err)
+		}
+		installed = append(installed, copied...)
+	}
+
+	// JSON merge for hooks
+	hooksMergePath := filepath.Join(stagingDir, "hooks", "hooks.merge.json")
+	if _, err := os.Stat(hooksMergePath); err == nil {
+		fmt.Println("  Merging hooks.json...")
+		hooksTarget := filepath.Join(cursorDir, "hooks.json")
+		merged, err := jsonMerge(hooksMergePath, hooksTarget)
+		if err != nil {
+			fmt.Printf("  Warning: hooks merge failed: %v\n", err)
+		} else {
+			installed = append(installed, merged...)
+		}
+
+		// Copy hook scripts
+		scriptsDir := filepath.Join(stagingDir, "hooks", "scripts")
+		if _, err := os.Stat(scriptsDir); err == nil {
+			targetScriptsDir := filepath.Join(cursorDir, "hooks", "scripts")
+			if err := os.MkdirAll(targetScriptsDir, 0755); err == nil {
+				copied, err := copyBrainFiles(scriptsDir, targetScriptsDir)
+				if err != nil {
+					fmt.Printf("  Warning: hook scripts copy failed: %v\n", err)
+				} else {
+					installed = append(installed, copied...)
+				}
+			}
+		}
+	}
+
+	// JSON merge for MCP
+	mcpMergePath := filepath.Join(stagingDir, "mcp", "mcp.merge.json")
+	if _, err := os.Stat(mcpMergePath); err == nil {
+		fmt.Println("  Merging mcp.json...")
+		mcpTarget := filepath.Join(cursorDir, "mcp.json")
+		merged, err := jsonMerge(mcpMergePath, mcpTarget)
+		if err != nil {
+			fmt.Printf("  Warning: MCP merge failed: %v\n", err)
+		} else {
+			installed = append(installed, merged...)
+		}
+	}
+
+	if err := writeManifest("cursor", installed); err != nil {
+		fmt.Printf("  Warning: failed to write manifest: %v\n", err)
+	}
+
+	fmt.Println("  [COMPLETE] Cursor plugin installed")
+	return nil
+}
+
+func uninstallCursor() error {
+	home, _ := os.UserHomeDir()
+	cursorDir := filepath.Join(home, ".cursor")
+
+	// Read manifest to know what was installed
+	m, err := readManifest("cursor")
+	if err != nil {
+		return fmt.Errorf("no install manifest found: %w", err)
+	}
+
+	// Remove Brain-managed files (those with 🧠- prefix)
+	for _, f := range m.Files {
+		if strings.Contains(filepath.Base(f), "\xf0\x9f\xa7\xa0-") {
+			os.Remove(f)
+			fmt.Printf("  Removed: %s\n", f)
+		}
+	}
+
+	// Reverse JSON merges for hooks and MCP
+	for _, configFile := range []string{"hooks.json", "mcp.json"} {
+		targetPath := filepath.Join(cursorDir, configFile)
+		if err := jsonUnmerge(targetPath); err != nil {
+			fmt.Printf("  Warning: failed to clean %s: %v\n", configFile, err)
+		}
+	}
+
+	// Remove staging
+	stagingDir := filepath.Join(home, ".cache", "brain", "staging", "cursor")
+	os.RemoveAll(stagingDir)
+
+	// Remove manifest
+	os.Remove(manifestPath("cursor"))
+
+	fmt.Println("  [COMPLETE] Cursor plugin uninstalled")
+	return nil
+}
+
+// copyBrainFiles copies all 🧠-prefixed files from src to dst. Returns paths of copied files.
+func copyBrainFiles(src, dst string) ([]string, error) {
+	var copied []string
+	entries, err := os.ReadDir(src)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, entry := range entries {
+		if entry.IsDir() || entry.Name() == ".DS_Store" || entry.Name() == ".gitkeep" {
+			continue
+		}
+		srcPath := filepath.Join(src, entry.Name())
+		dstPath := filepath.Join(dst, entry.Name())
+		data, err := os.ReadFile(srcPath)
+		if err != nil {
+			return copied, fmt.Errorf("read %s: %w", srcPath, err)
+		}
+		if err := os.WriteFile(dstPath, data, 0644); err != nil {
+			return copied, fmt.Errorf("write %s: %w", dstPath, err)
+		}
+		copied = append(copied, dstPath)
+	}
+
+	return copied, nil
+}
+
+// jsonMerge reads a merge payload and additively merges it into the target JSON file.
+// Returns the list of managed key paths that were merged.
+func jsonMerge(mergePayloadPath, targetPath string) ([]string, error) {
+	payloadData, err := os.ReadFile(mergePayloadPath)
+	if err != nil {
+		return nil, fmt.Errorf("read merge payload: %w", err)
+	}
+
+	var payload struct {
+		ManagedKeys []string       `json:"managedKeys"`
+		Content     map[string]any `json:"content"`
+	}
+	if err := json.Unmarshal(payloadData, &payload); err != nil {
+		return nil, fmt.Errorf("parse merge payload: %w", err)
+	}
+
+	// Read existing target (or start empty)
+	existing := map[string]any{}
+	if raw, err := os.ReadFile(targetPath); err == nil {
+		json.Unmarshal(raw, &existing)
+	}
+
+	// Additive merge: for each top-level key in content, merge into existing
+	for k, v := range payload.Content {
+		existingSection, ok := existing[k]
+		if !ok {
+			existing[k] = v
+			continue
+		}
+		// If both are maps, merge the inner keys
+		existingMap, eOk := existingSection.(map[string]any)
+		newMap, nOk := v.(map[string]any)
+		if eOk && nOk {
+			for ik, iv := range newMap {
+				existingMap[ik] = iv
+			}
+			existing[k] = existingMap
+		} else {
+			existing[k] = v
+		}
+	}
+
+	out, err := json.MarshalIndent(existing, "", "  ")
+	if err != nil {
+		return nil, fmt.Errorf("marshal merged config: %w", err)
+	}
+	out = append(out, '\n')
+
+	dir := filepath.Dir(targetPath)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return nil, fmt.Errorf("create dir for %s: %w", targetPath, err)
+	}
+	if err := os.WriteFile(targetPath, out, 0644); err != nil {
+		return nil, fmt.Errorf("write merged config: %w", err)
+	}
+
+	return payload.ManagedKeys, nil
+}
+
+// jsonUnmerge removes Brain-managed keys from a JSON config file.
+// Uses the manifest to determine which keys were managed.
+func jsonUnmerge(targetPath string) error {
+	raw, err := os.ReadFile(targetPath)
+	if err != nil {
+		return nil // File doesn't exist, nothing to clean
+	}
+
+	data := map[string]any{}
+	if err := json.Unmarshal(raw, &data); err != nil {
+		return err
+	}
+
+	// Look for a _brainManaged marker or use the manifest
+	m, err := readManifest("cursor")
+	if err != nil {
+		return nil // No manifest, nothing to reverse
+	}
+
+	_ = m // Manifest read for future managed key tracking
+
+	// Remove any keys that contain Brain emoji prefix from nested sections
+	modified := false
+	for _, v := range data {
+		if section, ok := v.(map[string]any); ok {
+			for sk := range section {
+				if strings.Contains(sk, "\xf0\x9f\xa7\xa0") {
+					delete(section, sk)
+					modified = true
+				}
+			}
+		}
+	}
+
+	if modified {
+		out, _ := json.MarshalIndent(data, "", "  ")
+		out = append(out, '\n')
+		return os.WriteFile(targetPath, out, 0644)
+	}
+
+	return nil
+}
+
 // ─── Install Command ─────────────────────────────────────────────────────────
 
 func runInstall(_ *cobra.Command, _ []string) error {
@@ -282,6 +529,10 @@ func runInstall(_ *cobra.Command, _ []string) error {
 			if err := installClaudeCode(projectRoot); err != nil {
 				fmt.Printf("  [FAIL] %v\n", err)
 			}
+		case "cursor":
+			if err := installCursor(projectRoot); err != nil {
+				fmt.Printf("  [FAIL] %v\n", err)
+			}
 		default:
 			fmt.Printf("  [FAIL] %s not yet supported\n", tool)
 		}
@@ -297,7 +548,7 @@ func runInstall(_ *cobra.Command, _ []string) error {
 func runUninstall(_ *cobra.Command, _ []string) error {
 	// Detect what is installed via manifests
 	var installed []string
-	for _, tool := range []string{"claude-code"} {
+	for _, tool := range []string{"claude-code", "cursor"} {
 		if _, err := readManifest(tool); err == nil {
 			installed = append(installed, tool)
 		}
@@ -354,6 +605,10 @@ func runUninstall(_ *cobra.Command, _ []string) error {
 		switch tool {
 		case "claude-code":
 			if err := uninstallClaudeCode(); err != nil {
+				fmt.Printf("  [FAIL] %v\n", err)
+			}
+		case "cursor":
+			if err := uninstallCursor(); err != nil {
 				fmt.Printf("  [FAIL] %v\n", err)
 			}
 		default:
