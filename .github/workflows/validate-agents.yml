@@ -16,77 +16,45 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
-  naming-conventions:
-    name: Check Naming Conventions
+  validate:
+    name: Validate
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          cache: true
-          cache-dependency-path: packages/validation/go.sum
-          go-version: "1.21"
-
-      - name: Validate artifact naming
-        run: |
-          go test -v -run "TestValidateNamingConvention" ./tests/...
-          go test -v -run "TestValidateArtifactNaming" ./tests/...
-        working-directory: packages/validation
-
-  validate-consistency:
-    name: Validate Consistency
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+          bun-version: latest
 
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           cache: true
           cache-dependency-path: packages/validation/go.sum
-          go-version: "1.21"
+          go-version-file: packages/validation/go.mod
 
-      - name: Run Go tests
-        run: go test -v ./tests/...
-        working-directory: packages/validation
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          cache: yarn
-          cache-dependency-path: packages/validation/wasm/yarn.lock
-          node-version: "20"
-
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Cache TinyGo
+      - name: Cache Bun dependencies
         uses: actions/cache@v4
         with:
-          key: ${{ runner.os }}-tinygo-0.33.0
-          path: /usr/local/lib/tinygo
-
-      - name: Install TinyGo
-        run: |
-          if [ ! -f /usr/local/lib/tinygo/bin/tinygo ]; then
-            wget https://github.com/tinygo-org/tinygo/releases/download/v0.33.0/tinygo_0.33.0_amd64.deb
-            sudo dpkg -i tinygo_0.33.0_amd64.deb
-          fi
+          key: bun-${{ runner.os }}-${{ hashFiles('**/bun.lock') }}
+          path: |
+            ~/.bun/install/cache
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          restore-keys: |
+            bun-${{ runner.os }}-
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
-        working-directory: packages/validation/wasm
+        run: bun install --frozen-lockfile
 
-      - name: Build WASM
-        run: yarn build
-        working-directory: packages/validation/wasm
+      - name: Go tests
+        run: go test -v ./...
+        working-directory: packages/validation
 
-      - name: Run TypeScript tests
-        run: yarn test
-        working-directory: packages/validation/wasm
+      - name: TypeScript tests
+        run: bun run test
+        working-directory: packages/validation

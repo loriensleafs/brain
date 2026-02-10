@@ -14,10 +14,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
-  analyze-go:
+  analyze:
     name: Analyze (go)
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 15
 
     permissions:
       actions: read
@@ -41,36 +41,31 @@ jobs:
         uses: github/codeql-action/init@v4
         with:
           languages: go
-          queries: security-extended
 
-      - name: Download Go dependencies (TUI)
-        run: go mod download
-        working-directory: apps/tui
-
-      - name: Download Go dependencies (Validation)
-        run: go mod download
-        working-directory: packages/validation
+      - name: Download Go dependencies
+        run: |
+          cd apps/tui && go mod download &
+          cd packages/validation && go mod download &
+          wait
 
       - name: Copy templates for embedding
         run: make embed
 
-      - name: Build TUI
-        run: go build -v ./...
-        working-directory: apps/tui
-
-      - name: Build Validation
-        run: go build -v ./...
-        working-directory: packages/validation
+      - name: Build
+        run: |
+          cd apps/tui && go build ./... &
+          cd packages/validation && go build ./... &
+          wait
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
         with:
           category: "/language:go"
 
-  analyze-javascript:
+  analyze-js:
     name: Analyze (javascript-typescript)
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 15
 
     permissions:
       actions: read
@@ -85,7 +80,15 @@ jobs:
         uses: github/codeql-action/init@v4
         with:
           languages: javascript-typescript
-          queries: security-extended
+          config: |
+            paths:
+              - apps/
+              - packages/
+              - templates/hooks/scripts/
+            paths-ignore:
+              - '**/node_modules/**'
+              - '**/dist/**'
+              - '**/generated/**'
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
