@@ -1,7 +1,7 @@
 ---
 title: TASK-017-cursor-integration-testing
 type: task
-status: todo
+status: complete
 feature-ref: FEAT-001
 effort-estimate-human: 6h
 effort-estimate-ai: 3h

@@ -39,16 +39,19 @@ tags:
 
 ## Work Log
 
-- [ ] [pending] Create Cursor TS adapter linking to [[TASK-014-create-ts-cursor-adapter]] #adapter
-- [ ] [pending] Extend brain install for Cursor linking to [[TASK-015-extend-brain-install-for-cursor]] #install
-- [ ] [pending] Implement brain cursor launcher linking to [[TASK-016-implement-brain-cursor-launcher]] #launcher
-- [ ] [pending] Cursor integration testing linking to [[TASK-017-cursor-integration-testing]] #testing
+- [x] [outcome] Created Cursor TS adapter (1e4e8f8) linking to [[TASK-014-create-ts-cursor-adapter]] #adapter
+- [x] [outcome] Extended brain install for Cursor with JSON merge and manifest tracking (924cd7f) linking to [[TASK-015-extend-brain-install-for-cursor]] #install
+- [x] [outcome] Implemented brain cursor launcher with fresh staging and JSON merge (cd51b4c) linking to [[TASK-016-implement-brain-cursor-launcher]] #launcher
+- [x] [outcome] Cursor integration testing: 10 PASS, 1 blocking bug (BUG-001 targets type mismatch), 1 warning linking to [[TASK-017-cursor-integration-testing]] #testing
 
 ## Commits
 
 | SHA | Description | Files |
 |---|---|---|
-| TBD | Session in progress | N/A |
+| 1e4e8f8 | feat: create TS Cursor adapter | 3 |
+| 924cd7f | feat: extend brain install for Cursor | 1 |
+| cd51b4c | feat: implement brain cursor launcher | 1 |
+| e79aaef | fix: correct BrainConfig.targets type from string[] to Record | 4 |
 
 ---
 
@@ -64,7 +67,13 @@ tags:
 
 | File | Context |
 |---|---|
-| TBD | Phase 2 implementation |
+| adapters/cursor.ts | New Cursor TS adapter |
+| adapters/__tests__/cursor.test.ts | Cursor adapter tests (11 tests) |
+| adapters/sync.ts | Wired cursor target + fixed targets type |
+| adapters/shared.ts | Fixed BrainConfig.targets type to Record |
+| adapters/__tests__/claude-code.test.ts | Fixed test fixtures for targets type |
+| apps/tui/cmd/install.go | Extended for Cursor install/uninstall |
+| apps/tui/cmd/cursor.go | New brain cursor launcher |
 
 ---
 

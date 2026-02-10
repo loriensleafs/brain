@@ -1,7 +1,7 @@
 ---
 title: TASK-016-implement-brain-cursor-launcher
 type: task
-status: todo
+status: complete
 feature-ref: FEAT-001
 effort-estimate-human: 3h
 effort-estimate-ai: 1h

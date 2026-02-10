@@ -1,7 +1,7 @@
 ---
 title: TASK-015-extend-brain-install-for-cursor
 type: task
-status: todo
+status: complete
 feature-ref: FEAT-001
 effort-estimate-human: 3h
 effort-estimate-ai: 1h
