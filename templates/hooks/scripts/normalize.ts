@@ -3,33 +3,33 @@
  *
  * Detects platform from stdin JSON shape and normalizes to a common
  * NormalizedHookEvent interface. Each hook script imports this normalizer,
- * then runs platform-agnostic logic.
+ * then runs platform-agnostic logic and uses formatOutput() to produce
+ * the correct platform-specific response.
  *
- * Platform detection: Cursor events have `hook_event_name` field;
+ * Platform detection: Cursor events include `hook_event_name` field;
  * Claude Code events do not.
  *
- * @see DESIGN-002-hook-normalization-layer
- * @see TASK-018-build-hook-normalization-shim
+ * Supported events (aligned with cursor.json and claude-code.json):
+ *
+ *   | Normalized       | Claude Code      | Cursor             |
+ *   |------------------|------------------|--------------------|
+ *   | session-start    | SessionStart     | sessionStart       |
+ *   | prompt-submit    | UserPromptSubmit | beforeSubmitPrompt |
+ *   | pre-tool-use     | PreToolUse       | preToolUse         |
+ *   | stop             | Stop             | stop               |
  */
 
 // ============================================================================
 // Types
 // ============================================================================
 
-/** Supported platforms. */
 export type Platform = "claude-code" | "cursor";
 
-/** Normalized event names shared across platforms. */
 export type NormalizedEventName =
-  | "prompt-submit"
-  | "before-shell"
-  | "before-mcp"
-  | "before-read-file"
-  | "after-edit"
-  | "stop"
   | "session-start"
-  | "notification"
-  | "subagent-stop";
+  | "prompt-submit"
+  | "pre-tool-use"
+  | "stop";
 
 /** Common interface for all hook events, regardless of source platform. */
 export interface NormalizedHookEvent {
@@ -37,90 +37,48 @@ export interface NormalizedHookEvent {
   event: NormalizedEventName;
   sessionId: string;
   workspaceRoot: string;
-  payload: Record<string, unknown>;
+  /** Raw input from the platform, passed through for scripts that need it. */
+  raw: Record<string, unknown>;
+  /** Normalized payload with event-specific fields. */
+  payload: SessionStartPayload | PromptSubmitPayload | PreToolUsePayload | StopPayload;
 }
 
-/** Platform-specific blocking capability per event. */
-export interface BlockingSemantics {
-  canBlock: boolean;
-  infoOnly: boolean;
+export interface SessionStartPayload {
+  sessionId: string;
+  isBackgroundAgent?: boolean;
+  composerMode?: string;
+}
+
+export interface PromptSubmitPayload {
+  prompt: string;
+  attachments?: Array<{ type: string; filePath: string }>;
+}
+
+export interface PreToolUsePayload {
+  toolName: string;
+  toolInput: Record<string, unknown>;
+}
+
+export interface StopPayload {
+  status: string;
 }
 
 // ============================================================================
 // Event Mapping
 // ============================================================================
 
-/**
- * Map Cursor hook_event_name values to normalized event names.
- * Cursor sends: beforeSubmitPrompt, beforeShellExecution,
- * beforeMCPExecution, beforeReadFile, afterFileEdit, stop
- */
 const cursorEventMap: Record<string, NormalizedEventName> = {
+  sessionStart: "session-start",
   beforeSubmitPrompt: "prompt-submit",
-  beforeShellExecution: "before-shell",
-  beforeMCPExecution: "before-mcp",
-  beforeReadFile: "before-read-file",
-  afterFileEdit: "after-edit",
+  preToolUse: "pre-tool-use",
   stop: "stop",
 };
 
-/**
- * Map Claude Code hook event names to normalized event names.
- * Claude Code doesn't send event names in the payload -- the event
- * type is determined by which hook config triggers. We infer from
- * the hookSpecificOutput.hookEventName or the structural shape.
- */
 const claudeCodeEventMap: Record<string, NormalizedEventName> = {
-  UserPromptSubmit: "prompt-submit",
-  PreToolUse: "before-shell", // refined by tool_name below
-  PostToolUse: "after-edit",  // refined by tool_name below
-  Stop: "stop",
   SessionStart: "session-start",
-  Notification: "notification",
-  SubagentStop: "subagent-stop",
-};
-
-/**
- * Blocking semantics per event per platform.
- * Claude Code Stop can block; Cursor stop is info-only.
- */
-const blockingSemantics: Record<string, Record<Platform, BlockingSemantics>> = {
-  "prompt-submit": {
-    "claude-code": { canBlock: true, infoOnly: false },
-    cursor: { canBlock: false, infoOnly: true },
-  },
-  "before-shell": {
-    "claude-code": { canBlock: true, infoOnly: false },
-    cursor: { canBlock: true, infoOnly: false },
-  },
-  "before-mcp": {
-    "claude-code": { canBlock: true, infoOnly: false },
-    cursor: { canBlock: true, infoOnly: false },
-  },
-  "before-read-file": {
-    "claude-code": { canBlock: false, infoOnly: true }, // no CC equivalent
-    cursor: { canBlock: true, infoOnly: false },
-  },
-  "after-edit": {
-    "claude-code": { canBlock: false, infoOnly: true },
-    cursor: { canBlock: false, infoOnly: true },
-  },
-  stop: {
-    "claude-code": { canBlock: true, infoOnly: false },
-    cursor: { canBlock: false, infoOnly: true },
-  },
-  "session-start": {
-    "claude-code": { canBlock: false, infoOnly: true },
-    cursor: { canBlock: false, infoOnly: true }, // no Cursor equivalent
-  },
-  notification: {
-    "claude-code": { canBlock: false, infoOnly: true },
-    cursor: { canBlock: false, infoOnly: true },
-  },
-  "subagent-stop": {
-    "claude-code": { canBlock: false, infoOnly: true },
-    cursor: { canBlock: false, infoOnly: true },
-  },
+  UserPromptSubmit: "prompt-submit",
+  PreToolUse: "pre-tool-use",
+  Stop: "stop",
 };
 
 // ============================================================================
@@ -129,9 +87,7 @@ const blockingSemantics: Record<string, Record<Platform, BlockingSemantics>> = {
 
 /**
  * Detect platform from the raw JSON event shape.
- *
- * Cursor events always include `hook_event_name`.
- * Claude Code events never do.
+ * Cursor events include `hook_event_name`; Claude Code events do not.
  */
 export function detectPlatform(raw: Record<string, unknown>): Platform {
   if (typeof raw.hook_event_name === "string") {
@@ -144,184 +100,182 @@ export function detectPlatform(raw: Record<string, unknown>): Platform {
 // Normalization
 // ============================================================================
 
-/**
- * Resolve the normalized event name for a Cursor event.
- */
-function normalizeCursorEvent(raw: Record<string, unknown>): NormalizedEventName {
-  const hookEventName = raw.hook_event_name as string;
-  return cursorEventMap[hookEventName] ?? "prompt-submit";
-}
+function resolveEvent(raw: Record<string, unknown>, platform: Platform, hookEventHint?: string): NormalizedEventName {
+  if (platform === "cursor") {
+    const name = raw.hook_event_name as string;
+    return cursorEventMap[name] ?? "prompt-submit";
+  }
 
-/**
- * Resolve the normalized event name for a Claude Code event.
- *
- * Claude Code doesn't embed the event type in the payload.
- * We use an optional `_hookEvent` hint (set by the caller or hook config)
- * or fall back to structural detection from known fields.
- */
-function normalizeClaudeCodeEvent(
-  raw: Record<string, unknown>,
-  hookEventHint?: string,
-): NormalizedEventName {
-  // Use explicit hint if provided
+  // Claude Code: use hint or structural detection
   if (hookEventHint && claudeCodeEventMap[hookEventHint]) {
-    const base = claudeCodeEventMap[hookEventHint];
-
-    // Refine PreToolUse based on tool_name
-    if (hookEventHint === "PreToolUse") {
-      const toolName = (raw.tool_name as string) ?? "";
-      if (toolName === "Bash") return "before-shell";
-      return "before-mcp";
-    }
-
-    // Refine PostToolUse based on tool_name
-    if (hookEventHint === "PostToolUse") {
-      return "after-edit";
-    }
-
-    return base;
+    return claudeCodeEventMap[hookEventHint];
   }
-
-  // Structural detection fallback
   if (typeof raw.prompt === "string") return "prompt-submit";
-  if (typeof raw.tool_name === "string") {
-    const toolName = raw.tool_name as string;
-    if (toolName === "Bash") return "before-shell";
-    return "before-mcp";
-  }
-  if (typeof raw.session_id === "string" && Object.keys(raw).length <= 2) {
-    return "session-start";
-  }
-
+  if (typeof raw.tool_name === "string") return "pre-tool-use";
+  if (typeof raw.session_id === "string") return "session-start";
   return "prompt-submit";
 }
 
-/**
- * Extract session ID from the raw event.
- * Claude Code uses `session_id`; Cursor uses `conversation_id`.
- */
 function extractSessionId(raw: Record<string, unknown>, platform: Platform): string {
   if (platform === "cursor") {
+    // Cursor: conversation_id is the stable session ID; sessionStart also has session_id
     return (raw.conversation_id as string) ?? (raw.session_id as string) ?? "";
   }
-  return (raw.session_id as string) ?? (raw.sessionId as string) ?? "";
+  return (raw.session_id as string) ?? "";
 }
 
-/**
- * Extract workspace root from the raw event.
- * Claude Code uses `cwd`; Cursor uses `cwd` or `workspace_root`.
- */
-function extractWorkspaceRoot(raw: Record<string, unknown>): string {
-  return (raw.cwd as string)
-    ?? (raw.workspace_root as string)
-    ?? "";
+function extractWorkspaceRoot(raw: Record<string, unknown>, platform: Platform): string {
+  if (platform === "cursor") {
+    // Cursor: workspace_roots is an array (multiroot workspaces), take first
+    const roots = raw.workspace_roots as string[] | undefined;
+    return roots?.[0] ?? "";
+  }
+  return (raw.cwd as string) ?? "";
 }
 
-/**
- * Build the normalized payload from platform-specific fields.
- * Strips platform metadata fields and keeps domain data.
- */
 function buildPayload(
   raw: Record<string, unknown>,
   platform: Platform,
   event: NormalizedEventName,
-): Record<string, unknown> {
-  const payload: Record<string, unknown> = {};
+): SessionStartPayload | PromptSubmitPayload | PreToolUsePayload | StopPayload {
+  switch (event) {
+    case "session-start":
+      if (platform === "cursor") {
+        return {
+          sessionId: (raw.session_id as string) ?? "",
+          isBackgroundAgent: (raw.is_background_agent as boolean) ?? false,
+          composerMode: raw.composer_mode as string | undefined,
+        };
+      }
+      return {
+        sessionId: (raw.session_id as string) ?? "",
+      };
 
-  if (platform === "cursor") {
-    switch (event) {
-      case "before-shell":
-        payload.command = raw.command ?? "";
-        break;
-      case "before-mcp":
-        payload.tool_name = raw.tool_name ?? "";
-        payload.tool_input = raw.tool_input ?? {};
-        if (raw.server) payload.server = raw.server;
-        break;
-      case "after-edit":
-        payload.edits = raw.edits ?? [];
-        break;
-      case "prompt-submit":
-        payload.prompt = raw.prompt ?? "";
-        if (raw.attachments) payload.attachments = raw.attachments;
-        break;
-      case "before-read-file":
-        payload.file_path = raw.file_path ?? "";
-        break;
-      case "stop":
-        payload.status = raw.status ?? "completed";
-        break;
-      default:
-        Object.assign(payload, raw);
-    }
-  } else {
-    // Claude Code
-    switch (event) {
-      case "before-shell":
-        payload.command = (raw.tool_input as Record<string, unknown>)?.command ?? "";
-        payload.tool_name = raw.tool_name ?? "Bash";
-        payload.tool_input = raw.tool_input ?? {};
-        break;
-      case "before-mcp":
-        payload.tool_name = raw.tool_name ?? "";
-        payload.tool_input = raw.tool_input ?? {};
-        break;
-      case "after-edit":
-        payload.tool_name = raw.tool_name ?? "";
-        payload.tool_output = raw.tool_output ?? {};
-        break;
-      case "prompt-submit":
-        payload.prompt = raw.prompt ?? "";
-        break;
-      case "stop":
-        // Claude Code stop has no specific payload fields
-        break;
-      case "session-start":
-        // Session start payload is the entire hook input
-        if (raw.cwd) payload.cwd = raw.cwd;
-        break;
-      default:
-        Object.assign(payload, raw);
-    }
+    case "prompt-submit":
+      if (platform === "cursor") {
+        return {
+          prompt: (raw.prompt as string) ?? "",
+          attachments: raw.attachments as Array<{ type: string; filePath: string }> | undefined,
+        };
+      }
+      return {
+        prompt: (raw.prompt as string) ?? "",
+      };
+
+    case "pre-tool-use":
+      return {
+        toolName: (raw.tool_name as string) ?? "",
+        toolInput: (raw.tool_input as Record<string, unknown>) ?? {},
+      };
+
+    case "stop":
+      if (platform === "cursor") {
+        return { status: (raw.status as string) ?? "completed" };
+      }
+      return { status: "completed" };
   }
-
-  return payload;
 }
 
 /**
- * Normalize a raw hook event JSON object to the common NormalizedHookEvent.
+ * Normalize a raw hook event JSON to the common NormalizedHookEvent.
  *
- * @param raw - The parsed JSON from stdin
- * @param hookEventHint - Optional Claude Code event type hint
- *   (e.g. "PreToolUse", "Stop"). Not needed for Cursor events.
+ * @param raw - Parsed JSON from stdin
+ * @param hookEventHint - Claude Code event type hint (e.g. "PreToolUse", "Stop")
  */
 export function normalizeEvent(
   raw: Record<string, unknown>,
   hookEventHint?: string,
 ): NormalizedHookEvent {
   const platform = detectPlatform(raw);
-  const event = platform === "cursor"
-    ? normalizeCursorEvent(raw)
-    : normalizeClaudeCodeEvent(raw, hookEventHint);
+  const event = resolveEvent(raw, platform, hookEventHint);
 
   return {
     platform,
     event,
     sessionId: extractSessionId(raw, platform),
-    workspaceRoot: extractWorkspaceRoot(raw),
+    workspaceRoot: extractWorkspaceRoot(raw, platform),
+    raw,
     payload: buildPayload(raw, platform, event),
   };
 }
 
+// ============================================================================
+// Output Formatting
+// ============================================================================
+
+/** Options for formatting hook output. Scripts populate what they need. */
+export interface HookOutput {
+  // session-start
+  env?: Record<string, string>;
+  additionalContext?: string;
+
+  // session-start, prompt-submit
+  continue?: boolean;
+
+  // pre-tool-use
+  decision?: "allow" | "deny";
+  reason?: string;
+  updatedInput?: Record<string, unknown>;
+
+  // stop
+  followupMessage?: string;
+
+  // shared
+  userMessage?: string;
+}
+
 /**
- * Get blocking semantics for a normalized event on a given platform.
+ * Format a HookOutput into the correct platform-specific JSON string.
+ * Scripts call this and write the result to stdout.
  */
-export function getBlockingSemantics(
-  event: NormalizedEventName,
-  platform: Platform,
-): BlockingSemantics {
-  return blockingSemantics[event]?.[platform]
-    ?? { canBlock: false, infoOnly: true };
+export function formatOutput(event: NormalizedHookEvent, output: HookOutput): string {
+  const result: Record<string, unknown> = {};
+
+  if (event.platform === "cursor") {
+    switch (event.event) {
+      case "session-start":
+        if (output.env) result.env = output.env;
+        if (output.additionalContext) result.additional_context = output.additionalContext;
+        if (output.continue !== undefined) result.continue = output.continue;
+        if (output.userMessage) result.user_message = output.userMessage;
+        break;
+      case "prompt-submit":
+        result.continue = output.continue ?? true;
+        if (output.userMessage) result.user_message = output.userMessage;
+        break;
+      case "pre-tool-use":
+        result.decision = output.decision ?? "allow";
+        if (output.reason) result.reason = output.reason;
+        if (output.updatedInput) result.updated_input = output.updatedInput;
+        break;
+      case "stop":
+        if (output.followupMessage) result.followup_message = output.followupMessage;
+        break;
+    }
+  } else {
+    // Claude Code output format
+    switch (event.event) {
+      case "session-start":
+        // Claude Code sessionStart is observational
+        break;
+      case "prompt-submit":
+        // Claude Code UserPromptSubmit can block
+        if (output.continue === false) {
+          result.decision = "block";
+          if (output.userMessage) result.reason = output.userMessage;
+        }
+        break;
+      case "pre-tool-use":
+        result.decision = output.decision ?? "allow";
+        if (output.reason) result.reason = output.reason;
+        break;
+      case "stop":
+        // Claude Code Stop is observational
+        break;
+    }
+  }
+
+  return JSON.stringify(result);
 }
 
 // ============================================================================
@@ -330,7 +284,6 @@ export function getBlockingSemantics(
 
 /**
  * Read stdin, parse JSON, and normalize the event.
- * Convenience function for hook scripts.
  *
  * @param hookEventHint - Optional Claude Code event type hint
  */

@@ -10,7 +10,7 @@
  */
 import type { StopOutput, WorkflowState } from "./types";
 import type { NormalizedHookEvent } from "./normalize";
-import { normalizeEvent, getBlockingSemantics } from "./normalize";
+import { normalizeEvent } from "./normalize";
 import { validateStopReadiness } from "./validate";
 import { execCommand } from "./exec";
 

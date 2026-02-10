@@ -2,18 +2,15 @@
  * Tests for normalize.ts -- hook normalization layer.
  *
  * Covers platform detection, event mapping, payload normalization,
- * blocking semantics, and session ID extraction for both platforms.
- *
- * @see TASK-018-build-hook-normalization-shim
+ * output formatting, and session ID extraction for both platforms.
  */
 import { describe, expect, it } from "vitest";
 import {
   detectPlatform,
   normalizeEvent,
-  getBlockingSemantics,
+  formatOutput,
   type NormalizedHookEvent,
-  type NormalizedEventName,
-} from "../normalize.js";
+} from "../normalize";
 
 // ============================================================================
 // Platform Detection
@@ -21,7 +18,7 @@ import {
 
 describe("detectPlatform", () => {
   it("detects Cursor from hook_event_name field", () => {
-    expect(detectPlatform({ hook_event_name: "beforeShellExecution" }))
+    expect(detectPlatform({ hook_event_name: "preToolUse" }))
       .toBe("cursor");
   });
 
@@ -45,7 +42,6 @@ describe("detectPlatform", () => {
   it("does not falsely detect Cursor when hook_event_name is non-string", () => {
     expect(detectPlatform({ hook_event_name: 42 })).toBe("claude-code");
     expect(detectPlatform({ hook_event_name: null })).toBe("claude-code");
-    expect(detectPlatform({ hook_event_name: true })).toBe("claude-code");
   });
 });
 
@@ -54,101 +50,92 @@ describe("detectPlatform", () => {
 // ============================================================================
 
 describe("normalizeEvent - Cursor", () => {
-  it("normalizes beforeSubmitPrompt to prompt-submit", () => {
+  it("normalizes sessionStart", () => {
+    const result = normalizeEvent({
+      hook_event_name: "sessionStart",
+      session_id: "sess-1",
+      is_background_agent: false,
+      composer_mode: "agent",
+      conversation_id: "conv-1",
+      workspace_roots: ["/workspace"],
+    });
+    expect(result.platform).toBe("cursor");
+    expect(result.event).toBe("session-start");
+    expect(result.sessionId).toBe("conv-1");
+    expect(result.workspaceRoot).toBe("/workspace");
+    expect(result.payload).toEqual({
+      sessionId: "sess-1",
+      isBackgroundAgent: false,
+      composerMode: "agent",
+    });
+  });
+
+  it("normalizes beforeSubmitPrompt", () => {
     const result = normalizeEvent({
       hook_event_name: "beforeSubmitPrompt",
       prompt: "hello world",
-      conversation_id: "conv-abc",
-      cwd: "/workspace",
+      conversation_id: "conv-2",
+      workspace_roots: ["/workspace"],
     });
-    expect(result.platform).toBe("cursor");
     expect(result.event).toBe("prompt-submit");
-    expect(result.sessionId).toBe("conv-abc");
-    expect(result.workspaceRoot).toBe("/workspace");
-    expect(result.payload.prompt).toBe("hello world");
-  });
-
-  it("normalizes beforeShellExecution to before-shell", () => {
-    const result = normalizeEvent({
-      hook_event_name: "beforeShellExecution",
-      command: "git status",
-      cwd: "/workspace",
-      conversation_id: "conv-456",
+    expect(result.payload).toEqual({
+      prompt: "hello world",
     });
-    expect(result.platform).toBe("cursor");
-    expect(result.event).toBe("before-shell");
-    expect(result.payload.command).toBe("git status");
   });
 
-  it("normalizes beforeMCPExecution to before-mcp", () => {
+  it("normalizes preToolUse", () => {
     const result = normalizeEvent({
-      hook_event_name: "beforeMCPExecution",
-      tool_name: "read_note",
-      tool_input: { identifier: "my-note" },
-      server: "brain",
-      conversation_id: "conv-789",
-      cwd: "/workspace",
+      hook_event_name: "preToolUse",
+      tool_name: "Shell",
+      tool_input: { command: "npm test" },
+      conversation_id: "conv-3",
+      workspace_roots: ["/workspace"],
     });
-    expect(result.platform).toBe("cursor");
-    expect(result.event).toBe("before-mcp");
-    expect(result.payload.tool_name).toBe("read_note");
-    expect(result.payload.server).toBe("brain");
+    expect(result.event).toBe("pre-tool-use");
+    expect(result.payload).toEqual({
+      toolName: "Shell",
+      toolInput: { command: "npm test" },
+    });
   });
 
-  it("normalizes beforeReadFile to before-read-file", () => {
-    const result = normalizeEvent({
-      hook_event_name: "beforeReadFile",
-      file_path: "/workspace/secret.env",
-      cwd: "/workspace",
-      conversation_id: "conv-111",
-    });
-    expect(result.platform).toBe("cursor");
-    expect(result.event).toBe("before-read-file");
-    expect(result.payload.file_path).toBe("/workspace/secret.env");
-  });
-
-  it("normalizes afterFileEdit to after-edit", () => {
-    const result = normalizeEvent({
-      hook_event_name: "afterFileEdit",
-      edits: [{ old_string: "foo", new_string: "bar" }],
-      cwd: "/workspace",
-      conversation_id: "conv-222",
-    });
-    expect(result.platform).toBe("cursor");
-    expect(result.event).toBe("after-edit");
-    expect(result.payload.edits).toEqual([{ old_string: "foo", new_string: "bar" }]);
-  });
-
-  it("normalizes Cursor stop to stop", () => {
+  it("normalizes stop", () => {
     const result = normalizeEvent({
       hook_event_name: "stop",
       status: "completed",
-      conversation_id: "conv-333",
-      cwd: "/workspace",
+      conversation_id: "conv-4",
+      workspace_roots: ["/workspace"],
     });
-    expect(result.platform).toBe("cursor");
     expect(result.event).toBe("stop");
-    expect(result.payload.status).toBe("completed");
+    expect(result.payload).toEqual({ status: "completed" });
   });
 
   it("includes attachments in prompt-submit payload", () => {
     const result = normalizeEvent({
       hook_event_name: "beforeSubmitPrompt",
-      prompt: "check this file",
-      attachments: [{ path: "/workspace/file.ts" }],
-      conversation_id: "conv-444",
-      cwd: "/workspace",
+      prompt: "check this",
+      attachments: [{ type: "file", filePath: "/test.ts" }],
+      conversation_id: "conv-5",
+      workspace_roots: ["/workspace"],
     });
-    expect(result.payload.attachments).toEqual([{ path: "/workspace/file.ts" }]);
+    expect((result.payload as any).attachments).toEqual([{ type: "file", filePath: "/test.ts" }]);
   });
 
-  it("falls back to prompt-submit for unknown Cursor event", () => {
+  it("falls back to prompt-submit for unknown event", () => {
     const result = normalizeEvent({
       hook_event_name: "someUnknownEvent",
-      conversation_id: "conv-555",
-      cwd: "/workspace",
+      conversation_id: "conv-6",
+      workspace_roots: ["/workspace"],
     });
     expect(result.event).toBe("prompt-submit");
+  });
+
+  it("extracts workspace_roots array (first element)", () => {
+    const result = normalizeEvent({
+      hook_event_name: "stop",
+      conversation_id: "conv-7",
+      workspace_roots: ["/first", "/second"],
+    });
+    expect(result.workspaceRoot).toBe("/first");
   });
 });
 
@@ -157,124 +144,58 @@ describe("normalizeEvent - Cursor", () => {
 // ============================================================================
 
 describe("normalizeEvent - Claude Code", () => {
-  it("normalizes PreToolUse with Bash to before-shell (with hint)", () => {
+  it("normalizes SessionStart with hint", () => {
     const result = normalizeEvent(
-      {
-        tool_name: "Bash",
-        tool_input: { command: "npm test" },
-        session_id: "sess-123",
-        cwd: "/workspace",
-      },
-      "PreToolUse",
+      { session_id: "sess-1", cwd: "/workspace" },
+      "SessionStart",
     );
-    expect(result.platform).toBe("claude-code");
-    expect(result.event).toBe("before-shell");
-    expect(result.sessionId).toBe("sess-123");
-    expect(result.payload.command).toBe("npm test");
-  });
-
-  it("normalizes PreToolUse with MCP tool to before-mcp (with hint)", () => {
-    const result = normalizeEvent(
-      {
-        tool_name: "mcp__plugin____brain__search",
-        tool_input: { query: "hooks" },
-        session_id: "sess-456",
-        cwd: "/workspace",
-      },
-      "PreToolUse",
-    );
-    expect(result.platform).toBe("claude-code");
-    expect(result.event).toBe("before-mcp");
-    expect(result.payload.tool_name).toBe("mcp__plugin____brain__search");
-  });
-
-  it("normalizes Stop with hint", () => {
-    const result = normalizeEvent(
-      { session_id: "sess-789", cwd: "/workspace" },
-      "Stop",
-    );
-    expect(result.platform).toBe("claude-code");
-    expect(result.event).toBe("stop");
+    expect(result.event).toBe("session-start");
+    expect(result.payload).toEqual({ sessionId: "sess-1" });
   });
 
   it("normalizes UserPromptSubmit with hint", () => {
     const result = normalizeEvent(
-      {
-        prompt: "implement feature X",
-        session_id: "sess-aaa",
-        cwd: "/workspace",
-      },
+      { prompt: "implement feature X", session_id: "sess-2", cwd: "/workspace" },
       "UserPromptSubmit",
     );
-    expect(result.platform).toBe("claude-code");
     expect(result.event).toBe("prompt-submit");
-    expect(result.payload.prompt).toBe("implement feature X");
+    expect(result.payload).toEqual({ prompt: "implement feature X" });
   });
 
-  it("normalizes SessionStart with hint", () => {
+  it("normalizes PreToolUse with hint", () => {
     const result = normalizeEvent(
-      { session_id: "sess-bbb", cwd: "/workspace" },
-      "SessionStart",
+      { tool_name: "Bash", tool_input: { command: "npm test" }, session_id: "sess-3", cwd: "/workspace" },
+      "PreToolUse",
     );
-    expect(result.platform).toBe("claude-code");
-    expect(result.event).toBe("session-start");
-    expect(result.payload.cwd).toBe("/workspace");
-  });
-
-  it("normalizes PostToolUse with hint", () => {
-    const result = normalizeEvent(
-      {
-        tool_name: "Write",
-        tool_output: { file: "test.ts" },
-        session_id: "sess-ccc",
-        cwd: "/workspace",
-      },
-      "PostToolUse",
-    );
-    expect(result.platform).toBe("claude-code");
-    expect(result.event).toBe("after-edit");
-    expect(result.payload.tool_name).toBe("Write");
-  });
-
-  // --- Structural detection fallback (no hint) ---
-
-  it("detects prompt-submit from prompt field (no hint)", () => {
-    const result = normalizeEvent({
-      prompt: "do something",
-      session_id: "sess-ddd",
-      cwd: "/workspace",
+    expect(result.event).toBe("pre-tool-use");
+    expect(result.payload).toEqual({
+      toolName: "Bash",
+      toolInput: { command: "npm test" },
     });
+  });
+
+  it("normalizes Stop with hint", () => {
+    const result = normalizeEvent(
+      { session_id: "sess-4", cwd: "/workspace" },
+      "Stop",
+    );
+    expect(result.event).toBe("stop");
+    expect(result.payload).toEqual({ status: "completed" });
+  });
+
+  // Structural detection (no hint)
+  it("detects prompt-submit from prompt field", () => {
+    const result = normalizeEvent({ prompt: "do something", session_id: "s", cwd: "/ws" });
     expect(result.event).toBe("prompt-submit");
-    expect(result.payload.prompt).toBe("do something");
   });
 
-  it("detects before-shell from Bash tool_name (no hint)", () => {
-    const result = normalizeEvent({
-      tool_name: "Bash",
-      tool_input: { command: "ls" },
-      session_id: "sess-eee",
-      cwd: "/workspace",
-    });
-    expect(result.event).toBe("before-shell");
-    expect(result.payload.command).toBe("ls");
+  it("detects pre-tool-use from tool_name field", () => {
+    const result = normalizeEvent({ tool_name: "Bash", tool_input: {}, session_id: "s", cwd: "/ws" });
+    expect(result.event).toBe("pre-tool-use");
   });
 
-  it("detects before-mcp from non-Bash tool_name (no hint)", () => {
-    const result = normalizeEvent({
-      tool_name: "Read",
-      tool_input: { file_path: "/test.ts" },
-      session_id: "sess-fff",
-      cwd: "/workspace",
-    });
-    expect(result.event).toBe("before-mcp");
-    expect(result.payload.tool_name).toBe("Read");
-  });
-
-  it("detects session-start from minimal session_id-only payload (no hint)", () => {
-    const result = normalizeEvent({
-      session_id: "sess-ggg",
-      cwd: "/workspace",
-    });
+  it("detects session-start from session_id-only payload", () => {
+    const result = normalizeEvent({ session_id: "s", cwd: "/ws" });
     expect(result.event).toBe("session-start");
   });
 });
@@ -292,19 +213,11 @@ describe("session ID extraction", () => {
     expect(result.sessionId).toBe("cc-session-1");
   });
 
-  it("extracts sessionId (camelCase) for Claude Code", () => {
-    const result = normalizeEvent(
-      { prompt: "hello", sessionId: "cc-session-2", cwd: "/ws" },
-      "UserPromptSubmit",
-    );
-    expect(result.sessionId).toBe("cc-session-2");
-  });
-
   it("extracts conversation_id for Cursor", () => {
     const result = normalizeEvent({
       hook_event_name: "stop",
       conversation_id: "cursor-conv-1",
-      cwd: "/ws",
+      workspace_roots: ["/ws"],
     });
     expect(result.sessionId).toBe("cursor-conv-1");
   });
@@ -313,7 +226,7 @@ describe("session ID extraction", () => {
     const result = normalizeEvent({
       hook_event_name: "stop",
       session_id: "cursor-sess-fallback",
-      cwd: "/ws",
+      workspace_roots: ["/ws"],
     });
     expect(result.sessionId).toBe("cursor-sess-fallback");
   });
@@ -321,169 +234,151 @@ describe("session ID extraction", () => {
   it("returns empty string when no session identifier present", () => {
     const result = normalizeEvent({
       hook_event_name: "stop",
-      cwd: "/ws",
+      workspace_roots: ["/ws"],
     });
     expect(result.sessionId).toBe("");
   });
 });
 
 // ============================================================================
-// Workspace Root Extraction
+// Output Formatting
 // ============================================================================
 
-describe("workspace root extraction", () => {
-  it("extracts cwd field", () => {
-    const result = normalizeEvent(
-      { prompt: "hi", cwd: "/my/project", session_id: "s1" },
-      "UserPromptSubmit",
-    );
-    expect(result.workspaceRoot).toBe("/my/project");
+describe("formatOutput - Cursor", () => {
+  const cursorEvent = (event: string): NormalizedHookEvent => ({
+    platform: "cursor",
+    event: event as any,
+    sessionId: "c1",
+    workspaceRoot: "/ws",
+    raw: {},
+    payload: {} as any,
   });
 
-  it("extracts workspace_root for Cursor", () => {
-    const result = normalizeEvent({
-      hook_event_name: "stop",
-      workspace_root: "/cursor/workspace",
-      conversation_id: "c1",
+  it("formats session-start output", () => {
+    const out = formatOutput(cursorEvent("session-start"), {
+      env: { BRAIN_SESSION: "s1" },
+      additionalContext: "You are Brain.",
+      continue: true,
     });
-    expect(result.workspaceRoot).toBe("/cursor/workspace");
+    expect(JSON.parse(out)).toEqual({
+      env: { BRAIN_SESSION: "s1" },
+      additional_context: "You are Brain.",
+      continue: true,
+    });
   });
 
-  it("returns empty string when neither cwd nor workspace_root", () => {
-    const result = normalizeEvent({
-      hook_event_name: "stop",
-      conversation_id: "c2",
+  it("formats prompt-submit block", () => {
+    const out = formatOutput(cursorEvent("prompt-submit"), {
+      continue: false,
+      userMessage: "Blocked by policy",
     });
-    expect(result.workspaceRoot).toBe("");
+    expect(JSON.parse(out)).toEqual({
+      continue: false,
+      user_message: "Blocked by policy",
+    });
+  });
+
+  it("formats pre-tool-use deny", () => {
+    const out = formatOutput(cursorEvent("pre-tool-use"), {
+      decision: "deny",
+      reason: "Analysis mode",
+    });
+    expect(JSON.parse(out)).toEqual({
+      decision: "deny",
+      reason: "Analysis mode",
+    });
+  });
+
+  it("formats pre-tool-use with updated input", () => {
+    const out = formatOutput(cursorEvent("pre-tool-use"), {
+      decision: "allow",
+      updatedInput: { command: "npm ci" },
+    });
+    expect(JSON.parse(out)).toEqual({
+      decision: "allow",
+      updated_input: { command: "npm ci" },
+    });
+  });
+
+  it("formats stop with followup", () => {
+    const out = formatOutput(cursorEvent("stop"), {
+      followupMessage: "Run tests next",
+    });
+    expect(JSON.parse(out)).toEqual({
+      followup_message: "Run tests next",
+    });
+  });
+});
+
+describe("formatOutput - Claude Code", () => {
+  const ccEvent = (event: string): NormalizedHookEvent => ({
+    platform: "claude-code",
+    event: event as any,
+    sessionId: "s1",
+    workspaceRoot: "/ws",
+    raw: {},
+    payload: {} as any,
+  });
+
+  it("formats pre-tool-use allow", () => {
+    const out = formatOutput(ccEvent("pre-tool-use"), { decision: "allow" });
+    expect(JSON.parse(out)).toEqual({ decision: "allow" });
+  });
+
+  it("formats prompt-submit block", () => {
+    const out = formatOutput(ccEvent("prompt-submit"), {
+      continue: false,
+      userMessage: "Blocked",
+    });
+    expect(JSON.parse(out)).toEqual({
+      decision: "block",
+      reason: "Blocked",
+    });
+  });
+
+  it("formats session-start as empty (observational)", () => {
+    const out = formatOutput(ccEvent("session-start"), {});
+    expect(JSON.parse(out)).toEqual({});
   });
 });
 
 // ============================================================================
-// Blocking Semantics
+// Cross-Platform Parity
 // ============================================================================
 
-describe("getBlockingSemantics", () => {
-  it("Claude Code Stop can block", () => {
-    const result = getBlockingSemantics("stop", "claude-code");
-    expect(result.canBlock).toBe(true);
-    expect(result.infoOnly).toBe(false);
-  });
-
-  it("Cursor stop is info-only", () => {
-    const result = getBlockingSemantics("stop", "cursor");
-    expect(result.canBlock).toBe(false);
-    expect(result.infoOnly).toBe(true);
-  });
-
-  it("both platforms can block before-shell", () => {
-    expect(getBlockingSemantics("before-shell", "claude-code").canBlock).toBe(true);
-    expect(getBlockingSemantics("before-shell", "cursor").canBlock).toBe(true);
-  });
-
-  it("both platforms can block before-mcp", () => {
-    expect(getBlockingSemantics("before-mcp", "claude-code").canBlock).toBe(true);
-    expect(getBlockingSemantics("before-mcp", "cursor").canBlock).toBe(true);
-  });
-
-  it("Claude Code prompt-submit can block, Cursor cannot", () => {
-    expect(getBlockingSemantics("prompt-submit", "claude-code").canBlock).toBe(true);
-    expect(getBlockingSemantics("prompt-submit", "cursor").canBlock).toBe(false);
-  });
-
-  it("before-read-file: Cursor can block, Claude Code cannot", () => {
-    expect(getBlockingSemantics("before-read-file", "cursor").canBlock).toBe(true);
-    expect(getBlockingSemantics("before-read-file", "claude-code").canBlock).toBe(false);
-  });
-
-  it("after-edit is info-only on both platforms", () => {
-    expect(getBlockingSemantics("after-edit", "claude-code").infoOnly).toBe(true);
-    expect(getBlockingSemantics("after-edit", "cursor").infoOnly).toBe(true);
-  });
-
-  it("returns info-only for unknown events", () => {
-    const result = getBlockingSemantics("unknown-event" as NormalizedEventName, "claude-code");
-    expect(result.canBlock).toBe(false);
-    expect(result.infoOnly).toBe(true);
-  });
-});
-
-// ============================================================================
-// Full Round-Trip Tests
-// ============================================================================
-
-describe("normalizeEvent - round-trip scenarios", () => {
-  it("Cursor shell execution round-trip", () => {
-    const raw = {
-      hook_event_name: "beforeShellExecution",
-      command: "git push origin main",
-      cwd: "/Users/dev/brain",
-      conversation_id: "conv-roundtrip-1",
-      generation_id: "gen-001",
-    };
-    const event = normalizeEvent(raw);
-
-    expect(event).toEqual({
-      platform: "cursor",
-      event: "before-shell",
-      sessionId: "conv-roundtrip-1",
-      workspaceRoot: "/Users/dev/brain",
-      payload: { command: "git push origin main" },
-    } satisfies NormalizedHookEvent);
-  });
-
-  it("Claude Code Bash execution round-trip", () => {
-    const raw = {
-      tool_name: "Bash",
-      tool_input: { command: "git push origin main" },
-      session_id: "sess-roundtrip-1",
-      cwd: "/Users/dev/brain",
-    };
-    const event = normalizeEvent(raw, "PreToolUse");
-
-    expect(event).toEqual({
-      platform: "claude-code",
-      event: "before-shell",
-      sessionId: "sess-roundtrip-1",
-      workspaceRoot: "/Users/dev/brain",
-      payload: {
-        command: "git push origin main",
-        tool_name: "Bash",
-        tool_input: { command: "git push origin main" },
-      },
-    } satisfies NormalizedHookEvent);
-  });
-
-  it("both platforms produce same event name for shell execution", () => {
-    const cursorResult = normalizeEvent({
-      hook_event_name: "beforeShellExecution",
-      command: "ls",
-      cwd: "/ws",
+describe("cross-platform parity", () => {
+  it("both platforms produce same normalized event for pre-tool-use", () => {
+    const cursor = normalizeEvent({
+      hook_event_name: "preToolUse",
+      tool_name: "Shell",
+      tool_input: { command: "ls" },
       conversation_id: "c",
+      workspace_roots: ["/ws"],
     });
 
-    const ccResult = normalizeEvent(
-      { tool_name: "Bash", tool_input: { command: "ls" }, session_id: "s", cwd: "/ws" },
+    const cc = normalizeEvent(
+      { tool_name: "Shell", tool_input: { command: "ls" }, session_id: "s", cwd: "/ws" },
       "PreToolUse",
     );
 
-    expect(cursorResult.event).toBe(ccResult.event);
-    expect(cursorResult.event).toBe("before-shell");
+    expect(cursor.event).toBe(cc.event);
+    expect(cursor.event).toBe("pre-tool-use");
   });
 
-  it("both platforms produce same event name for stop", () => {
-    const cursorResult = normalizeEvent({
+  it("both platforms produce same normalized event for stop", () => {
+    const cursor = normalizeEvent({
       hook_event_name: "stop",
       status: "completed",
       conversation_id: "c",
-      cwd: "/ws",
+      workspace_roots: ["/ws"],
     });
 
-    const ccResult = normalizeEvent(
+    const cc = normalizeEvent(
       { session_id: "s", cwd: "/ws" },
       "Stop",
     );
 
-    expect(cursorResult.event).toBe(ccResult.event);
-    expect(cursorResult.event).toBe("stop");
+    expect(cursor.event).toBe(cc.event);
+    expect(cursor.event).toBe("stop");
   });
 });

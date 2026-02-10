@@ -27,7 +27,7 @@ export { validateStopReadiness, validateSession } from "./validate";
 export {
   normalizeEvent,
   detectPlatform,
-  getBlockingSemantics,
+  formatOutput,
   readAndNormalize,
 } from "./normalize";
 
@@ -47,5 +47,9 @@ export type {
   Platform,
   NormalizedEventName,
   NormalizedHookEvent,
-  BlockingSemantics,
+  HookOutput,
+  SessionStartPayload,
+  PromptSubmitPayload,
+  PreToolUsePayload,
+  StopPayload,
 } from "./normalize";
