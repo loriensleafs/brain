@@ -1,0 +1,8 @@
+tool_name: Cursor
+role: orchestrator
+role_noun: orchestrator
+role_article: the orchestrator
+agent_file: orchestrator.md
+instructions_file: AGENTS.md
+worker_plural: agents
+worker_noun: agents and subagents

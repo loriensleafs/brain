@@ -385,6 +385,21 @@ func installCursor(src *adapters.TemplateSource) error {
 		installed = append(installed, copied...)
 	}
 
+	// Copy reference docs to ~/.agents/
+	dotsAgentsDir := filepath.Join(stagingDir, ".agents")
+	if _, err := os.Stat(dotsAgentsDir); err == nil {
+		fmt.Println("  Copying reference docs to ~/.agents/...")
+		targetDotsAgentsDir := filepath.Join(home, ".agents")
+		if err := os.MkdirAll(targetDotsAgentsDir, 0755); err != nil {
+			return fmt.Errorf("create .agents dir: %w", err)
+		}
+		copied, err := copyBrainFiles(dotsAgentsDir, targetDotsAgentsDir)
+		if err != nil {
+			return fmt.Errorf("copy .agents: %w", err)
+		}
+		installed = append(installed, copied...)
+	}
+
 	// Track directories for skills
 	var installedDirs []string
 	var hookKeys []string

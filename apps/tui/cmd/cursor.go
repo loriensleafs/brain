@@ -83,6 +83,18 @@ func runCursor(_ *cobra.Command, args []string) error {
 		}
 	}
 
+	// Copy reference docs to ~/.agents/
+	dotsAgentsDir := filepath.Join(stagingDir, ".agents")
+	if _, err := os.Stat(dotsAgentsDir); err == nil {
+		targetDotsAgentsDir := filepath.Join(home, ".agents")
+		if err := os.MkdirAll(targetDotsAgentsDir, 0755); err != nil {
+			return fmt.Errorf("create .agents dir: %w", err)
+		}
+		if _, err := copyBrainFiles(dotsAgentsDir, targetDotsAgentsDir); err != nil {
+			return fmt.Errorf("copy .agents: %w", err)
+		}
+	}
+
 	// Copy rules to .cursor/rules/
 	rulesDir := filepath.Join(stagingDir, "rules")
 	if _, err := os.Stat(rulesDir); err == nil {

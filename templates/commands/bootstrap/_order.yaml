@@ -1,23 +1,23 @@
-# Composition order for bootstrap command
-# Each entry references a rule file relative to bootstrap/
-# Variables from _variables.yaml are substituted at compose time
-
-frontmatter:
-  name: bootstrap
-  description: "Initialize {tool_name} session with {role} pattern, {role_noun} identity, and Brain MCP context"
+name: bootstrap
+description: Composable sections for the bootstrap command
 
 sections:
-  # Mandatory header
-  - sections/010-mandatory-header.md
+  - 010-mandatory-header
+  - 020-role-identity
+  - 030-clarifying-questions
+  - 040-memory-directive
+  - 050-plan-review
+  - 060-ask-user-question
+  - 070-session-hook
 
-  # Role identity and reload instructions
-  - "{tool}/020-role-identity.md"
-
-  # Shared behavior directives
-  - sections/030-clarifying-questions.md
-  - sections/040-memory-directive.md
-  - sections/050-plan-review.md
-  - sections/060-ask-user-question.md
-
-  # Session start hook
-  - sections/070-session-hook.md
+variants:
+  claude-code:
+    variables: _variables.yaml
+    overrides:
+      020-role-identity: 020-role-identity
+    inserts_at_VARIANT_INSERT: []
+  cursor:
+    variables: _variables.yaml
+    overrides:
+      020-role-identity: 020-role-identity
+    inserts_at_VARIANT_INSERT: []
