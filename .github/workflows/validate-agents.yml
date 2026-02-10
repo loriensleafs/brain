@@ -79,6 +79,14 @@ jobs:
             sudo dpkg -i tinygo_0.33.0_amd64.deb
           fi
 
+      - name: Cache yarn dependencies
+        uses: actions/cache@v4
+        with:
+          key: yarn-wasm-${{ runner.os }}-${{ hashFiles('packages/validation/wasm/yarn.lock') }}
+          path: packages/validation/wasm/node_modules
+          restore-keys: |
+            yarn-wasm-${{ runner.os }}-
+
       - name: Install dependencies
         run: yarn install --frozen-lockfile
         working-directory: packages/validation/wasm

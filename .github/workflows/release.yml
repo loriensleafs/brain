@@ -34,7 +34,9 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.23'
+          cache: true
+          cache-dependency-path: apps/tui/go.sum
+          go-version-file: apps/tui/go.mod
 
       - uses: goreleaser/goreleaser-action@v6
         with:
