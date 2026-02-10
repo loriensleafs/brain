@@ -44,10 +44,7 @@ func extractFlag(args []string, flag string) ([]string, bool) {
 func runClaude(_ *cobra.Command, args []string) error {
 	args, agentTeams := extractFlag(args, "--agent-teams")
 
-	projectRoot, err := findProjectRoot()
-	if err != nil {
-		return fmt.Errorf("cannot find project root: %w", err)
-	}
+	src := resolveTemplateSource()
 
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -59,7 +56,7 @@ func runClaude(_ *cobra.Command, args []string) error {
 	if err := os.RemoveAll(pluginDir); err != nil {
 		return fmt.Errorf("clean staging: %w", err)
 	}
-	if err := runAdapterStage(projectRoot, "claude-code", pluginDir); err != nil {
+	if err := runAdapterStageFromSource(src, "claude-code", pluginDir); err != nil {
 		return fmt.Errorf("staging plugin via adapter: %w", err)
 	}
 
@@ -67,17 +64,25 @@ func runClaude(_ *cobra.Command, args []string) error {
 
 	if agentTeams {
 		// Swap to agent-teams orchestrator variant.
-		// The canonical agents/ directory contains both orchestrator-claude.md (standard)
-		// and orchestrator-claude-teams.md (Agent Teams variant).
-		// Replace the standard orchestrator symlink with the teams variant.
 		standardOrch := filepath.Join(pluginDir, "agents", "\xf0\x9f\xa7\xa0-orchestrator-claude.md")
-		teamsOrch := filepath.Join(projectRoot, "agents", "orchestrator-claude-teams.md")
-		if _, err := os.Stat(teamsOrch); err == nil {
-			os.Remove(standardOrch)
-			// Write the teams variant through the adapter would be ideal,
-			// but for now directly symlink the source file.
-			if err := os.Symlink(teamsOrch, standardOrch); err != nil {
-				return fmt.Errorf("swap orchestrator variant: %w", err)
+
+		// Try filesystem first for the teams variant
+		if !src.IsEmbedded() {
+			teamsOrch := filepath.Join(src.ProjectRoot(), "agents", "orchestrator-claude-teams.md")
+			if _, err := os.Stat(teamsOrch); err == nil {
+				os.Remove(standardOrch)
+				if err := os.Symlink(teamsOrch, standardOrch); err != nil {
+					return fmt.Errorf("swap orchestrator variant: %w", err)
+				}
+			}
+		} else {
+			// Read from embedded templates and write to staging
+			data, err := src.ReadFile("agents/orchestrator-claude-teams.md")
+			if err == nil {
+				os.Remove(standardOrch)
+				if writeErr := os.WriteFile(standardOrch, data, 0644); writeErr != nil {
+					return fmt.Errorf("swap orchestrator variant: %w", writeErr)
+				}
 			}
 		}
 

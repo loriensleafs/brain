@@ -8,6 +8,7 @@ package adapters
 import (
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -310,9 +311,58 @@ func ReadCanonicalAgents(agentsDir string) ([]CanonicalAgent, error) {
 	return agents, nil
 }
 
+// ReadCanonicalAgentsFromSource reads agents from a TemplateSource.
+// relDir is relative to the templates root (e.g., "agents").
+func ReadCanonicalAgentsFromSource(src *TemplateSource, relDir string) ([]CanonicalAgent, error) {
+	entries, err := src.ReadDir(relDir)
+	if err != nil {
+		return nil, nil
+	}
+
+	var agents []CanonicalAgent
+	for _, entry := range entries {
+		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".md") {
+			continue
+		}
+		if entry.Name() == ".gitkeep" {
+			continue
+		}
+
+		raw, err := src.ReadFile(relDir + "/" + entry.Name())
+		if err != nil {
+			return nil, fmt.Errorf("read agent %s: %w", entry.Name(), err)
+		}
+
+		fm, body := ParseFrontmatter(string(raw))
+		name := strings.TrimSuffix(entry.Name(), ".md")
+		agents = append(agents, CanonicalAgent{
+			Name:        name,
+			Body:        body,
+			Frontmatter: fm,
+		})
+	}
+
+	return agents, nil
+}
+
 // ReadBrainConfig reads brain.config.json from the project root.
 func ReadBrainConfig(projectRoot string) (*BrainConfig, error) {
 	data, err := os.ReadFile(filepath.Join(projectRoot, "templates", "configs", "brain.config.json"))
+	if err != nil {
+		return nil, fmt.Errorf("read brain.config.json: %w", err)
+	}
+
+	var config BrainConfig
+	if err := json.Unmarshal(data, &config); err != nil {
+		return nil, fmt.Errorf("parse brain.config.json: %w", err)
+	}
+
+	return &config, nil
+}
+
+// ReadBrainConfigFromSource reads brain.config.json from a TemplateSource.
+func ReadBrainConfigFromSource(src *TemplateSource) (*BrainConfig, error) {
+	data, err := src.ReadFile("configs/brain.config.json")
 	if err != nil {
 		return nil, fmt.Errorf("read brain.config.json: %w", err)
 	}
@@ -396,6 +446,86 @@ func ScanAllFiles(dir string) ([]string, error) {
 	}
 
 	return files, nil
+}
+
+// ScanMarkdownFilesFromSource returns all .md filenames in a directory via TemplateSource.
+func ScanMarkdownFilesFromSource(src *TemplateSource, relDir string) ([]string, error) {
+	entries, err := src.ReadDir(relDir)
+	if err != nil {
+		return nil, nil
+	}
+
+	var files []string
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		if entry.Name() == ".gitkeep" || entry.Name() == ".DS_Store" {
+			continue
+		}
+		if strings.HasSuffix(entry.Name(), ".md") {
+			files = append(files, entry.Name())
+		}
+	}
+
+	return files, nil
+}
+
+// ScanAllFilesFromSource returns all non-hidden filenames in a directory via TemplateSource.
+func ScanAllFilesFromSource(src *TemplateSource, relDir string) ([]string, error) {
+	entries, err := src.ReadDir(relDir)
+	if err != nil {
+		return nil, nil
+	}
+
+	var files []string
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		name := entry.Name()
+		if name == ".gitkeep" || name == ".DS_Store" || strings.HasPrefix(name, ".") {
+			continue
+		}
+		files = append(files, name)
+	}
+
+	return files, nil
+}
+
+// CollectFilesFromSource recursively collects all files relative to relDir via TemplateSource.
+func CollectFilesFromSource(src *TemplateSource, relDir string) ([]string, error) {
+	var result []string
+
+	err := src.WalkDir(relDir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		name := d.Name()
+		if d.IsDir() {
+			if name == "node_modules" || name == ".git" {
+				return fs.SkipDir
+			}
+			return nil
+		}
+
+		if name == ".DS_Store" {
+			return nil
+		}
+
+		// Get path relative to relDir
+		rel := strings.TrimPrefix(path, relDir+"/")
+		if rel != path {
+			result = append(result, rel)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 // WriteGeneratedFiles writes a slice of generated files to the given output directory.

@@ -9,6 +9,7 @@ import (
 
 	"github.com/charmbracelet/huh"
 	"github.com/peterkloss/brain-tui/internal/adapters"
+	"github.com/peterkloss/brain-tui/embedded"
 	"github.com/spf13/cobra"
 )
 
@@ -130,6 +131,23 @@ func readManifest(tool string) (*installManifest, error) {
 	return &m, nil
 }
 
+// ─── Template Source ─────────────────────────────────────────────────────────
+
+// resolveTemplateSource returns a TemplateSource for reading templates.
+// Prefers the real filesystem (development), falls back to embedded templates.
+func resolveTemplateSource() *adapters.TemplateSource {
+	// Try to find project root on the filesystem first
+	projectRoot, err := findProjectRoot()
+	if err == nil {
+		return adapters.NewFilesystemSource(projectRoot)
+	}
+
+	// Fall back to embedded templates
+	// Use a reasonable default for projectRoot (used for path resolution in MCP config)
+	home, _ := os.UserHomeDir()
+	return adapters.NewEmbeddedSource(embedded.FS(), filepath.Join(home, "Dev", "brain"))
+}
+
 // ─── Adapter Invocation ──────────────────────────────────────────────────────
 
 func runAdapterStage(projectRoot, target, outputDir string) error {
@@ -162,9 +180,40 @@ func runAdapterStage(projectRoot, target, outputDir string) error {
 	return adapters.WriteGeneratedFiles(files, outputDir)
 }
 
+// runAdapterStageFromSource runs adapter transforms using a TemplateSource.
+func runAdapterStageFromSource(src *adapters.TemplateSource, target, outputDir string) error {
+	brainConfig, err := adapters.ReadBrainConfigFromSource(src)
+	if err != nil {
+		return fmt.Errorf("read config: %w", err)
+	}
+
+	var files []adapters.GeneratedFile
+	switch target {
+	case "claude-code":
+		output, err := adapters.TransformClaudeCodeFromSource(src, brainConfig)
+		if err != nil {
+			return fmt.Errorf("transform claude-code: %w", err)
+		}
+		files = output.AllFiles()
+	case "cursor":
+		output, err := adapters.CursorTransformFromSource(src, brainConfig)
+		if err != nil {
+			return fmt.Errorf("transform cursor: %w", err)
+		}
+		files = append(files, output.Agents...)
+		files = append(files, output.Rules...)
+		files = append(files, output.Hooks...)
+		files = append(files, output.MCP...)
+	default:
+		return fmt.Errorf("unknown target: %s", target)
+	}
+
+	return adapters.WriteGeneratedFiles(files, outputDir)
+}
+
 // ─── Claude Code Install ─────────────────────────────────────────────────────
 
-func installClaudeCode(projectRoot string) error {
+func installClaudeCode(src *adapters.TemplateSource) error {
 	home, _ := os.UserHomeDir()
 	pluginsDir := filepath.Join(home, ".claude", "plugins")
 	marketplaceDir := filepath.Join(pluginsDir, "marketplaces", "brain")
@@ -176,7 +225,7 @@ func installClaudeCode(projectRoot string) error {
 	if err := os.RemoveAll(stagingDir); err != nil {
 		return fmt.Errorf("clean staging: %w", err)
 	}
-	if err := runAdapterStage(projectRoot, "claude-code", stagingDir); err != nil {
+	if err := runAdapterStageFromSource(src, "claude-code", stagingDir); err != nil {
 		return fmt.Errorf("adapter: %w", err)
 	}
 
@@ -241,7 +290,7 @@ func uninstallClaudeCode() error {
 
 // ─── Cursor Install ─────────────────────────────────────────────────────────
 
-func installCursor(projectRoot string) error {
+func installCursor(src *adapters.TemplateSource) error {
 	home, _ := os.UserHomeDir()
 	cursorDir := filepath.Join(home, ".cursor")
 
@@ -250,7 +299,7 @@ func installCursor(projectRoot string) error {
 	if err := os.RemoveAll(stagingDir); err != nil {
 		return fmt.Errorf("clean staging: %w", err)
 	}
-	if err := runAdapterStage(projectRoot, "cursor", stagingDir); err != nil {
+	if err := runAdapterStageFromSource(src, "cursor", stagingDir); err != nil {
 		return fmt.Errorf("adapter: %w", err)
 	}
 
@@ -537,22 +586,23 @@ func runInstall(_ *cobra.Command, _ []string) error {
 		return nil
 	}
 
-	projectRoot, err := findProjectRoot()
-	if err != nil {
-		return err
+	src := resolveTemplateSource()
+	if src.IsEmbedded() {
+		fmt.Println("Using embedded templates (no project root found)")
+	} else {
+		fmt.Printf("Project: %s\n\n", src.ProjectRoot())
 	}
-	fmt.Printf("Project: %s\n\n", projectRoot)
 
 	// Install each selected tool
 	for _, tool := range selected {
 		fmt.Printf("Installing for %s...\n", tool)
 		switch tool {
 		case "claude-code":
-			if err := installClaudeCode(projectRoot); err != nil {
+			if err := installClaudeCode(src); err != nil {
 				fmt.Printf("  [FAIL] %v\n", err)
 			}
 		case "cursor":
-			if err := installCursor(projectRoot); err != nil {
+			if err := installCursor(src); err != nil {
 				fmt.Printf("  [FAIL] %v\n", err)
 			}
 		default:
