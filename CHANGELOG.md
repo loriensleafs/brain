@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.9](https://github.com/loriensleafs/brain/compare/v0.1.8...v0.1.9) (2026-02-10)
+
+
+### Bug Fixes
+
+* **install:** ensure target dirs exist and ignore .DS_Store in cleanup ([514e96b](https://github.com/loriensleafs/brain/commit/514e96b5731a0d0af55b9460a16d18a433c2add1))
+* **install:** ensure target dirs exist and ignore .DS_Store in cleanup ([abc5183](https://github.com/loriensleafs/brain/commit/abc5183357c3ca62f089025fd88363b3d639fd65))
+* **install:** replace existing symlinks with real files during copy ([9b55f85](https://github.com/loriensleafs/brain/commit/9b55f85ac980a03318207479a11eb7d041634e46))
+
 ## [0.1.8](https://github.com/loriensleafs/brain/compare/v0.1.7...v0.1.8) (2026-02-10)
 
 
