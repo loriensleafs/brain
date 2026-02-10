@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.12](https://github.com/loriensleafs/brain/compare/v0.1.11...v0.1.12) (2026-02-10)
+
+
+### Bug Fixes
+
+* **hooks:** output Cursor-format JSON from session-start hook ([fa6acaf](https://github.com/loriensleafs/brain/commit/fa6acafaaf6716a0ee14699405a3d06a40eb3ebf))
+* **hooks:** output Cursor-format JSON from session-start hook ([3f79fae](https://github.com/loriensleafs/brain/commit/3f79faefbde95edec76682e6a27c992188853048))
+* **hooks:** use platform-correct output format in all hook scripts ([17df981](https://github.com/loriensleafs/brain/commit/17df98190c9576405fe87693a4ea65be3f1f2592))
+
 ## [0.1.11](https://github.com/loriensleafs/brain/compare/v0.1.10...v0.1.11) (2026-02-10)
 
 
