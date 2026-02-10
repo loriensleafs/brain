@@ -1,0 +1,22 @@
+# Template variables for bootstrap command
+# Resolved per tool variant at compose time
+
+claude-code:
+  tool_name: Claude Code
+  role: orchestrator
+  role_noun: team lead
+  role_article: the Team Lead
+  agent_file: orchestrator agent
+  instructions_file: AGENTS.md
+  worker_plural: teammates
+  worker_noun: agent teammates
+
+cursor:
+  tool_name: Cursor
+  role: orchestrator
+  role_noun: orchestrator
+  role_article: the orchestrator
+  agent_file: orchestrator.md
+  instructions_file: AGENTS.md
+  worker_plural: agents
+  worker_noun: agents and subagents
