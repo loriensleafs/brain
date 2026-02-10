@@ -98,8 +98,11 @@ func findProjectRoot() (string, error) {
 // ─── Install Manifest ────────────────────────────────────────────────────────
 
 type installManifest struct {
-	Tool  string   `json:"tool"`
-	Files []string `json:"files"`
+	Tool        string   `json:"tool"`
+	Files       []string `json:"files"`       // file paths installed (agents, commands, rules, scripts)
+	Dirs        []string `json:"dirs"`        // directories installed (skills)
+	HookKeys    []string `json:"hookKeys"`    // hook event keys merged into hooks.json
+	MCPServers  []string `json:"mcpServers"`  // MCP server names merged into mcp.json
 }
 
 func manifestPath(tool string) string {
@@ -130,6 +133,34 @@ func readManifest(tool string) (*installManifest, error) {
 		return nil, err
 	}
 	return &m, nil
+}
+
+// ─── Installed Dependencies Tracking ─────────────────────────────────────────
+
+func depsManifestPath() string {
+	home, _ := os.UserHomeDir()
+	return filepath.Join(home, ".cache", "brain", "installed-deps.json")
+}
+
+func writeInstalledDeps(deps []string) error {
+	data, err := json.MarshalIndent(deps, "", "  ")
+	if err != nil {
+		return err
+	}
+	data = append(data, '\n')
+	dir := filepath.Dir(depsManifestPath())
+	os.MkdirAll(dir, 0755)
+	return os.WriteFile(depsManifestPath(), data, 0644)
+}
+
+func readInstalledDeps() []string {
+	data, err := os.ReadFile(depsManifestPath())
+	if err != nil {
+		return nil
+	}
+	var deps []string
+	json.Unmarshal(data, &deps)
+	return deps
 }
 
 // ─── Template Source ─────────────────────────────────────────────────────────
@@ -324,21 +355,6 @@ func installCursor(src *adapters.TemplateSource) error {
 		installed = append(installed, copied...)
 	}
 
-	// Copy skills to .cursor/skills/
-	skillsDir := filepath.Join(stagingDir, "skills")
-	if _, err := os.Stat(skillsDir); err == nil {
-		fmt.Println("  Copying skills to .cursor/skills/...")
-		targetSkillsDir := filepath.Join(cursorDir, "skills")
-		if err := os.MkdirAll(targetSkillsDir, 0755); err != nil {
-			return fmt.Errorf("create skills dir: %w", err)
-		}
-		copied, err := copyBrainFilesRecursive(skillsDir, targetSkillsDir)
-		if err != nil {
-			return fmt.Errorf("copy skills: %w", err)
-		}
-		installed = append(installed, copied...)
-	}
-
 	// Copy commands to .cursor/commands/
 	commandsDir := filepath.Join(stagingDir, "commands")
 	if _, err := os.Stat(commandsDir); err == nil {
@@ -369,6 +385,33 @@ func installCursor(src *adapters.TemplateSource) error {
 		installed = append(installed, copied...)
 	}
 
+	// Track directories for skills
+	var installedDirs []string
+	var hookKeys []string
+	var mcpServers []string
+
+	// Copy skills to .cursor/skills/
+	skillsDir := filepath.Join(stagingDir, "skills")
+	if _, err := os.Stat(skillsDir); err == nil {
+		fmt.Println("  Copying skills to .cursor/skills/...")
+		targetSkillsDir := filepath.Join(cursorDir, "skills")
+		if err := os.MkdirAll(targetSkillsDir, 0755); err != nil {
+			return fmt.Errorf("create skills dir: %w", err)
+		}
+		copied, err := copyBrainFilesRecursive(skillsDir, targetSkillsDir)
+		if err != nil {
+			return fmt.Errorf("copy skills: %w", err)
+		}
+		installed = append(installed, copied...)
+		// Track top-level skill directories for removal
+		entries, _ := os.ReadDir(targetSkillsDir)
+		for _, e := range entries {
+			if e.IsDir() && strings.HasPrefix(e.Name(), "\xf0\x9f\xa7\xa0-") {
+				installedDirs = append(installedDirs, filepath.Join(targetSkillsDir, e.Name()))
+			}
+		}
+	}
+
 	// JSON merge for hooks
 	hooksMergePath := filepath.Join(stagingDir, "hooks", "hooks.merge.json")
 	if _, err := os.Stat(hooksMergePath); err == nil {
@@ -378,7 +421,7 @@ func installCursor(src *adapters.TemplateSource) error {
 		if err != nil {
 			fmt.Printf("  Warning: hooks merge failed: %v\n", err)
 		} else {
-			installed = append(installed, merged...)
+			hookKeys = append(hookKeys, merged...)
 		}
 
 		// Copy hook scripts
@@ -405,11 +448,22 @@ func installCursor(src *adapters.TemplateSource) error {
 		if err != nil {
 			fmt.Printf("  Warning: MCP merge failed: %v\n", err)
 		} else {
-			installed = append(installed, merged...)
+			mcpServers = append(mcpServers, merged...)
 		}
 	}
 
-	if err := writeManifest("cursor", installed); err != nil {
+	manifest := installManifest{
+		Tool:       "cursor",
+		Files:      installed,
+		Dirs:       installedDirs,
+		HookKeys:   hookKeys,
+		MCPServers: mcpServers,
+	}
+	data, _ := json.MarshalIndent(manifest, "", "  ")
+	data = append(data, '\n')
+	dir := filepath.Dir(manifestPath("cursor"))
+	os.MkdirAll(dir, 0755)
+	if err := os.WriteFile(manifestPath("cursor"), data, 0644); err != nil {
 		fmt.Printf("  Warning: failed to write manifest: %v\n", err)
 	}
 
@@ -427,19 +481,44 @@ func uninstallCursor() error {
 		return fmt.Errorf("no install manifest found: %w", err)
 	}
 
-	// Remove Brain-managed files (those with 🧠- prefix)
+	// Remove Brain-managed files (agents, commands, rules, hook scripts)
 	for _, f := range m.Files {
-		if strings.Contains(filepath.Base(f), "\xf0\x9f\xa7\xa0-") {
-			os.Remove(f)
+		if err := os.Remove(f); err == nil {
 			fmt.Printf("  Removed: %s\n", f)
 		}
 	}
 
-	// Reverse JSON merges for hooks and MCP
-	for _, configFile := range []string{"hooks.json", "mcp.json"} {
-		targetPath := filepath.Join(cursorDir, configFile)
-		if err := jsonUnmerge(targetPath); err != nil {
-			fmt.Printf("  Warning: failed to clean %s: %v\n", configFile, err)
+	// Remove Brain-managed directories (🧠-prefixed skill dirs)
+	for _, d := range m.Dirs {
+		if err := os.RemoveAll(d); err == nil {
+			fmt.Printf("  Removed: %s\n", d)
+		}
+	}
+
+	// Remove empty hooks/scripts dir if we cleaned it out
+	hooksScriptsDir := filepath.Join(cursorDir, "hooks", "scripts")
+	if entries, err := os.ReadDir(hooksScriptsDir); err == nil && len(entries) == 0 {
+		os.Remove(hooksScriptsDir)
+		os.Remove(filepath.Join(cursorDir, "hooks")) // remove parent if empty
+	}
+
+	// Clean hooks.json: remove Brain-managed hook event keys
+	if len(m.HookKeys) > 0 {
+		hooksPath := filepath.Join(cursorDir, "hooks.json")
+		if err := jsonRemoveKeys(hooksPath, m.HookKeys); err != nil {
+			fmt.Printf("  Warning: failed to clean hooks.json: %v\n", err)
+		} else {
+			fmt.Println("  Cleaned hooks.json")
+		}
+	}
+
+	// Clean mcp.json: remove Brain-managed MCP servers
+	if len(m.MCPServers) > 0 {
+		mcpPath := filepath.Join(cursorDir, "mcp.json")
+		if err := jsonRemoveKeys(mcpPath, m.MCPServers); err != nil {
+			fmt.Printf("  Warning: failed to clean mcp.json: %v\n", err)
+		} else {
+			fmt.Println("  Cleaned mcp.json")
 		}
 	}
 
@@ -575,9 +654,12 @@ func jsonMerge(mergePayloadPath, targetPath string) ([]string, error) {
 	return payload.ManagedKeys, nil
 }
 
-// jsonUnmerge removes Brain-managed keys from a JSON config file.
-// Uses the manifest to determine which keys were managed.
-func jsonUnmerge(targetPath string) error {
+// jsonRemoveKeys removes specific dotted keys from a JSON config file.
+// Keys like "hooks.beforeSubmitPrompt" remove data["hooks"]["beforeSubmitPrompt"].
+// Keys like "mcpServers.brain" remove data["mcpServers"]["brain"].
+// If removing the last nested key empties the parent, removes the parent too.
+// If the file becomes effectively empty, deletes it entirely.
+func jsonRemoveKeys(targetPath string, keys []string) error {
 	raw, err := os.ReadFile(targetPath)
 	if err != nil {
 		return nil // File doesn't exist, nothing to clean
@@ -588,34 +670,42 @@ func jsonUnmerge(targetPath string) error {
 		return err
 	}
 
-	// Look for a _brainManaged marker or use the manifest
-	m, err := readManifest("cursor")
-	if err != nil {
-		return nil // No manifest, nothing to reverse
-	}
-
-	_ = m // Manifest read for future managed key tracking
-
-	// Remove any keys that contain Brain emoji prefix from nested sections
-	modified := false
-	for _, v := range data {
-		if section, ok := v.(map[string]any); ok {
-			for sk := range section {
-				if strings.Contains(sk, "\xf0\x9f\xa7\xa0") {
-					delete(section, sk)
-					modified = true
+	for _, key := range keys {
+		parts := strings.SplitN(key, ".", 2)
+		if len(parts) == 2 {
+			// Nested key: remove from sub-map
+			if section, ok := data[parts[0]].(map[string]any); ok {
+				delete(section, parts[1])
+				// If section is now empty, remove the parent key
+				if len(section) == 0 {
+					delete(data, parts[0])
 				}
 			}
+		} else {
+			// Top-level key
+			delete(data, key)
 		}
 	}
 
-	if modified {
-		out, _ := json.MarshalIndent(data, "", "  ")
-		out = append(out, '\n')
-		return os.WriteFile(targetPath, out, 0644)
+	// If only metadata keys remain (version, $schema) or empty, delete the file
+	meaningful := 0
+	for k := range data {
+		if k != "version" && k != "$schema" {
+			meaningful++
+		}
+	}
+	if meaningful == 0 {
+		os.Remove(targetPath)
+		fmt.Printf("  Removed: %s (empty after cleanup)\n", targetPath)
+		return nil
 	}
 
-	return nil
+	out, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		return err
+	}
+	out = append(out, '\n')
+	return os.WriteFile(targetPath, out, 0644)
 }
 
 // ─── Install Detection ──────────────────────────────────────────────────────
@@ -1017,16 +1107,36 @@ func ensureDependencies() error {
 	}
 
 	installedBasicMemory := false
+	var newlyInstalled []string
 	for _, dep := range missing {
 		if err := installDependency(dep); err != nil {
 			fmt.Printf("  [FAIL] %s: %v\n", dep.Name, err)
 			fmt.Printf("  Install manually: %s\n", dep.InstallCmd)
 		} else {
 			fmt.Printf("  [COMPLETE] %s installed\n", dep.Name)
+			newlyInstalled = append(newlyInstalled, dep.Name)
 			if dep.Name == "basic-memory" {
 				installedBasicMemory = true
 			}
 		}
+	}
+
+	// Track which deps Brain installed (append to existing list)
+	if len(newlyInstalled) > 0 {
+		existing := readInstalledDeps()
+		for _, dep := range newlyInstalled {
+			found := false
+			for _, e := range existing {
+				if e == dep {
+					found = true
+					break
+				}
+			}
+			if !found {
+				existing = append(existing, dep)
+			}
+		}
+		writeInstalledDeps(existing)
 	}
 
 	// Configure basic-memory (fresh install writes full config,
@@ -1126,11 +1236,13 @@ func runInstall(_ *cobra.Command, _ []string) error {
 	}
 
 	if hasNew {
-		var confirm bool
+		confirm := true
 		confirmForm := huh.NewForm(
 			huh.NewGroup(
 				huh.NewConfirm().
 					Title(fmt.Sprintf("Install Brain for: %s?", strings.Join(confirmed, ", "))).
+					Affirmative("Yes").
+					Negative("No").
 					Value(&confirm),
 			),
 		)
@@ -1175,6 +1287,75 @@ func runInstall(_ *cobra.Command, _ []string) error {
 
 // ─── Uninstall Command ───────────────────────────────────────────────────────
 
+// uninstallDependencies removes only dependencies that were installed by brain install.
+// Dependencies that existed before Brain was installed are left untouched.
+func uninstallDependencies() {
+	brainInstalled := readInstalledDeps()
+	if len(brainInstalled) == 0 {
+		fmt.Println("  No dependencies were installed by Brain")
+		return
+	}
+
+	uninstallCmds := map[string]string{
+		"basic-memory": "uv tool uninstall basic-memory",
+		"uv":           "rm -rf ~/.local/bin/uv ~/.local/bin/uvx",
+		"bun":          "rm -rf ~/.bun",
+	}
+
+	// Uninstall in reverse order (basic-memory before uv, since uv manages it)
+	order := []string{"basic-memory", "uv", "bun"}
+	for _, name := range order {
+		found := false
+		for _, installed := range brainInstalled {
+			if installed == name {
+				found = true
+				break
+			}
+		}
+		if !found {
+			continue // Brain didn't install this, leave it alone
+		}
+
+		cmd, ok := uninstallCmds[name]
+		if !ok {
+			continue
+		}
+
+		fmt.Printf("  Removing %s (installed by Brain)...\n", name)
+		c := exec.Command("sh", "-c", cmd)
+		c.Stdout = os.Stdout
+		c.Stderr = os.Stderr
+		if err := c.Run(); err != nil {
+			fmt.Printf("  Warning: failed to remove %s: %v\n", name, err)
+		} else {
+			fmt.Printf("  [COMPLETE] %s removed\n", name)
+		}
+	}
+
+	// Clean up the deps manifest
+	os.Remove(depsManifestPath())
+}
+
+// uninstallBrainConfig removes Brain's own config files.
+func uninstallBrainConfig() {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return
+	}
+
+	// Remove Brain config
+	brainConfigDir := filepath.Join(home, ".config", "brain")
+	if err := os.RemoveAll(brainConfigDir); err == nil {
+		fmt.Println("  Removed ~/.config/brain/")
+	}
+
+	// Remove Brain cache
+	brainCacheDir := filepath.Join(home, ".cache", "brain")
+	if err := os.RemoveAll(brainCacheDir); err == nil {
+		fmt.Println("  Removed ~/.cache/brain/")
+	}
+}
+
 func runUninstall(_ *cobra.Command, _ []string) error {
 	// Detect what is installed via manifests
 	var installed []string
@@ -1189,9 +1370,35 @@ func runUninstall(_ *cobra.Command, _ []string) error {
 		return nil
 	}
 
+	// First choice: selective or full uninstall
+	var mode string
+	modeForm := huh.NewForm(
+		huh.NewGroup(
+			huh.NewSelect[string]().
+				Title("How would you like to uninstall Brain?").
+				Options(
+					huh.NewOption("Remove from specific tools", "selective"),
+					huh.NewOption("Full uninstall (all tools + dependencies)", "full"),
+				).
+				Value(&mode),
+		),
+	)
+
+	if err := modeForm.Run(); err != nil {
+		return err
+	}
+
+	if mode == "full" {
+		return runFullUninstall(installed)
+	}
+
+	return runSelectiveUninstall(installed)
+}
+
+func runSelectiveUninstall(installed []string) error {
 	var options []huh.Option[string]
 	for _, t := range installed {
-		options = append(options, huh.NewOption(t, t))
+		options = append(options, huh.NewOption(toolDisplayName(t), t))
 	}
 
 	var selected []string
@@ -1218,6 +1425,8 @@ func runUninstall(_ *cobra.Command, _ []string) error {
 		huh.NewGroup(
 			huh.NewConfirm().
 				Title(fmt.Sprintf("Uninstall Brain from: %s?", strings.Join(selected, ", "))).
+				Affirmative("Yes").
+				Negative("No").
 				Value(&confirm),
 		),
 	)
@@ -1231,22 +1440,84 @@ func runUninstall(_ *cobra.Command, _ []string) error {
 	}
 
 	for _, tool := range selected {
-		fmt.Printf("Uninstalling from %s...\n", tool)
-		switch tool {
-		case "claude-code":
-			if err := uninstallClaudeCode(); err != nil {
-				fmt.Printf("  [FAIL] %v\n", err)
-			}
-		case "cursor":
-			if err := uninstallCursor(); err != nil {
-				fmt.Printf("  [FAIL] %v\n", err)
-			}
-		default:
-			fmt.Printf("  [FAIL] %s not yet supported\n", tool)
-		}
+		fmt.Printf("Uninstalling from %s...\n", toolDisplayName(tool))
+		uninstallTool(tool)
 		fmt.Println()
 	}
 
 	fmt.Println("Done. Restart your tools to take effect.")
 	return nil
+}
+
+func runFullUninstall(installed []string) error {
+	brainDeps := readInstalledDeps()
+
+	fmt.Println("\nThis will remove Brain from all tools.")
+	fmt.Println()
+	fmt.Println("Tools to remove from:")
+	for _, t := range installed {
+		fmt.Printf("  - %s\n", toolDisplayName(t))
+	}
+	if len(brainDeps) > 0 {
+		fmt.Println()
+		fmt.Println("Dependencies to remove (installed by Brain):")
+		for _, dep := range brainDeps {
+			fmt.Printf("  - %s\n", dep)
+		}
+	}
+	fmt.Println()
+
+	var confirm bool
+	confirmForm := huh.NewForm(
+		huh.NewGroup(
+			huh.NewConfirm().
+				Title("Proceed with full uninstall?").
+				Affirmative("Yes, remove everything").
+				Negative("No").
+				Value(&confirm),
+		),
+	)
+
+	if err := confirmForm.Run(); err != nil {
+		return err
+	}
+	if !confirm {
+		fmt.Println("Cancelled.")
+		return nil
+	}
+
+	// Uninstall from all tools
+	for _, tool := range installed {
+		fmt.Printf("Uninstalling from %s...\n", toolDisplayName(tool))
+		uninstallTool(tool)
+		fmt.Println()
+	}
+
+	// Remove dependencies
+	fmt.Println("Removing dependencies...")
+	uninstallDependencies()
+	fmt.Println()
+
+	// Remove Brain config and cache
+	fmt.Println("Removing Brain config...")
+	uninstallBrainConfig()
+	fmt.Println()
+
+	fmt.Println("Done. Brain has been fully uninstalled.")
+	return nil
+}
+
+func uninstallTool(tool string) {
+	switch tool {
+	case "claude-code":
+		if err := uninstallClaudeCode(); err != nil {
+			fmt.Printf("  [FAIL] %v\n", err)
+		}
+	case "cursor":
+		if err := uninstallCursor(); err != nil {
+			fmt.Printf("  [FAIL] %v\n", err)
+		}
+	default:
+		fmt.Printf("  [FAIL] %s not yet supported\n", tool)
+	}
 }
