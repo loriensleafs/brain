@@ -496,10 +496,12 @@ func uninstallCursor() error {
 		return fmt.Errorf("no install manifest found: %w", err)
 	}
 
-	// Remove Brain-managed files (agents, commands, rules, hook scripts)
+	// Remove Brain-managed files (agents, commands, rules, hook scripts, .agents docs)
+	removedDirs := make(map[string]bool)
 	for _, f := range m.Files {
 		if err := os.Remove(f); err == nil {
 			fmt.Printf("  Removed: %s\n", f)
+			removedDirs[filepath.Dir(f)] = true
 		}
 	}
 
@@ -507,14 +509,13 @@ func uninstallCursor() error {
 	for _, d := range m.Dirs {
 		if err := os.RemoveAll(d); err == nil {
 			fmt.Printf("  Removed: %s\n", d)
+			removedDirs[filepath.Dir(d)] = true
 		}
 	}
 
-	// Remove empty hooks/scripts dir if we cleaned it out
-	hooksScriptsDir := filepath.Join(cursorDir, "hooks", "scripts")
-	if entries, err := os.ReadDir(hooksScriptsDir); err == nil && len(entries) == 0 {
-		os.Remove(hooksScriptsDir)
-		os.Remove(filepath.Join(cursorDir, "hooks")) // remove parent if empty
+	// Clean up any directories that are now empty after file removal
+	for dir := range removedDirs {
+		removeEmptyDirChain(dir, home)
 	}
 
 	// Clean hooks.json: remove Brain-managed hook event keys
@@ -667,6 +668,21 @@ func jsonMerge(mergePayloadPath, targetPath string) ([]string, error) {
 	}
 
 	return payload.ManagedKeys, nil
+}
+
+// removeEmptyDirChain removes a directory if empty, then walks up removing
+// empty parents until hitting stopAt or a non-empty directory.
+// Prevents removing user home or .cursor root.
+func removeEmptyDirChain(dir, stopAt string) {
+	for dir != stopAt && dir != "/" && len(dir) > len(stopAt) {
+		entries, err := os.ReadDir(dir)
+		if err != nil || len(entries) > 0 {
+			break
+		}
+		os.Remove(dir)
+		fmt.Printf("  Removed empty directory: %s\n", dir)
+		dir = filepath.Dir(dir)
+	}
 }
 
 // jsonRemoveKeys removes specific dotted keys from a JSON config file.
