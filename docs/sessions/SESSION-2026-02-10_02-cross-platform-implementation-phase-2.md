@@ -84,10 +84,10 @@ tags:
 | File | Context |
 |---|---|
 | adapters/cursor.ts | New Cursor TS adapter |
-| adapters/**tests**/cursor.test.ts | Cursor adapter tests (11 tests) |
+| adapters/\_\_tests\_\_/cursor.test.ts | Cursor adapter tests (11 tests) |
 | adapters/sync.ts | Wired cursor target + fixed targets type |
 | adapters/shared.ts | Fixed BrainConfig.targets type to Record |
-| adapters/**tests**/claude-code.test.ts | Fixed test fixtures for targets type |
+| adapters/\_\_tests\_\_/claude-code.test.ts | Fixed test fixtures for targets type |
 | apps/tui/cmd/install.go | Extended for Cursor install/uninstall |
 | apps/tui/cmd/cursor.go | New brain cursor launcher |
 
