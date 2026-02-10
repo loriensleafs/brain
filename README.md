@@ -12,11 +12,6 @@ curl -fsSL https://raw.githubusercontent.com/loriensleafs/brain/main/install.sh 
 
 This downloads the latest release binary for your platform (macOS/Linux, amd64/arm64) and installs it to `~/.local/bin/brain`.
 
-### Requirements
-
-- [bun](https://bun.sh) is required for Brain's MCP server and hook scripts
-- Ensure `~/.local/bin` is in your `PATH`
-
 ### Install to your AI tools
 
 After installing the binary, run:
@@ -25,7 +20,13 @@ After installing the binary, run:
 brain install
 ```
 
-This opens an interactive prompt to select which tools to install Brain for (Claude Code, Cursor). Brain installs non-destructively and never modifies your existing configuration files.
+This will:
+
+1. Check for missing dependencies (bun, uv, basic-memory) and offer to install them
+2. Prompt you to select which tools to install Brain for (Claude Code, Cursor)
+3. Install agents, skills, commands, hooks, and MCP config non-destructively
+
+Brain never modifies your existing configuration files.
 
 ### Upgrade
 

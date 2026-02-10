@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -718,9 +719,123 @@ func toolDisplayName(tool string) string {
 	}
 }
 
+// ─── Dependency Management ───────────────────────────────────────────────────
+
+type dependency struct {
+	Name       string
+	Binary     string
+	CheckArgs  []string // args to verify it works (e.g., "--version")
+	InstallCmd string   // shell command to install
+	InstallMsg string   // human-readable install instruction
+}
+
+var requiredDeps = []dependency{
+	{
+		Name:       "bun",
+		Binary:     "bun",
+		CheckArgs:  []string{"--version"},
+		InstallCmd: "curl -fsSL https://bun.sh/install | bash",
+		InstallMsg: "Required for MCP server and hook scripts",
+	},
+	{
+		Name:       "uv",
+		Binary:     "uv",
+		CheckArgs:  []string{"--version"},
+		InstallCmd: "curl -LsSf https://astral.sh/uv/install.sh | sh",
+		InstallMsg: "Required to install basic-memory",
+	},
+	{
+		Name:       "basic-memory",
+		Binary:     "basic-memory",
+		CheckArgs:  []string{"version"},
+		InstallCmd: "uv tool install basic-memory",
+		InstallMsg: "Knowledge graph backend for Brain",
+	},
+}
+
+// checkDependencies returns a list of missing dependencies.
+func checkDependencies() []dependency {
+	var missing []dependency
+	for _, dep := range requiredDeps {
+		if _, err := exec.LookPath(dep.Binary); err != nil {
+			missing = append(missing, dep)
+		}
+	}
+	return missing
+}
+
+// installDependency runs the install command for a dependency.
+func installDependency(dep dependency) error {
+	fmt.Printf("  Installing %s...\n", dep.Name)
+	cmd := exec.Command("sh", "-c", dep.InstallCmd)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
+
+// ensureDependencies checks for missing deps and offers to install them.
+func ensureDependencies() error {
+	missing := checkDependencies()
+	if len(missing) == 0 {
+		return nil
+	}
+
+	fmt.Println("Missing dependencies:")
+	for _, dep := range missing {
+		fmt.Printf("  - %s (%s)\n", dep.Name, dep.InstallMsg)
+	}
+	fmt.Println()
+
+	var install bool
+	form := huh.NewForm(
+		huh.NewGroup(
+			huh.NewConfirm().
+				Title("Install missing dependencies?").
+				Affirmative("Yes").
+				Negative("No").
+				Value(&install),
+		),
+	)
+
+	if err := form.Run(); err != nil {
+		return err
+	}
+
+	if !install {
+		fmt.Println("Skipping dependency installation. Some features may not work.")
+		return nil
+	}
+
+	// Install in order (uv before basic-memory)
+	for _, dep := range missing {
+		// If basic-memory is missing but uv was just installed, refresh PATH
+		if dep.Name == "basic-memory" {
+			if _, err := exec.LookPath("uv"); err != nil {
+				fmt.Println("  Skipping basic-memory (uv not available yet)")
+				fmt.Printf("  Run manually after restarting shell: %s\n", dep.InstallCmd)
+				continue
+			}
+		}
+		if err := installDependency(dep); err != nil {
+			fmt.Printf("  [FAIL] %s: %v\n", dep.Name, err)
+			fmt.Printf("  Install manually: %s\n", dep.InstallCmd)
+		} else {
+			fmt.Printf("  [COMPLETE] %s installed\n", dep.Name)
+		}
+	}
+	fmt.Println()
+
+	return nil
+}
+
 // ─── Install Command ─────────────────────────────────────────────────────────
 
 func runInstall(_ *cobra.Command, _ []string) error {
+	// Check and install dependencies first
+	if err := ensureDependencies(); err != nil {
+		return err
+	}
+
 	tools := detectTools()
 
 	// Build options for multiselect
