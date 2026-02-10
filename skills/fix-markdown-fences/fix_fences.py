@@ -99,7 +99,7 @@ def fix_markdown_files(
         List of fixed file paths
     """
     # SECURITY: Validate directory is safe before globbing (prevents CWE-22)
-    if not validate_path_safety(str(directory), allowed_base=Path.cwd()):
+    if validate_and_resolve_path(str(directory), allowed_base=Path.cwd()) is None:
         raise ValueError(f"Invalid directory: {directory} contains unsafe characters or is outside allowed directory")
 
     fixed: list[str] = []
