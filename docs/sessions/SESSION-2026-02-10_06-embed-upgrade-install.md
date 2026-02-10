@@ -22,7 +22,7 @@ tags:
 
 # SESSION-2026-02-10_06 Embed Templates, Upgrade Command, Install Improvements
 
-**Status:** IN_PROGRESS
+**Status:** COMPLETE
 
 **Branch:** feat/embed-upgrade-install
 
