@@ -301,6 +301,10 @@
     "claude-code": {
       "source": "hooks/claude-code.json",
       "scripts": "hooks/scripts/"
+    },
+    "cursor": {
+      "source": "hooks/cursor.json",
+      "scripts": "hooks/scripts/"
     }
   },
   "skills": {

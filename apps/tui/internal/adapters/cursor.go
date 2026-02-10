@@ -405,76 +405,45 @@ func CursorTransformProtocolsFromSource(src *TemplateSource) ([]GeneratedFile, e
 }
 
 // CursorTransformHooksFromSource generates hooks using a TemplateSource.
+// Reads the pre-defined hooks/cursor.json file and wraps it as a JSON merge
+// payload so the installer can additively merge into ~/.cursor/hooks.json.
 func CursorTransformHooksFromSource(src *TemplateSource, brainConfig *BrainConfig) ([]GeneratedFile, error) {
 	var results []GeneratedFile
 
-	if brainConfig.Hooks == nil {
-		return results, nil
+	// Read the Cursor hooks definition file
+	data, err := src.ReadFile("hooks/cursor.json")
+	if err != nil {
+		return results, nil // no cursor hooks file is fine
 	}
 
-	hooksContent := make(map[string]any)
+	// Parse to extract managed keys
+	var hooksFile map[string]any
+	if err := json.Unmarshal(data, &hooksFile); err != nil {
+		return nil, fmt.Errorf("parse hooks/cursor.json: %w", err)
+	}
+
 	var managedKeys []string
-
-	for hookName, rawConfig := range brainConfig.Hooks {
-		var toolConfig map[string]json.RawMessage
-		if err := json.Unmarshal(rawConfig, &toolConfig); err != nil {
-			continue
-		}
-
-		cursorRaw, ok := toolConfig["cursor"]
-		if !ok {
-			continue
-		}
-
-		var cursorConfig cursorHookEntry
-		if err := json.Unmarshal(cursorRaw, &cursorConfig); err != nil {
-			continue
-		}
-
-		entry := map[string]any{
-			"matcher": cursorConfig.Matcher,
-			"hooks": []map[string]any{
-				{
-					"type":    "command",
-					"command": "hooks/scripts/" + BrainPrefix(hookName) + ".js",
-					"timeout": cursorConfig.Timeout,
-				},
-			},
-		}
-		if cursorConfig.Timeout == 0 {
-			entry["hooks"].([]map[string]any)[0]["timeout"] = 10
-		}
-
-		eventKey := cursorConfig.Event
-		entries, ok := hooksContent[eventKey]
-		if !ok {
-			hooksContent[eventKey] = []any{entry}
-		} else {
-			hooksContent[eventKey] = append(entries.([]any), entry)
-		}
-
-		managedKey := "hooks." + eventKey
-		if !containsString(managedKeys, managedKey) {
-			managedKeys = append(managedKeys, managedKey)
+	if hooks, ok := hooksFile["hooks"].(map[string]any); ok {
+		for eventKey := range hooks {
+			managedKeys = append(managedKeys, "hooks."+eventKey)
 		}
 	}
 
-	if len(hooksContent) > 0 {
-		payload := JsonMergePayload{
-			ManagedKeys: managedKeys,
-			Content:     map[string]any{"hooks": hooksContent},
-		}
-
-		data, err := json.MarshalIndent(payload, "", "  ")
-		if err != nil {
-			return nil, fmt.Errorf("marshal hooks payload: %w", err)
-		}
-
-		results = append(results, GeneratedFile{
-			RelativePath: "hooks/hooks.merge.json",
-			Content:      string(data) + "\n",
-		})
+	// Wrap as a merge payload (content is the entire hooks file)
+	payload := JsonMergePayload{
+		ManagedKeys: managedKeys,
+		Content:     hooksFile,
 	}
+
+	payloadData, err := json.MarshalIndent(payload, "", "  ")
+	if err != nil {
+		return nil, fmt.Errorf("marshal hooks payload: %w", err)
+	}
+
+	results = append(results, GeneratedFile{
+		RelativePath: "hooks/hooks.merge.json",
+		Content:      string(payloadData) + "\n",
+	})
 
 	// Copy hook scripts
 	scripts, err := ScanAllFilesFromSource(src, "hooks/scripts")

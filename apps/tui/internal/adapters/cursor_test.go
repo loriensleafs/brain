@@ -386,7 +386,7 @@ func TestCursorTransform_FullIntegration(t *testing.T) {
 			}
 		}
 	}`
-	os.WriteFile(filepath.Join(tmpDir, "templates", "configs", "brain.config.json"), []byte(brainConfigJSON), 0o644)
+	os.WriteFile(filepath.Join(tmpDir, "brain.config.json"), []byte(brainConfigJSON), 0o644)
 
 	config := &BrainConfig{
 		Agents: map[string]AgentToolConfig{

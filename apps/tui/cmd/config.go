@@ -473,7 +473,7 @@ func handleErrorResponse(text string) error {
 				fmt.Fprintf(os.Stderr, "  %s\n", k)
 			}
 		}
-		return fmt.Errorf(resp.Error)
+		return fmt.Errorf("%s", resp.Error)
 	}
 	return fmt.Errorf("unknown error")
 }

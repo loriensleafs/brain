@@ -347,7 +347,7 @@ func ReadCanonicalAgentsFromSource(src *TemplateSource, relDir string) ([]Canoni
 
 // ReadBrainConfig reads brain.config.json from the project root.
 func ReadBrainConfig(projectRoot string) (*BrainConfig, error) {
-	data, err := os.ReadFile(filepath.Join(projectRoot, "templates", "configs", "brain.config.json"))
+	data, err := os.ReadFile(filepath.Join(projectRoot, "brain.config.json"))
 	if err != nil {
 		return nil, fmt.Errorf("read brain.config.json: %w", err)
 	}
@@ -362,7 +362,7 @@ func ReadBrainConfig(projectRoot string) (*BrainConfig, error) {
 
 // ReadBrainConfigFromSource reads brain.config.json from a TemplateSource.
 func ReadBrainConfigFromSource(src *TemplateSource) (*BrainConfig, error) {
-	data, err := src.ReadFile("configs/brain.config.json")
+	data, err := src.ReadFile("brain.config.json")
 	if err != nil {
 		return nil, fmt.Errorf("read brain.config.json: %w", err)
 	}

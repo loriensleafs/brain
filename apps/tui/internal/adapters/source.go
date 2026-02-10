@@ -48,7 +48,7 @@ func (s *TemplateSource) TemplatesDir() string {
 }
 
 // ReadFile reads a file relative to the templates directory.
-// relPath should use forward slashes (e.g., "configs/brain.config.json").
+// relPath should use forward slashes (e.g., "brain.config.json").
 func (s *TemplateSource) ReadFile(relPath string) ([]byte, error) {
 	if s.embedded != nil {
 		return fs.ReadFile(s.embedded, relPath)
