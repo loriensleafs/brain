@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.8](https://github.com/loriensleafs/brain/compare/v0.1.7...v0.1.8) (2026-02-10)
+
+
+### Bug Fixes
+
+* **cursor:** bootstrap command, protocol routing, and rule frontmatter ([#20](https://github.com/loriensleafs/brain/issues/20)) ([9b8f505](https://github.com/loriensleafs/brain/commit/9b8f505c1596c6143d3430103349075c6b94c7ac))
+
 ## [0.1.7](https://github.com/loriensleafs/brain/compare/v0.1.6...v0.1.7) (2026-02-10)
 
 
