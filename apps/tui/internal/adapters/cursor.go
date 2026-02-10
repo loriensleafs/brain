@@ -332,7 +332,7 @@ func CursorTransform(projectRoot string, brainConfig *BrainConfig) (*CursorOutpu
 	commandsDir := filepath.Join(projectRoot, "templates", "commands")
 	protocolsDir := filepath.Join(projectRoot, "templates", "protocols")
 	hooksDir := filepath.Join(projectRoot, "templates", "hooks")
-	instructionsDir := filepath.Join(projectRoot, "templates", "instructions")
+	instructionsDir := filepath.Join(projectRoot, "templates", "rules")
 
 	agents, err := CursorTransformAgents(agentsDir, brainConfig)
 	if err != nil {
