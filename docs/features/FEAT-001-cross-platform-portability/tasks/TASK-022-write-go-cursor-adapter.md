@@ -1,7 +1,7 @@
 ---
 title: TASK-022-write-go-cursor-adapter
 type: task
-status: pending
+status: complete
 feature-ref: FEAT-001
 effort-estimate-human: 6h
 effort-estimate-ai: 3h
@@ -28,11 +28,11 @@ permalink: features/feat-001-cross-platform-portability/tasks/task-022-write-go-
 
 ## Definition of Done
 
-- [ ] [requirement] apps/tui/internal/adapters/cursor.go compiles and passes unit tests #build
-- [ ] [requirement] Generated output matches existing TS adapter output (parity with adapters/cursor.ts) #parity
-- [ ] [requirement] Cursor directory structure correctly generated #structure
-- [ ] [requirement] JSON merge with manifest works for hooks and MCP config #merge
-- [ ] [requirement] No bun/node dependency required for Cursor adapter #no-bun
+- [x] [requirement] apps/tui/internal/adapters/cursor.go compiles and passes unit tests #build
+- [x] [requirement] Generated output matches existing TS adapter output (parity with adapters/cursor.ts) #parity
+- [x] [requirement] Cursor directory structure correctly generated #structure
+- [x] [requirement] JSON merge with manifest works for hooks and MCP config #merge
+- [x] [requirement] No bun/node dependency required for Cursor adapter #no-bun
 
 ## Effort Summary
 

@@ -1,7 +1,7 @@
 ---
 title: TASK-025-verify-build-and-tests
 type: task
-status: pending
+status: complete
 feature-ref: FEAT-001
 effort-estimate-human: 2h
 effort-estimate-ai: 1h
@@ -28,12 +28,12 @@ permalink: features/feat-001-cross-platform-portability/tasks/task-025-verify-bu
 
 ## Definition of Done
 
-- [ ] [requirement] `go build ./...` passes with zero errors #build
-- [ ] [requirement] `go test ./...` passes with zero failures #unit-tests
-- [ ] [requirement] Integration tests for install and launcher commands pass #integration
-- [ ] [requirement] Golden file validation passes #golden-files
-- [ ] [requirement] CI pipeline runs green #ci
-- [ ] [requirement] No runtime dependency on bun/node for adapter operations #no-bun
+- [x] [requirement] `go build ./...` passes with zero errors #build
+- [x] [requirement] `go test ./...` passes with zero failures #unit-tests
+- [x] [requirement] Integration tests for install and launcher commands pass #integration
+- [x] [requirement] Golden file validation passes #golden-files
+- [x] [requirement] CI pipeline runs green #ci
+- [x] [requirement] No runtime dependency on bun/node for adapter operations #no-bun
 
 ## Effort Summary
 

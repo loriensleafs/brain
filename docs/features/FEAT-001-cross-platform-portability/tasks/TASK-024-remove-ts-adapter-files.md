@@ -1,7 +1,7 @@
 ---
 title: TASK-024-remove-ts-adapter-files
 type: task
-status: pending
+status: complete
 feature-ref: FEAT-001
 effort-estimate-human: 2h
 effort-estimate-ai: 1h
@@ -28,11 +28,11 @@ permalink: features/feat-001-cross-platform-portability/tasks/task-024-remove-ts
 
 ## Definition of Done
 
-- [ ] [requirement] All TS adapter files removed from adapters/ directory #removed
-- [ ] [requirement] No broken references to TS adapter files in codebase #clean
-- [ ] [requirement] Golden file tests updated to validate Go adapter output #golden-files
-- [ ] [requirement] CI pipeline updated to remove bun adapter steps #ci
-- [ ] [requirement] Build and all tests pass #tests
+- [x] [requirement] All TS adapter files removed from adapters/ directory #removed
+- [x] [requirement] No broken references to TS adapter files in codebase #clean
+- [x] [requirement] Golden file tests updated to validate Go adapter output #golden-files
+- [x] [requirement] CI pipeline updated to remove bun adapter steps #ci
+- [x] [requirement] Build and all tests pass #tests
 
 ## Effort Summary
 

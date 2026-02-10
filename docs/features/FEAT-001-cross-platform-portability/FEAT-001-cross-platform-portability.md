@@ -1,7 +1,7 @@
 ---
 title: FEAT-001 Cross-Platform Portability
 type: feature
-status: in-progress
+status: complete
 source-refs:
 - ADR-002
 permalink: features/feat-001-cross-platform-portability/feat-001-cross-platform-portability
@@ -141,11 +141,11 @@ permalink: features/feat-001-cross-platform-portability/feat-001-cross-platform-
 - [x] [task] [[TASK-018-build-hook-normalization-shim]] #status-complete
 - [x] [task] [[TASK-019-refactor-hook-scripts-for-normalization]] #status-complete
 - [x] [task] [[TASK-020-add-ci-validation-and-golden-files]] #status-complete
-- [ ] [task] [[TASK-021-write-go-claude-code-adapter]] #status-pending
-- [ ] [task] [[TASK-022-write-go-cursor-adapter]] #status-pending
-- [ ] [task] [[TASK-023-wire-go-adapters-into-cli]] #status-pending
-- [ ] [task] [[TASK-024-remove-ts-adapter-files]] #status-pending
-- [ ] [task] [[TASK-025-verify-build-and-tests]] #status-pending
+- [x] [task] [[TASK-021-write-go-claude-code-adapter]] #status-complete
+- [x] [task] [[TASK-022-write-go-cursor-adapter]] #status-complete
+- [x] [task] [[TASK-023-wire-go-adapters-into-cli]] #status-complete
+- [x] [task] [[TASK-024-remove-ts-adapter-files]] #status-complete
+- [x] [task] [[TASK-025-verify-build-and-tests]] #status-complete
 
 ## Observations
 

@@ -1,7 +1,7 @@
 ---
 title: TASK-021-write-go-claude-code-adapter
 type: task
-status: pending
+status: complete
 feature-ref: FEAT-001
 effort-estimate-human: 6h
 effort-estimate-ai: 3h
@@ -29,11 +29,11 @@ permalink: features/feat-001-cross-platform-portability/tasks/task-021-write-go-
 
 ## Definition of Done
 
-- [ ] [requirement] apps/tui/internal/adapters/claude.go compiles and passes unit tests #build
-- [ ] [requirement] Generated output matches existing TS adapter output (parity with adapters/claude-code.ts) #parity
-- [ ] [requirement] mcp.json correctly transformed to .mcp.json #mcp
-- [ ] [requirement] Agents with null claude-code config skipped #filtering
-- [ ] [requirement] No bun/node dependency required for Claude Code adapter #no-bun
+- [x] [requirement] apps/tui/internal/adapters/claude.go compiles and passes unit tests #build
+- [x] [requirement] Generated output matches existing TS adapter output (parity with adapters/claude-code.ts) #parity
+- [x] [requirement] mcp.json correctly transformed to .mcp.json #mcp
+- [x] [requirement] Agents with null claude-code config skipped #filtering
+- [x] [requirement] No bun/node dependency required for Claude Code adapter #no-bun
 
 ## Effort Summary
 

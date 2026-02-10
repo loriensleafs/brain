@@ -1,7 +1,7 @@
 ---
 title: TASK-023-wire-go-adapters-into-cli
 type: task
-status: pending
+status: complete
 feature-ref: FEAT-001
 effort-estimate-human: 4h
 effort-estimate-ai: 2h
@@ -28,11 +28,11 @@ permalink: features/feat-001-cross-platform-portability/tasks/task-023-wire-go-a
 
 ## Definition of Done
 
-- [ ] [requirement] `brain install` uses Go adapters directly without bun subprocess #install
-- [ ] [requirement] `brain claude` launcher uses Go Claude adapter #claude
-- [ ] [requirement] `brain cursor` launcher uses Go Cursor adapter #cursor
-- [ ] [requirement] All CLI commands pass existing integration tests #tests
-- [ ] [requirement] No bun/node subprocess calls remain in install or launcher paths #no-bun
+- [x] [requirement] `brain install` uses Go adapters directly without bun subprocess #install
+- [x] [requirement] `brain claude` launcher uses Go Claude adapter #claude
+- [x] [requirement] `brain cursor` launcher uses Go Cursor adapter #cursor
+- [x] [requirement] All CLI commands pass existing integration tests #tests
+- [x] [requirement] No bun/node subprocess calls remain in install or launcher paths #no-bun
 
 ## Effort Summary
 
