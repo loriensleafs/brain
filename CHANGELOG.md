@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.4](https://github.com/loriensleafs/brain/compare/v0.1.3...v0.1.4) (2026-02-10)
+
+
+### Bug Fixes
+
+* read brain.config.json from project root not templates dir ([#12](https://github.com/loriensleafs/brain/issues/12)) ([d8077fb](https://github.com/loriensleafs/brain/commit/d8077fb5dd22ac4a6a448db3d9a409265e8cdc09))
+
 ## [0.1.3](https://github.com/loriensleafs/brain/compare/v0.1.2...v0.1.3) (2026-02-10)
 
 
