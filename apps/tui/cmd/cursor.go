@@ -47,7 +47,43 @@ func runCursor(_ *cobra.Command, args []string) error {
 
 	cursorDir := filepath.Join(home, ".cursor")
 
-	// Copy .mdc rules to .cursor/rules/
+	// Copy agents to .cursor/agents/
+	agentsDir := filepath.Join(stagingDir, "agents")
+	if _, err := os.Stat(agentsDir); err == nil {
+		targetAgentsDir := filepath.Join(cursorDir, "agents")
+		if err := os.MkdirAll(targetAgentsDir, 0755); err != nil {
+			return fmt.Errorf("create agents dir: %w", err)
+		}
+		if _, err := copyBrainFiles(agentsDir, targetAgentsDir); err != nil {
+			return fmt.Errorf("copy agents: %w", err)
+		}
+	}
+
+	// Copy skills to .cursor/skills/
+	skillsDir := filepath.Join(stagingDir, "skills")
+	if _, err := os.Stat(skillsDir); err == nil {
+		targetSkillsDir := filepath.Join(cursorDir, "skills")
+		if err := os.MkdirAll(targetSkillsDir, 0755); err != nil {
+			return fmt.Errorf("create skills dir: %w", err)
+		}
+		if _, err := copyBrainFilesRecursive(skillsDir, targetSkillsDir); err != nil {
+			return fmt.Errorf("copy skills: %w", err)
+		}
+	}
+
+	// Copy commands to .cursor/commands/
+	commandsDir := filepath.Join(stagingDir, "commands")
+	if _, err := os.Stat(commandsDir); err == nil {
+		targetCommandsDir := filepath.Join(cursorDir, "commands")
+		if err := os.MkdirAll(targetCommandsDir, 0755); err != nil {
+			return fmt.Errorf("create commands dir: %w", err)
+		}
+		if _, err := copyBrainFiles(commandsDir, targetCommandsDir); err != nil {
+			return fmt.Errorf("copy commands: %w", err)
+		}
+	}
+
+	// Copy rules to .cursor/rules/
 	rulesDir := filepath.Join(stagingDir, "rules")
 	if _, err := os.Stat(rulesDir); err == nil {
 		targetRulesDir := filepath.Join(cursorDir, "rules")

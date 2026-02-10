@@ -201,6 +201,8 @@ func runAdapterStageFromSource(src *adapters.TemplateSource, target, outputDir s
 			return fmt.Errorf("transform cursor: %w", err)
 		}
 		files = append(files, output.Agents...)
+		files = append(files, output.Skills...)
+		files = append(files, output.Commands...)
 		files = append(files, output.Rules...)
 		files = append(files, output.Hooks...)
 		files = append(files, output.MCP...)
@@ -304,11 +306,57 @@ func installCursor(src *adapters.TemplateSource) error {
 	}
 
 	// File copy (not symlinks -- Cursor symlinks are broken)
-	fmt.Println("  Copying rules to .cursor/rules/...")
 	var installed []string
 
+	// Copy agents to .cursor/agents/
+	agentsDir := filepath.Join(stagingDir, "agents")
+	if _, err := os.Stat(agentsDir); err == nil {
+		fmt.Println("  Copying agents to .cursor/agents/...")
+		targetAgentsDir := filepath.Join(cursorDir, "agents")
+		if err := os.MkdirAll(targetAgentsDir, 0755); err != nil {
+			return fmt.Errorf("create agents dir: %w", err)
+		}
+		copied, err := copyBrainFiles(agentsDir, targetAgentsDir)
+		if err != nil {
+			return fmt.Errorf("copy agents: %w", err)
+		}
+		installed = append(installed, copied...)
+	}
+
+	// Copy skills to .cursor/skills/
+	skillsDir := filepath.Join(stagingDir, "skills")
+	if _, err := os.Stat(skillsDir); err == nil {
+		fmt.Println("  Copying skills to .cursor/skills/...")
+		targetSkillsDir := filepath.Join(cursorDir, "skills")
+		if err := os.MkdirAll(targetSkillsDir, 0755); err != nil {
+			return fmt.Errorf("create skills dir: %w", err)
+		}
+		copied, err := copyBrainFilesRecursive(skillsDir, targetSkillsDir)
+		if err != nil {
+			return fmt.Errorf("copy skills: %w", err)
+		}
+		installed = append(installed, copied...)
+	}
+
+	// Copy commands to .cursor/commands/
+	commandsDir := filepath.Join(stagingDir, "commands")
+	if _, err := os.Stat(commandsDir); err == nil {
+		fmt.Println("  Copying commands to .cursor/commands/...")
+		targetCommandsDir := filepath.Join(cursorDir, "commands")
+		if err := os.MkdirAll(targetCommandsDir, 0755); err != nil {
+			return fmt.Errorf("create commands dir: %w", err)
+		}
+		copied, err := copyBrainFiles(commandsDir, targetCommandsDir)
+		if err != nil {
+			return fmt.Errorf("copy commands: %w", err)
+		}
+		installed = append(installed, copied...)
+	}
+
+	// Copy rules to .cursor/rules/
 	rulesDir := filepath.Join(stagingDir, "rules")
 	if _, err := os.Stat(rulesDir); err == nil {
+		fmt.Println("  Copying rules to .cursor/rules/...")
 		targetRulesDir := filepath.Join(cursorDir, "rules")
 		if err := os.MkdirAll(targetRulesDir, 0755); err != nil {
 			return fmt.Errorf("create rules dir: %w", err)
@@ -430,6 +478,41 @@ func copyBrainFiles(src, dst string) ([]string, error) {
 	}
 
 	return copied, nil
+}
+
+// copyBrainFilesRecursive copies all files from src to dst, preserving subdirectory structure.
+// Used for skills which have subdirectories (e.g., skills/🧠-name/SKILL.md).
+func copyBrainFilesRecursive(src, dst string) ([]string, error) {
+	var copied []string
+	err := filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.Name() == ".DS_Store" || info.Name() == ".gitkeep" {
+			return nil
+		}
+
+		rel, err := filepath.Rel(src, path)
+		if err != nil {
+			return err
+		}
+		dstPath := filepath.Join(dst, rel)
+
+		if info.IsDir() {
+			return os.MkdirAll(dstPath, 0755)
+		}
+
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return fmt.Errorf("read %s: %w", path, err)
+		}
+		if err := os.WriteFile(dstPath, data, 0644); err != nil {
+			return fmt.Errorf("write %s: %w", dstPath, err)
+		}
+		copied = append(copied, dstPath)
+		return nil
+	})
+	return copied, err
 }
 
 // jsonMerge reads a merge payload and additively merges it into the target JSON file.
