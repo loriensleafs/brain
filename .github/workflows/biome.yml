@@ -3,32 +3,9 @@ name: Biome
 on:
   pull_request:
     branches: [main]
-    paths:
-      - "apps/**/*.js"
-      - "apps/**/*.json"
-      - "apps/**/*.jsx"
-      - "apps/**/*.ts"
-      - "apps/**/*.tsx"
-      - "biome.jsonc"
-      - "packages/**/*.js"
-      - "packages/**/*.json"
-      - "packages/**/*.jsx"
-      - "packages/**/*.ts"
-      - "packages/**/*.tsx"
+
   push:
     branches: [main]
-    paths:
-      - "apps/**/*.js"
-      - "apps/**/*.json"
-      - "apps/**/*.jsx"
-      - "apps/**/*.ts"
-      - "apps/**/*.tsx"
-      - "biome.jsonc"
-      - "packages/**/*.js"
-      - "packages/**/*.json"
-      - "packages/**/*.jsx"
-      - "packages/**/*.ts"
-      - "packages/**/*.tsx"
 
 concurrency:
   cancel-in-progress: true
