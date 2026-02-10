@@ -10,7 +10,7 @@
  */
 import type { StopOutput, WorkflowState } from "./types";
 import type { NormalizedHookEvent } from "./normalize";
-import { normalizeEvent } from "./normalize";
+import { normalizeEvent, formatOutput } from "./normalize";
 import { validateStopReadiness } from "./validate";
 import { execCommand } from "./exec";
 
@@ -36,7 +36,6 @@ function loadWorkflowState(): WorkflowState | null {
  */
 export function processStop(event: NormalizedHookEvent): { output: StopOutput; shouldBlock: boolean } {
   const workflowState = loadWorkflowState();
-  const blocking = getBlockingSemantics(event.event, event.platform);
 
   if (!workflowState) {
     return {
@@ -57,8 +56,8 @@ export function processStop(event: NormalizedHookEvent): { output: StopOutput; s
     remediation: result.remediation || undefined,
   };
 
-  // Only block if the platform supports it and validation failed
-  const shouldBlock = !result.valid && blocking.canBlock;
+  // Only block on Claude Code (exit code 2); Cursor stop uses followup_message
+  const shouldBlock = !result.valid && event.platform === "claude-code";
 
   return { output, shouldBlock };
 }
@@ -79,11 +78,19 @@ export async function runStop(): Promise<void> {
   const event = normalizeEvent(parsed, "Stop");
   const { output, shouldBlock } = processStop(event);
 
-  process.stdout.write(JSON.stringify(output, null, 2) + "\n");
-
-  // Exit code 2 = block (Claude Code only; Cursor stop is info-only)
-  if (shouldBlock) {
-    process.exit(2);
+  if (event.platform === "cursor") {
+    // Cursor stop: {followup_message} (optional, triggers retry loop)
+    const out = formatOutput(event, {
+      followupMessage: !output.continue ? output.remediation : undefined,
+    });
+    process.stdout.write(out + "\n");
+  } else {
+    // Claude Code: pass through internal format
+    process.stdout.write(JSON.stringify(output, null, 2) + "\n");
+    // Exit code 2 = block (Claude Code only)
+    if (shouldBlock) {
+      process.exit(2);
+    }
   }
 }
 
