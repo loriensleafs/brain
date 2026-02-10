@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.5](https://github.com/loriensleafs/brain/compare/v0.1.4...v0.1.5) (2026-02-10)
+
+
+### Bug Fixes
+
+* rewrite compose engine to handle variant-aware _order.yaml ([#14](https://github.com/loriensleafs/brain/issues/14)) ([e7a7db7](https://github.com/loriensleafs/brain/commit/e7a7db7abf6908263dc1e7ae44b939748338caf9))
+
 ## [0.1.4](https://github.com/loriensleafs/brain/compare/v0.1.3...v0.1.4) (2026-02-10)
 
 
