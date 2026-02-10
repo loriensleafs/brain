@@ -26,11 +26,11 @@ permalink: features/feat-001-cross-platform-portability/tasks/task-015-extend-br
 
 ## Definition of Done
 
-- [ ] [requirement] Cursor appears in brain install multiselect when detected #detection
-- [ ] [requirement] Install uses file copy (not symlinks) with 🧠-prefixed filenames #copy
-- [ ] [requirement] hooks.json and mcp.json use JSON merge, not overwrite #json-merge
-- [ ] [requirement] Install never modifies user's existing Cursor config #non-destructive
-- [ ] [requirement] Uninstall removes 🧠-prefixed files and manifest-tracked JSON entries #uninstall
+- [x] [requirement] Cursor appears in brain install multiselect when detected #detection
+- [x] [requirement] Install uses file copy (not symlinks) with 🧠-prefixed filenames #copy
+- [x] [requirement] hooks.json and mcp.json use JSON merge, not overwrite #json-merge
+- [x] [requirement] Install never modifies user's existing Cursor config #non-destructive
+- [x] [requirement] Uninstall removes 🧠-prefixed files and manifest-tracked JSON entries #uninstall
 
 ## Effort Summary
 

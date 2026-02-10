@@ -27,11 +27,11 @@ permalink: features/feat-001-cross-platform-portability/tasks/task-017-cursor-in
 
 ## Definition of Done
 
-- [ ] [requirement] Agents load in Cursor and are invocable #agents
-- [ ] [requirement] Skills discovered and functional #skills
-- [ ] [requirement] MCP server connects and tools available #mcp
-- [ ] [requirement] Orchestrator-cursor successfully delegates to subagents #orchestrator
-- [ ] [requirement] Issues documented with workarounds #documentation
+- [x] [requirement] Agents load in Cursor and are invocable #agents
+- [x] [requirement] Skills discovered and functional #skills
+- [x] [requirement] MCP server connects and tools available #mcp
+- [x] [requirement] Orchestrator-cursor successfully delegates to subagents #orchestrator
+- [x] [requirement] Issues documented with workarounds #documentation
 
 ## Effort Summary
 

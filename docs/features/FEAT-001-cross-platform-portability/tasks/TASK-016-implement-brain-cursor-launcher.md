@@ -26,9 +26,9 @@ permalink: features/feat-001-cross-platform-portability/tasks/task-016-implement
 
 ## Definition of Done
 
-- [ ] [requirement] brain cursor stages via TS adapter and launches Cursor #launch
-- [ ] [requirement] Fresh staging on every launch #fresh
-- [ ] [requirement] Error when Cursor not found #detection
+- [x] [requirement] brain cursor stages via TS adapter and launches Cursor #launch
+- [x] [requirement] Fresh staging on every launch #fresh
+- [x] [requirement] Error when Cursor not found #detection
 
 ## Effort Summary
 

@@ -32,11 +32,11 @@ permalink: features/feat-001-cross-platform-portability/tasks/task-014-create-ts
 
 ## Definition of Done
 
-- [ ] [requirement] Cursor adapter generates valid .cursor/ directory structure with 🧠-prefixed filenames #output
-- [ ] [requirement] All agents have correct Cursor frontmatter with description field #frontmatter
-- [ ] [requirement] .cursor/rules/🧠-*.mdc generated from protocols #rules
-- [ ] [requirement] Agents with null cursor config skipped (e.g., orchestrator-claude) #filtering
-- [ ] [requirement] JSON merge payloads for hooks.json and mcp.json support manifest tracking #json-merge
+- [x] [requirement] Cursor adapter generates valid .cursor/ directory structure with 🧠-prefixed filenames #output
+- [x] [requirement] All agents have correct Cursor frontmatter with description field #frontmatter
+- [x] [requirement] .cursor/rules/🧠-*.mdc generated from protocols #rules
+- [x] [requirement] Agents with null cursor config skipped (e.g., orchestrator-claude) #filtering
+- [x] [requirement] JSON merge payloads for hooks.json and mcp.json support manifest tracking #json-merge
 
 ## Effort Summary
 
