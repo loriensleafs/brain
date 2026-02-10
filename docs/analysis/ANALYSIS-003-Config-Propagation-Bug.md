@@ -1,7 +1,7 @@
 ---
-title: ANALYSIS-002-Config-Propagation-Bug
+title: ANALYSIS-003-Config-Propagation-Bug
 type: note
-permalink: analysis/analysis-002-config-propagation-bug
+permalink: analysis/analysis-003-config-propagation-bug
 ---
 
 # Analysis: Brain Config Changes Not Propagating to basic-memory

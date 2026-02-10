@@ -1,7 +1,7 @@
 ---
-title: ANALYSIS-002-basic-memory-sync-capabilities
+title: ANALYSIS-004-basic-memory-sync-capabilities
 type: note
-permalink: analysis/analysis-002-basic-memory-sync-capabilities
+permalink: analysis/analysis-004-basic-memory-sync-capabilities
 ---
 
 # Analysis: Basic-Memory Sync Capabilities Deep Dive
@@ -72,5 +72,5 @@ Hot config reload NOT possible without MCP client restart. Source code confirms 
 
 ## Relations
 
-- supersedes [[ANALYSIS-001-sync-changes-clarification]]
+- supersedes [[ANALYSIS-002-sync-changes-clarification]]
 - relates_to [[ADR-020 Configuration Architecture]]

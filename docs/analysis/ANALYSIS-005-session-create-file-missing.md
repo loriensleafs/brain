@@ -1,7 +1,7 @@
 ---
-title: ANALYSIS-003-session-create-file-missing
+title: ANALYSIS-005-session-create-file-missing
 type: note
-permalink: analysis/analysis-003-session-create-file-missing
+permalink: analysis/analysis-005-session-create-file-missing
 ---
 
 # ANALYSIS-003: Session Create MCP Tool Does Not Create Files

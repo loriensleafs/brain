@@ -1,7 +1,7 @@
 ---
-title: ANALYSIS-001-sync-changes-clarification
+title: ANALYSIS-002-sync-changes-clarification
 type: note
-permalink: analysis/analysis-001-sync-changes-clarification
+permalink: analysis/analysis-002-sync-changes-clarification
 ---
 
 # Analysis: What sync_changes Actually Syncs in basic-memory
