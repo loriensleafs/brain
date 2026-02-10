@@ -1,5 +1,5 @@
 ---
-title: SESSION-2026-02-10_01-cross-platform-implementation
+title: SESSION-2026-02-10_01-cross-platform-implementation-phase-1
 type: session
 permalink: sessions/session-2026-02-10-01-cross-platform-implementation-phase-1
 tags:
@@ -10,7 +10,7 @@ tags:
 - phase-1
 ---
 
-# SESSION-2026-02-10_01 Cross-Platform Implementation
+# SESSION-2026-02-10_01 Cross-Platform Implementation Phase 1
 
 **Status:** IN_PROGRESS
 **Branch:** main
