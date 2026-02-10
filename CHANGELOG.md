@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.3](https://github.com/loriensleafs/brain/compare/v0.1.2...v0.1.3) (2026-02-10)
+
+
+### Bug Fixes
+
+* **install:** generate Cursor hooks.json from pre-defined hooks file ([#10](https://github.com/loriensleafs/brain/issues/10)) ([94b70c9](https://github.com/loriensleafs/brain/commit/94b70c9d4a3218bd7073ecabea1ede07e5efa9a4))
+
 ## [0.1.2](https://github.com/loriensleafs/brain/compare/v0.1.1...v0.1.2) (2026-02-10)
 
 
