@@ -23,7 +23,7 @@ builds:
       - -X github.com/peterkloss/brain-tui/cmd.Version={{.Version}}
 
 archives:
-  - format: binary
+  - formats: [binary]
     name_template: "brain-{{ .Os }}-{{ .Arch }}"
 
 checksum:
