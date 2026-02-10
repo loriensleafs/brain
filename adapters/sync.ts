@@ -153,10 +153,8 @@ async function main(): Promise<void> {
       break;
     }
     case "cursor":
-      // Cursor adapter is Phase 2 scope
       console.error("Error: cursor adapter not yet implemented (Phase 2)");
       process.exit(1);
-      break;
     default:
       console.error(`Error: unknown target "${opts.target}"`);
       process.exit(1);
