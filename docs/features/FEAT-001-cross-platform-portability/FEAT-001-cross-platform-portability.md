@@ -87,8 +87,8 @@ permalink: features/feat-001-cross-platform-portability/feat-001-cross-platform-
 
 - [x] [requirement] All canonical content at repo root (agents/, skills/, commands/, protocols/, hooks/) #structure
 - [x] [requirement] `apps/claude-plugin/` removed entirely #removal
-- [ ] [requirement] `brain install` detects and installs to Claude Code and Cursor #install
-- [ ] [requirement] `brain uninstall` cleanly removes from either tool #uninstall
+- [x] [requirement] `brain install` detects and installs to Claude Code and Cursor #install
+- [x] [requirement] `brain uninstall` cleanly removes from either tool #uninstall
 - [x] [requirement] Claude Code orchestrator uses Agent Teams; Cursor orchestrator uses Task tool hub-and-spoke #orchestrator
 - [x] [requirement] All specialist agents portable across both tools (identical body, different frontmatter) #portability
 - [ ] [requirement] Hook scripts work on both tools via normalization layer #hooks
@@ -100,9 +100,9 @@ permalink: features/feat-001-cross-platform-portability/feat-001-cross-platform-
 ### Requirements
 
 - [x] [requirement] [[REQ-001-canonical-content-extraction]] #status-implemented
-- [x] [requirement] [[REQ-002-cross-platform-agent-adaptation]] #status-approved
+- [x] [requirement] [[REQ-002-cross-platform-agent-adaptation]] #status-implemented
 - [ ] [requirement] [[REQ-003-hook-normalization]] #status-draft
-- [x] [requirement] [[REQ-004-unified-install]] #status-approved
+- [x] [requirement] [[REQ-004-unified-install]] #status-implemented
 - [x] [requirement] [[REQ-005-orchestrator-portability]] #status-implemented
 
 ### Designs
@@ -128,10 +128,10 @@ permalink: features/feat-001-cross-platform-portability/feat-001-cross-platform-
 - [x] [task] [[TASK-011-implement-brain-install-uninstall]] #status-complete
 - [x] [task] [[TASK-012-refactor-brain-claude-launcher]] #status-complete
 - [x] [task] [[TASK-013-remove-apps-claude-plugin]] #status-complete
-- [ ] [task] [[TASK-014-create-ts-cursor-adapter]] #status-todo
-- [ ] [task] [[TASK-015-extend-brain-install-for-cursor]] #status-todo
-- [ ] [task] [[TASK-016-implement-brain-cursor-launcher]] #status-todo
-- [ ] [task] [[TASK-017-cursor-integration-testing]] #status-todo
+- [x] [task] [[TASK-014-create-ts-cursor-adapter]] #status-complete
+- [x] [task] [[TASK-015-extend-brain-install-for-cursor]] #status-complete
+- [x] [task] [[TASK-016-implement-brain-cursor-launcher]] #status-complete
+- [x] [task] [[TASK-017-cursor-integration-testing]] #status-complete
 - [ ] [task] [[TASK-018-build-hook-normalization-shim]] #status-todo
 - [ ] [task] [[TASK-019-refactor-hook-scripts-for-normalization]] #status-todo
 - [ ] [task] [[TASK-020-add-ci-validation-and-golden-files]] #status-todo
