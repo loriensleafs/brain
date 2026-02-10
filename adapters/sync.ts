@@ -19,6 +19,7 @@
 
 import { dirname, join, resolve } from "path";
 import { transform as claudeCodeTransform } from "./claude-code.js";
+import { transform as cursorTransform } from "./cursor.js";
 import type { GeneratedFile } from "./shared.js";
 import { readBrainConfig } from "./shared.js";
 
@@ -152,9 +153,16 @@ async function main(): Promise<void> {
       ];
       break;
     }
-    case "cursor":
-      console.error("Error: cursor adapter not yet implemented (Phase 2)");
-      process.exit(1);
+    case "cursor": {
+      const cursorOutput = await cursorTransform(opts.projectRoot, brainConfig);
+      allFiles = [
+        ...cursorOutput.agents,
+        ...cursorOutput.rules,
+        ...cursorOutput.hooks,
+        ...cursorOutput.mcp,
+      ];
+      break;
+    }
     default:
       console.error(`Error: unknown target "${opts.target}"`);
       process.exit(1);
