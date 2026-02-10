@@ -3,7 +3,7 @@
 # Usage: curl -fsSL https://raw.githubusercontent.com/peterkloss/brain/main/install.sh | sh
 set -e
 
-REPO="peterkloss/brain"
+REPO="loriensleafs/brain"
 INSTALL_DIR="${BRAIN_INSTALL_DIR:-$HOME/.local/bin}"
 
 # Colors
