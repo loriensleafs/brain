@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.11](https://github.com/loriensleafs/brain/compare/v0.1.10...v0.1.11) (2026-02-10)
+
+
+### Bug Fixes
+
+* **hooks:** rewrite normalize.ts to match Cursor hook spec ([4b62197](https://github.com/loriensleafs/brain/commit/4b6219785ee0a3119f6df9c0824cbcf2d95746c1))
+* **hooks:** rewrite normalize.ts to match Cursor hook spec ([25c1e0f](https://github.com/loriensleafs/brain/commit/25c1e0fdfa6847db8b186b83e96db4234d984304))
+
 ## [0.1.10](https://github.com/loriensleafs/brain/compare/v0.1.9...v0.1.10) (2026-02-10)
 
 
