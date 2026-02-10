@@ -1,0 +1,30 @@
+# Template variables for Claude Code Agent Teams variant.
+# These replace {variable_name} placeholders in shared rule files.
+
+worker: teammate
+worker_plural: teammates
+worker_type: teammate type
+lead_role: Team Lead
+lead_role_caps: TEAM LEAD
+delegate_cmd: 'Task(team_name="...", name="...", subagent_type="...", prompt="...", run_in_background=true)'
+create_work: 'TaskCreate(subject="...", depends_on=[...])'
+sequence_model: task dependencies (automatic)
+sequence_noun: dependency chain
+parallel_model: Shared task list with dependency-based unblocking
+send_context: 'SendMessage / Teammate(operation="write")'
+delegation_verb: spawning
+delegation_noun: spawn
+planning_unit: task dependency graph
+workflow_unit: task
+arch_role: 'the **team lead**'
+shutdown_note: Shut down all teammates and clean up team before session end.
+route_next: unblock downstream tasks
+route_back: message implementer teammate
+wave_label: task group
+exec_parallel: Create independent tasks they can claim
+exec_sequential: Use task dependencies to express this
+announce_pattern: 'Create {worker} task for [specific task]'
+handoff_return: sends message to team-lead
+agent_catalog_header: Teammate Capability Matrix
+output_table_header: Team Configuration
+output_table_columns: '| Teammate | Type | Tasks Completed | Status |'

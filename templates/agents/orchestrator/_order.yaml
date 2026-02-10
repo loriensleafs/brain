@@ -1,0 +1,65 @@
+name: orchestrator
+description: Composable rules for the orchestrator agent
+default_variant: claude-code
+
+# Composition order: shared rules in sequence.
+# The build step walks this list. For each entry:
+#   1. If the variant has an override file with the same name, use the variant version.
+#   2. Otherwise, use the shared rule from rules/.
+#   3. Apply {variable} substitution from the variant's _variables.yaml.
+# At VARIANT_INSERT, inject all variant-specific insert files in numbered order.
+
+rules:
+  - 00-style-guide
+  - 01-core-identity
+  - 02-activation-profile
+  - 03-triage
+  - VARIANT_INSERT             # Variant-specific rules inject here
+  - 04-reliability
+  - 05-execution-style
+  - 06-memory-protocol
+  - 07-execution-protocol
+  - 08-task-classification
+  - 09-delegation-plan
+  - 10-routing-algorithm
+  - 11-swarming
+  - 12-consistency-validation
+  - 13-ideation-workflow
+  - 14-retrospective
+  - 15-todo-management
+  - 16-session-continuity
+  - 17-failure-recovery
+  - 18-completion-criteria
+  - 19-session-end-gate
+  - 20-content-attribution
+  - 21-output-format
+
+variants:
+  claude-code:
+    frontmatter: _frontmatter.yaml
+    variables: _variables.yaml
+    overrides:
+      01-core-identity: 01-core-identity
+    inserts_at_VARIANT_INSERT:
+      - 04-architecture
+      - 05-tools
+      - 06-team-lifecycle
+      - 07-plan-approval
+      - 08-task-dependencies
+      - 09-communication
+      - 10-capability-matrix
+      - 11-scenarios
+
+  cursor:
+    frontmatter: _frontmatter.yaml
+    variables: _variables.yaml
+    overrides:
+      01-core-identity: 01-core-identity
+    inserts_at_VARIANT_INSERT:
+      - 04-architecture
+      - 05-tools
+      - 06-sub-agent-delegation
+      - 07-capability-matrix
+      - 08-scenarios
+      - 09-handoff-protocol
+      - 10-output-directory

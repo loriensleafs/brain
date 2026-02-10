@@ -1,0 +1,30 @@
+# Template variables for Cursor / generic Task-tool variant.
+# These replace {variable_name} placeholders in shared rule files.
+
+worker: agent
+worker_plural: agents
+worker_type: agent type
+lead_role: ROOT agent
+lead_role_caps: ROOT AGENT
+delegate_cmd: 'Task(subagent_type="...", prompt="...")'
+create_work: (implicit in Task prompt)
+sequence_model: waves (manual)
+sequence_noun: wave sequence
+parallel_model: Multiple Task calls in single message
+send_context: (included in Task prompt)
+delegation_verb: delegating
+delegation_noun: delegation
+planning_unit: parallel wave plan
+workflow_unit: wave
+arch_role: 'the **root agent**'
+shutdown_note: ''
+route_next: route to next agent per original plan
+route_back: route back to implementer
+wave_label: wave
+exec_parallel: Invoke them in parallel by sending multiple Task tool calls in a single message
+exec_sequential: Use a sequential wave for this
+announce_pattern: 'Route to {worker} for [specific task]'
+handoff_return: returns results to you (orchestrator)
+agent_catalog_header: Agent Capability Matrix
+output_table_header: Agent Workflow
+output_table_columns: '| Step | Agent | Purpose | Status |'
