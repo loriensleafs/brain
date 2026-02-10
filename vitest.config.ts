@@ -24,6 +24,7 @@ export default defineConfig({
     include: [
       "adapters/**/*.test.ts",
       "apps/**/src/**/*.test.ts",
+      "hooks/scripts/__tests__/**/*.test.ts",
       "packages/**/src/**/*.test.ts",
     ],
     exclude: [
@@ -31,11 +32,9 @@ export default defineConfig({
       "**/node_modules/**",
     ],
 
-    // --- Parallelism (Vitest 4: top-level, not poolOptions) ---
+    // --- Parallelism ---
     fileParallelism: true,
     isolate: true,
-    maxForks: 8,
-    minForks: 2,
     pool: "forks",
 
     // --- Timeouts ---
