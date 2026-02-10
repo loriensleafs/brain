@@ -76,14 +76,44 @@ func TransformClaudeAgent(agent CanonicalAgent, config *AgentPlatformConfig) *Ge
 }
 
 // TransformClaudeAgents transforms all canonical agents for Claude Code.
+// Supports both single-file agents and composable agent directories.
 func TransformClaudeAgents(agentsDir string, brainConfig *BrainConfig) ([]GeneratedFile, error) {
+	var results []GeneratedFile
+
+	// Phase 1: Composable agent directories (contain _order.yaml)
+	entries, err := os.ReadDir(agentsDir)
+	if err != nil && !os.IsNotExist(err) {
+		return nil, err
+	}
+	composedNames := make(map[string]bool)
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+		subDir := filepath.Join(agentsDir, entry.Name())
+		if !IsComposableDir(subDir) {
+			continue
+		}
+		gen, err := ComposeAgent(subDir, "claude-code", brainConfig)
+		if err != nil {
+			return nil, fmt.Errorf("compose agent %s: %w", entry.Name(), err)
+		}
+		if gen != nil {
+			results = append(results, *gen)
+			composedNames[entry.Name()] = true
+		}
+	}
+
+	// Phase 2: Single-file agents (skip any that were composed)
 	agents, err := ReadCanonicalAgents(agentsDir)
 	if err != nil {
 		return nil, err
 	}
 
-	var results []GeneratedFile
 	for _, agent := range agents {
+		if composedNames[agent.Name] {
+			continue
+		}
 		agentConfig, ok := brainConfig.Agents[agent.Name]
 		if !ok {
 			continue
@@ -145,14 +175,46 @@ func TransformSkills(skillsDir string) ([]GeneratedFile, error) {
 // ─── Commands Transform ──────────────────────────────────────────────────────
 
 // TransformCommands collects commands for Claude Code.
-// Commands are copied as-is with emoji prefix.
-func TransformCommands(commandsDir string) ([]GeneratedFile, error) {
-	files, err := ScanMarkdownFiles(commandsDir)
+// Supports both single-file commands (copied with emoji prefix) and
+// composable command directories (contain _order.yaml).
+func TransformCommands(commandsDir string, variant string) ([]GeneratedFile, error) {
+	var results []GeneratedFile
+
+	entries, err := os.ReadDir(commandsDir)
 	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, nil
+		}
 		return nil, nil
 	}
 
-	var results []GeneratedFile
+	composedNames := make(map[string]bool)
+
+	// Phase 1: Composable command directories
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+		subDir := filepath.Join(commandsDir, entry.Name())
+		if !IsComposableDir(subDir) {
+			continue
+		}
+		gen, err := ComposeCommand(subDir, variant)
+		if err != nil {
+			return nil, fmt.Errorf("compose command %s: %w", entry.Name(), err)
+		}
+		if gen != nil {
+			results = append(results, *gen)
+			composedNames[entry.Name()] = true
+		}
+	}
+
+	// Phase 2: Single-file commands
+	files, err := ScanMarkdownFiles(commandsDir)
+	if err != nil {
+		return results, nil
+	}
+
 	for _, file := range files {
 		content, err := os.ReadFile(filepath.Join(commandsDir, file))
 		if err != nil {
@@ -370,6 +432,7 @@ func TransformClaudeCode(projectRoot string, brainConfig *BrainConfig) (*ClaudeC
 	commandsDir := filepath.Join(projectRoot, "templates", "commands")
 	protocolsDir := filepath.Join(projectRoot, "templates", "protocols")
 	hooksDir := filepath.Join(projectRoot, "templates", "hooks")
+	instructionsDir := filepath.Join(projectRoot, "templates", "instructions")
 
 	agents, err := TransformClaudeAgents(agentsDir, brainConfig)
 	if err != nil {
@@ -381,7 +444,7 @@ func TransformClaudeCode(projectRoot string, brainConfig *BrainConfig) (*ClaudeC
 		return nil, fmt.Errorf("transform skills: %w", err)
 	}
 
-	commands, err := TransformCommands(commandsDir)
+	commands, err := TransformCommands(commandsDir, "claude-code")
 	if err != nil {
 		return nil, fmt.Errorf("transform commands: %w", err)
 	}
@@ -389,6 +452,19 @@ func TransformClaudeCode(projectRoot string, brainConfig *BrainConfig) (*ClaudeC
 	rules, err := TransformClaudeProtocols(protocolsDir)
 	if err != nil {
 		return nil, fmt.Errorf("transform protocols: %w", err)
+	}
+
+	// Compose instructions if the directory is composable
+	if IsComposableDir(instructionsDir) {
+		gen, err := ComposeInstructions(instructionsDir, "claude-code")
+		if err != nil {
+			return nil, fmt.Errorf("compose instructions: %w", err)
+		}
+		if gen != nil {
+			// Instructions output goes to rules/ for Claude Code
+			gen.RelativePath = "instructions/AGENTS.md"
+			rules = append(rules, *gen)
+		}
 	}
 
 	hooks, err := TransformClaudeHooks(hooksDir, brainConfig)

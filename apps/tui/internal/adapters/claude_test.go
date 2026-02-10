@@ -396,7 +396,7 @@ func TestTransformCommands_AlreadyPrefixed(t *testing.T) {
 
 	writeFile(t, filepath.Join(dir, "\U0001F9E0-bootstrap.md"), "Bootstrap command")
 
-	results, err := TransformCommands(dir)
+	results, err := TransformCommands(dir, "claude-code")
 	if err != nil {
 		t.Fatalf("error: %v", err)
 	}

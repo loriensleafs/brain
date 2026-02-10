@@ -46,14 +46,44 @@ func CursorTransformAgent(agent CanonicalAgent, config *AgentPlatformConfig) *Ge
 }
 
 // CursorTransformAgents transforms all canonical agents for Cursor.
+// Supports both single-file agents and composable agent directories.
 func CursorTransformAgents(agentsDir string, brainConfig *BrainConfig) ([]GeneratedFile, error) {
+	var results []GeneratedFile
+
+	// Phase 1: Composable agent directories
+	entries, err := os.ReadDir(agentsDir)
+	if err != nil && !os.IsNotExist(err) {
+		return nil, err
+	}
+	composedNames := make(map[string]bool)
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+		subDir := filepath.Join(agentsDir, entry.Name())
+		if !IsComposableDir(subDir) {
+			continue
+		}
+		gen, err := ComposeAgent(subDir, "cursor", brainConfig)
+		if err != nil {
+			return nil, fmt.Errorf("compose agent %s: %w", entry.Name(), err)
+		}
+		if gen != nil {
+			results = append(results, *gen)
+			composedNames[entry.Name()] = true
+		}
+	}
+
+	// Phase 2: Single-file agents (skip any that were composed)
 	agents, err := ReadCanonicalAgents(agentsDir)
 	if err != nil {
 		return nil, err
 	}
 
-	var results []GeneratedFile
 	for _, agent := range agents {
+		if composedNames[agent.Name] {
+			continue
+		}
 		agentConfig, ok := brainConfig.Agents[agent.Name]
 		if !ok {
 			continue
@@ -83,9 +113,9 @@ func CursorTransformSkills(skillsDir string) ([]GeneratedFile, error) {
 // CursorTransformCommands collects commands for Cursor.
 // Commands are copied as-is with emoji prefix.
 // Cursor supports .cursor/commands/*.md natively.
-// Uses the same logic as Claude Code -- commands are format-identical.
+// Supports composable command directories.
 func CursorTransformCommands(commandsDir string) ([]GeneratedFile, error) {
-	return TransformCommands(commandsDir)
+	return TransformCommands(commandsDir, "cursor")
 }
 
 // ─── Rules Transform ────────────────────────────────────────────────────────
@@ -302,6 +332,7 @@ func CursorTransform(projectRoot string, brainConfig *BrainConfig) (*CursorOutpu
 	commandsDir := filepath.Join(projectRoot, "templates", "commands")
 	protocolsDir := filepath.Join(projectRoot, "templates", "protocols")
 	hooksDir := filepath.Join(projectRoot, "templates", "hooks")
+	instructionsDir := filepath.Join(projectRoot, "templates", "instructions")
 
 	agents, err := CursorTransformAgents(agentsDir, brainConfig)
 	if err != nil {
@@ -321,6 +352,19 @@ func CursorTransform(projectRoot string, brainConfig *BrainConfig) (*CursorOutpu
 	rules, err := CursorTransformProtocols(protocolsDir)
 	if err != nil {
 		return nil, fmt.Errorf("transform protocols: %w", err)
+	}
+
+	// Compose instructions if the directory is composable
+	if IsComposableDir(instructionsDir) {
+		gen, err := ComposeInstructions(instructionsDir, "cursor")
+		if err != nil {
+			return nil, fmt.Errorf("compose instructions: %w", err)
+		}
+		if gen != nil {
+			// For Cursor, instructions compose into AGENTS.md
+			gen.RelativePath = "AGENTS.md"
+			rules = append(rules, *gen)
+		}
 	}
 
 	hooks, err := CursorTransformHooks(hooksDir, brainConfig)
