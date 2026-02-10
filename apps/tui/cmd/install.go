@@ -549,8 +549,12 @@ func uninstallCursor() error {
 	return nil
 }
 
-// copyBrainFiles copies all 🧠-prefixed files from src to dst. Returns paths of copied files.
+// copyBrainFiles copies files from src to dst. Creates dst if needed. Returns paths of copied files.
 func copyBrainFiles(src, dst string) ([]string, error) {
+	if err := os.MkdirAll(dst, 0755); err != nil {
+		return nil, fmt.Errorf("create directory %s: %w", dst, err)
+	}
+
 	var copied []string
 	entries, err := os.ReadDir(src)
 	if err != nil {
@@ -563,6 +567,12 @@ func copyBrainFiles(src, dst string) ([]string, error) {
 		}
 		srcPath := filepath.Join(src, entry.Name())
 		dstPath := filepath.Join(dst, entry.Name())
+
+		// Remove existing symlinks so we replace with a real file
+		if info, err := os.Lstat(dstPath); err == nil && info.Mode()&os.ModeSymlink != 0 {
+			os.Remove(dstPath)
+		}
+
 		data, err := os.ReadFile(srcPath)
 		if err != nil {
 			return copied, fmt.Errorf("read %s: %w", srcPath, err)
@@ -670,15 +680,27 @@ func jsonMerge(mergePayloadPath, targetPath string) ([]string, error) {
 	return payload.ManagedKeys, nil
 }
 
-// removeEmptyDirChain removes a directory if empty, then walks up removing
-// empty parents until hitting stopAt or a non-empty directory.
-// Prevents removing user home or .cursor root.
+// removeEmptyDirChain removes a directory if empty (ignoring .DS_Store),
+// then walks up removing empty parents until hitting stopAt or a non-empty directory.
 func removeEmptyDirChain(dir, stopAt string) {
 	for dir != stopAt && dir != "/" && len(dir) > len(stopAt) {
 		entries, err := os.ReadDir(dir)
-		if err != nil || len(entries) > 0 {
+		if err != nil {
 			break
 		}
+		// Count only meaningful entries (ignore .DS_Store)
+		meaningful := 0
+		for _, e := range entries {
+			if e.Name() != ".DS_Store" {
+				meaningful++
+			}
+		}
+		if meaningful > 0 {
+			break
+		}
+		// Remove .DS_Store if it's the only thing left
+		dsStore := filepath.Join(dir, ".DS_Store")
+		os.Remove(dsStore)
 		os.Remove(dir)
 		fmt.Printf("  Removed empty directory: %s\n", dir)
 		dir = filepath.Dir(dir)
