@@ -135,6 +135,34 @@ func readManifest(tool string) (*installManifest, error) {
 	return &m, nil
 }
 
+// ─── Installed Dependencies Tracking ─────────────────────────────────────────
+
+func depsManifestPath() string {
+	home, _ := os.UserHomeDir()
+	return filepath.Join(home, ".cache", "brain", "installed-deps.json")
+}
+
+func writeInstalledDeps(deps []string) error {
+	data, err := json.MarshalIndent(deps, "", "  ")
+	if err != nil {
+		return err
+	}
+	data = append(data, '\n')
+	dir := filepath.Dir(depsManifestPath())
+	os.MkdirAll(dir, 0755)
+	return os.WriteFile(depsManifestPath(), data, 0644)
+}
+
+func readInstalledDeps() []string {
+	data, err := os.ReadFile(depsManifestPath())
+	if err != nil {
+		return nil
+	}
+	var deps []string
+	json.Unmarshal(data, &deps)
+	return deps
+}
+
 // ─── Template Source ─────────────────────────────────────────────────────────
 
 // resolveTemplateSource returns a TemplateSource for reading templates.
@@ -1079,16 +1107,36 @@ func ensureDependencies() error {
 	}
 
 	installedBasicMemory := false
+	var newlyInstalled []string
 	for _, dep := range missing {
 		if err := installDependency(dep); err != nil {
 			fmt.Printf("  [FAIL] %s: %v\n", dep.Name, err)
 			fmt.Printf("  Install manually: %s\n", dep.InstallCmd)
 		} else {
 			fmt.Printf("  [COMPLETE] %s installed\n", dep.Name)
+			newlyInstalled = append(newlyInstalled, dep.Name)
 			if dep.Name == "basic-memory" {
 				installedBasicMemory = true
 			}
 		}
+	}
+
+	// Track which deps Brain installed (append to existing list)
+	if len(newlyInstalled) > 0 {
+		existing := readInstalledDeps()
+		for _, dep := range newlyInstalled {
+			found := false
+			for _, e := range existing {
+				if e == dep {
+					found = true
+					break
+				}
+			}
+			if !found {
+				existing = append(existing, dep)
+			}
+		}
+		writeInstalledDeps(existing)
 	}
 
 	// Configure basic-memory (fresh install writes full config,
@@ -1237,30 +1285,53 @@ func runInstall(_ *cobra.Command, _ []string) error {
 
 // ─── Uninstall Command ───────────────────────────────────────────────────────
 
-// uninstallDependencies removes dependencies that were installed by brain install.
+// uninstallDependencies removes only dependencies that were installed by brain install.
+// Dependencies that existed before Brain was installed are left untouched.
 func uninstallDependencies() {
-	for _, dep := range []struct {
-		name       string
-		binary     string
-		uninstall  string
-	}{
-		{"basic-memory", "basic-memory", "uv tool uninstall basic-memory"},
-		{"uv", "uv", "rm -rf ~/.local/bin/uv ~/.local/bin/uvx"},
-		{"bun", "bun", "rm -rf ~/.bun"},
-	} {
-		if _, err := exec.LookPath(dep.binary); err != nil {
-			continue // not installed
+	brainInstalled := readInstalledDeps()
+	if len(brainInstalled) == 0 {
+		fmt.Println("  No dependencies were installed by Brain")
+		return
+	}
+
+	uninstallCmds := map[string]string{
+		"basic-memory": "uv tool uninstall basic-memory",
+		"uv":           "rm -rf ~/.local/bin/uv ~/.local/bin/uvx",
+		"bun":          "rm -rf ~/.bun",
+	}
+
+	// Uninstall in reverse order (basic-memory before uv, since uv manages it)
+	order := []string{"basic-memory", "uv", "bun"}
+	for _, name := range order {
+		found := false
+		for _, installed := range brainInstalled {
+			if installed == name {
+				found = true
+				break
+			}
 		}
-		fmt.Printf("  Removing %s...\n", dep.name)
-		cmd := exec.Command("sh", "-c", dep.uninstall)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		if err := cmd.Run(); err != nil {
-			fmt.Printf("  Warning: failed to remove %s: %v\n", dep.name, err)
+		if !found {
+			continue // Brain didn't install this, leave it alone
+		}
+
+		cmd, ok := uninstallCmds[name]
+		if !ok {
+			continue
+		}
+
+		fmt.Printf("  Removing %s (installed by Brain)...\n", name)
+		c := exec.Command("sh", "-c", cmd)
+		c.Stdout = os.Stdout
+		c.Stderr = os.Stderr
+		if err := c.Run(); err != nil {
+			fmt.Printf("  Warning: failed to remove %s: %v\n", name, err)
 		} else {
-			fmt.Printf("  [COMPLETE] %s removed\n", dep.name)
+			fmt.Printf("  [COMPLETE] %s removed\n", name)
 		}
 	}
+
+	// Clean up the deps manifest
+	os.Remove(depsManifestPath())
 }
 
 // uninstallBrainConfig removes Brain's own config files.
@@ -1377,16 +1448,18 @@ func runSelectiveUninstall(installed []string) error {
 }
 
 func runFullUninstall(installed []string) error {
-	fmt.Println("\nThis will remove Brain from all tools and uninstall dependencies (bun, uv, basic-memory).")
+	brainDeps := readInstalledDeps()
+
+	fmt.Println("\nThis will remove Brain from all tools.")
 	fmt.Println()
 	fmt.Println("Tools to remove from:")
 	for _, t := range installed {
 		fmt.Printf("  - %s\n", toolDisplayName(t))
 	}
-	fmt.Println()
-	fmt.Println("Dependencies to remove:")
-	for _, dep := range []string{"basic-memory", "uv", "bun"} {
-		if _, err := exec.LookPath(dep); err == nil {
+	if len(brainDeps) > 0 {
+		fmt.Println()
+		fmt.Println("Dependencies to remove (installed by Brain):")
+		for _, dep := range brainDeps {
 			fmt.Printf("  - %s\n", dep)
 		}
 	}
