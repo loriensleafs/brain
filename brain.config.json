@@ -29,9 +29,319 @@
       }
     }
   },
-  "agents": {},
-  "hooks": {},
-  "skills": {},
-  "commands": {},
-  "protocols": {}
+  "agents": {
+    "orchestrator-claude": {
+      "source": "agents/orchestrator-claude.md",
+      "claude-code": {
+        "model": "claude-opus-4-6[1m]",
+        "description": "Enterprise task orchestrator coordinating specialized agent teammates via Agent Teams",
+        "tools": ["Teammate", "TaskCreate", "TaskUpdate", "TaskList", "TaskGet", "SendMessage", "TodoWrite"]
+      },
+      "cursor": null
+    },
+    "orchestrator-cursor": {
+      "source": "agents/orchestrator-cursor.md",
+      "claude-code": null,
+      "cursor": {
+        "description": "Enterprise task orchestrator coordinating specialized agents via hub-and-spoke delegation"
+      }
+    },
+    "analyst": {
+      "source": "agents/analyst.md",
+      "claude-code": {
+        "model": "claude-opus-4-6[1m]",
+        "description": "Research and investigation specialist for pre-implementation analysis"
+      },
+      "cursor": {
+        "description": "Research and investigation specialist for pre-implementation analysis"
+      }
+    },
+    "architect": {
+      "source": "agents/architect.md",
+      "claude-code": {
+        "model": "claude-opus-4-6[1m]",
+        "description": "System design governance and ADR documentation"
+      },
+      "cursor": {
+        "description": "System design governance and ADR documentation"
+      }
+    },
+    "planner": {
+      "source": "agents/planner.md",
+      "claude-code": {
+        "model": "claude-opus-4-6[1m]",
+        "description": "Implementation strategist breaking epics into milestones with acceptance criteria"
+      },
+      "cursor": {
+        "description": "Implementation strategist breaking epics into milestones with acceptance criteria"
+      }
+    },
+    "implementer": {
+      "source": "agents/implementer.md",
+      "claude-code": {
+        "model": "claude-opus-4-6[1m]",
+        "description": "Production code implementation with SOLID principles and test coverage"
+      },
+      "cursor": {
+        "description": "Production code implementation with SOLID principles and test coverage"
+      }
+    },
+    "critic": {
+      "source": "agents/critic.md",
+      "claude-code": {
+        "model": "claude-opus-4-6[1m]",
+        "description": "Plan validator stress-testing proposals and blocking when risks are unmitigated"
+      },
+      "cursor": {
+        "description": "Plan validator stress-testing proposals and blocking when risks are unmitigated"
+      }
+    },
+    "qa": {
+      "source": "agents/qa.md",
+      "claude-code": {
+        "model": "claude-opus-4-6[1m]",
+        "description": "Test engineer designing strategies and ensuring coverage"
+      },
+      "cursor": {
+        "description": "Test engineer designing strategies and ensuring coverage"
+      }
+    },
+    "security": {
+      "source": "agents/security.md",
+      "claude-code": {
+        "model": "claude-opus-4-6[1m]",
+        "description": "Security engineer for threat modeling and vulnerability analysis"
+      },
+      "cursor": {
+        "description": "Security engineer for threat modeling and vulnerability analysis"
+      }
+    },
+    "devops": {
+      "source": "agents/debug.md",
+      "claude-code": {
+        "model": "claude-sonnet-4-5-20250929",
+        "description": "Infrastructure specialist for CI/CD pipelines and automation"
+      },
+      "cursor": {
+        "description": "Infrastructure specialist for CI/CD pipelines and automation"
+      }
+    },
+    "explainer": {
+      "source": "agents/explainer.md",
+      "claude-code": {
+        "model": "claude-opus-4-6[1m]",
+        "description": "Technical writer creating PRDs and documentation"
+      },
+      "cursor": {
+        "description": "Technical writer creating PRDs and documentation"
+      }
+    },
+    "high-level-advisor": {
+      "source": "agents/high-level-advisor.md",
+      "claude-code": {
+        "model": "claude-opus-4-6[1m]",
+        "description": "Strategic advisor cutting through complexity with clear verdicts"
+      },
+      "cursor": {
+        "description": "Strategic advisor cutting through complexity with clear verdicts"
+      }
+    },
+    "independent-thinker": {
+      "source": "agents/independent-thinker.md",
+      "claude-code": {
+        "model": "claude-opus-4-6[1m]",
+        "description": "Contrarian analyst challenging assumptions with evidence"
+      },
+      "cursor": {
+        "description": "Contrarian analyst challenging assumptions with evidence"
+      }
+    },
+    "roadmap": {
+      "source": "agents/roadmap.md",
+      "claude-code": {
+        "model": "claude-opus-4-6[1m]",
+        "description": "Product strategist prioritizing by business value"
+      },
+      "cursor": {
+        "description": "Product strategist prioritizing by business value"
+      }
+    },
+    "retrospective": {
+      "source": "agents/retrospective.md",
+      "claude-code": {
+        "model": "claude-sonnet-4-5-20250929",
+        "description": "Learning facilitator extracting insights from execution"
+      },
+      "cursor": {
+        "description": "Learning facilitator extracting insights from execution"
+      }
+    },
+    "skillbook": {
+      "source": "agents/skillbook.md",
+      "claude-code": {
+        "model": "claude-sonnet-4-5-20250929",
+        "description": "Knowledge curator transforming reflections into reusable strategies"
+      },
+      "cursor": {
+        "description": "Knowledge curator transforming reflections into reusable strategies"
+      }
+    },
+    "memory": {
+      "source": "agents/memory.md",
+      "claude-code": {
+        "model": "claude-opus-4-6[1m]",
+        "description": "Cross-session context management via Brain MCP"
+      },
+      "cursor": {
+        "description": "Cross-session context management via Brain MCP"
+      }
+    },
+    "task-generator": {
+      "source": "agents/task-generator.md",
+      "claude-code": {
+        "model": "claude-opus-4-6[1m]",
+        "description": "Decomposition specialist breaking PRDs into atomic work items"
+      },
+      "cursor": {
+        "description": "Decomposition specialist breaking PRDs into atomic work items"
+      }
+    },
+    "spec-generator": {
+      "source": "agents/spec-generator.md",
+      "claude-code": {
+        "model": "claude-opus-4-6[1m]",
+        "description": "Transforms vibe-level descriptions into structured 3-tier specifications"
+      },
+      "cursor": {
+        "description": "Transforms vibe-level descriptions into structured 3-tier specifications"
+      }
+    },
+    "pr-comment-responder": {
+      "source": "agents/pr-comment-responder.md",
+      "claude-code": {
+        "model": "claude-sonnet-4-5-20250929",
+        "description": "PR review coordinator ensuring systematic feedback resolution"
+      },
+      "cursor": {
+        "description": "PR review coordinator ensuring systematic feedback resolution"
+      }
+    },
+    "adr-generator": {
+      "source": "agents/adr-generator.md",
+      "claude-code": {
+        "model": "claude-opus-4-6[1m]",
+        "description": "Architecture Decision Record generator"
+      },
+      "cursor": {
+        "description": "Architecture Decision Record generator"
+      }
+    },
+    "context-retrieval": {
+      "source": "agents/context-retrieval.md",
+      "claude-code": {
+        "model": "claude-opus-4-6[1m]",
+        "description": "Context retrieval from Brain memory for session initialization"
+      },
+      "cursor": {
+        "description": "Context retrieval from Brain memory for session initialization"
+      }
+    },
+    "debug": {
+      "source": "agents/debug.md",
+      "claude-code": {
+        "model": "claude-opus-4-6[1m]",
+        "description": "Debugging specialist for troubleshooting and root cause analysis"
+      },
+      "cursor": {
+        "description": "Debugging specialist for troubleshooting and root cause analysis"
+      }
+    },
+    "import-memories": {
+      "source": "agents/import-memories.md",
+      "claude-code": {
+        "model": "claude-opus-4-6[1m]",
+        "description": "Memory import specialist for cross-session knowledge transfer"
+      },
+      "cursor": {
+        "description": "Memory import specialist for cross-session knowledge transfer"
+      }
+    },
+    "janitor": {
+      "source": "agents/janitor.md",
+      "claude-code": {
+        "model": "claude-sonnet-4-5-20250929",
+        "description": "Cleanup specialist for maintaining project hygiene"
+      },
+      "cursor": {
+        "description": "Cleanup specialist for maintaining project hygiene"
+      }
+    },
+    "prompt-builder": {
+      "source": "agents/prompt-builder.md",
+      "claude-code": {
+        "model": "claude-opus-4-6[1m]",
+        "description": "Prompt engineering specialist for agent definition creation"
+      },
+      "cursor": {
+        "description": "Prompt engineering specialist for agent definition creation"
+      }
+    },
+    "technical-writer": {
+      "source": "agents/technical-writer.md",
+      "claude-code": {
+        "model": "claude-opus-4-6[1m]",
+        "description": "Technical documentation specialist"
+      },
+      "cursor": {
+        "description": "Technical documentation specialist"
+      }
+    }
+  },
+  "hooks": {
+    "claude-code": {
+      "source": "hooks/claude-code.json",
+      "scripts": "hooks/scripts/"
+    }
+  },
+  "skills": {
+    "adr-review": { "source": "skills/adr-review/" },
+    "analyze": { "source": "skills/analyze/" },
+    "curating-memories": { "source": "skills/curating-memories/" },
+    "decision-critic": { "source": "skills/decision-critic/" },
+    "doc-sync": { "source": "skills/doc-sync/" },
+    "exploring-knowledge-graph": { "source": "skills/exploring-knowledge-graph/" },
+    "fix-markdown-fences": { "source": "skills/fix-markdown-fences/" },
+    "incoherence": { "source": "skills/incoherence/" },
+    "memory": { "source": "skills/memory/" },
+    "memory-documentary": { "source": "skills/memory-documentary/" },
+    "planner": { "source": "skills/planner/" },
+    "pr-comment-responder": { "source": "skills/pr-comment-responder/" },
+    "programming-advisor": { "source": "skills/programming-advisor/" },
+    "prompt-engineer": { "source": "skills/prompt-engineer/" },
+    "research-and-incorporate": { "source": "skills/research-and-incorporate/" },
+    "security-detection": { "source": "skills/security-detection/" },
+    "serena-code-architecture": { "source": "skills/serena-code-architecture/" },
+    "session": { "source": "skills/session/" },
+    "session-log-fixer": { "source": "skills/session-log-fixer/" },
+    "SkillForge": { "source": "skills/SkillForge/" },
+    "slashcommandcreator": { "source": "skills/slashcommandcreator/" },
+    "steering-matcher": { "source": "skills/steering-matcher/" },
+    "using-forgetful-memory": { "source": "skills/using-forgetful-memory/" }
+  },
+  "commands": {
+    "bootstrap": { "source": "commands/bootstrap.md" },
+    "end-session": { "source": "commands/end-session.md" },
+    "mode": { "source": "commands/mode.md" },
+    "pause-session": { "source": "commands/pause-session.md" },
+    "planning-agent": { "source": "commands/planning-agent.md" },
+    "research-agent": { "source": "commands/research-agent.md" },
+    "resume-session": { "source": "commands/resume-session.md" },
+    "spec": { "source": "commands/spec.md" },
+    "start-session": { "source": "commands/start-session.md" }
+  },
+  "protocols": {
+    "agent-system": { "source": "protocols/AGENT-SYSTEM.md" },
+    "agent-instructions": { "source": "protocols/AGENT-INSTRUCTIONS.md" },
+    "session-protocol": { "source": "protocols/SESSION-PROTOCOL.md" }
+  }
 }
