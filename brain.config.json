@@ -1,0 +1,37 @@
+{
+  "$schema": "./packages/validation/schemas/brain-config.schema.json",
+  "version": "1.0.0",
+  "targets": {
+    "claude-code": {
+      "adapter": "./adapters/claude-code.ts",
+      "outputDir": ".claude",
+      "agentFrontmatter": {
+        "format": "yaml"
+      },
+      "hooks": {
+        "configPath": ".claude/settings.json"
+      },
+      "mcp": {
+        "configPath": ".claude/mcp.json"
+      }
+    },
+    "cursor": {
+      "adapter": "./adapters/cursor.ts",
+      "outputDir": ".cursor",
+      "agentFrontmatter": {
+        "format": "yaml"
+      },
+      "hooks": {
+        "configPath": ".cursor/hooks.json"
+      },
+      "mcp": {
+        "configPath": ".cursor/mcp.json"
+      }
+    }
+  },
+  "agents": {},
+  "hooks": {},
+  "skills": {},
+  "commands": {},
+  "protocols": {}
+}
