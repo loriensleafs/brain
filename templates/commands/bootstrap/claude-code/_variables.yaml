@@ -1,0 +1,8 @@
+tool_name: Claude Code
+role: orchestrator
+role_noun: team lead
+role_article: the Team Lead
+agent_file: orchestrator agent
+instructions_file: AGENTS.md
+worker_plural: teammates
+worker_noun: agent teammates

@@ -378,7 +378,15 @@ func CursorTransformAgentsFromSource(src *TemplateSource, brainConfig *BrainConf
 	return results, nil
 }
 
+// protocolsAsRules lists protocols that should become .cursor/rules/*.mdc files.
+// All others are reference docs installed to .agents/*.md.
+var protocolsAsRules = map[string]bool{
+	"AGENT-INSTRUCTIONS.md": true,
+}
+
 // CursorTransformProtocolsFromSource transforms protocols using a TemplateSource.
+// AGENT-INSTRUCTIONS becomes a .mdc rule with alwaysApply: true.
+// AGENT-SYSTEM and SESSION-PROTOCOL become reference docs in .agents/.
 func CursorTransformProtocolsFromSource(src *TemplateSource) ([]GeneratedFile, error) {
 	files, err := ScanMarkdownFilesFromSource(src, "protocols")
 	if err != nil {
@@ -392,13 +400,31 @@ func CursorTransformProtocolsFromSource(src *TemplateSource) ([]GeneratedFile, e
 			continue
 		}
 
-		nameWithoutExt := strings.TrimSuffix(filename, ".md")
-		prefixed := BrainPrefix(nameWithoutExt) + ".mdc"
+		if protocolsAsRules[filename] {
+			// Install as a Cursor rule with alwaysApply frontmatter
+			nameWithoutExt := strings.TrimSuffix(filename, ".md")
+			prefixed := BrainPrefix(nameWithoutExt) + ".mdc"
 
-		results = append(results, GeneratedFile{
-			RelativePath: "rules/" + prefixed,
-			Content:      string(content),
-		})
+			// Add alwaysApply frontmatter and fix references to point to ~/.agents/
+			body := string(content)
+			body = strings.ReplaceAll(body, "See `AGENT-SYSTEM.md`", "See `~/.agents/AGENT-SYSTEM.md`")
+			body = strings.ReplaceAll(body, "See SESSION-PROTOCOL.md", "See ~/.agents/SESSION-PROTOCOL.md")
+			body = strings.ReplaceAll(body, "See `SESSION-PROTOCOL.md`", "See `~/.agents/SESSION-PROTOCOL.md`")
+
+			ruleContent := "---\nalwaysApply: true\n---\n\n" + body
+
+			results = append(results, GeneratedFile{
+				RelativePath: "rules/" + prefixed,
+				Content:      ruleContent,
+			})
+		} else {
+			// Install as reference doc in .agents/
+			nameWithoutExt := strings.TrimSuffix(filename, ".md")
+			results = append(results, GeneratedFile{
+				RelativePath: ".agents/" + nameWithoutExt + ".md",
+				Content:      string(content),
+			})
+		}
 	}
 
 	return results, nil
