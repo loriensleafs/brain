@@ -5,11 +5,12 @@ INSTALL_PATH = $(HOME)/.local/bin
 
 .PHONY: all clean embed
 
-## embed: Copy templates into apps/tui/embedded/ for go:embed
+## embed: Copy templates and config into apps/tui/embedded/ for go:embed
 embed:
 	@echo "Copying templates for embedding..."
 	rm -rf apps/tui/embedded/templates
 	cp -R templates apps/tui/embedded/templates
+	cp brain.config.json apps/tui/embedded/templates/brain.config.json
 	@# Remove .DS_Store and .gitkeep files that shouldn't be embedded
 	find apps/tui/embedded/templates -name '.DS_Store' -delete
 	find apps/tui/embedded/templates -name '.gitkeep' -delete

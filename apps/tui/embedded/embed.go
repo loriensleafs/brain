@@ -18,7 +18,7 @@ import (
 var content embed.FS
 
 // FS returns an fs.FS rooted at the templates/ directory.
-// Callers can use fs.ReadFile(FS(), "configs/brain.config.json") etc.
+// Callers can use fs.ReadFile(FS(), "brain.config.json") etc.
 func FS() fs.FS {
 	sub, err := fs.Sub(content, "templates")
 	if err != nil {
