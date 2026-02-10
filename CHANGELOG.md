@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/loriensleafs/brain/compare/v0.2.1...v0.3.0) (2026-02-10)
+
+
+### Features
+
+* embed templates, upgrade command, and install detection ([#4](https://github.com/loriensleafs/brain/issues/4)) ([9be568c](https://github.com/loriensleafs/brain/commit/9be568c566cc93762a65d3b839ed33187161e7bc))
+
 ## [0.2.1](https://github.com/loriensleafs/brain/compare/v0.2.0...v0.2.1) (2026-02-10)
 
 
