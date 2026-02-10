@@ -777,23 +777,26 @@ func installDependency(dep dependency) error {
 func ensureDependencies() error {
 	missing := checkDependencies()
 	if len(missing) == 0 {
+		fmt.Println("All dependencies found.")
+		fmt.Println()
 		return nil
 	}
 
-	fmt.Println("Missing dependencies:")
+	fmt.Println("The following dependencies will be installed:")
+	fmt.Println()
 	for _, dep := range missing {
-		fmt.Printf("  - %s (%s)\n", dep.Name, dep.InstallMsg)
+		fmt.Printf("  %s — %s\n", dep.Name, dep.InstallMsg)
 	}
 	fmt.Println()
 
-	var install bool
+	proceed := true
 	form := huh.NewForm(
 		huh.NewGroup(
 			huh.NewConfirm().
-				Title("Install missing dependencies?").
+				Title("Continue with installation?").
 				Affirmative("Yes").
 				Negative("No").
-				Value(&install),
+				Value(&proceed),
 		),
 	)
 
@@ -801,9 +804,8 @@ func ensureDependencies() error {
 		return err
 	}
 
-	if !install {
-		fmt.Println("Skipping dependency installation. Some features may not work.")
-		return nil
+	if !proceed {
+		return fmt.Errorf("installation cancelled")
 	}
 
 	// Install in order (uv before basic-memory)
