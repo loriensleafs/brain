@@ -534,6 +534,107 @@ func jsonUnmerge(targetPath string) error {
 	return nil
 }
 
+// ─── Install Detection ──────────────────────────────────────────────────────
+
+// isBrainInstalledClaude checks if Brain is already installed for Claude Code.
+func isBrainInstalledClaude() bool {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return false
+	}
+
+	// Check for plugin marketplace directory
+	marketplaceDir := filepath.Join(home, ".claude", "plugins", "marketplaces", "brain")
+	if _, err := os.Stat(marketplaceDir); err == nil {
+		return true
+	}
+
+	// Check for Brain manifest
+	if _, err := readManifest("claude-code"); err == nil {
+		return true
+	}
+
+	// Check for Brain rules files (🧠-*.md)
+	rulesDir := filepath.Join(home, ".claude", "rules")
+	if hasBrainPrefixedFiles(rulesDir, ".md") {
+		return true
+	}
+
+	return false
+}
+
+// isBrainInstalledCursor checks if Brain is already installed for Cursor.
+func isBrainInstalledCursor() bool {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return false
+	}
+
+	// Check for Brain manifest
+	if _, err := readManifest("cursor"); err == nil {
+		return true
+	}
+
+	// Check for Brain agent files (🧠-*.md)
+	agentsDir := filepath.Join(home, ".cursor", "agents")
+	if hasBrainPrefixedFiles(agentsDir, ".md") {
+		return true
+	}
+
+	// Check for Brain rules files (🧠-*.mdc)
+	rulesDir := filepath.Join(home, ".cursor", "rules")
+	if hasBrainPrefixedFiles(rulesDir, ".mdc") {
+		return true
+	}
+
+	return false
+}
+
+// hasBrainPrefixedFiles checks if a directory contains files with the Brain emoji prefix.
+func hasBrainPrefixedFiles(dir, ext string) bool {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return false
+	}
+
+	prefix := "\xf0\x9f\xa7\xa0-" // 🧠-
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		name := entry.Name()
+		if strings.HasPrefix(name, prefix) && strings.HasSuffix(name, ext) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// isBrainInstalled checks if Brain is already installed for a given tool.
+func isBrainInstalled(tool string) bool {
+	switch tool {
+	case "claude-code":
+		return isBrainInstalledClaude()
+	case "cursor":
+		return isBrainInstalledCursor()
+	default:
+		return false
+	}
+}
+
+// toolDisplayName converts a tool slug to a display name.
+func toolDisplayName(tool string) string {
+	switch tool {
+	case "claude-code":
+		return "Claude Code"
+	case "cursor":
+		return "Cursor"
+	default:
+		return tool
+	}
+}
+
 // ─── Install Command ─────────────────────────────────────────────────────────
 
 func runInstall(_ *cobra.Command, _ []string) error {
@@ -568,22 +669,64 @@ func runInstall(_ *cobra.Command, _ []string) error {
 		return nil
 	}
 
-	// Confirmation
-	var confirm bool
-	confirmForm := huh.NewForm(
-		huh.NewGroup(
-			huh.NewConfirm().
-				Title(fmt.Sprintf("Install Brain for: %s?", strings.Join(selected, ", "))).
-				Value(&confirm),
-		),
-	)
-
-	if err := confirmForm.Run(); err != nil {
-		return err
+	// Check for existing installations and prompt for update
+	var confirmed []string
+	for _, tool := range selected {
+		if isBrainInstalled(tool) {
+			var update bool
+			updateForm := huh.NewForm(
+				huh.NewGroup(
+					huh.NewConfirm().
+						Title(fmt.Sprintf("Brain is already installed for %s. Update?", toolDisplayName(tool))).
+						Affirmative("Yes").
+						Negative("No").
+						Value(&update),
+				),
+			)
+			if err := updateForm.Run(); err != nil {
+				return err
+			}
+			if update {
+				confirmed = append(confirmed, tool)
+			} else {
+				fmt.Printf("Skipping %s.\n", toolDisplayName(tool))
+			}
+		} else {
+			confirmed = append(confirmed, tool)
+		}
 	}
-	if !confirm {
-		fmt.Println("Cancelled.")
+
+	if len(confirmed) == 0 {
+		fmt.Println("Nothing to install.")
 		return nil
+	}
+
+	// Confirmation for new installations
+	var hasNew bool
+	for _, tool := range confirmed {
+		if !isBrainInstalled(tool) {
+			hasNew = true
+			break
+		}
+	}
+
+	if hasNew {
+		var confirm bool
+		confirmForm := huh.NewForm(
+			huh.NewGroup(
+				huh.NewConfirm().
+					Title(fmt.Sprintf("Install Brain for: %s?", strings.Join(confirmed, ", "))).
+					Value(&confirm),
+			),
+		)
+
+		if err := confirmForm.Run(); err != nil {
+			return err
+		}
+		if !confirm {
+			fmt.Println("Cancelled.")
+			return nil
+		}
 	}
 
 	src := resolveTemplateSource()
@@ -593,8 +736,8 @@ func runInstall(_ *cobra.Command, _ []string) error {
 		fmt.Printf("Project: %s\n\n", src.ProjectRoot())
 	}
 
-	// Install each selected tool
-	for _, tool := range selected {
+	// Install each confirmed tool
+	for _, tool := range confirmed {
 		fmt.Printf("Installing for %s...\n", tool)
 		switch tool {
 		case "claude-code":
