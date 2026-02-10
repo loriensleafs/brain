@@ -567,6 +567,12 @@ func copyBrainFiles(src, dst string) ([]string, error) {
 		}
 		srcPath := filepath.Join(src, entry.Name())
 		dstPath := filepath.Join(dst, entry.Name())
+
+		// Remove existing symlinks so we replace with a real file
+		if info, err := os.Lstat(dstPath); err == nil && info.Mode()&os.ModeSymlink != 0 {
+			os.Remove(dstPath)
+		}
+
 		data, err := os.ReadFile(srcPath)
 		if err != nil {
 			return copied, fmt.Errorf("read %s: %w", srcPath, err)
