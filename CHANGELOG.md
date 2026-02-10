@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/loriensleafs/brain/compare/v0.2.0...v0.2.1) (2026-02-10)
+
+
+### Bug Fixes
+
+* correct GitHub repo owner in goreleaser and install script ([f259e31](https://github.com/loriensleafs/brain/commit/f259e315e011c7319bb5da30795a4f390a9cb067))
+
 ## [0.2.0](https://github.com/loriensleafs/brain/compare/v0.1.0...v0.2.0) (2026-02-10)
 
 
