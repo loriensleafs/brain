@@ -131,34 +131,6 @@ func readManifest(tool string) (*installManifest, error) {
 
 // ─── Adapter Invocation ──────────────────────────────────────────────────────
 
-type syncResult struct {
-	Target     string `json:"target"`
-	TotalFiles int    `json:"totalFiles"`
-	Files      []struct {
-		RelativePath string `json:"relativePath"`
-		Size         int    `json:"size"`
-	} `json:"files"`
-	Errors []string `json:"errors"`
-}
-
-func runAdapter(projectRoot, target string) (*syncResult, error) {
-	syncScript := filepath.Join(projectRoot, "adapters", "sync.ts")
-	cmd := exec.Command("bun", syncScript, "--target", target, "--json", "--project", projectRoot)
-	cmd.Stderr = os.Stderr
-
-	out, err := cmd.Output()
-	if err != nil {
-		return nil, fmt.Errorf("adapter failed: %w", err)
-	}
-
-	var result syncResult
-	if err := json.Unmarshal(out, &result); err != nil {
-		return nil, fmt.Errorf("failed to parse adapter output: %w", err)
-	}
-
-	return &result, nil
-}
-
 func runAdapterWrite(projectRoot, target, outputDir string) error {
 	syncScript := filepath.Join(projectRoot, "adapters", "sync.ts")
 	cmd := exec.Command("bun", syncScript, "--target", target, "--output", outputDir, "--project", projectRoot)
