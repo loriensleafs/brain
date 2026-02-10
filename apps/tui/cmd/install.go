@@ -764,13 +764,104 @@ func checkDependencies() []dependency {
 	return missing
 }
 
+// refreshPATH adds common install locations to PATH so newly installed
+// binaries are immediately available without restarting the shell.
+func refreshPATH() {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return
+	}
+
+	extraPaths := []string{
+		filepath.Join(home, ".bun", "bin"),
+		filepath.Join(home, ".local", "bin"),
+		filepath.Join(home, ".cargo", "bin"),
+	}
+
+	current := os.Getenv("PATH")
+	for _, p := range extraPaths {
+		if !strings.Contains(current, p) {
+			current = p + ":" + current
+		}
+	}
+	os.Setenv("PATH", current)
+}
+
 // installDependency runs the install command for a dependency.
 func installDependency(dep dependency) error {
 	fmt.Printf("  Installing %s...\n", dep.Name)
 	cmd := exec.Command("sh", "-c", dep.InstallCmd)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	return cmd.Run()
+	if err := cmd.Run(); err != nil {
+		return err
+	}
+	// Refresh PATH so the next dep can find this one
+	refreshPATH()
+	return nil
+}
+
+// initBasicMemory writes the Brain-recommended config and initializes the database.
+func initBasicMemory() {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return
+	}
+
+	configDir := filepath.Join(home, ".basic-memory")
+	configPath := filepath.Join(configDir, "config.json")
+
+	// Only write config if it doesn't exist yet
+	if _, err := os.Stat(configPath); err == nil {
+		fmt.Println("  basic-memory config already exists, skipping")
+		return
+	}
+
+	fmt.Println("  Configuring basic-memory...")
+	if err := os.MkdirAll(configDir, 0755); err != nil {
+		fmt.Printf("  Warning: could not create config dir: %v\n", err)
+		return
+	}
+
+	config := map[string]any{
+		"env":                          "user",
+		"default_project_mode":         false,
+		"log_level":                    "info",
+		"database_backend":             "sqlite",
+		"database_url":                 nil,
+		"db_pool_size":                 20,
+		"db_pool_overflow":             40,
+		"db_pool_recycle":              180,
+		"sync_delay":                   500,
+		"watch_project_reload_interval": 30,
+		"update_permalinks_on_move":    true,
+		"sync_changes":                 true,
+		"sync_thread_pool_size":        4,
+		"sync_max_concurrent_files":    10,
+		"kebab_filenames":              false,
+		"disable_permalinks":           false,
+		"skip_initialization_sync":     false,
+		"format_on_save":               false,
+		"formatter_command":            nil,
+		"formatters":                   map[string]any{},
+		"formatter_timeout":            5,
+		"project_root":                 nil,
+		"cloud_mode":                   false,
+	}
+
+	data, err := json.MarshalIndent(config, "", "  ")
+	if err != nil {
+		fmt.Printf("  Warning: could not marshal config: %v\n", err)
+		return
+	}
+	data = append(data, '\n')
+
+	if err := os.WriteFile(configPath, data, 0644); err != nil {
+		fmt.Printf("  Warning: could not write config: %v\n", err)
+		return
+	}
+
+	fmt.Println("  [COMPLETE] basic-memory configured")
 }
 
 // ensureDependencies checks for missing deps and offers to install them.
@@ -808,25 +899,25 @@ func ensureDependencies() error {
 		return fmt.Errorf("installation cancelled")
 	}
 
-	// Install in order (uv before basic-memory)
+	installedBasicMemory := false
 	for _, dep := range missing {
-		// If basic-memory is missing but uv was just installed, refresh PATH
-		if dep.Name == "basic-memory" {
-			if _, err := exec.LookPath("uv"); err != nil {
-				fmt.Println("  Skipping basic-memory (uv not available yet)")
-				fmt.Printf("  Run manually after restarting shell: %s\n", dep.InstallCmd)
-				continue
-			}
-		}
 		if err := installDependency(dep); err != nil {
 			fmt.Printf("  [FAIL] %s: %v\n", dep.Name, err)
 			fmt.Printf("  Install manually: %s\n", dep.InstallCmd)
 		} else {
 			fmt.Printf("  [COMPLETE] %s installed\n", dep.Name)
+			if dep.Name == "basic-memory" {
+				installedBasicMemory = true
+			}
 		}
 	}
-	fmt.Println()
 
+	// Configure basic-memory after fresh install
+	if installedBasicMemory {
+		initBasicMemory()
+	}
+
+	fmt.Println()
 	return nil
 }
 
