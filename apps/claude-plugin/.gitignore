@@ -1,9 +1,0 @@
-# Go binaries
-brain-hooks
-hooks/scripts/brain-hooks
-
-# Build artifacts
-*.exe
-*.dll
-*.so
-*.dylib
