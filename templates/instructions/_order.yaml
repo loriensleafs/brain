@@ -4,66 +4,66 @@
 
 sections:
   # Header and identity
-  - rules/010-header.md
-  - rules/020-identity.md
-  - rules/030-required-reading.md
+  - sections/010-header.md
+  - sections/020-identity.md
+  - sections/030-required-reading.md
   - "{tool}/040-memory-delegation.md"
   - "{tool}/050-execution-model.md"
   - "{tool}/060-typical-workflow.md"
 
   # Blocking gates
-  - rules/100-initialization-gate.md
-  - rules/110-session-protocol.md
-  - rules/120-session-start.md
-  - rules/130-session-end.md
-  - rules/140-memory-bridge.md
-  - rules/150-context-recovery.md
+  - sections/100-initialization-gate.md
+  - sections/110-session-protocol.md
+  - sections/120-session-start.md
+  - sections/130-session-end.md
+  - sections/140-memory-bridge.md
+  - sections/150-context-recovery.md
   - "{tool}/160-session-extras.md"
 
   # Commands
-  - rules/200-session-commands.md
+  - sections/200-session-commands.md
   - "{tool}/210-tool-commands.md"
-  - rules/220-dev-commands.md
-  - rules/230-git-commands.md
+  - sections/220-dev-commands.md
+  - sections/230-git-commands.md
 
   # Boundaries
-  - rules/300-always-do.md
-  - rules/310-ask-first.md
-  - rules/320-never-do.md
-  - rules/330-commit-messages.md
+  - sections/300-always-do.md
+  - sections/310-ask-first.md
+  - sections/320-never-do.md
+  - sections/330-commit-messages.md
 
   # Agent catalog and routing
   - "{tool}/400-agent-catalog.md"
-  - rules/410-adr-review.md
-  - rules/420-output-paths.md
-  - rules/430-task-classification.md
-  - rules/440-workflow-patterns.md
-  - rules/450-impact-analysis.md
-  - rules/460-disagree-commit.md
+  - sections/410-adr-review.md
+  - sections/420-output-paths.md
+  - sections/430-task-classification.md
+  - sections/440-workflow-patterns.md
+  - sections/450-impact-analysis.md
+  - sections/460-disagree-commit.md
   - "{tool}/470-extra-patterns.md"
 
   # Memory architecture
-  - rules/500-memory-architecture.md
-  - rules/510-entity-mapping.md
-  - rules/520-session-entity.md
-  - rules/530-observations-relations.md
-  - rules/540-quality-thresholds.md
-  - rules/550-compliant-note.md
-  - rules/560-write-decision-tree.md
-  - rules/570-validation.md
+  - sections/500-memory-architecture.md
+  - sections/510-entity-mapping.md
+  - sections/520-session-entity.md
+  - sections/530-observations-relations.md
+  - sections/540-quality-thresholds.md
+  - sections/550-compliant-note.md
+  - sections/560-write-decision-tree.md
+  - sections/570-validation.md
 
   # Memory-first gate
-  - rules/600-memory-first-gate.md
+  - sections/600-memory-first-gate.md
 
   # Reference
-  - rules/700-brain-mcp-reference.md
-  - rules/710-trigger-phrases.md
-  - rules/720-anti-patterns.md
-  - rules/730-communication-standards.md
-  - rules/740-self-improvement.md
-  - rules/750-utilities.md
+  - sections/700-brain-mcp-reference.md
+  - sections/710-trigger-phrases.md
+  - sections/720-anti-patterns.md
+  - sections/730-communication-standards.md
+  - sections/740-self-improvement.md
+  - sections/750-utilities.md
 
   # Key documents and responsibilities
-  - rules/800-key-documents.md
-  - rules/810-critical-constraints.md
+  - sections/800-key-documents.md
+  - sections/810-critical-constraints.md
   - "{tool}/820-responsibilities.md"

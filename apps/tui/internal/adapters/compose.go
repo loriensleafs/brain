@@ -10,7 +10,7 @@ import (
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 // ComposableDir represents a directory with _order.yaml, _variables.yaml,
-// rules/, and variant-specific subdirectories (claude-code/, cursor/).
+// sections/, and variant-specific subdirectories (claude-code/, cursor/).
 type ComposableDir struct {
 	// Dir is the absolute path to the composable directory.
 	Dir string
@@ -26,7 +26,7 @@ type ComposableDir struct {
 // Expected format:
 //
 //	sections:
-//	  - rules/010-header.md
+//	  - sections/010-header.md
 //	  - "{tool}/040-memory-delegation.md"
 func parseOrderYAML(data string) []string {
 	var sections []string

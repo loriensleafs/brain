@@ -1,20 +1,20 @@
 name: orchestrator
-description: Composable rules for the orchestrator agent
+description: Composable sections for the orchestrator agent
 default_variant: claude-code
 
-# Composition order: shared rules in sequence.
+# Composition order: shared sections in sequence.
 # The build step walks this list. For each entry:
 #   1. If the variant has an override file with the same name, use the variant version.
-#   2. Otherwise, use the shared rule from rules/.
+#   2. Otherwise, use the shared rule from sections/.
 #   3. Apply {variable} substitution from the variant's _variables.yaml.
 # At VARIANT_INSERT, inject all variant-specific insert files in numbered order.
 
-rules:
+sections:
   - 00-style-guide
   - 01-core-identity
   - 02-activation-profile
   - 03-triage
-  - VARIANT_INSERT             # Variant-specific rules inject here
+  - VARIANT_INSERT             # Variant-specific sections inject here
   - 04-reliability
   - 05-execution-style
   - 06-memory-protocol

@@ -13,11 +13,11 @@ import (
 func TestParseOrderYAML_Basic(t *testing.T) {
 	input := `# Comment
 sections:
-  - rules/010-header.md
-  - rules/020-identity.md
+  - sections/010-header.md
+  - sections/020-identity.md
 `
 	got := parseOrderYAML(input)
-	want := []string{"rules/010-header.md", "rules/020-identity.md"}
+	want := []string{"sections/010-header.md", "sections/020-identity.md"}
 
 	if len(got) != len(want) {
 		t.Fatalf("len = %d, want %d", len(got), len(want))
@@ -31,13 +31,13 @@ sections:
 
 func TestParseOrderYAML_QuotedEntries(t *testing.T) {
 	input := `sections:
-  - rules/010-header.md
+  - sections/010-header.md
   - "{tool}/040-memory-delegation.md"
   - '{tool}/050-execution-model.md'
 `
 	got := parseOrderYAML(input)
 	want := []string{
-		"rules/010-header.md",
+		"sections/010-header.md",
 		"{tool}/040-memory-delegation.md",
 		"{tool}/050-execution-model.md",
 	}
@@ -64,9 +64,9 @@ func TestParseOrderYAML_CommentsAndBlanks(t *testing.T) {
 sections:
 
   # Sub-comment
-  - rules/one.md
+  - sections/one.md
 
-  - rules/two.md
+  - sections/two.md
 `
 	got := parseOrderYAML(input)
 	if len(got) != 2 {
@@ -163,7 +163,7 @@ func TestSubstituteVariables_MultipleOccurrences(t *testing.T) {
 
 func TestIsComposableDir_WithOrderYaml(t *testing.T) {
 	dir := t.TempDir()
-	writeFile(t, filepath.Join(dir, "_order.yaml"), "sections:\n  - rules/a.md\n")
+	writeFile(t, filepath.Join(dir, "_order.yaml"), "sections:\n  - sections/a.md\n")
 
 	if !IsComposableDir(dir) {
 		t.Error("expected true for dir with _order.yaml")
@@ -194,7 +194,7 @@ func TestReadComposableDir_WithFiles(t *testing.T) {
 	dir := t.TempDir()
 
 	writeFile(t, filepath.Join(dir, "_order.yaml"), `sections:
-  - rules/a.md
+  - sections/a.md
   - "{tool}/b.md"
 `)
 	writeFile(t, filepath.Join(dir, "_variables.yaml"), `v1:
@@ -229,7 +229,7 @@ func setupComposableDir(t *testing.T) string {
 	dir := t.TempDir()
 
 	// Create directory structure
-	for _, d := range []string{"rules", "claude-code", "cursor"} {
+	for _, d := range []string{"sections", "claude-code", "cursor"} {
 		if err := os.MkdirAll(filepath.Join(dir, d), 0755); err != nil {
 			t.Fatal(err)
 		}
@@ -237,9 +237,9 @@ func setupComposableDir(t *testing.T) string {
 
 	// _order.yaml
 	writeFile(t, filepath.Join(dir, "_order.yaml"), `sections:
-  - rules/010-header.md
+  - sections/010-header.md
   - "{tool}/020-identity.md"
-  - rules/030-shared.md
+  - sections/030-shared.md
 `)
 
 	// _variables.yaml
@@ -253,10 +253,10 @@ cursor:
 `)
 
 	// Shared rule files
-	writeFile(t, filepath.Join(dir, "rules", "010-header.md"),
+	writeFile(t, filepath.Join(dir, "sections", "010-header.md"),
 		"# Agent System\n\nThis document defines the {tool_name} agent system.")
 
-	writeFile(t, filepath.Join(dir, "rules", "030-shared.md"),
+	writeFile(t, filepath.Join(dir, "sections", "030-shared.md"),
 		"## Shared Rules\n\nSpawn a {worker} to do work.")
 
 	// Claude Code variant
@@ -286,7 +286,7 @@ func TestComposeFromDir_ClaudeCode(t *testing.T) {
 		t.Error("missing worker substitution in identity")
 	}
 	if !strings.Contains(result, "Spawn a teammate to do work") {
-		t.Error("missing worker substitution in shared rules")
+		t.Error("missing worker substitution in shared sections")
 	}
 
 	// Check Claude Code-specific identity section
@@ -342,15 +342,15 @@ func TestComposeFromDir_ExtraVars(t *testing.T) {
 
 func TestComposeFromDir_MissingVariantFile(t *testing.T) {
 	dir := t.TempDir()
-	if err := os.MkdirAll(filepath.Join(dir, "rules"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(dir, "sections"), 0755); err != nil {
 		t.Fatal(err)
 	}
 
 	writeFile(t, filepath.Join(dir, "_order.yaml"), `sections:
-  - rules/010-header.md
+  - sections/010-header.md
   - "{tool}/020-optional.md"
 `)
-	writeFile(t, filepath.Join(dir, "rules", "010-header.md"), "# Header")
+	writeFile(t, filepath.Join(dir, "sections", "010-header.md"), "# Header")
 
 	// No claude-code/ directory -- variant file is optional
 	result, err := ComposeFromDir(dir, "claude-code", nil)
@@ -531,14 +531,14 @@ func TestComposeInstructions_ClaudeCode(t *testing.T) {
 func TestComposeCommand_Basic(t *testing.T) {
 	dir := t.TempDir()
 	cmdDir := filepath.Join(dir, "bootstrap")
-	if err := os.MkdirAll(filepath.Join(cmdDir, "rules"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(cmdDir, "sections"), 0755); err != nil {
 		t.Fatal(err)
 	}
 
 	writeFile(t, filepath.Join(cmdDir, "_order.yaml"), `sections:
-  - rules/010-init.md
+  - sections/010-init.md
 `)
-	writeFile(t, filepath.Join(cmdDir, "rules", "010-init.md"),
+	writeFile(t, filepath.Join(cmdDir, "sections", "010-init.md"),
 		"Initialize the session.")
 
 	gen, err := ComposeCommand(cmdDir, "claude-code")
@@ -566,7 +566,7 @@ func TestTransformClaudeAgents_ComposableDir(t *testing.T) {
 	// Create a composable agent directory
 	orchDir := filepath.Join(agentsDir, "orchestrator")
 	for _, d := range []string{
-		filepath.Join(orchDir, "rules"),
+		filepath.Join(orchDir, "sections"),
 		filepath.Join(orchDir, "claude-code"),
 	} {
 		if err := os.MkdirAll(d, 0755); err != nil {
@@ -575,13 +575,13 @@ func TestTransformClaudeAgents_ComposableDir(t *testing.T) {
 	}
 
 	writeFile(t, filepath.Join(orchDir, "_order.yaml"), `sections:
-  - rules/010-core.md
+  - sections/010-core.md
   - "{tool}/020-variant.md"
 `)
 	writeFile(t, filepath.Join(orchDir, "_variables.yaml"), `claude-code:
   worker: "teammate"
 `)
-	writeFile(t, filepath.Join(orchDir, "rules", "010-core.md"),
+	writeFile(t, filepath.Join(orchDir, "sections", "010-core.md"),
 		"# Core\n\nShared content for {worker}.")
 	writeFile(t, filepath.Join(orchDir, "claude-code", "020-variant.md"),
 		"## Claude Code\n\nSpecific to Claude Code {worker}.")
@@ -661,17 +661,17 @@ func TestTransformCommands_ComposableDir(t *testing.T) {
 
 	// Create a composable command directory
 	bootDir := filepath.Join(dir, "bootstrap")
-	if err := os.MkdirAll(filepath.Join(bootDir, "rules"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(bootDir, "sections"), 0755); err != nil {
 		t.Fatal(err)
 	}
 
 	writeFile(t, filepath.Join(bootDir, "_order.yaml"), `sections:
-  - rules/010-init.md
-  - rules/020-identity.md
+  - sections/010-init.md
+  - sections/020-identity.md
 `)
-	writeFile(t, filepath.Join(bootDir, "rules", "010-init.md"),
+	writeFile(t, filepath.Join(bootDir, "sections", "010-init.md"),
 		"Initialize the session.")
-	writeFile(t, filepath.Join(bootDir, "rules", "020-identity.md"),
+	writeFile(t, filepath.Join(bootDir, "sections", "020-identity.md"),
 		"You are the team lead.")
 
 	// Also create a regular single-file command

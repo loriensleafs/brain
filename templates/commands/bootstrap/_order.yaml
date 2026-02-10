@@ -8,16 +8,16 @@ frontmatter:
 
 sections:
   # Mandatory header
-  - rules/010-mandatory-header.md
+  - sections/010-mandatory-header.md
 
   # Role identity and reload instructions
   - "{tool}/020-role-identity.md"
 
   # Shared behavior directives
-  - rules/030-clarifying-questions.md
-  - rules/040-memory-directive.md
-  - rules/050-plan-review.md
-  - rules/060-ask-user-question.md
+  - sections/030-clarifying-questions.md
+  - sections/040-memory-directive.md
+  - sections/050-plan-review.md
+  - sections/060-ask-user-question.md
 
   # Session start hook
-  - rules/070-session-hook.md
+  - sections/070-session-hook.md
