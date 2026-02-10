@@ -33,9 +33,9 @@ export {
 
 // Hook handlers
 export { runSessionStart } from "./session-start.js";
-export { runUserPrompt } from "./user-prompt.js";
-export { runPreToolUse } from "./pre-tool-use.js";
-export { runStop } from "./stop.js";
+export { runUserPrompt, processUserPrompt } from "./user-prompt.js";
+export { runPreToolUse, processPreToolUse } from "./pre-tool-use.js";
+export { runStop, processStop } from "./stop.js";
 export { runDetectScenario } from "./detect-scenario-cmd.js";
 export { runLoadSkills } from "./load-skills.js";
 export { runAnalyze } from "./analyze.js";

@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeSubmitPrompt": [
+      {
+        "command": "bun run hooks/scripts/user-prompt.ts"
+      }
+    ],
+    "beforeShellExecution": [
+      {
+        "command": "bun run hooks/scripts/pre-tool-use.ts"
+      }
+    ],
+    "beforeMCPExecution": [
+      {
+        "command": "bun run hooks/scripts/pre-tool-use.ts"
+      }
+    ],
+    "afterFileEdit": [
+      {
+        "command": "bun run hooks/scripts/validate-session.ts"
+      }
+    ],
+    "stop": [
+      {
+        "command": "bun run hooks/scripts/stop.ts"
+      }
+    ]
+  }
+}

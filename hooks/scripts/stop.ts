@@ -3,8 +3,14 @@
  *
  * Ported from apps/claude-plugin/cmd/hooks/stop.go.
  * Validates session before ending, outputs {"continue": true/false}.
+ *
+ * Cross-platform: works with both Claude Code (Stop, blocking) and
+ * Cursor (stop, info-only) via normalization. On Cursor, validation
+ * runs but exit code is always 0 (cannot block).
  */
 import type { StopOutput, WorkflowState } from "./types.js";
+import type { NormalizedHookEvent } from "./normalize.js";
+import { normalizeEvent, getBlockingSemantics } from "./normalize.js";
 import { validateStopReadiness } from "./validate.js";
 import { execCommand } from "./exec.js";
 
@@ -24,16 +30,22 @@ function loadWorkflowState(): WorkflowState | null {
   }
 }
 
-export async function runStop(): Promise<void> {
+/**
+ * Process a normalized stop event. Platform-agnostic core logic.
+ * Returns the output and whether the process should block (exit non-zero).
+ */
+export function processStop(event: NormalizedHookEvent): { output: StopOutput; shouldBlock: boolean } {
   const workflowState = loadWorkflowState();
+  const blocking = getBlockingSemantics(event.event, event.platform);
 
   if (!workflowState) {
-    const output: StopOutput = {
-      continue: true,
-      message: "No active workflow - session can end",
+    return {
+      output: {
+        continue: true,
+        message: "No active workflow - session can end",
+      },
+      shouldBlock: false,
     };
-    process.stdout.write(JSON.stringify(output, null, 2) + "\n");
-    return;
   }
 
   const result = validateStopReadiness(workflowState);
@@ -45,10 +57,32 @@ export async function runStop(): Promise<void> {
     remediation: result.remediation || undefined,
   };
 
+  // Only block if the platform supports it and validation failed
+  const shouldBlock = !result.valid && blocking.canBlock;
+
+  return { output, shouldBlock };
+}
+
+export async function runStop(): Promise<void> {
+  // Read stdin if available (Cursor sends stop event JSON)
+  let parsed: Record<string, unknown> = {};
+  try {
+    const data = await Bun.file("/dev/stdin").text();
+    if (data.trim()) {
+      parsed = JSON.parse(data.trim()) as Record<string, unknown>;
+    }
+  } catch {
+    // No stdin or parse error -- treat as CC stop with no payload
+  }
+
+  // Normalize the event (auto-detects Claude Code vs Cursor)
+  const event = normalizeEvent(parsed, "Stop");
+  const { output, shouldBlock } = processStop(event);
+
   process.stdout.write(JSON.stringify(output, null, 2) + "\n");
 
-  // Exit code 2 = block if validation failed
-  if (!result.valid) {
+  // Exit code 2 = block (Claude Code only; Cursor stop is info-only)
+  if (shouldBlock) {
     process.exit(2);
   }
 }

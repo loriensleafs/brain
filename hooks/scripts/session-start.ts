@@ -9,6 +9,7 @@
  */
 import { execCommand } from "./exec.js";
 import { resolveProjectWithCwd } from "./project-resolve.js";
+import { normalizeEvent } from "./normalize.js";
 import type {
   ActiveSession,
   BootstrapContextResult,
@@ -429,19 +430,23 @@ export function formatContextMarkdown(output: SessionStartOutput): string {
 }
 
 /**
- * Read hook input from stdin.
+ * Read hook input from stdin and normalize.
  */
 async function readHookInput(): Promise<HookInput> {
   try {
     const data = await Bun.file("/dev/stdin").text();
     if (!data) return {};
-    return JSON.parse(data) as HookInput;
+    const parsed = JSON.parse(data) as Record<string, unknown>;
+    // Normalize to extract cwd/session_id consistently
+    const event = normalizeEvent(parsed, "SessionStart");
+    return {
+      session_id: event.sessionId || undefined,
+      cwd: event.workspaceRoot || undefined,
+    };
   } catch {
     return {};
   }
 }
-
-// Bun.file() used for file reads (no node:fs import needed)
 
 /**
  * Main entry point for session-start hook.

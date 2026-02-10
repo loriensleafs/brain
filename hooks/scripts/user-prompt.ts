@@ -3,6 +3,9 @@
  *
  * Ported from apps/claude-plugin/cmd/hooks/user_prompt.go.
  * Reads prompt from stdin, detects scenarios, injects workflow state.
+ *
+ * Cross-platform: works with both Claude Code (UserPromptSubmit) and
+ * Cursor (beforeSubmitPrompt) via the normalization layer.
  */
 import type {
   UserPromptInput,
@@ -10,6 +13,8 @@ import type {
   ScenarioDetectionResult,
   WorkflowStateInfo,
 } from "./types.js";
+import type { NormalizedHookEvent } from "./normalize.js";
+import { normalizeEvent } from "./normalize.js";
 import { detectScenario } from "./detect-scenario.js";
 import { execCommand } from "./exec.js";
 
@@ -37,25 +42,17 @@ function loadWorkflowState(): WorkflowStateInfo | null {
   }
 }
 
-export async function runUserPrompt(): Promise<void> {
-  const chunks: Buffer[] = [];
-  for await (const chunk of process.stdin) {
-    chunks.push(chunk as Buffer);
-  }
-  const raw = Buffer.concat(chunks).toString("utf-8").trim();
-
-  let promptInput: UserPromptInput;
-  try {
-    promptInput = JSON.parse(raw) as UserPromptInput;
-  } catch {
-    // If not JSON, treat entire input as the prompt
-    promptInput = { prompt: raw };
-  }
-
+/**
+ * Process a normalized prompt event. Platform-agnostic core logic.
+ * Extracts prompt text from the normalized payload and runs scenario
+ * detection and workflow state injection.
+ */
+export function processUserPrompt(event: NormalizedHookEvent): UserPromptOutput {
+  const prompt = (event.payload.prompt as string) ?? "";
   const output: UserPromptOutput = { continue: true };
 
   // Detect scenario from prompt
-  const result = detectScenario(promptInput.prompt);
+  const result = detectScenario(prompt);
   if (result.detected) {
     output.scenario = {
       detected: result.detected,
@@ -66,12 +63,34 @@ export async function runUserPrompt(): Promise<void> {
   }
 
   // Check for planning keywords and inject workflow state
-  if (containsAny(promptInput.prompt, planningKeywords)) {
+  if (containsAny(prompt, planningKeywords)) {
     const workflowState = loadWorkflowState();
     if (workflowState) {
       output.workflowState = workflowState;
     }
   }
+
+  return output;
+}
+
+export async function runUserPrompt(): Promise<void> {
+  const chunks: Buffer[] = [];
+  for await (const chunk of process.stdin) {
+    chunks.push(chunk as Buffer);
+  }
+  const raw = Buffer.concat(chunks).toString("utf-8").trim();
+
+  let parsed: Record<string, unknown>;
+  try {
+    parsed = JSON.parse(raw) as Record<string, unknown>;
+  } catch {
+    // If not JSON, treat entire input as the prompt
+    parsed = { prompt: raw };
+  }
+
+  // Normalize the event (auto-detects Claude Code vs Cursor)
+  const event = normalizeEvent(parsed, "UserPromptSubmit");
+  const output = processUserPrompt(event);
 
   process.stdout.write(JSON.stringify(output, null, 2) + "\n");
 }
