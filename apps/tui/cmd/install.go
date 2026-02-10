@@ -98,8 +98,11 @@ func findProjectRoot() (string, error) {
 // ─── Install Manifest ────────────────────────────────────────────────────────
 
 type installManifest struct {
-	Tool  string   `json:"tool"`
-	Files []string `json:"files"`
+	Tool        string   `json:"tool"`
+	Files       []string `json:"files"`       // file paths installed (agents, commands, rules, scripts)
+	Dirs        []string `json:"dirs"`        // directories installed (skills)
+	HookKeys    []string `json:"hookKeys"`    // hook event keys merged into hooks.json
+	MCPServers  []string `json:"mcpServers"`  // MCP server names merged into mcp.json
 }
 
 func manifestPath(tool string) string {
@@ -324,21 +327,6 @@ func installCursor(src *adapters.TemplateSource) error {
 		installed = append(installed, copied...)
 	}
 
-	// Copy skills to .cursor/skills/
-	skillsDir := filepath.Join(stagingDir, "skills")
-	if _, err := os.Stat(skillsDir); err == nil {
-		fmt.Println("  Copying skills to .cursor/skills/...")
-		targetSkillsDir := filepath.Join(cursorDir, "skills")
-		if err := os.MkdirAll(targetSkillsDir, 0755); err != nil {
-			return fmt.Errorf("create skills dir: %w", err)
-		}
-		copied, err := copyBrainFilesRecursive(skillsDir, targetSkillsDir)
-		if err != nil {
-			return fmt.Errorf("copy skills: %w", err)
-		}
-		installed = append(installed, copied...)
-	}
-
 	// Copy commands to .cursor/commands/
 	commandsDir := filepath.Join(stagingDir, "commands")
 	if _, err := os.Stat(commandsDir); err == nil {
@@ -369,6 +357,33 @@ func installCursor(src *adapters.TemplateSource) error {
 		installed = append(installed, copied...)
 	}
 
+	// Track directories for skills
+	var installedDirs []string
+	var hookKeys []string
+	var mcpServers []string
+
+	// Copy skills to .cursor/skills/
+	skillsDir := filepath.Join(stagingDir, "skills")
+	if _, err := os.Stat(skillsDir); err == nil {
+		fmt.Println("  Copying skills to .cursor/skills/...")
+		targetSkillsDir := filepath.Join(cursorDir, "skills")
+		if err := os.MkdirAll(targetSkillsDir, 0755); err != nil {
+			return fmt.Errorf("create skills dir: %w", err)
+		}
+		copied, err := copyBrainFilesRecursive(skillsDir, targetSkillsDir)
+		if err != nil {
+			return fmt.Errorf("copy skills: %w", err)
+		}
+		installed = append(installed, copied...)
+		// Track top-level skill directories for removal
+		entries, _ := os.ReadDir(targetSkillsDir)
+		for _, e := range entries {
+			if e.IsDir() && strings.HasPrefix(e.Name(), "\xf0\x9f\xa7\xa0-") {
+				installedDirs = append(installedDirs, filepath.Join(targetSkillsDir, e.Name()))
+			}
+		}
+	}
+
 	// JSON merge for hooks
 	hooksMergePath := filepath.Join(stagingDir, "hooks", "hooks.merge.json")
 	if _, err := os.Stat(hooksMergePath); err == nil {
@@ -378,7 +393,7 @@ func installCursor(src *adapters.TemplateSource) error {
 		if err != nil {
 			fmt.Printf("  Warning: hooks merge failed: %v\n", err)
 		} else {
-			installed = append(installed, merged...)
+			hookKeys = append(hookKeys, merged...)
 		}
 
 		// Copy hook scripts
@@ -405,11 +420,22 @@ func installCursor(src *adapters.TemplateSource) error {
 		if err != nil {
 			fmt.Printf("  Warning: MCP merge failed: %v\n", err)
 		} else {
-			installed = append(installed, merged...)
+			mcpServers = append(mcpServers, merged...)
 		}
 	}
 
-	if err := writeManifest("cursor", installed); err != nil {
+	manifest := installManifest{
+		Tool:       "cursor",
+		Files:      installed,
+		Dirs:       installedDirs,
+		HookKeys:   hookKeys,
+		MCPServers: mcpServers,
+	}
+	data, _ := json.MarshalIndent(manifest, "", "  ")
+	data = append(data, '\n')
+	dir := filepath.Dir(manifestPath("cursor"))
+	os.MkdirAll(dir, 0755)
+	if err := os.WriteFile(manifestPath("cursor"), data, 0644); err != nil {
 		fmt.Printf("  Warning: failed to write manifest: %v\n", err)
 	}
 
@@ -427,19 +453,44 @@ func uninstallCursor() error {
 		return fmt.Errorf("no install manifest found: %w", err)
 	}
 
-	// Remove Brain-managed files (those with 🧠- prefix)
+	// Remove Brain-managed files (agents, commands, rules, hook scripts)
 	for _, f := range m.Files {
-		if strings.Contains(filepath.Base(f), "\xf0\x9f\xa7\xa0-") {
-			os.Remove(f)
+		if err := os.Remove(f); err == nil {
 			fmt.Printf("  Removed: %s\n", f)
 		}
 	}
 
-	// Reverse JSON merges for hooks and MCP
-	for _, configFile := range []string{"hooks.json", "mcp.json"} {
-		targetPath := filepath.Join(cursorDir, configFile)
-		if err := jsonUnmerge(targetPath); err != nil {
-			fmt.Printf("  Warning: failed to clean %s: %v\n", configFile, err)
+	// Remove Brain-managed directories (🧠-prefixed skill dirs)
+	for _, d := range m.Dirs {
+		if err := os.RemoveAll(d); err == nil {
+			fmt.Printf("  Removed: %s\n", d)
+		}
+	}
+
+	// Remove empty hooks/scripts dir if we cleaned it out
+	hooksScriptsDir := filepath.Join(cursorDir, "hooks", "scripts")
+	if entries, err := os.ReadDir(hooksScriptsDir); err == nil && len(entries) == 0 {
+		os.Remove(hooksScriptsDir)
+		os.Remove(filepath.Join(cursorDir, "hooks")) // remove parent if empty
+	}
+
+	// Clean hooks.json: remove Brain-managed hook event keys
+	if len(m.HookKeys) > 0 {
+		hooksPath := filepath.Join(cursorDir, "hooks.json")
+		if err := jsonRemoveKeys(hooksPath, m.HookKeys); err != nil {
+			fmt.Printf("  Warning: failed to clean hooks.json: %v\n", err)
+		} else {
+			fmt.Println("  Cleaned hooks.json")
+		}
+	}
+
+	// Clean mcp.json: remove Brain-managed MCP servers
+	if len(m.MCPServers) > 0 {
+		mcpPath := filepath.Join(cursorDir, "mcp.json")
+		if err := jsonRemoveKeys(mcpPath, m.MCPServers); err != nil {
+			fmt.Printf("  Warning: failed to clean mcp.json: %v\n", err)
+		} else {
+			fmt.Println("  Cleaned mcp.json")
 		}
 	}
 
@@ -575,9 +626,12 @@ func jsonMerge(mergePayloadPath, targetPath string) ([]string, error) {
 	return payload.ManagedKeys, nil
 }
 
-// jsonUnmerge removes Brain-managed keys from a JSON config file.
-// Uses the manifest to determine which keys were managed.
-func jsonUnmerge(targetPath string) error {
+// jsonRemoveKeys removes specific dotted keys from a JSON config file.
+// Keys like "hooks.beforeSubmitPrompt" remove data["hooks"]["beforeSubmitPrompt"].
+// Keys like "mcpServers.brain" remove data["mcpServers"]["brain"].
+// If removing the last nested key empties the parent, removes the parent too.
+// If the file becomes effectively empty, deletes it entirely.
+func jsonRemoveKeys(targetPath string, keys []string) error {
 	raw, err := os.ReadFile(targetPath)
 	if err != nil {
 		return nil // File doesn't exist, nothing to clean
@@ -588,34 +642,42 @@ func jsonUnmerge(targetPath string) error {
 		return err
 	}
 
-	// Look for a _brainManaged marker or use the manifest
-	m, err := readManifest("cursor")
-	if err != nil {
-		return nil // No manifest, nothing to reverse
-	}
-
-	_ = m // Manifest read for future managed key tracking
-
-	// Remove any keys that contain Brain emoji prefix from nested sections
-	modified := false
-	for _, v := range data {
-		if section, ok := v.(map[string]any); ok {
-			for sk := range section {
-				if strings.Contains(sk, "\xf0\x9f\xa7\xa0") {
-					delete(section, sk)
-					modified = true
+	for _, key := range keys {
+		parts := strings.SplitN(key, ".", 2)
+		if len(parts) == 2 {
+			// Nested key: remove from sub-map
+			if section, ok := data[parts[0]].(map[string]any); ok {
+				delete(section, parts[1])
+				// If section is now empty, remove the parent key
+				if len(section) == 0 {
+					delete(data, parts[0])
 				}
 			}
+		} else {
+			// Top-level key
+			delete(data, key)
 		}
 	}
 
-	if modified {
-		out, _ := json.MarshalIndent(data, "", "  ")
-		out = append(out, '\n')
-		return os.WriteFile(targetPath, out, 0644)
+	// If only metadata keys remain (version, $schema) or empty, delete the file
+	meaningful := 0
+	for k := range data {
+		if k != "version" && k != "$schema" {
+			meaningful++
+		}
+	}
+	if meaningful == 0 {
+		os.Remove(targetPath)
+		fmt.Printf("  Removed: %s (empty after cleanup)\n", targetPath)
+		return nil
 	}
 
-	return nil
+	out, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		return err
+	}
+	out = append(out, '\n')
+	return os.WriteFile(targetPath, out, 0644)
 }
 
 // ─── Install Detection ──────────────────────────────────────────────────────
