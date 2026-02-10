@@ -1,7 +1,7 @@
 ---
 title: REQ-001-canonical-content-extraction
 type: requirement
-status: draft
+status: implemented
 feature-ref: FEAT-001
 tags:
 - requirement
@@ -21,15 +21,15 @@ permalink: features/feat-001-cross-platform-portability/requirements/req-001-can
 
 ## Acceptance Criteria
 
-- [ ] [requirement] AC-01: 25 agent definitions exist at `agents/` (23 portable specialists + 2 tool-specific orchestrators) #agents
-- [ ] [requirement] AC-02: 27 skill directories exist at `skills/` with Open Agent Skills SKILL.md format #skills
-- [ ] [requirement] AC-03: 9 command files exist at `commands/` in canonical Markdown #commands
-- [ ] [requirement] AC-04: Protocol files exist at `protocols/` with tool-neutral content #protocols
-- [ ] [requirement] AC-05: AGENTS.md exists at repo root as universal instruction file #instructions
-- [ ] [requirement] AC-06: `apps/claude-plugin/` directory no longer exists #removal
-- [ ] [requirement] AC-07: No broken references to `apps/claude-plugin/` remain in codebase #cleanup
-- [ ] [requirement] AC-08: No Go binary required for hook or skill execution #no-binary
-- [ ] [requirement] AC-09: All Brain content filenames use `🧠` emoji prefix (skills, agents, commands, rules, hooks) #naming
+- [x] [requirement] AC-01: 25 agent definitions exist at `agents/` (23 portable specialists + 2 tool-specific orchestrators) #agents
+- [x] [requirement] AC-02: 27 skill directories exist at `skills/` with Open Agent Skills SKILL.md format #skills
+- [x] [requirement] AC-03: 9 command files exist at `commands/` in canonical Markdown #commands
+- [x] [requirement] AC-04: Protocol files exist at `protocols/` with tool-neutral content #protocols
+- [x] [requirement] AC-05: AGENTS.md exists at repo root as universal instruction file #instructions
+- [x] [requirement] AC-06: `apps/claude-plugin/` directory no longer exists #removal
+- [x] [requirement] AC-07: No broken references to `apps/claude-plugin/` remain in codebase #cleanup
+- [x] [requirement] AC-08: No Go binary required for hook or skill execution #no-binary
+- [x] [requirement] AC-09: All Brain content filenames use `🧠` emoji prefix (skills, agents, commands, rules, hooks) #naming
 
 ## Observations
 

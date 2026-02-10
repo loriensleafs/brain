@@ -1,6 +1,7 @@
 ---
 title: DESIGN-005-composable-orchestrator-rules
-type: note
+type: design
+status: implemented
 permalink: features/feat-001-cross-platform-portability/design/design-005-composable-orchestrator-rules
 tags:
 - design

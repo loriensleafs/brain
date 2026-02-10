@@ -22,9 +22,9 @@ permalink: features/feat-001-cross-platform-portability/requirements/req-003-hoo
 
 ## Acceptance Criteria
 
-- [ ] [requirement] AC-01: All 8 brain-hooks subcommands work identically in JS/TS #parity
+- [x] [requirement] AC-01: All 8 brain-hooks subcommands work identically in JS/TS #parity
 - [ ] [requirement] AC-02: normalize.ts correctly detects Claude Code vs Cursor from stdin JSON #detection
-- [ ] [requirement] AC-03: hooks/claude-code.json maps Claude Code events to scripts #config
+- [x] [requirement] AC-03: hooks/claude-code.json maps Claude Code events to scripts #config
 - [ ] [requirement] AC-04: hooks/cursor.json maps Cursor events to scripts #config
 - [ ] [requirement] AC-05: Hook scripts handle different blocking semantics (CC Stop blocks, Cursor stop is info-only) #blocking
 

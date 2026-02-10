@@ -1,7 +1,7 @@
 ---
 title: DESIGN-004-orchestrator-strategy
 type: design
-status: draft
+status: implemented
 feature-ref: FEAT-001
 req-refs:
 - REQ-005

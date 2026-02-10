@@ -1,7 +1,7 @@
 ---
 title: TASK-002-move-canonical-skills
 type: task
-status: todo
+status: complete
 feature-ref: FEAT-001
 effort-estimate-human: 2h
 effort-estimate-ai: 0.5h
@@ -25,9 +25,9 @@ permalink: features/feat-001-cross-platform-portability/tasks/task-002-move-cano
 
 ## Definition of Done
 
-- [ ] [requirement] All 27 skill directories at `skills/` with SKILL.md format intact #skills
-- [ ] [requirement] All scripts (.py, .ps1, .ts) and reference files preserved #completeness
-- [ ] [requirement] No Claude-specific skill development guides remain #portability
+- [x] [requirement] All 27 skill directories at `skills/` with SKILL.md format intact #skills
+- [x] [requirement] All scripts (.py, .ps1, .ts) and reference files preserved #completeness
+- [x] [requirement] No Claude-specific skill development guides remain #portability
 
 ## Effort Summary
 

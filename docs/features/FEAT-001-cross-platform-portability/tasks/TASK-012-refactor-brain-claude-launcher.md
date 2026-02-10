@@ -1,7 +1,7 @@
 ---
 title: TASK-012-refactor-brain-claude-launcher
 type: task
-status: todo
+status: complete
 feature-ref: FEAT-001
 effort-estimate-human: 3h
 effort-estimate-ai: 1h
@@ -26,9 +26,9 @@ permalink: features/feat-001-cross-platform-portability/tasks/task-012-refactor-
 
 ## Definition of Done
 
-- [ ] [requirement] brain claude stages via TS adapter and launches Claude Code #launch
-- [ ] [requirement] brain claude --agent-teams swaps orchestrator variant correctly #variants
-- [ ] [requirement] No references to apps/claude-plugin/ in claude.go #cleanup
+- [x] [requirement] brain claude stages via TS adapter and launches Claude Code #launch
+- [x] [requirement] brain claude --agent-teams swaps orchestrator variant correctly #variants
+- [x] [requirement] No references to apps/claude-plugin/ in claude.go #cleanup
 
 ## Effort Summary
 

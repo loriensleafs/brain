@@ -1,7 +1,7 @@
 ---
 title: TASK-013-remove-apps-claude-plugin
 type: task
-status: todo
+status: complete
 feature-ref: FEAT-001
 effort-estimate-human: 3h
 effort-estimate-ai: 1h
@@ -27,11 +27,11 @@ permalink: features/feat-001-cross-platform-portability/tasks/task-013-remove-ap
 
 ## Definition of Done
 
-- [ ] [requirement] apps/claude-plugin/ deleted #removed
-- [ ] [requirement] brain plugin install/uninstall commands removed from Go CLI #removed
-- [ ] [requirement] No broken references to apps/claude-plugin/ in codebase #clean
-- [ ] [requirement] brain install and brain claude work via adapters + root content #functional
-- [ ] [requirement] CI passes #ci
+- [x] [requirement] apps/claude-plugin/ deleted #removed
+- [x] [requirement] brain plugin install/uninstall commands removed from Go CLI #removed
+- [x] [requirement] No broken references to apps/claude-plugin/ in codebase #clean
+- [x] [requirement] brain install and brain claude work via adapters + root content #functional
+- [x] [requirement] CI passes #ci
 
 ## Effort Summary
 

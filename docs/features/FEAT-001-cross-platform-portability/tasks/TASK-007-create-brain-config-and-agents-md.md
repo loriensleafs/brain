@@ -1,7 +1,7 @@
 ---
 title: TASK-007-create-brain-config-and-agents-md
 type: task
-status: todo
+status: complete
 feature-ref: FEAT-001
 effort-estimate-human: 4h
 effort-estimate-ai: 2h
@@ -25,9 +25,9 @@ permalink: features/feat-001-cross-platform-portability/tasks/task-007-create-br
 
 ## Definition of Done
 
-- [ ] [requirement] brain.config.json contains targets, agents, and hooks mappings #config
-- [ ] [requirement] AGENTS.md at repo root is readable by both Claude Code and Cursor #universal
-- [ ] [requirement] No Claude-specific content in AGENTS.md universal sections #portability
+- [x] [requirement] brain.config.json contains targets, agents, and hooks mappings #config
+- [x] [requirement] AGENTS.md at repo root is readable by both Claude Code and Cursor #universal
+- [x] [requirement] No Claude-specific content in AGENTS.md universal sections #portability
 
 ## Effort Summary
 

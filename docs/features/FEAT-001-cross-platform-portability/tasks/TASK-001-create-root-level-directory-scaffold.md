@@ -1,7 +1,7 @@
 ---
 title: TASK-001-create-root-level-directory-scaffold
 type: task
-status: todo
+status: complete
 feature-ref: FEAT-001
 effort-estimate-human: 2h
 effort-estimate-ai: 0.5h
@@ -23,10 +23,10 @@ permalink: features/feat-001-cross-platform-portability/tasks/task-001-create-ro
 
 ## Definition of Done
 
-- [ ] [requirement] All directories exist at repo root #structure
-- [ ] [requirement] `mcp.json` contains MCP server config with relative paths (not hardcoded user paths) #mcp
-- [ ] [requirement] `brain.config.json` skeleton exists #config
-- [ ] [requirement] No turbo workspace entries needed for static content directories #turbo
+- [x] [requirement] All directories exist at repo root #structure
+- [x] [requirement] `mcp.json` contains MCP server config with relative paths (not hardcoded user paths) #mcp
+- [x] [requirement] `brain.config.json` skeleton exists #config
+- [x] [requirement] No turbo workspace entries needed for static content directories #turbo
 
 ## Effort Summary
 

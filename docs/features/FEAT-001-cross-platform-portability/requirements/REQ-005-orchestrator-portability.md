@@ -1,7 +1,7 @@
 ---
 title: REQ-005-orchestrator-portability
 type: requirement
-status: draft
+status: implemented
 feature-ref: FEAT-001
 tags:
 - requirement
@@ -21,10 +21,10 @@ permalink: features/feat-001-cross-platform-portability/requirements/req-005-orc
 
 ## Acceptance Criteria
 
-- [ ] [requirement] AC-01: orchestrator-claude.md uses Agent Teams APIs (Teammate, SendMessage, TaskCreate) #claude
-- [ ] [requirement] AC-02: orchestrator-cursor.md uses Task tool hub-and-spoke pattern (is_background subagents) #cursor
-- [ ] [requirement] AC-03: Specialist agents (architect, implementer, analyst, qa, etc.) have identical body content across tools #portable
-- [ ] [requirement] AC-04: brain.config.json maps orchestrator-claude to Claude Code only, orchestrator-cursor to Cursor only #config
+- [x] [requirement] AC-01: orchestrator-claude.md uses Agent Teams APIs (Teammate, SendMessage, TaskCreate) #claude
+- [x] [requirement] AC-02: orchestrator-cursor.md uses Task tool hub-and-spoke pattern (is_background subagents) #cursor
+- [x] [requirement] AC-03: Specialist agents (architect, implementer, analyst, qa, etc.) have identical body content across tools #portable
+- [x] [requirement] AC-04: brain.config.json maps orchestrator-claude to Claude Code only, orchestrator-cursor to Cursor only #config
 
 ## Observations
 

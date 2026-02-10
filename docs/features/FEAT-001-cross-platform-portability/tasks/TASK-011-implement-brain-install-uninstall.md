@@ -1,7 +1,7 @@
 ---
 title: TASK-011-implement-brain-install-uninstall
 type: task
-status: todo
+status: complete
 feature-ref: FEAT-001
 effort-estimate-human: 10h
 effort-estimate-ai: 5h
@@ -34,14 +34,14 @@ permalink: features/feat-001-cross-platform-portability/tasks/task-011-implement
 
 ## Definition of Done
 
-- [ ] [requirement] brain install uses huh v2 (no gum binary dependency) #huh
-- [ ] [requirement] Claude Code installed via symlinks with 🧠 prefix #claude
-- [ ] [requirement] Cursor installed via file copy with 🧠-prefixed filenames #cursor
-- [ ] [requirement] Cursor hooks.json/mcp.json use JSON merge with manifest, not overwrite #json-merge
-- [ ] [requirement] Install NEVER modifies user's existing files (CLAUDE.md, hooks, MCP config) #non-destructive
-- [ ] [requirement] Install manifest tracks all Brain content per tool #manifest
-- [ ] [requirement] brain uninstall removes all artifacts including manifest-tracked JSON entries #uninstall
-- [ ] [requirement] Idempotent re-runs #reliability
+- [x] [requirement] brain install uses huh v2 (no gum binary dependency) #huh
+- [x] [requirement] Claude Code installed via symlinks with 🧠 prefix #claude
+- [x] [requirement] Cursor installed via file copy with 🧠-prefixed filenames #cursor
+- [x] [requirement] Cursor hooks.json/mcp.json use JSON merge with manifest, not overwrite #json-merge
+- [x] [requirement] Install NEVER modifies user's existing files (CLAUDE.md, hooks, MCP config) #non-destructive
+- [x] [requirement] Install manifest tracks all Brain content per tool #manifest
+- [x] [requirement] brain uninstall removes all artifacts including manifest-tracked JSON entries #uninstall
+- [x] [requirement] Idempotent re-runs #reliability
 
 ## Effort Summary
 

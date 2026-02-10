@@ -1,7 +1,7 @@
 ---
 title: REQ-004-unified-install
 type: requirement
-status: draft
+status: approved
 feature-ref: FEAT-001
 tags:
 - requirement
@@ -26,14 +26,14 @@ permalink: features/feat-001-cross-platform-portability/requirements/req-004-uni
 
 ## Acceptance Criteria
 
-- [ ] [requirement] AC-01: brain install uses huh v2 multiselect (no gum binary dependency) #huh
-- [ ] [requirement] AC-02: Claude Code installed via symlinks to ~/.claude/ #claude
+- [x] [requirement] AC-01: brain install uses huh v2 multiselect (no gum binary dependency) #huh
+- [x] [requirement] AC-02: Claude Code installed via symlinks to ~/.claude/ #claude
 - [ ] [requirement] AC-03: Cursor installed via file copy to .cursor/ with 🧠-prefixed filenames #cursor
-- [ ] [requirement] AC-04: brain uninstall removes all artifacts for selected tool #uninstall
-- [ ] [requirement] AC-05: Install is idempotent (safe to re-run) #idempotent
-- [ ] [requirement] AC-06: Install NEVER modifies user's existing CLAUDE.md, AGENTS.md, hooks config, or MCP config #non-destructive
+- [x] [requirement] AC-04: brain uninstall removes all artifacts for selected tool #uninstall
+- [x] [requirement] AC-05: Install is idempotent (safe to re-run) #idempotent
+- [x] [requirement] AC-06: Install NEVER modifies user's existing CLAUDE.md, AGENTS.md, hooks config, or MCP config #non-destructive
 - [ ] [requirement] AC-07: Cursor hooks and MCP config use JSON merge (not overwrite) with manifest tracking #json-merge
-- [ ] [requirement] AC-08: Manifest file tracks all installed Brain content per tool for deterministic uninstall #manifest
+- [x] [requirement] AC-08: Manifest file tracks all installed Brain content per tool for deterministic uninstall #manifest
 
 ## Observations
 

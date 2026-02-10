@@ -1,7 +1,7 @@
 ---
 title: TASK-004-extract-protocols-to-root
 type: task
-status: todo
+status: complete
 feature-ref: FEAT-001
 effort-estimate-human: 6h
 effort-estimate-ai: 2h
@@ -26,9 +26,9 @@ permalink: features/feat-001-cross-platform-portability/tasks/task-004-extract-p
 
 ## Definition of Done
 
-- [ ] [requirement] Protocol files exist at root `protocols/` with tool-neutral content #structure
-- [ ] [requirement] Tool-specific sections identified and documented for adapter injection #adaptation
-- [ ] [requirement] No broken references to `apps/claude-plugin/instructions/protocols/` #cleanup
+- [x] [requirement] Protocol files exist at root `protocols/` with tool-neutral content #structure
+- [x] [requirement] Tool-specific sections identified and documented for adapter injection #adaptation
+- [x] [requirement] No broken references to `apps/claude-plugin/instructions/protocols/` #cleanup
 
 ## Effort Summary
 

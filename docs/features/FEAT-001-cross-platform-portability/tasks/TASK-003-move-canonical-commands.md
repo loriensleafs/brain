@@ -1,7 +1,7 @@
 ---
 title: TASK-003-move-canonical-commands
 type: task
-status: todo
+status: complete
 feature-ref: FEAT-001
 effort-estimate-human: 1h
 effort-estimate-ai: 0.5h
@@ -23,8 +23,8 @@ permalink: features/feat-001-cross-platform-portability/tasks/task-003-move-cano
 
 ## Definition of Done
 
-- [ ] [requirement] All 9 commands at `commands/` in Markdown format #commands
-- [ ] [requirement] No Claude-specific formatting remains in command content #portability
+- [x] [requirement] All 9 commands at `commands/` in Markdown format #commands
+- [x] [requirement] No Claude-specific formatting remains in command content #portability
 
 ## Effort Summary
 

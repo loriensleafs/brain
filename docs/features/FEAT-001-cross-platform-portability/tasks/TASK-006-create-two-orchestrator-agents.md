@@ -1,7 +1,7 @@
 ---
 title: TASK-006-create-two-orchestrator-agents
 type: task
-status: todo
+status: complete
 feature-ref: FEAT-001
 effort-estimate-human: 8h
 effort-estimate-ai: 4h
@@ -26,10 +26,10 @@ permalink: features/feat-001-cross-platform-portability/tasks/task-006-create-tw
 
 ## Definition of Done
 
-- [ ] [requirement] orchestrator-claude.md uses Agent Teams APIs and works on Claude Code #claude
-- [ ] [requirement] orchestrator-cursor.md uses Task tool hub-and-spoke and works on Cursor #cursor
-- [ ] [requirement] brain.config.json routes each orchestrator to correct tool only #config
-- [ ] [requirement] Both orchestrators can delegate to the same specialist agents #compatibility
+- [x] [requirement] orchestrator-claude.md uses Agent Teams APIs and works on Claude Code #claude
+- [x] [requirement] orchestrator-cursor.md uses Task tool hub-and-spoke and works on Cursor #cursor
+- [x] [requirement] brain.config.json routes each orchestrator to correct tool only #config
+- [x] [requirement] Both orchestrators can delegate to the same specialist agents #compatibility
 
 ## Effort Summary
 

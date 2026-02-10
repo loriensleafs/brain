@@ -1,7 +1,7 @@
 ---
 title: TASK-009-consolidate-brain-skills-binary
 type: task
-status: todo
+status: complete
 feature-ref: FEAT-001
 effort-estimate-human: 3h
 effort-estimate-ai: 1h
@@ -25,10 +25,10 @@ permalink: features/feat-001-cross-platform-portability/tasks/task-009-consolida
 
 ## Definition of Done
 
-- [ ] [requirement] brain-skills binary no longer required for skill execution #no-binary
-- [ ] [requirement] All 3 skill workflows (incoherence, decision-critic, fix-fences) work via Python or JS/TS #functional
-- [ ] [requirement] SKILL.md files reference correct script paths #references
-- [ ] [requirement] Go source archived but not deleted #safety
+- [x] [requirement] brain-skills binary no longer required for skill execution #no-binary
+- [x] [requirement] All 3 skill workflows (incoherence, decision-critic, fix-fences) work via Python or JS/TS #functional
+- [x] [requirement] SKILL.md files reference correct script paths #references
+- [x] [requirement] Go source archived but not deleted #safety
 
 ## Effort Summary
 

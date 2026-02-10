@@ -1,7 +1,7 @@
 ---
 title: DESIGN-001-adapter-architecture
 type: design
-status: draft
+status: implemented
 feature-ref: FEAT-001
 req-refs:
 - REQ-001

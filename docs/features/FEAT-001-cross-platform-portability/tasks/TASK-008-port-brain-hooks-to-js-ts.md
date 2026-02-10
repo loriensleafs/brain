@@ -1,7 +1,7 @@
 ---
 title: TASK-008-port-brain-hooks-to-js-ts
 type: task
-status: todo
+status: complete
 feature-ref: FEAT-001
 effort-estimate-human: 16h
 effort-estimate-ai: 8h
@@ -28,12 +28,12 @@ permalink: features/feat-001-cross-platform-portability/tasks/task-008-port-brai
 
 ## Definition of Done
 
-- [ ] [requirement] All 8 hook subcommands work identically in JS/TS #parity
-- [ ] [requirement] hooks/claude-code.json maps all Claude Code events correctly #config
-- [ ] [requirement] Hook scripts executable via Node.js without compilation #portable
-- [ ] [requirement] Go shared package functionality ported to TS #dependencies
-- [ ] [requirement] Test coverage equivalent to Go tests (2,669 LOC) #testing
-- [ ] [requirement] Go binary archived but not deleted #safety
+- [x] [requirement] All 8 hook subcommands work identically in JS/TS #parity
+- [x] [requirement] hooks/claude-code.json maps all Claude Code events correctly #config
+- [x] [requirement] Hook scripts executable via Node.js without compilation #portable
+- [x] [requirement] Go shared package functionality ported to TS #dependencies
+- [x] [requirement] Test coverage equivalent to Go tests (2,669 LOC) #testing
+- [x] [requirement] Go binary archived but not deleted #safety
 
 ## Effort Summary
 

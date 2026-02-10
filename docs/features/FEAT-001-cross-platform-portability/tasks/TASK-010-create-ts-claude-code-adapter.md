@@ -1,7 +1,7 @@
 ---
 title: TASK-010-create-ts-claude-code-adapter
 type: task
-status: todo
+status: complete
 feature-ref: FEAT-001
 effort-estimate-human: 6h
 effort-estimate-ai: 3h
@@ -30,10 +30,10 @@ permalink: features/feat-001-cross-platform-portability/tasks/task-010-create-ts
 
 ## Definition of Done
 
-- [ ] [requirement] adapters/sync.ts produces valid Claude Code plugin output when invoked via bun #output
-- [ ] [requirement] Generated agents match current apps/claude-plugin/agents/ structure #parity
-- [ ] [requirement] mcp.json correctly transformed #mcp
-- [ ] [requirement] Agents with null claude-code config skipped (e.g., orchestrator-cursor) #filtering
+- [x] [requirement] adapters/sync.ts produces valid Claude Code plugin output when invoked via bun #output
+- [x] [requirement] Generated agents match current apps/claude-plugin/agents/ structure #parity
+- [x] [requirement] mcp.json correctly transformed #mcp
+- [x] [requirement] Agents with null claude-code config skipped (e.g., orchestrator-cursor) #filtering
 
 ## Effort Summary
 

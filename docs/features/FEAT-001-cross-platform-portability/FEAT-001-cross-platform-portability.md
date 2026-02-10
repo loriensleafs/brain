@@ -1,7 +1,7 @@
 ---
 title: FEAT-001 Cross-Platform Portability
 type: feature
-status: draft
+status: in-progress
 source-refs:
 - ADR-002
 permalink: features/feat-001-cross-platform-portability/feat-001-cross-platform-portability
@@ -85,49 +85,49 @@ permalink: features/feat-001-cross-platform-portability/feat-001-cross-platform-
 
 ## Success Criteria
 
-- [ ] [requirement] All canonical content at repo root (agents/, skills/, commands/, protocols/, hooks/) #structure
-- [ ] [requirement] `apps/claude-plugin/` removed entirely #removal
+- [x] [requirement] All canonical content at repo root (agents/, skills/, commands/, protocols/, hooks/) #structure
+- [x] [requirement] `apps/claude-plugin/` removed entirely #removal
 - [ ] [requirement] `brain install` detects and installs to Claude Code and Cursor #install
 - [ ] [requirement] `brain uninstall` cleanly removes from either tool #uninstall
-- [ ] [requirement] Claude Code orchestrator uses Agent Teams; Cursor orchestrator uses Task tool hub-and-spoke #orchestrator
-- [ ] [requirement] All specialist agents portable across both tools (identical body, different frontmatter) #portability
+- [x] [requirement] Claude Code orchestrator uses Agent Teams; Cursor orchestrator uses Task tool hub-and-spoke #orchestrator
+- [x] [requirement] All specialist agents portable across both tools (identical body, different frontmatter) #portability
 - [ ] [requirement] Hook scripts work on both tools via normalization layer #hooks
 - [ ] [requirement] CI validates adapter output via golden file snapshots #ci
-- [ ] [requirement] No Go binary required for hook or skill execution #no-binary
+- [x] [requirement] No Go binary required for hook or skill execution #no-binary
 
 ## Artifact Status
 
 ### Requirements
 
-- [ ] [requirement] [[REQ-001-canonical-content-extraction]] #status-draft
-- [ ] [requirement] [[REQ-002-cross-platform-agent-adaptation]] #status-draft
+- [x] [requirement] [[REQ-001-canonical-content-extraction]] #status-implemented
+- [x] [requirement] [[REQ-002-cross-platform-agent-adaptation]] #status-approved
 - [ ] [requirement] [[REQ-003-hook-normalization]] #status-draft
-- [ ] [requirement] [[REQ-004-unified-install]] #status-draft
-- [ ] [requirement] [[REQ-005-orchestrator-portability]] #status-draft
+- [x] [requirement] [[REQ-004-unified-install]] #status-approved
+- [x] [requirement] [[REQ-005-orchestrator-portability]] #status-implemented
 
 ### Designs
 
-- [ ] [design] [[DESIGN-001-adapter-architecture]] #status-draft
+- [x] [design] [[DESIGN-001-adapter-architecture]] #status-implemented
 - [ ] [design] [[DESIGN-002-hook-normalization-layer]] #status-draft
-- [ ] [design] [[DESIGN-003-install-tui-flow]] #status-draft
-- [ ] [design] [[DESIGN-004-orchestrator-strategy]] #status-draft
-- [ ] [design] [[DESIGN-005-composable-orchestrator-rules]] #status-draft
+- [x] [design] [[DESIGN-003-install-tui-flow]] #status-implemented
+- [x] [design] [[DESIGN-004-orchestrator-strategy]] #status-implemented
+- [x] [design] [[DESIGN-005-composable-orchestrator-rules]] #status-implemented
 
 ### Tasks
 
-- [ ] [task] [[TASK-001-create-root-level-directory-scaffold]] #status-todo
-- [ ] [task] [[TASK-002-move-canonical-skills]] #status-todo
-- [ ] [task] [[TASK-003-move-canonical-commands]] #status-todo
-- [ ] [task] [[TASK-004-extract-protocols-to-root]] #status-todo
-- [ ] [task] [[TASK-005-canonicalize-agent-definitions]] #status-todo
-- [ ] [task] [[TASK-006-create-two-orchestrator-agents]] #status-todo
-- [ ] [task] [[TASK-007-create-brain-config-and-agents-md]] #status-todo
-- [ ] [task] [[TASK-008-port-brain-hooks-to-js-ts]] #status-todo
-- [ ] [task] [[TASK-009-consolidate-brain-skills-binary]] #status-todo
-- [ ] [task] [[TASK-010-create-ts-claude-code-adapter]] #status-todo
-- [ ] [task] [[TASK-011-implement-brain-install-uninstall]] #status-todo
-- [ ] [task] [[TASK-012-refactor-brain-claude-launcher]] #status-todo
-- [ ] [task] [[TASK-013-remove-apps-claude-plugin]] #status-todo
+- [x] [task] [[TASK-001-create-root-level-directory-scaffold]] #status-complete
+- [x] [task] [[TASK-002-move-canonical-skills]] #status-complete
+- [x] [task] [[TASK-003-move-canonical-commands]] #status-complete
+- [x] [task] [[TASK-004-extract-protocols-to-root]] #status-complete
+- [x] [task] [[TASK-005-canonicalize-agent-definitions]] #status-complete
+- [x] [task] [[TASK-006-create-two-orchestrator-agents]] #status-complete
+- [x] [task] [[TASK-007-create-brain-config-and-agents-md]] #status-complete
+- [x] [task] [[TASK-008-port-brain-hooks-to-js-ts]] #status-complete
+- [x] [task] [[TASK-009-consolidate-brain-skills-binary]] #status-complete
+- [x] [task] [[TASK-010-create-ts-claude-code-adapter]] #status-complete
+- [x] [task] [[TASK-011-implement-brain-install-uninstall]] #status-complete
+- [x] [task] [[TASK-012-refactor-brain-claude-launcher]] #status-complete
+- [x] [task] [[TASK-013-remove-apps-claude-plugin]] #status-complete
 - [ ] [task] [[TASK-014-create-ts-cursor-adapter]] #status-todo
 - [ ] [task] [[TASK-015-extend-brain-install-for-cursor]] #status-todo
 - [ ] [task] [[TASK-016-implement-brain-cursor-launcher]] #status-todo

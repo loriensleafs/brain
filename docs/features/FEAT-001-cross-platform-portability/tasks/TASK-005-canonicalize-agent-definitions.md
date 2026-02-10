@@ -1,7 +1,7 @@
 ---
 title: TASK-005-canonicalize-agent-definitions
 type: task
-status: todo
+status: complete
 feature-ref: FEAT-001
 effort-estimate-human: 8h
 effort-estimate-ai: 3h
@@ -28,10 +28,10 @@ permalink: features/feat-001-cross-platform-portability/tasks/task-005-canonical
 
 ## Definition of Done
 
-- [ ] [requirement] 23 specialist agents at `agents/` with tool-neutral body content #agents
-- [ ] [requirement] No Claude-specific frontmatter in canonical agent files #frontmatter
-- [ ] [requirement] Agent bodies readable and useful on both Claude Code and Cursor #portability
-- [ ] [requirement] brain.config.json updated with per-agent per-tool values for all 23 specialists #config
+- [x] [requirement] 23 specialist agents at `agents/` with tool-neutral body content #agents
+- [x] [requirement] No Claude-specific frontmatter in canonical agent files #frontmatter
+- [x] [requirement] Agent bodies readable and useful on both Claude Code and Cursor #portability
+- [x] [requirement] brain.config.json updated with per-agent per-tool values for all 23 specialists #config
 
 ## Effort Summary
 

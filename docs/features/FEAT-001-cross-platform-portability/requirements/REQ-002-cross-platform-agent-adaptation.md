@@ -1,7 +1,7 @@
 ---
 title: REQ-002-cross-platform-agent-adaptation
 type: requirement
-status: draft
+status: approved
 feature-ref: FEAT-001
 tags:
 - requirement
@@ -21,12 +21,12 @@ permalink: features/feat-001-cross-platform-portability/requirements/req-002-cro
 
 ## Acceptance Criteria
 
-- [ ] [requirement] AC-01: Canonical agents have no vendor-specific YAML frontmatter #frontmatter
-- [ ] [requirement] AC-02: Claude Code adapter generates valid .claude/agents/ output with model, allowed_tools, skills fields #claude
+- [x] [requirement] AC-01: Canonical agents have no vendor-specific YAML frontmatter #frontmatter
+- [x] [requirement] AC-02: Claude Code adapter generates valid .claude/agents/ output with model, allowed_tools, skills fields #claude
 - [ ] [requirement] AC-03: Cursor adapter generates valid .cursor/agents/🧠-*.md output with description field and 🧠 prefix #cursor
-- [ ] [requirement] AC-04: brain.config.json contains per-agent per-tool mappings for all 25 agents #config
-- [ ] [requirement] AC-05: Tool-specific orchestrators (orchestrator-claude, orchestrator-cursor) excluded from wrong tool #filtering
-- [ ] [requirement] AC-06: All generated agent filenames use `🧠-{name}.md` pattern #naming
+- [x] [requirement] AC-04: brain.config.json contains per-agent per-tool mappings for all 25 agents #config
+- [x] [requirement] AC-05: Tool-specific orchestrators (orchestrator-claude, orchestrator-cursor) excluded from wrong tool #filtering
+- [x] [requirement] AC-06: All generated agent filenames use `🧠-{name}.md` pattern #naming
 
 ## Observations
 
