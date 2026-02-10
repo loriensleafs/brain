@@ -333,7 +333,7 @@ func runRollback(cmd *cobra.Command, args []string) error {
 		if errorResp.Details != "" {
 			fmt.Fprintf(os.Stderr, "Details: %s\n", errorResp.Details)
 		}
-		return fmt.Errorf(errorResp.Error)
+		return fmt.Errorf("%s", errorResp.Error)
 	}
 
 	// Parse success response
@@ -397,7 +397,7 @@ func handleConfigMigrationError(text string) error {
 		if resp.NewLocation != "" {
 			fmt.Fprintf(os.Stderr, "New location: %s\n", resp.NewLocation)
 		}
-		return fmt.Errorf(resp.Error)
+		return fmt.Errorf("%s", resp.Error)
 	}
 	return fmt.Errorf("unknown error")
 }
@@ -497,7 +497,7 @@ func handleAgentsMigrationError(text string) error {
 		if resp.RollbackStatus != "" {
 			fmt.Fprintf(os.Stderr, "Rollback status: %s\n", resp.RollbackStatus)
 		}
-		return fmt.Errorf(resp.Error)
+		return fmt.Errorf("%s", resp.Error)
 	}
 	return fmt.Errorf("unknown error")
 }

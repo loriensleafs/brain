@@ -403,7 +403,7 @@ func getProjectDetails(project string) error {
 				fmt.Fprintf(os.Stderr, "  - %s\n", p)
 			}
 		}
-		return fmt.Errorf(errorResponse.Error)
+		return fmt.Errorf("%s", errorResponse.Error)
 	}
 
 	var response struct {
@@ -494,7 +494,7 @@ func editProject(project string) error {
 				fmt.Fprintf(os.Stderr, "  - %s\n", p)
 			}
 		}
-		return fmt.Errorf(errorResponse.Error)
+		return fmt.Errorf("%s", errorResponse.Error)
 	}
 
 	fmt.Println(text)
@@ -548,7 +548,7 @@ func runProjectsCreate(cmd *cobra.Command, args []string) error {
 		if errorResponse.ExistingCodePath != nil {
 			fmt.Fprintf(os.Stderr, "Existing code path: %s\n", *errorResponse.ExistingCodePath)
 		}
-		return fmt.Errorf(errorResponse.Error)
+		return fmt.Errorf("%s", errorResponse.Error)
 	}
 
 	// Parse success response
@@ -607,7 +607,7 @@ func runProjectsDelete(cmd *cobra.Command, args []string) error {
 			}
 		}
 		os.Exit(1)
-		return fmt.Errorf(errorResponse.Error)
+		return fmt.Errorf("%s", errorResponse.Error)
 	}
 
 	var projectDetails struct {
@@ -718,7 +718,7 @@ func runProjectsDelete(cmd *cobra.Command, args []string) error {
 				}
 			}
 			os.Exit(1)
-			return fmt.Errorf(deleteError.Error)
+			return fmt.Errorf("%s", deleteError.Error)
 		}
 		if deleteError.Warning != "" {
 			fmt.Fprintf(os.Stderr, "[WARNING] %s\n", deleteError.Warning)
@@ -726,7 +726,7 @@ func runProjectsDelete(cmd *cobra.Command, args []string) error {
 				fmt.Fprintf(os.Stderr, "Recovery: %s\n", deleteError.Recovery)
 			}
 			os.Exit(1)
-			return fmt.Errorf(deleteError.Warning)
+			return fmt.Errorf("%s", deleteError.Warning)
 		}
 	}
 
