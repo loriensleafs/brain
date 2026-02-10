@@ -24,6 +24,12 @@ export {
 } from "./gate-check.js";
 export { detectScenario } from "./detect-scenario.js";
 export { validateStopReadiness, validateSession } from "./validate.js";
+export {
+  normalizeEvent,
+  detectPlatform,
+  getBlockingSemantics,
+  readAndNormalize,
+} from "./normalize.js";
 
 // Hook handlers
 export { runSessionStart } from "./session-start.js";
@@ -37,3 +43,9 @@ export { runValidateSession } from "./validate-session.js";
 
 // Types
 export type * from "./types.js";
+export type {
+  Platform,
+  NormalizedEventName,
+  NormalizedHookEvent,
+  BlockingSemantics,
+} from "./normalize.js";
