@@ -60,7 +60,6 @@ export async function runPreToolUse(): Promise<void> {
   } catch {
     process.stderr.write("failed to parse input\n");
     process.exit(1);
-    return;
   }
 
   // Normalize the event (auto-detects Claude Code vs Cursor)

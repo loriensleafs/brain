@@ -8,7 +8,6 @@
  * Cursor (beforeSubmitPrompt) via the normalization layer.
  */
 import type {
-  UserPromptInput,
   UserPromptOutput,
   ScenarioDetectionResult,
   WorkflowStateInfo,

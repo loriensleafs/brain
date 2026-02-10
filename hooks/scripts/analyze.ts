@@ -5,7 +5,6 @@
  * Step-by-step codebase analysis workflow with file-based state.
  */
 import { join } from "path";
-import { tmpdir } from "os";
 import type {
   AnalyzeInput,
   AnalyzeOutput,
@@ -38,7 +37,7 @@ function getStatus(step: number, totalSteps: number): string {
 
 /** Get the default state file path. */
 function getDefaultStateFile(): string {
-  const brainDir = join(tmpdir(), "brain-analyze");
+  const brainDir = join(process.env.TMPDIR ?? "/tmp", "brain-analyze");
   try {
     Bun.spawnSync(["mkdir", "-p", brainDir]);
   } catch {
