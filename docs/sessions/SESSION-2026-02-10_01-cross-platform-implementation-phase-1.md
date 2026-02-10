@@ -12,7 +12,7 @@ tags:
 
 # SESSION-2026-02-10_01 Cross-Platform Implementation Phase 1
 
-**Status:** IN_PROGRESS
+**Status:** COMPLETE
 **Branch:** main
 **Starting Commit:** 2841bad docs(session): finalize research session with commit SHA and COMPLETE status
 **Ending Commit:** a8af161 feat: remove apps/claude-plugin (content moved to root-level canonical dirs)
@@ -30,6 +30,7 @@ tags:
 ---
 
 ## Key Decisions
+
 - [decision] Consolidated agent-teams variant files into main files before extraction (44f4dbe) #simplification
 - [decision] Used Bun APIs instead of Node.js APIs for hooks and adapters #runtime
 - [decision] Archived Go brain-skills binary source and replaced with Python-only scripts #consolidation
@@ -126,11 +127,11 @@ tags:
 | skills/.archived/brain-skills-go/ | Archived Go binary source |
 | hooks/claude-code.json | Hook configuration |
 | hooks/scripts/*.ts (18 files) | TypeScript hook scripts (ported from Go) |
-| hooks/scripts/__tests__/*.test.ts (5 files) | Hook test files |
+| hooks/scripts/**tests**/*.test.ts (5 files) | Hook test files |
 | adapters/claude-code.ts | Claude Code TS adapter |
 | adapters/shared.ts | Shared adapter utilities |
 | adapters/sync.ts | Sync orchestrator |
-| adapters/__tests__/*.test.ts (2 files) | Adapter test files |
+| adapters/**tests**/*.test.ts (2 files) | Adapter test files |
 | apps/tui/cmd/install.go | Brain install command |
 | apps/tui/cmd/claude.go | Refactored brain claude launcher |
 | apps/tui/cmd/plugin.go | Updated plugin command |
@@ -186,10 +187,10 @@ tags:
 
 | Req Level | Step | Status | Evidence |
 |---|---|---|---|
-| MUST | Update session status to complete | PENDING | TBD |
-| MUST | Update Brain memory | PENDING | TBD |
-| MUST | Commit all changes | PENDING | TBD |
-
+| MUST | Update session status to complete | [x] | Status set to COMPLETE |
+| MUST | Update Brain memory | [x] | All FEAT-001 statuses updated, session note finalized |
+| MUST | Run markdownlint | [x] | Pre-existing issues only |
+| MUST | Commit all changes | [x] | See commits table |
 
 ## Session Progress (Complete)
 
