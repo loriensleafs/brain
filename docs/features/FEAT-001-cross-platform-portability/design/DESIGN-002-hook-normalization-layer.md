@@ -1,7 +1,7 @@
 ---
 title: DESIGN-002-hook-normalization-layer
 type: design
-status: draft
+status: implemented
 feature-ref: FEAT-001
 req-refs:
 - REQ-003

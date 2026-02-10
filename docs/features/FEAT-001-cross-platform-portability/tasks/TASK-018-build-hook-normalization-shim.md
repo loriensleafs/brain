@@ -1,7 +1,7 @@
 ---
 title: TASK-018-build-hook-normalization-shim
 type: task
-status: todo
+status: complete
 feature-ref: FEAT-001
 effort-estimate-human: 6h
 effort-estimate-ai: 3h
@@ -26,10 +26,10 @@ permalink: features/feat-001-cross-platform-portability/tasks/task-018-build-hoo
 
 ## Definition of Done
 
-- [ ] [requirement] normalize.ts correctly detects Claude Code vs Cursor from stdin JSON #detection
-- [ ] [requirement] NormalizedHookEvent produced for all mapped event types #normalization
-- [ ] [requirement] Platform-specific blocking semantics documented and handled #blocking
-- [ ] [requirement] Unit tests cover both platforms and all event types #testing
+- [x] [requirement] normalize.ts correctly detects Claude Code vs Cursor from stdin JSON #detection
+- [x] [requirement] NormalizedHookEvent produced for all mapped event types #normalization
+- [x] [requirement] Platform-specific blocking semantics documented and handled #blocking
+- [x] [requirement] Unit tests cover both platforms and all event types #testing
 
 ## Effort Summary
 

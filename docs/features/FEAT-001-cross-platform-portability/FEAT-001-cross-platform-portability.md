@@ -1,7 +1,7 @@
 ---
 title: FEAT-001 Cross-Platform Portability
 type: feature
-status: in-progress
+status: complete
 source-refs:
 - ADR-002
 permalink: features/feat-001-cross-platform-portability/feat-001-cross-platform-portability
@@ -91,8 +91,8 @@ permalink: features/feat-001-cross-platform-portability/feat-001-cross-platform-
 - [x] [requirement] `brain uninstall` cleanly removes from either tool #uninstall
 - [x] [requirement] Claude Code orchestrator uses Agent Teams; Cursor orchestrator uses Task tool hub-and-spoke #orchestrator
 - [x] [requirement] All specialist agents portable across both tools (identical body, different frontmatter) #portability
-- [ ] [requirement] Hook scripts work on both tools via normalization layer #hooks
-- [ ] [requirement] CI validates adapter output via golden file snapshots #ci
+- [x] [requirement] Hook scripts work on both tools via normalization layer #hooks
+- [x] [requirement] CI validates adapter output via golden file snapshots #ci
 - [x] [requirement] No Go binary required for hook or skill execution #no-binary
 
 ## Artifact Status
@@ -101,14 +101,14 @@ permalink: features/feat-001-cross-platform-portability/feat-001-cross-platform-
 
 - [x] [requirement] [[REQ-001-canonical-content-extraction]] #status-implemented
 - [x] [requirement] [[REQ-002-cross-platform-agent-adaptation]] #status-implemented
-- [ ] [requirement] [[REQ-003-hook-normalization]] #status-draft
+- [ ] [requirement] [[REQ-003-hook-normalization]] #status-implemented
 - [x] [requirement] [[REQ-004-unified-install]] #status-implemented
 - [x] [requirement] [[REQ-005-orchestrator-portability]] #status-implemented
 
 ### Designs
 
 - [x] [design] [[DESIGN-001-adapter-architecture]] #status-implemented
-- [ ] [design] [[DESIGN-002-hook-normalization-layer]] #status-draft
+- [ ] [design] [[DESIGN-002-hook-normalization-layer]] #status-implemented
 - [x] [design] [[DESIGN-003-install-tui-flow]] #status-implemented
 - [x] [design] [[DESIGN-004-orchestrator-strategy]] #status-implemented
 - [x] [design] [[DESIGN-005-composable-orchestrator-rules]] #status-implemented
@@ -132,9 +132,9 @@ permalink: features/feat-001-cross-platform-portability/feat-001-cross-platform-
 - [x] [task] [[TASK-015-extend-brain-install-for-cursor]] #status-complete
 - [x] [task] [[TASK-016-implement-brain-cursor-launcher]] #status-complete
 - [x] [task] [[TASK-017-cursor-integration-testing]] #status-complete
-- [ ] [task] [[TASK-018-build-hook-normalization-shim]] #status-todo
-- [ ] [task] [[TASK-019-refactor-hook-scripts-for-normalization]] #status-todo
-- [ ] [task] [[TASK-020-add-ci-validation-and-golden-files]] #status-todo
+- [x] [task] [[TASK-018-build-hook-normalization-shim]] #status-complete
+- [x] [task] [[TASK-019-refactor-hook-scripts-for-normalization]] #status-complete
+- [x] [task] [[TASK-020-add-ci-validation-and-golden-files]] #status-complete
 
 ## Observations
 

@@ -17,7 +17,7 @@ tags:
 **Status:** IN_PROGRESS
 **Branch:** main
 **Starting Commit:** 99b67a7 fix(session): escape \_\_tests\_\_ in session note code files table
-**Ending Commit:** TBD
+**Ending Commit:** 3a138ba feat: add CI golden file snapshots and hook config validation
 **Objective:** Implement [[FEAT-001-cross-platform-portability]] Phase 3 (Hook Normalization) following [[ADR-002-cross-platform-plugin-architecture]]. Build normalize.ts shim, refactor hooks to use normalized events, generate per-tool hook configs, add CI validation.
 
 ---
@@ -38,14 +38,18 @@ tags:
 
 ## Work Log
 
-- [ ] [pending] Build hook normalization shim linking to [[TASK-018-build-hook-normalization-shim]] #normalization
-- [ ] [pending] Refactor hook scripts for normalization linking to [[TASK-019-refactor-hook-scripts-for-normalization]] #hooks
-- [ ] [pending] Add CI validation and golden files linking to [[TASK-020-add-ci-validation-and-golden-files]] #ci
+- [x] [outcome] Built hook normalization shim normalize.ts with 43 tests (f0047f3) linking to [[TASK-018-build-hook-normalization-shim]] #normalization
+- [x] [outcome] Refactored 4 hook scripts for normalization with 17 cross-platform tests (aca19a9) linking to [[TASK-019-refactor-hook-scripts-for-normalization]] #hooks
+- [x] [outcome] Added CI validation with golden snapshots and hook config validation (3a138ba) linking to [[TASK-020-add-ci-validation-and-golden-files]] #ci
 
 ## Commits
 
 | SHA | Description | Files |
 |---|---|---|
+| ecea593 | docs(session): create Phase 3 implementation session note | 1 |
+| f0047f3 | feat: build hook normalization shim normalize.ts | 3 |
+| aca19a9 | feat: refactor hook scripts for normalization layer | 7 |
+| 3a138ba | feat: add CI golden file snapshots and hook config validation | 5 |
 
 ---
 
@@ -61,6 +65,17 @@ tags:
 
 | File | Context |
 |---|---|
+| hooks/scripts/normalize.ts | New normalization shim |
+| hooks/scripts/\_\_tests\_\_/normalize.test.ts | 43 normalization tests |
+| hooks/scripts/\_\_tests\_\_/cross-platform.test.ts | 17 cross-platform tests |
+| hooks/scripts/\_\_tests\_\_/golden-snapshots.test.ts | Golden file snapshots |
+| hooks/scripts/\_\_tests\_\_/hook-config-validation.test.ts | Config validation tests |
+| hooks/cursor.json | New Cursor hook event mapping |
+| hooks/scripts/user-prompt.ts | Refactored for normalization |
+| hooks/scripts/pre-tool-use.ts | Refactored for normalization |
+| hooks/scripts/stop.ts | Refactored for normalization |
+| hooks/scripts/session-start.ts | Refactored for normalization |
+| hooks/scripts/index.ts | Updated barrel exports |
 
 ---
 

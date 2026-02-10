@@ -1,7 +1,7 @@
 ---
 title: TASK-020-add-ci-validation-and-golden-files
 type: task
-status: todo
+status: complete
 feature-ref: FEAT-001
 effort-estimate-human: 4h
 effort-estimate-ai: 2h
@@ -28,10 +28,10 @@ permalink: features/feat-001-cross-platform-portability/tasks/task-020-add-ci-va
 
 ## Definition of Done
 
-- [ ] [requirement] Golden file snapshots committed for both adapters #golden-files
-- [ ] [requirement] CI validates adapter output matches golden files #ci
-- [ ] [requirement] CI fails on violations #enforcement
-- [ ] [requirement] Documentation updated with multi-tool support #documentation
+- [x] [requirement] Golden file snapshots committed for both adapters #golden-files
+- [x] [requirement] CI validates adapter output matches golden files #ci
+- [x] [requirement] CI fails on violations #enforcement
+- [x] [requirement] Documentation updated with multi-tool support #documentation
 
 ## Effort Summary
 

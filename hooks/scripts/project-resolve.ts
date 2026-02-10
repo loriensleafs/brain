@@ -13,7 +13,11 @@
  * 6. Empty string (caller shows error)
  */
 import { join, resolve, sep, normalize } from "path";
-import { homedir } from "os";
+
+/** Get home directory using Bun env. */
+function homedir(): string {
+  return Bun.env.HOME || "/tmp";
+}
 import type { BrainConfig, BrainProjectConfig } from "./types.js";
 
 /**

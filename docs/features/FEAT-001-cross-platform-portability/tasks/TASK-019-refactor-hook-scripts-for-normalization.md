@@ -1,7 +1,7 @@
 ---
 title: TASK-019-refactor-hook-scripts-for-normalization
 type: task
-status: todo
+status: complete
 feature-ref: FEAT-001
 effort-estimate-human: 6h
 effort-estimate-ai: 3h
@@ -27,11 +27,11 @@ permalink: features/feat-001-cross-platform-portability/tasks/task-019-refactor-
 
 ## Definition of Done
 
-- [ ] [requirement] All hook scripts use NormalizedHookEvent interface #normalized
-- [ ] [requirement] hooks/cursor.json maps Cursor events to shared scripts #cursor
-- [ ] [requirement] hooks/claude-code.json maps Claude Code events to shared scripts #claude
-- [ ] [requirement] Stop validation works on both platforms #stop
-- [ ] [requirement] Tool gating works on both platforms #gating
+- [x] [requirement] All hook scripts use NormalizedHookEvent interface #normalized
+- [x] [requirement] hooks/cursor.json maps Cursor events to shared scripts #cursor
+- [x] [requirement] hooks/claude-code.json maps Claude Code events to shared scripts #claude
+- [x] [requirement] Stop validation works on both platforms #stop
+- [x] [requirement] Tool gating works on both platforms #gating
 
 ## Effort Summary
 

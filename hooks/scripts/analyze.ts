@@ -308,29 +308,24 @@ export async function runAnalyze(): Promise<void> {
     } catch {
       process.stderr.write("failed to parse input\n");
       process.exit(1);
-      return;
     }
   } else {
     process.stderr.write("no input provided\n");
     process.exit(1);
-    return;
   }
 
   // Validate input
   if (analyzeInput.stepNumber < 1) {
     process.stderr.write("stepNumber must be >= 1\n");
     process.exit(1);
-    return;
   }
   if (analyzeInput.totalSteps < 6) {
     process.stderr.write("totalSteps must be >= 6 (minimum workflow)\n");
     process.exit(1);
-    return;
   }
   if (analyzeInput.totalSteps < analyzeInput.stepNumber) {
     process.stderr.write("totalSteps must be >= stepNumber\n");
     process.exit(1);
-    return;
   }
 
   // Load or create state
