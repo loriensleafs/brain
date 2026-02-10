@@ -13,7 +13,7 @@ import type {
   WorkflowStateInfo,
 } from "./types";
 import type { NormalizedHookEvent } from "./normalize";
-import { normalizeEvent } from "./normalize";
+import { normalizeEvent, formatOutput } from "./normalize";
 import { detectScenario } from "./detect-scenario";
 import { execCommand } from "./exec";
 
@@ -47,7 +47,7 @@ function loadWorkflowState(): WorkflowStateInfo | null {
  * detection and workflow state injection.
  */
 export function processUserPrompt(event: NormalizedHookEvent): UserPromptOutput {
-  const prompt = (event.payload.prompt as string) ?? "";
+  const prompt = ("prompt" in event.payload ? event.payload.prompt : "") as string;
   const output: UserPromptOutput = { continue: true };
 
   // Detect scenario from prompt
@@ -89,9 +89,21 @@ export async function runUserPrompt(): Promise<void> {
 
   // Normalize the event (auto-detects Claude Code vs Cursor)
   const event = normalizeEvent(parsed, "UserPromptSubmit");
-  const output = processUserPrompt(event);
+  const result = processUserPrompt(event);
 
-  process.stdout.write(JSON.stringify(output, null, 2) + "\n");
+  if (event.platform === "cursor") {
+    // Cursor beforeSubmitPrompt: {continue, user_message}
+    const out = formatOutput(event, {
+      continue: result.continue,
+      userMessage: result.scenario?.detected
+        ? `[${result.scenario.scenario}] ${result.scenario.recommended}`
+        : undefined,
+    });
+    process.stdout.write(out + "\n");
+  } else {
+    // Claude Code: pass through internal format
+    process.stdout.write(JSON.stringify(result, null, 2) + "\n");
+  }
 }
 
 // Run if executed directly

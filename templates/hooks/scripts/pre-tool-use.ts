@@ -8,8 +8,8 @@
  * Cursor (beforeShellExecution, beforeMCPExecution) via normalization.
  */
 import type { PreToolUseOutput } from "./types";
-import type { NormalizedHookEvent } from "./normalize";
-import { normalizeEvent } from "./normalize";
+import type { NormalizedHookEvent, PreToolUsePayload } from "./normalize";
+import { normalizeEvent, formatOutput } from "./normalize";
 import { performGateCheck } from "./gate-check";
 
 /**
@@ -18,15 +18,8 @@ import { performGateCheck } from "./gate-check";
  * Cursor sends tool_name for MCP, and "Bash" equivalent for shell.
  */
 function extractToolName(event: NormalizedHookEvent): string {
-  // For before-shell, the tool is always Bash
-  if (event.event === "before-shell") return "Bash";
-
-  // For before-mcp, extract from payload
-  const toolName = event.payload.tool_name as string;
-  if (toolName) return toolName;
-
-  // Fallback to tool field in payload (Claude Code PreToolUse)
-  return (event.payload.tool as string) ?? "";
+  const payload = event.payload as PreToolUsePayload;
+  return payload.toolName ?? "";
 }
 
 /**
@@ -64,9 +57,19 @@ export async function runPreToolUse(): Promise<void> {
 
   // Normalize the event (auto-detects Claude Code vs Cursor)
   const event = normalizeEvent(parsed, "PreToolUse");
-  const output = processPreToolUse(event);
+  const result = processPreToolUse(event);
 
-  process.stdout.write(JSON.stringify(output, null, 2) + "\n");
+  if (event.platform === "cursor") {
+    // Cursor preToolUse: {decision: "allow"|"deny", reason}
+    const out = formatOutput(event, {
+      decision: result.decision === "block" ? "deny" : "allow",
+      reason: result.message,
+    });
+    process.stdout.write(out + "\n");
+  } else {
+    // Claude Code: pass through internal format
+    process.stdout.write(JSON.stringify(result, null, 2) + "\n");
+  }
 }
 
 // Run if executed directly
