@@ -106,7 +106,7 @@ func TestCursorTransformAgent_IgnoresNonCursorFields(t *testing.T) {
 func TestCursorTransformAgents_IntegrationWithConfig(t *testing.T) {
 	// Set up temp directory with agent files
 	tmpDir := t.TempDir()
-	agentsDir := filepath.Join(tmpDir, "agents")
+	agentsDir := filepath.Join(tmpDir, "templates", "agents")
 	os.MkdirAll(agentsDir, 0o755)
 
 	// Write test agent
@@ -305,7 +305,8 @@ func TestCursorTransformMCP_ValidConfig(t *testing.T) {
 			}
 		}
 	}`
-	os.WriteFile(filepath.Join(tmpDir, "mcp.json"), []byte(mcpJSON), 0o644)
+	os.MkdirAll(filepath.Join(tmpDir, "templates"), 0o755)
+	os.WriteFile(filepath.Join(tmpDir, "templates", "mcp.json"), []byte(mcpJSON), 0o644)
 
 	results, err := CursorTransformMCP(tmpDir)
 	if err != nil {
@@ -345,7 +346,7 @@ func TestCursorTransformMCP_ValidConfig(t *testing.T) {
 
 func TestCursorTransformMCP_InvalidJSON(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.WriteFile(filepath.Join(tmpDir, "mcp.json"), []byte("not json"), 0o644)
+	os.WriteFile(filepath.Join(tmpDir, "templates", "mcp.json"), []byte("not json"), 0o644)
 
 	results, err := CursorTransformMCP(tmpDir)
 	if err != nil {
@@ -362,9 +363,9 @@ func TestCursorTransform_FullIntegration(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	// Set up directory structure
-	agentsDir := filepath.Join(tmpDir, "agents")
-	protocolsDir := filepath.Join(tmpDir, "protocols")
-	hooksDir := filepath.Join(tmpDir, "hooks")
+	agentsDir := filepath.Join(tmpDir, "templates", "agents")
+	protocolsDir := filepath.Join(tmpDir, "templates", "protocols")
+	hooksDir := filepath.Join(tmpDir, "templates", "hooks")
 	os.MkdirAll(agentsDir, 0o755)
 	os.MkdirAll(protocolsDir, 0o755)
 	os.MkdirAll(hooksDir, 0o755)
@@ -385,7 +386,7 @@ func TestCursorTransform_FullIntegration(t *testing.T) {
 			}
 		}
 	}`
-	os.WriteFile(filepath.Join(tmpDir, "brain.config.json"), []byte(brainConfigJSON), 0o644)
+	os.WriteFile(filepath.Join(tmpDir, "templates", "brain.config.json"), []byte(brainConfigJSON), 0o644)
 
 	config := &BrainConfig{
 		Agents: map[string]AgentToolConfig{

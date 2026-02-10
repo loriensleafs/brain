@@ -262,11 +262,9 @@ func buildClaudeHooksJSON(hooksDir string, brainConfig *BrainConfig) (string, er
 	}
 
 	// Read the hook source file (it's already a valid hooks.json)
-	// The source path is relative to project root, but we receive hooksDir
-	// which is projectRoot/hooks. The source is like "hooks/claude-code.json"
-	// so we need to resolve relative to hooksDir's parent.
-	projectRoot := filepath.Dir(hooksDir)
-	sourceFile := filepath.Join(projectRoot, hookConfig.Source)
+	// The source is like "hooks/claude-code.json" -- resolve relative to hooksDir parent (templates/)
+	templatesDir := filepath.Dir(hooksDir)
+	sourceFile := filepath.Join(templatesDir, hookConfig.Source)
 	data, err := os.ReadFile(sourceFile)
 	if err != nil {
 		return "", err
@@ -287,7 +285,7 @@ func buildClaudeHooksJSON(hooksDir string, brainConfig *BrainConfig) (string, er
 // TransformClaudeMCP transforms canonical mcp.json into Claude Code format.
 // Resolves relative paths (starting with ./) to absolute paths.
 func TransformClaudeMCP(projectRoot string) ([]GeneratedFile, error) {
-	mcpPath := filepath.Join(projectRoot, "mcp.json")
+	mcpPath := filepath.Join(projectRoot, "templates", "mcp.json")
 	data, err := os.ReadFile(mcpPath)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -367,11 +365,11 @@ func GenerateClaudePluginManifest() []GeneratedFile {
 // TransformClaudeCode runs all Claude Code transforms and returns generated files.
 // This is the main entry point for the Claude Code adapter.
 func TransformClaudeCode(projectRoot string, brainConfig *BrainConfig) (*ClaudeCodeOutput, error) {
-	agentsDir := filepath.Join(projectRoot, "agents")
-	skillsDir := filepath.Join(projectRoot, "skills")
-	commandsDir := filepath.Join(projectRoot, "commands")
-	protocolsDir := filepath.Join(projectRoot, "protocols")
-	hooksDir := filepath.Join(projectRoot, "hooks")
+	agentsDir := filepath.Join(projectRoot, "templates", "agents")
+	skillsDir := filepath.Join(projectRoot, "templates", "skills")
+	commandsDir := filepath.Join(projectRoot, "templates", "commands")
+	protocolsDir := filepath.Join(projectRoot, "templates", "protocols")
+	hooksDir := filepath.Join(projectRoot, "templates", "hooks")
 
 	agents, err := TransformClaudeAgents(agentsDir, brainConfig)
 	if err != nil {

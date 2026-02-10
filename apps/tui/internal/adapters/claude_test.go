@@ -93,11 +93,11 @@ func setupTestProject(t *testing.T) string {
 
 	// Create directory structure
 	for _, d := range []string{
-		"agents",
-		"skills/memory",
-		"commands",
-		"protocols",
-		"hooks/scripts",
+		"templates/agents",
+		"templates/skills/memory",
+		"templates/commands",
+		"templates/protocols",
+		"templates/hooks/scripts",
 	} {
 		if err := os.MkdirAll(filepath.Join(dir, d), 0755); err != nil {
 			t.Fatal(err)
@@ -118,19 +118,19 @@ func TestTransformClaudeCode_MinimalProject(t *testing.T) {
 	dir := setupTestProject(t)
 
 	// Create canonical agent
-	writeFile(t, filepath.Join(dir, "agents", "architect.md"),
+	writeFile(t, filepath.Join(dir, "templates", "agents", "architect.md"),
 		"# Architect Agent\n\nYou design systems.")
 
 	// Create command
-	writeFile(t, filepath.Join(dir, "commands", "start-session.md"),
+	writeFile(t, filepath.Join(dir, "templates", "commands", "start-session.md"),
 		"Start a new session.")
 
 	// Create protocol
-	writeFile(t, filepath.Join(dir, "protocols", "memory-architecture.md"),
+	writeFile(t, filepath.Join(dir, "templates", "protocols", "memory-architecture.md"),
 		"# Memory Architecture\n\nRules for memory.")
 
 	// Create skill file
-	writeFile(t, filepath.Join(dir, "skills", "memory", "SKILL.md"),
+	writeFile(t, filepath.Join(dir, "templates", "skills", "memory", "SKILL.md"),
 		"# Memory Skill\n\nInstructions.")
 
 	// Create mcp.json
@@ -143,10 +143,10 @@ func TestTransformClaudeCode_MinimalProject(t *testing.T) {
 			},
 		},
 	})
-	writeFile(t, filepath.Join(dir, "mcp.json"), string(mcpJSON))
+	writeFile(t, filepath.Join(dir, "templates", "mcp.json"), string(mcpJSON))
 
 	// Create hook source file
-	writeFile(t, filepath.Join(dir, "hooks", "claude-code.json"), `{
+	writeFile(t, filepath.Join(dir, "templates", "hooks", "claude-code.json"), `{
   "hooks": {
     "Stop": [
       {
@@ -283,7 +283,7 @@ func TestTransformClaudeCode_MinimalProject(t *testing.T) {
 func TestTransformClaudeCode_SkipsNullConfig(t *testing.T) {
 	dir := setupTestProject(t)
 
-	writeFile(t, filepath.Join(dir, "agents", "orchestrator-cursor.md"),
+	writeFile(t, filepath.Join(dir, "templates", "agents", "orchestrator-cursor.md"),
 		"# Cursor Orchestrator")
 
 	config := &BrainConfig{
@@ -312,7 +312,7 @@ func TestTransformClaudeCode_SkipsNullConfig(t *testing.T) {
 func TestTransformClaudeCode_SkipsUnlistedAgent(t *testing.T) {
 	dir := setupTestProject(t)
 
-	writeFile(t, filepath.Join(dir, "agents", "unlisted.md"),
+	writeFile(t, filepath.Join(dir, "templates", "agents", "unlisted.md"),
 		"# Unlisted Agent")
 
 	config := &BrainConfig{

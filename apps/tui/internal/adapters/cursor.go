@@ -205,7 +205,7 @@ func CursorTransformHooks(hooksDir string, brainConfig *BrainConfig) ([]Generate
 // Produces a merge payload that the Go CLI applies additively to .cursor/mcp.json.
 // Resolves relative paths to absolute paths for the MCP server binary.
 func CursorTransformMCP(projectRoot string) ([]GeneratedFile, error) {
-	mcpPath := filepath.Join(projectRoot, "mcp.json")
+	mcpPath := filepath.Join(projectRoot, "templates", "mcp.json")
 
 	data, err := os.ReadFile(mcpPath)
 	if err != nil {
@@ -273,9 +273,9 @@ func CursorTransformMCP(projectRoot string) ([]GeneratedFile, error) {
 //   - No separate skills, commands, or plugin manifest
 //   - Hooks and MCP use JSON merge payloads (not direct files)
 func CursorTransform(projectRoot string, brainConfig *BrainConfig) (*CursorOutput, error) {
-	agentsDir := filepath.Join(projectRoot, "agents")
-	protocolsDir := filepath.Join(projectRoot, "protocols")
-	hooksDir := filepath.Join(projectRoot, "hooks")
+	agentsDir := filepath.Join(projectRoot, "templates", "agents")
+	protocolsDir := filepath.Join(projectRoot, "templates", "protocols")
+	hooksDir := filepath.Join(projectRoot, "templates", "hooks")
 
 	agents, err := CursorTransformAgents(agentsDir, brainConfig)
 	if err != nil {
