@@ -9,28 +9,33 @@ import (
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-// ComposableDir represents a directory with _order.yaml, _variables.yaml,
-// sections/, and variant-specific subdirectories (claude-code/, cursor/).
-type ComposableDir struct {
-	// Dir is the absolute path to the composable directory.
-	Dir string
-	// Order is the parsed section list from _order.yaml.
-	Order []string
-	// Variables maps variant name to variable key-value pairs.
-	Variables map[string]map[string]string
+// OrderYAML represents the parsed _order.yaml file for composable directories.
+type OrderYAML struct {
+	Name     string
+	Sections []string
+	Variants map[string]VariantConfig
+}
+
+// VariantConfig holds per-variant composition settings from _order.yaml.
+type VariantConfig struct {
+	Frontmatter string            // path to frontmatter file (e.g., _frontmatter.yaml)
+	Variables   string            // path to variables file (e.g., _variables.yaml)
+	Overrides   map[string]string // section name -> override file name
+	Inserts     []string          // files to inject at VARIANT_INSERT
 }
 
 // ─── Parsing ────────────────────────────────────────────────────────────────
 
-// parseOrderYAML parses a _order.yaml file and returns the section list.
-// Expected format:
-//
-//	sections:
-//	  - sections/010-header.md
-//	  - "{tool}/040-memory-delegation.md"
-func parseOrderYAML(data string) []string {
-	var sections []string
-	inSections := false
+// parseOrderYAML parses a _order.yaml file including the variants section.
+func parseOrderYAML(data string) *OrderYAML {
+	result := &OrderYAML{
+		Variants: make(map[string]VariantConfig),
+	}
+
+	var currentBlock string       // "sections", "variants"
+	var currentVariant string     // e.g., "claude-code", "cursor"
+	var currentSubBlock string    // "overrides", "inserts_at_VARIANT_INSERT"
+	var currentVariantConfig VariantConfig
 
 	for _, line := range strings.Split(data, "\n") {
 		trimmed := strings.TrimSpace(line)
@@ -39,148 +44,119 @@ func parseOrderYAML(data string) []string {
 			continue
 		}
 
-		if strings.HasPrefix(trimmed, "sections:") {
-			inSections = true
+		// Top-level keys (no indent)
+		if !strings.HasPrefix(line, " ") && !strings.HasPrefix(line, "\t") {
+			// Save any in-progress variant
+			if currentVariant != "" {
+				result.Variants[currentVariant] = currentVariantConfig
+				currentVariant = ""
+			}
+
+			if strings.HasPrefix(trimmed, "name:") {
+				result.Name = strings.TrimSpace(strings.TrimPrefix(trimmed, "name:"))
+			} else if strings.HasPrefix(trimmed, "sections:") {
+				currentBlock = "sections"
+				currentSubBlock = ""
+			} else if strings.HasPrefix(trimmed, "variants:") {
+				currentBlock = "variants"
+				currentSubBlock = ""
+			} else {
+				currentBlock = ""
+			}
 			continue
 		}
 
-		if inSections && strings.HasPrefix(trimmed, "- ") {
-			entry := strings.TrimPrefix(trimmed, "- ")
-			// Strip surrounding quotes if present
-			entry = strings.Trim(entry, `"'`)
-			sections = append(sections, entry)
+		// Indent level 1 (2 spaces)
+		indent := len(line) - len(strings.TrimLeft(line, " \t"))
+
+		switch currentBlock {
+		case "sections":
+			if strings.HasPrefix(trimmed, "- ") {
+				entry := strings.TrimPrefix(trimmed, "- ")
+				entry = strings.Trim(entry, `"'`)
+				// Strip inline comments
+				if idx := strings.Index(entry, "#"); idx > 0 {
+					entry = strings.TrimSpace(entry[:idx])
+				}
+				result.Sections = append(result.Sections, entry)
+			}
+
+		case "variants":
+			// Variant name (indent exactly 2, ends with ":", no spaces in name)
+			if indent == 2 && strings.HasSuffix(trimmed, ":") && !strings.Contains(trimmed, " ") {
+				// Save previous variant
+				if currentVariant != "" {
+					result.Variants[currentVariant] = currentVariantConfig
+				}
+				currentVariant = strings.TrimSuffix(trimmed, ":")
+				currentVariantConfig = VariantConfig{
+					Overrides: make(map[string]string),
+				}
+				currentSubBlock = ""
+				continue
+			}
+
+			if currentVariant == "" {
+				continue
+			}
+
+			// Variant properties
+			if strings.HasPrefix(trimmed, "frontmatter:") {
+				currentVariantConfig.Frontmatter = strings.TrimSpace(strings.TrimPrefix(trimmed, "frontmatter:"))
+				currentSubBlock = ""
+			} else if strings.HasPrefix(trimmed, "variables:") {
+				currentVariantConfig.Variables = strings.TrimSpace(strings.TrimPrefix(trimmed, "variables:"))
+				currentSubBlock = ""
+			} else if strings.HasPrefix(trimmed, "overrides:") {
+				currentSubBlock = "overrides"
+			} else if strings.HasPrefix(trimmed, "inserts_at_VARIANT_INSERT:") {
+				currentSubBlock = "inserts_at_VARIANT_INSERT"
+			} else if strings.HasPrefix(trimmed, "- ") {
+				entry := strings.TrimPrefix(trimmed, "- ")
+				entry = strings.Trim(entry, `"'`)
+				if currentSubBlock == "inserts_at_VARIANT_INSERT" {
+					currentVariantConfig.Inserts = append(currentVariantConfig.Inserts, entry)
+				}
+			} else if strings.Contains(trimmed, ":") && currentSubBlock == "overrides" {
+				key, value, _ := strings.Cut(trimmed, ":")
+				key = strings.TrimSpace(key)
+				value = strings.TrimSpace(value)
+				currentVariantConfig.Overrides[key] = value
+			}
 		}
 	}
 
-	return sections
-}
-
-// parseVariablesYAML parses a _variables.yaml file and returns a map of
-// variant name to variable key-value pairs.
-// Expected format:
-//
-//	claude-code:
-//	  worker: "teammate"
-//	  workers: "teammates"
-//	cursor:
-//	  worker: "agent"
-//	  workers: "agents"
-func parseVariablesYAML(data string) map[string]map[string]string {
-	result := make(map[string]map[string]string)
-	var currentVariant string
-
-	for _, line := range strings.Split(data, "\n") {
-		if strings.TrimSpace(line) == "" || strings.HasPrefix(strings.TrimSpace(line), "#") {
-			continue
-		}
-
-		// Top-level key (variant name) — no leading whitespace, ends with ":"
-		if !strings.HasPrefix(line, " ") && !strings.HasPrefix(line, "\t") && strings.HasSuffix(strings.TrimSpace(line), ":") {
-			currentVariant = strings.TrimSuffix(strings.TrimSpace(line), ":")
-			result[currentVariant] = make(map[string]string)
-			continue
-		}
-
-		// Indented key-value pair under a variant
-		if currentVariant != "" {
-			trimmed := strings.TrimSpace(line)
-			key, value, found := strings.Cut(trimmed, ":")
-			if !found {
-				continue
-			}
-			key = strings.TrimSpace(key)
-			value = strings.TrimSpace(value)
-			// Strip surrounding quotes
-			value = strings.Trim(value, `"'`)
-			result[currentVariant][key] = value
-		}
+	// Save last variant
+	if currentVariant != "" {
+		result.Variants[currentVariant] = currentVariantConfig
 	}
 
 	return result
 }
 
+// parseVariablesYAML parses a flat key: value YAML file into a string map.
+func parseVariablesYAML(data string) map[string]string {
+	result := make(map[string]string)
+	for _, line := range strings.Split(data, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" || strings.HasPrefix(trimmed, "#") {
+			continue
+		}
+		key, value, found := strings.Cut(trimmed, ":")
+		if !found {
+			continue
+		}
+		key = strings.TrimSpace(key)
+		value = strings.TrimSpace(value)
+		value = strings.Trim(value, `"'`)
+		result[key] = value
+	}
+	return result
+}
+
 // ─── Composition ────────────────────────────────────────────────────────────
 
-// ReadComposableDir reads _order.yaml and _variables.yaml from a directory.
-// Returns nil if the directory does not have an _order.yaml (not composable).
-func ReadComposableDir(dir string) (*ComposableDir, error) {
-	orderPath := filepath.Join(dir, "_order.yaml")
-	orderData, err := os.ReadFile(orderPath)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("read _order.yaml: %w", err)
-	}
-
-	order := parseOrderYAML(string(orderData))
-
-	// Variables are optional
-	variables := make(map[string]map[string]string)
-	variablesPath := filepath.Join(dir, "_variables.yaml")
-	variablesData, err := os.ReadFile(variablesPath)
-	if err == nil {
-		variables = parseVariablesYAML(string(variablesData))
-	}
-
-	return &ComposableDir{
-		Dir:       dir,
-		Order:     order,
-		Variables: variables,
-	}, nil
-}
-
-// ComposeFromDir composes content from a composable directory for the given variant.
-// The variant determines which variant-specific files to load and which variables
-// to substitute. Paths in _order.yaml containing {tool} are resolved to the
-// variant's subdirectory.
-func ComposeFromDir(dir, variant string, extraVars map[string]string) (string, error) {
-	cd, err := ReadComposableDir(dir)
-	if err != nil {
-		return "", err
-	}
-	if cd == nil {
-		return "", fmt.Errorf("directory %s is not composable (no _order.yaml)", dir)
-	}
-
-	// Build variable map: start with variant variables, overlay extraVars
-	vars := make(map[string]string)
-	if variantVars, ok := cd.Variables[variant]; ok {
-		for k, v := range variantVars {
-			vars[k] = v
-		}
-	}
-	for k, v := range extraVars {
-		vars[k] = v
-	}
-
-	// Compose sections in order
-	var sections []string
-	for _, entry := range cd.Order {
-		// Resolve {tool} placeholder to variant name
-		resolved := strings.ReplaceAll(entry, "{tool}", variant)
-
-		sectionPath := filepath.Join(dir, resolved)
-		content, err := os.ReadFile(sectionPath)
-		if err != nil {
-			if os.IsNotExist(err) {
-				// Variant-specific files are optional; skip if missing
-				continue
-			}
-			return "", fmt.Errorf("read section %s: %w", resolved, err)
-		}
-
-		section := string(content)
-		// Apply variable substitution
-		section = substituteVariables(section, vars)
-		sections = append(sections, strings.TrimRight(section, "\n"))
-	}
-
-	return strings.Join(sections, "\n\n") + "\n", nil
-}
-
 // substituteVariables replaces {key} placeholders in content with variable values.
-// Only replaces keys that exist in the vars map.
 func substituteVariables(content string, vars map[string]string) string {
 	for key, value := range vars {
 		content = strings.ReplaceAll(content, "{"+key+"}", value)
@@ -188,15 +164,136 @@ func substituteVariables(content string, vars map[string]string) string {
 	return content
 }
 
+// readSection reads a section file, checking variant override first, then shared.
+// For filesystem: looks in {dir}/{variant}/{name}.md then {dir}/sections/{name}.md
+func readSection(dir, variant, name string) (string, error) {
+	// Check variant override first
+	overridePath := filepath.Join(dir, variant, name+".md")
+	if data, err := os.ReadFile(overridePath); err == nil {
+		return string(data), nil
+	}
+
+	// Fall back to shared section
+	sharedPath := filepath.Join(dir, "sections", name+".md")
+	data, err := os.ReadFile(sharedPath)
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
+}
+
+// readSectionFromSource reads a section file from a TemplateSource.
+func readSectionFromSource(src *TemplateSource, relDir, variant, name string) (string, error) {
+	// Check variant override first
+	data, err := src.ReadFile(relDir + "/" + variant + "/" + name + ".md")
+	if err == nil {
+		return string(data), nil
+	}
+
+	// Fall back to shared section
+	data, err = src.ReadFile(relDir + "/sections/" + name + ".md")
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
+}
+
+// composeWithOrder assembles sections based on the parsed order and variant config.
+// readFn is called for each section name and returns its content.
+func composeWithOrder(order *OrderYAML, variant string, vars map[string]string, readFn func(name string) (string, error)) (string, error) {
+	vc := order.Variants[variant]
+
+	var sections []string
+	for _, entry := range order.Sections {
+		if entry == "VARIANT_INSERT" {
+			// Expand variant-specific inserts
+			for _, insert := range vc.Inserts {
+				content, err := readFn(insert)
+				if err != nil {
+					continue // variant inserts are optional
+				}
+				content = substituteVariables(content, vars)
+				sections = append(sections, strings.TrimRight(content, "\n"))
+			}
+			continue
+		}
+
+		// Check if this section has a variant override
+		if _, hasOverride := vc.Overrides[entry]; hasOverride {
+			// readFn already checks variant dir first, so this works naturally
+		}
+
+		content, err := readFn(entry)
+		if err != nil {
+			continue // optional sections
+		}
+		content = substituteVariables(content, vars)
+		sections = append(sections, strings.TrimRight(content, "\n"))
+	}
+
+	return strings.Join(sections, "\n\n") + "\n", nil
+}
+
+// ComposeFromDir composes content from a composable directory for the given variant.
+func ComposeFromDir(dir, variant string, extraVars map[string]string) (string, error) {
+	orderData, err := os.ReadFile(filepath.Join(dir, "_order.yaml"))
+	if err != nil {
+		return "", fmt.Errorf("read _order.yaml: %w", err)
+	}
+
+	order := parseOrderYAML(string(orderData))
+
+	// Read variant variables
+	vars := make(map[string]string)
+	vc := order.Variants[variant]
+	if vc.Variables != "" {
+		varData, err := os.ReadFile(filepath.Join(dir, variant, vc.Variables))
+		if err == nil {
+			vars = parseVariablesYAML(string(varData))
+		}
+	}
+	for k, v := range extraVars {
+		vars[k] = v
+	}
+
+	return composeWithOrder(order, variant, vars, func(name string) (string, error) {
+		return readSection(dir, variant, name)
+	})
+}
+
+// ComposeFromSource composes content from a TemplateSource for the given variant.
+func ComposeFromSource(src *TemplateSource, relDir, variant string, extraVars map[string]string) (string, error) {
+	orderData, err := src.ReadFile(relDir + "/_order.yaml")
+	if err != nil {
+		return "", fmt.Errorf("read _order.yaml: %w", err)
+	}
+
+	order := parseOrderYAML(string(orderData))
+
+	// Read variant variables
+	vars := make(map[string]string)
+	vc := order.Variants[variant]
+	if vc.Variables != "" {
+		varData, err := src.ReadFile(relDir + "/" + variant + "/" + vc.Variables)
+		if err == nil {
+			vars = parseVariablesYAML(string(varData))
+		}
+	}
+	for k, v := range extraVars {
+		vars[k] = v
+	}
+
+	return composeWithOrder(order, variant, vars, func(name string) (string, error) {
+		return readSectionFromSource(src, relDir, variant, name)
+	})
+}
+
 // ─── High-Level Compose Functions ───────────────────────────────────────────
 
 // ComposeAgent composes an agent from a composable directory.
-// Reads _order.yaml and _variables.yaml, loads sections, applies variable
-// substitution, and injects frontmatter from brain.config.json.
 func ComposeAgent(agentDir, variant string, config *BrainConfig) (*GeneratedFile, error) {
 	agentName := filepath.Base(agentDir)
 
-	// Get agent platform config for frontmatter
 	agentConfig, ok := config.Agents[agentName]
 	if !ok {
 		return nil, nil
@@ -211,7 +308,6 @@ func ComposeAgent(agentDir, variant string, config *BrainConfig) (*GeneratedFile
 		return nil, fmt.Errorf("compose agent %s: %w", agentName, err)
 	}
 
-	// Build frontmatter based on variant
 	var result string
 	switch variant {
 	case "claude-code":
@@ -227,11 +323,8 @@ func ComposeAgent(agentDir, variant string, config *BrainConfig) (*GeneratedFile
 		result = content
 	}
 
-	// Determine output path based on variant
-	relPath := "agents/" + BrainPrefix(agentName) + ".md"
-
 	return &GeneratedFile{
-		RelativePath: relPath,
+		RelativePath: "agents/" + BrainPrefix(agentName) + ".md",
 		Content:      result,
 	}, nil
 }
@@ -267,7 +360,6 @@ func buildClaudeAgentFrontmatter(agentName string, config *AgentPlatformConfig) 
 }
 
 // ComposeInstructions composes an instructions file from a composable directory.
-// For Claude Code, outputs as AGENTS.md. For Cursor, outputs as AGENTS.md.
 func ComposeInstructions(instructionsDir, variant string) (*GeneratedFile, error) {
 	content, err := ComposeFromDir(instructionsDir, variant, nil)
 	if err != nil {
@@ -281,7 +373,6 @@ func ComposeInstructions(instructionsDir, variant string) (*GeneratedFile, error
 }
 
 // ComposeCommand composes a command from a composable directory.
-// The command name is derived from the directory name.
 func ComposeCommand(commandDir, variant string) (*GeneratedFile, error) {
 	commandName := filepath.Base(commandDir)
 
@@ -290,60 +381,13 @@ func ComposeCommand(commandDir, variant string) (*GeneratedFile, error) {
 		return nil, fmt.Errorf("compose command %s: %w", commandName, err)
 	}
 
-	prefixed := BrainPrefix(commandName) + ".md"
-
 	return &GeneratedFile{
-		RelativePath: "commands/" + prefixed,
+		RelativePath: "commands/" + BrainPrefix(commandName) + ".md",
 		Content:      content,
 	}, nil
 }
 
 // ─── Source-Aware Compose Functions ──────────────────────────────────────────
-
-// ComposeFromSource composes content from a TemplateSource for the given variant.
-// relDir is relative to the templates root (e.g., "agents/orchestrator").
-func ComposeFromSource(src *TemplateSource, relDir, variant string, extraVars map[string]string) (string, error) {
-	orderData, err := src.ReadFile(relDir + "/_order.yaml")
-	if err != nil {
-		return "", fmt.Errorf("directory %s is not composable (no _order.yaml)", relDir)
-	}
-
-	order := parseOrderYAML(string(orderData))
-
-	// Parse variables (optional)
-	variables := make(map[string]map[string]string)
-	variablesData, err := src.ReadFile(relDir + "/_variables.yaml")
-	if err == nil {
-		variables = parseVariablesYAML(string(variablesData))
-	}
-
-	// Build variable map
-	vars := make(map[string]string)
-	if variantVars, ok := variables[variant]; ok {
-		for k, v := range variantVars {
-			vars[k] = v
-		}
-	}
-	for k, v := range extraVars {
-		vars[k] = v
-	}
-
-	// Compose sections in order
-	var sections []string
-	for _, entry := range order {
-		resolved := strings.ReplaceAll(entry, "{tool}", variant)
-		content, err := src.ReadFile(relDir + "/" + resolved)
-		if err != nil {
-			// Variant-specific files are optional
-			continue
-		}
-		section := string(content)
-		section = substituteVariables(section, vars)
-		sections = append(sections, strings.TrimRight(section, "\n"))
-	}
-
-	return strings.Join(sections, "\n\n") + "\n", nil
-}
 
 // ComposeAgentFromSource composes an agent using a TemplateSource.
 func ComposeAgentFromSource(src *TemplateSource, relDir, variant string, config *BrainConfig) (*GeneratedFile, error) {
@@ -378,10 +422,8 @@ func ComposeAgentFromSource(src *TemplateSource, relDir, variant string, config 
 		result = content
 	}
 
-	relPath := "agents/" + BrainPrefix(agentName) + ".md"
-
 	return &GeneratedFile{
-		RelativePath: relPath,
+		RelativePath: "agents/" + BrainPrefix(agentName) + ".md",
 		Content:      result,
 	}, nil
 }
@@ -408,18 +450,29 @@ func ComposeCommandFromSource(src *TemplateSource, relDir, variant string) (*Gen
 		return nil, fmt.Errorf("compose command %s: %w", commandName, err)
 	}
 
-	prefixed := BrainPrefix(commandName) + ".md"
-
 	return &GeneratedFile{
-		RelativePath: "commands/" + prefixed,
+		RelativePath: "commands/" + BrainPrefix(commandName) + ".md",
 		Content:      content,
 	}, nil
 }
 
 // ─── Directory Detection ────────────────────────────────────────────────────
 
-// IsComposableDir returns true if the directory contains an _order.yaml file,
-// indicating it should be composed rather than copied as-is.
+// ReadComposableDir reads and parses _order.yaml from a directory.
+// Returns nil if the directory does not have an _order.yaml (not composable).
+func ReadComposableDir(dir string) (*OrderYAML, error) {
+	orderPath := filepath.Join(dir, "_order.yaml")
+	data, err := os.ReadFile(orderPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("read _order.yaml: %w", err)
+	}
+	return parseOrderYAML(string(data)), nil
+}
+
+// IsComposableDir returns true if the directory contains an _order.yaml file.
 func IsComposableDir(dir string) bool {
 	_, err := os.Stat(filepath.Join(dir, "_order.yaml"))
 	return err == nil
