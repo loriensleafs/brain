@@ -361,8 +361,17 @@ func ReadBrainConfig(projectRoot string) (*BrainConfig, error) {
 }
 
 // ReadBrainConfigFromSource reads brain.config.json from a TemplateSource.
+// For filesystem sources, reads from the project root (brain.config.json lives
+// alongside templates/, not inside it). For embedded sources, reads from the
+// embedded FS where the Makefile copies it during the embed step.
 func ReadBrainConfigFromSource(src *TemplateSource) (*BrainConfig, error) {
-	data, err := src.ReadFile("brain.config.json")
+	var data []byte
+	var err error
+	if src.IsEmbedded() {
+		data, err = src.ReadFile("brain.config.json")
+	} else {
+		data, err = os.ReadFile(filepath.Join(src.ProjectRoot(), "brain.config.json"))
+	}
 	if err != nil {
 		return nil, fmt.Errorf("read brain.config.json: %w", err)
 	}
