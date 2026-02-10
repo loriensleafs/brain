@@ -22,6 +22,7 @@ export default defineConfig({
 
     // --- File Patterns ---
     include: [
+      "adapters/**/*.test.ts",
       "apps/**/src/**/*.test.ts",
       "packages/**/src/**/*.test.ts",
     ],
