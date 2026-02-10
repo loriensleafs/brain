@@ -16,8 +16,7 @@ builds:
       - arm64
     ldflags:
       - -s -w
-      - -X main.version={{.Version}}
-      - -X main.commit={{.Commit}}
+      - -X github.com/peterkloss/brain-tui/cmd.Version={{.Version}}
 
 archives:
   - format: binary
