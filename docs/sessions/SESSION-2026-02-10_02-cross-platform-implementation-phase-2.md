@@ -17,25 +17,29 @@ tags:
 **Status:** IN_PROGRESS
 **Branch:** main
 **Starting Commit:** 1be42d6 docs(session): remove stray agent-canonicalization session note
-**Ending Commit:** TBD
+**Ending Commit:** b3da8f1 docs: update all FEAT-001 statuses for Phase 2 completion
 **Objective:** Implement [[FEAT-001-cross-platform-portability]] Phase 2 (Add Cursor Target) following [[ADR-002-cross-platform-plugin-architecture]]. Create Cursor adapter, generate .cursor/ output, extend brain install for Cursor, implement brain cursor launcher.
 
 ---
 
 ## Acceptance Criteria
 
-- [ ] [requirement] Cursor TS adapter created (adapters/cursor.ts) #adapter
-- [ ] [requirement] .cursor/ output generated (agents, skills, commands, rules, hooks, MCP) #cursor-output
-- [ ] [requirement] brain install extended for Cursor (file sync with 🧠 prefixes) #install
-- [ ] [requirement] brain cursor launcher implemented #launcher
-- [ ] [requirement] Cursor integration tested #testing
-- [ ] [requirement] Session note kept current with files touched #session
+- [x] [requirement] Cursor TS adapter created (adapters/cursor.ts) #adapter
+- [x] [requirement] .cursor/ output generated (agents as .mdc rules, hooks merge, MCP merge) #cursor-output
+- [x] [requirement] brain install extended for Cursor (file sync with 🧠 prefixes) #install
+- [x] [requirement] brain cursor launcher implemented #launcher
+- [x] [requirement] Cursor integration tested (10 PASS, BUG-001 fixed) #testing
+- [x] [requirement] Session note kept current with files touched #session
 
 ---
 
 ## Key Decisions
 
-(Decisions made during this session will be recorded here.)
+- [decision] Cursor agents output as .mdc rules (not .md agents) since Cursor uses rules for context injection #cursor-format
+- [decision] No skills/commands/plugin manifest in Cursor output (Cursor lacks these concepts natively) #cursor-scope
+- [decision] JSON merge payloads with managedKeys arrays for Go CLI manifest tracking #json-merge
+- [decision] Hook script paths are relative (not ${CLAUDE_PLUGIN_ROOT}) since Cursor copies files #hooks
+- [decision] BrainConfig.targets type corrected from string[] to Record for brain.config.json compatibility #bugfix
 
 ## Work Log
 
@@ -48,10 +52,14 @@ tags:
 
 | SHA | Description | Files |
 |---|---|---|
+| c221cf3 | docs(session): create Phase 2 implementation session note | 1 |
 | 1e4e8f8 | feat: create TS Cursor adapter | 3 |
 | 924cd7f | feat: extend brain install for Cursor | 1 |
 | cd51b4c | feat: implement brain cursor launcher | 1 |
 | e79aaef | fix: correct BrainConfig.targets type from string[] to Record | 4 |
+| 6ffc644 | docs: complete Phase 2 session - statuses and QA note | 6 |
+| 9eba569 | docs: check off Definition of Done for Phase 2 tasks | 4 |
+| b3da8f1 | docs: update all FEAT-001 statuses for Phase 2 completion | 3 |
 
 ---
 
@@ -62,6 +70,14 @@ tags:
 | Action | Note | Status |
 |---|---|---|
 | created | [[SESSION-2026-02-10_02-cross-platform-implementation-phase-2]] | this note |
+| created | [[QA-001-cursor-integration-testing-phase-2]] | QA report |
+| updated | [[FEAT-001-cross-platform-portability]] | Phase 2 statuses complete |
+| updated | [[TASK-014-create-ts-cursor-adapter]] | status: complete, DoD checked |
+| updated | [[TASK-015-extend-brain-install-for-cursor]] | status: complete, DoD checked |
+| updated | [[TASK-016-implement-brain-cursor-launcher]] | status: complete, DoD checked |
+| updated | [[TASK-017-cursor-integration-testing]] | status: complete, DoD checked |
+| updated | [[REQ-002-cross-platform-agent-adaptation]] | status: implemented |
+| updated | [[REQ-004-unified-install]] | status: implemented |
 
 ### Code Files
 
@@ -84,6 +100,10 @@ tags:
 - [fact] Cursor uses file sync (not plugin) with 🧠-prefixed file placement + JSON merge for hooks and MCP #cursor-strategy
 - [fact] Cursor symlinks broken as of Feb 2026, must use file copy #constraint
 - [insight] Claude Code adapter (adapters/claude-code.ts) serves as reference implementation for Cursor adapter #reference
+- [outcome] All 4 Phase 2 tasks completed across 4 implementation commits + 1 bugfix #completion
+- [outcome] BUG-001 (targets type mismatch) found by QA and fixed in e79aaef #bugfix
+- [outcome] 40 adapter tests passing (11 cursor + 7 claude-code + 22 shared) #testing
+- [decision] Cursor agents output as .mdc rules not .md agents #cursor-format
 
 ## Relations
 
