@@ -1,7 +1,7 @@
 ---
 title: SESSION-2026-02-10_01-cross-platform-implementation
 type: session
-permalink: sessions/session-2026-02-10-01-cross-platform-implementation
+permalink: sessions/session-2026-02-10-01-cross-platform-implementation-phase-1
 tags:
 - session
 - '2026-02-10'
