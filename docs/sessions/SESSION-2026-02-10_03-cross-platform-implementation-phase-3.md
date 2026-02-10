@@ -129,7 +129,7 @@ tags:
 
 ---
 
-## Session Start Protocol (BLOCKING)
+## Session Start Protocol
 
 | Req Level | Step | Status | Evidence |
 |---|---|---|---|
@@ -138,7 +138,7 @@ tags:
 | SHOULD | Search relevant memories | [x] | Phase 2 session and FEAT-001 context loaded |
 | SHOULD | Verify git status | [x] | main branch, 99b67a7, clean working tree |
 
-## Session End Protocol (BLOCKING)
+## Session End Protocol
 
 | Req Level | Step | Status | Evidence |
 |---|---|---|---|
