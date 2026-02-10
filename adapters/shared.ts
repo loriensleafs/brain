@@ -3,8 +3,16 @@
  * Provides frontmatter parsing, file generation, and common transform helpers.
  */
 
-import { readdir, readFile, stat } from "node:fs/promises";
+import { readFile as nodeReadFile, readdir, stat } from "node:fs/promises";
 import { join, relative } from "node:path";
+
+/** Read a text file using Bun.file() when available, node:fs otherwise. */
+export async function readTextFile(path: string): Promise<string> {
+  if (typeof globalThis.Bun !== "undefined") {
+    return Bun.file(path).text();
+  }
+  return nodeReadFile(path, "utf-8");
+}
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -260,7 +268,7 @@ export async function readCanonicalAgents(
     const fileStat = await stat(filePath);
     if (!fileStat.isFile()) continue;
 
-    const raw = await readFile(filePath, "utf-8");
+    const raw = await readTextFile(filePath);
     const { frontmatter, body } = parseFrontmatter(raw);
     const name = entry.replace(/\.md$/, "");
     agents.push({ name, body, frontmatter });
@@ -276,7 +284,7 @@ export async function readBrainConfig(
   projectRoot: string,
 ): Promise<BrainConfig> {
   const configPath = join(projectRoot, "brain.config.json");
-  const raw = await readFile(configPath, "utf-8");
+  const raw = await readTextFile(configPath);
   return JSON.parse(raw) as BrainConfig;
 }
 

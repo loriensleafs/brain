@@ -10,7 +10,7 @@
  * NEVER modifies user's existing CLAUDE.md, hooks, or MCP config.
  */
 
-import { readFile, readdir, stat } from "node:fs/promises";
+import { readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
 import type {
   AgentPlatformConfig,
@@ -22,6 +22,7 @@ import {
   brainPrefix,
   collectFiles,
   readCanonicalAgents,
+  readTextFile,
   withFrontmatter,
 } from "./shared.js";
 
@@ -121,7 +122,7 @@ export async function transformSkills(
     const files = await collectFiles(skillPath);
     for (const file of files) {
       const fullPath = join(skillPath, file);
-      const content = await readFile(fullPath, "utf-8");
+      const content = await readTextFile(fullPath);
       results.push({
         relativePath: `skills/${brainPrefix(entry)}/${file}`,
         content,
@@ -152,7 +153,7 @@ export async function transformCommands(
   for (const entry of entries) {
     if (!entry.endsWith(".md") || entry === ".gitkeep") continue;
     const fullPath = join(commandsDir, entry);
-    const content = await readFile(fullPath, "utf-8");
+    const content = await readTextFile(fullPath);
     const prefixed = entry.startsWith("\u{1F9E0}-")
       ? entry
       : `${brainPrefix(entry.replace(/\.md$/, ""))}.md`;
@@ -186,7 +187,7 @@ export async function transformProtocols(
   for (const entry of entries) {
     if (!entry.endsWith(".md") || entry === ".gitkeep") continue;
     const fullPath = join(protocolsDir, entry);
-    const content = await readFile(fullPath, "utf-8");
+    const content = await readTextFile(fullPath);
     const prefixed = `${brainPrefix(entry.replace(/\.md$/, ""))}.md`;
     results.push({
       relativePath: `rules/${prefixed}`,
@@ -251,7 +252,7 @@ export async function transformHooks(
       const fileStat = await stat(fullPath);
       if (fileStat.isDirectory()) continue;
 
-      const content = await readFile(fullPath, "utf-8");
+      const content = await readTextFile(fullPath);
       results.push({
         relativePath: `hooks/scripts/${entry}`,
         content,
@@ -277,7 +278,7 @@ export async function transformMcp(
   const mcpPath = join(projectRoot, "mcp.json");
 
   try {
-    const raw = await readFile(mcpPath, "utf-8");
+    const raw = await readTextFile(mcpPath);
     const mcpConfig = JSON.parse(raw);
 
     // Resolve relative paths in args to absolute paths from project root
