@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/loriensleafs/brain/compare/v0.1.1...v0.1.2) (2026-02-10)
+
+
+### Bug Fixes
+
+* **install:** copy agents, skills, and commands for Cursor ([#8](https://github.com/loriensleafs/brain/issues/8)) ([c909951](https://github.com/loriensleafs/brain/commit/c90995105b95ccd5187f5d8be56912ae9341c426))
+
 ## [0.1.1](https://github.com/loriensleafs/brain/compare/v0.1.0...v0.1.1) (2026-02-10)
 
 
