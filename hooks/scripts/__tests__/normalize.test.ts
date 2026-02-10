@@ -12,7 +12,6 @@ import {
   normalizeEvent,
   getBlockingSemantics,
   type NormalizedHookEvent,
-  type Platform,
   type NormalizedEventName,
 } from "../normalize.js";
 
