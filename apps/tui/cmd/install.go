@@ -1237,6 +1237,52 @@ func runInstall(_ *cobra.Command, _ []string) error {
 
 // ─── Uninstall Command ───────────────────────────────────────────────────────
 
+// uninstallDependencies removes dependencies that were installed by brain install.
+func uninstallDependencies() {
+	for _, dep := range []struct {
+		name       string
+		binary     string
+		uninstall  string
+	}{
+		{"basic-memory", "basic-memory", "uv tool uninstall basic-memory"},
+		{"uv", "uv", "rm -rf ~/.local/bin/uv ~/.local/bin/uvx"},
+		{"bun", "bun", "rm -rf ~/.bun"},
+	} {
+		if _, err := exec.LookPath(dep.binary); err != nil {
+			continue // not installed
+		}
+		fmt.Printf("  Removing %s...\n", dep.name)
+		cmd := exec.Command("sh", "-c", dep.uninstall)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		if err := cmd.Run(); err != nil {
+			fmt.Printf("  Warning: failed to remove %s: %v\n", dep.name, err)
+		} else {
+			fmt.Printf("  [COMPLETE] %s removed\n", dep.name)
+		}
+	}
+}
+
+// uninstallBrainConfig removes Brain's own config files.
+func uninstallBrainConfig() {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return
+	}
+
+	// Remove Brain config
+	brainConfigDir := filepath.Join(home, ".config", "brain")
+	if err := os.RemoveAll(brainConfigDir); err == nil {
+		fmt.Println("  Removed ~/.config/brain/")
+	}
+
+	// Remove Brain cache
+	brainCacheDir := filepath.Join(home, ".cache", "brain")
+	if err := os.RemoveAll(brainCacheDir); err == nil {
+		fmt.Println("  Removed ~/.cache/brain/")
+	}
+}
+
 func runUninstall(_ *cobra.Command, _ []string) error {
 	// Detect what is installed via manifests
 	var installed []string
@@ -1251,9 +1297,35 @@ func runUninstall(_ *cobra.Command, _ []string) error {
 		return nil
 	}
 
+	// First choice: selective or full uninstall
+	var mode string
+	modeForm := huh.NewForm(
+		huh.NewGroup(
+			huh.NewSelect[string]().
+				Title("How would you like to uninstall Brain?").
+				Options(
+					huh.NewOption("Remove from specific tools", "selective"),
+					huh.NewOption("Full uninstall (all tools + dependencies)", "full"),
+				).
+				Value(&mode),
+		),
+	)
+
+	if err := modeForm.Run(); err != nil {
+		return err
+	}
+
+	if mode == "full" {
+		return runFullUninstall(installed)
+	}
+
+	return runSelectiveUninstall(installed)
+}
+
+func runSelectiveUninstall(installed []string) error {
 	var options []huh.Option[string]
 	for _, t := range installed {
-		options = append(options, huh.NewOption(t, t))
+		options = append(options, huh.NewOption(toolDisplayName(t), t))
 	}
 
 	var selected []string
@@ -1280,6 +1352,8 @@ func runUninstall(_ *cobra.Command, _ []string) error {
 		huh.NewGroup(
 			huh.NewConfirm().
 				Title(fmt.Sprintf("Uninstall Brain from: %s?", strings.Join(selected, ", "))).
+				Affirmative("Yes").
+				Negative("No").
 				Value(&confirm),
 		),
 	)
@@ -1293,22 +1367,82 @@ func runUninstall(_ *cobra.Command, _ []string) error {
 	}
 
 	for _, tool := range selected {
-		fmt.Printf("Uninstalling from %s...\n", tool)
-		switch tool {
-		case "claude-code":
-			if err := uninstallClaudeCode(); err != nil {
-				fmt.Printf("  [FAIL] %v\n", err)
-			}
-		case "cursor":
-			if err := uninstallCursor(); err != nil {
-				fmt.Printf("  [FAIL] %v\n", err)
-			}
-		default:
-			fmt.Printf("  [FAIL] %s not yet supported\n", tool)
-		}
+		fmt.Printf("Uninstalling from %s...\n", toolDisplayName(tool))
+		uninstallTool(tool)
 		fmt.Println()
 	}
 
 	fmt.Println("Done. Restart your tools to take effect.")
 	return nil
+}
+
+func runFullUninstall(installed []string) error {
+	fmt.Println("\nThis will remove Brain from all tools and uninstall dependencies (bun, uv, basic-memory).")
+	fmt.Println()
+	fmt.Println("Tools to remove from:")
+	for _, t := range installed {
+		fmt.Printf("  - %s\n", toolDisplayName(t))
+	}
+	fmt.Println()
+	fmt.Println("Dependencies to remove:")
+	for _, dep := range []string{"basic-memory", "uv", "bun"} {
+		if _, err := exec.LookPath(dep); err == nil {
+			fmt.Printf("  - %s\n", dep)
+		}
+	}
+	fmt.Println()
+
+	var confirm bool
+	confirmForm := huh.NewForm(
+		huh.NewGroup(
+			huh.NewConfirm().
+				Title("Proceed with full uninstall?").
+				Affirmative("Yes, remove everything").
+				Negative("No").
+				Value(&confirm),
+		),
+	)
+
+	if err := confirmForm.Run(); err != nil {
+		return err
+	}
+	if !confirm {
+		fmt.Println("Cancelled.")
+		return nil
+	}
+
+	// Uninstall from all tools
+	for _, tool := range installed {
+		fmt.Printf("Uninstalling from %s...\n", toolDisplayName(tool))
+		uninstallTool(tool)
+		fmt.Println()
+	}
+
+	// Remove dependencies
+	fmt.Println("Removing dependencies...")
+	uninstallDependencies()
+	fmt.Println()
+
+	// Remove Brain config and cache
+	fmt.Println("Removing Brain config...")
+	uninstallBrainConfig()
+	fmt.Println()
+
+	fmt.Println("Done. Brain has been fully uninstalled.")
+	return nil
+}
+
+func uninstallTool(tool string) {
+	switch tool {
+	case "claude-code":
+		if err := uninstallClaudeCode(); err != nil {
+			fmt.Printf("  [FAIL] %v\n", err)
+		}
+	case "cursor":
+		if err := uninstallCursor(); err != nil {
+			fmt.Printf("  [FAIL] %v\n", err)
+		}
+	default:
+		fmt.Printf("  [FAIL] %s not yet supported\n", tool)
+	}
 }
