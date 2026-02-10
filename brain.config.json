@@ -30,18 +30,13 @@
     }
   },
   "agents": {
-    "orchestrator-claude": {
-      "source": "agents/orchestrator-claude.md",
+    "orchestrator": {
+      "source": "agents/orchestrator/",
       "claude-code": {
         "model": "claude-opus-4-6[1m]",
         "description": "Enterprise task orchestrator coordinating specialized agent teammates via Agent Teams",
         "tools": ["Teammate", "TaskCreate", "TaskUpdate", "TaskList", "TaskGet", "SendMessage", "TodoWrite"]
       },
-      "cursor": null
-    },
-    "orchestrator-cursor": {
-      "source": "agents/orchestrator-cursor.md",
-      "claude-code": null,
       "cursor": {
         "description": "Enterprise task orchestrator coordinating specialized agents via hub-and-spoke delegation"
       }
