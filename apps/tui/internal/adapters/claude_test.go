@@ -98,6 +98,7 @@ func setupTestProject(t *testing.T) string {
 		"templates/commands",
 		"templates/protocols",
 		"templates/hooks/scripts",
+		"templates/configs",
 	} {
 		if err := os.MkdirAll(filepath.Join(dir, d), 0755); err != nil {
 			t.Fatal(err)
@@ -143,7 +144,7 @@ func TestTransformClaudeCode_MinimalProject(t *testing.T) {
 			},
 		},
 	})
-	writeFile(t, filepath.Join(dir, "templates", "mcp.json"), string(mcpJSON))
+	writeFile(t, filepath.Join(dir, "templates", "configs", "mcp.json"), string(mcpJSON))
 
 	// Create hook source file
 	writeFile(t, filepath.Join(dir, "templates", "hooks", "claude-code.json"), `{

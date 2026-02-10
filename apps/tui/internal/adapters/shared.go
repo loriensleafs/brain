@@ -312,7 +312,7 @@ func ReadCanonicalAgents(agentsDir string) ([]CanonicalAgent, error) {
 
 // ReadBrainConfig reads brain.config.json from the project root.
 func ReadBrainConfig(projectRoot string) (*BrainConfig, error) {
-	data, err := os.ReadFile(filepath.Join(projectRoot, "templates", "brain.config.json"))
+	data, err := os.ReadFile(filepath.Join(projectRoot, "templates", "configs", "brain.config.json"))
 	if err != nil {
 		return nil, fmt.Errorf("read brain.config.json: %w", err)
 	}

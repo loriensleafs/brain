@@ -347,7 +347,7 @@ func buildClaudeHooksJSON(hooksDir string, brainConfig *BrainConfig) (string, er
 // TransformClaudeMCP transforms canonical mcp.json into Claude Code format.
 // Resolves relative paths (starting with ./) to absolute paths.
 func TransformClaudeMCP(projectRoot string) ([]GeneratedFile, error) {
-	mcpPath := filepath.Join(projectRoot, "templates", "mcp.json")
+	mcpPath := filepath.Join(projectRoot, "templates", "configs", "mcp.json")
 	data, err := os.ReadFile(mcpPath)
 	if err != nil {
 		if os.IsNotExist(err) {

@@ -305,8 +305,8 @@ func TestCursorTransformMCP_ValidConfig(t *testing.T) {
 			}
 		}
 	}`
-	os.MkdirAll(filepath.Join(tmpDir, "templates"), 0o755)
-	os.WriteFile(filepath.Join(tmpDir, "templates", "mcp.json"), []byte(mcpJSON), 0o644)
+	os.MkdirAll(filepath.Join(tmpDir, "templates", "configs"), 0o755)
+	os.WriteFile(filepath.Join(tmpDir, "templates", "configs", "mcp.json"), []byte(mcpJSON), 0o644)
 
 	results, err := CursorTransformMCP(tmpDir)
 	if err != nil {
@@ -346,7 +346,7 @@ func TestCursorTransformMCP_ValidConfig(t *testing.T) {
 
 func TestCursorTransformMCP_InvalidJSON(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.WriteFile(filepath.Join(tmpDir, "templates", "mcp.json"), []byte("not json"), 0o644)
+	os.WriteFile(filepath.Join(tmpDir, "templates", "configs", "mcp.json"), []byte("not json"), 0o644)
 
 	results, err := CursorTransformMCP(tmpDir)
 	if err != nil {
@@ -386,7 +386,7 @@ func TestCursorTransform_FullIntegration(t *testing.T) {
 			}
 		}
 	}`
-	os.WriteFile(filepath.Join(tmpDir, "templates", "brain.config.json"), []byte(brainConfigJSON), 0o644)
+	os.WriteFile(filepath.Join(tmpDir, "templates", "configs", "brain.config.json"), []byte(brainConfigJSON), 0o644)
 
 	config := &BrainConfig{
 		Agents: map[string]AgentToolConfig{
