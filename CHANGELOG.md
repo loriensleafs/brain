@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.6](https://github.com/loriensleafs/brain/compare/v0.1.5...v0.1.6) (2026-02-10)
+
+
+### Bug Fixes
+
+* **uninstall:** properly clean up hooks, skills, and MCP for Cursor ([#16](https://github.com/loriensleafs/brain/issues/16)) ([48b76c9](https://github.com/loriensleafs/brain/commit/48b76c906a487042e315c9d8552a15295b99b9ca))
+
 ## [0.1.5](https://github.com/loriensleafs/brain/compare/v0.1.4...v0.1.5) (2026-02-10)
 
 
