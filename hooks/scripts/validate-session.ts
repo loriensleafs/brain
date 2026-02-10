@@ -8,9 +8,9 @@ import type {
   ValidateSessionInput,
   ValidateSessionOutput,
   WorkflowState,
-} from "./types.js";
-import { validateSession } from "./validate.js";
-import { execCommand } from "./exec.js";
+} from "./types.ts";
+import { validateSession } from "./validate.ts";
+import { execCommand } from "./exec.ts";
 
 /** Load workflow state from brain session command. */
 function loadWorkflowState(): WorkflowState | null {

@@ -4,7 +4,7 @@
  * Ported from packages/validation/internal/validate_session.go.
  * Provides ValidateStopReadiness and ValidateSession.
  */
-import type { Check, ValidationResult, WorkflowState } from "./types.js";
+import type { Check, ValidationResult, WorkflowState } from "./types.ts";
 
 /**
  * Validate that it's safe to pause/stop the session.

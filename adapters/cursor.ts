@@ -17,12 +17,12 @@ import type {
   BrainConfig,
   CanonicalAgent,
   GeneratedFile,
-} from "./shared.js";
+} from "./shared.ts";
 import {
   brainPrefix,
   readCanonicalAgents,
   withFrontmatter,
-} from "./shared.js";
+} from "./shared.ts";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 

@@ -4,8 +4,8 @@
  * Ported from apps/claude-plugin/cmd/hooks/gate_check.go.
  * Implements FAIL-CLOSED behavior per ADR-016 Resolution 4.
  */
-import { execCommand } from "./exec.js";
-import type { BrainSessionState, GateCheckResult } from "./types.js";
+import { execCommand } from "./exec.ts";
+import type { BrainSessionState, GateCheckResult } from "./types.ts";
 
 /** Read-only tools that are safe when session state is unavailable. */
 const READ_ONLY_TOOLS: Record<string, boolean> = {

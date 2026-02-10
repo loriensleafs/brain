@@ -4,8 +4,8 @@
  * Ported from apps/claude-plugin/cmd/hooks/detect_scenario.go.
  * Reads a prompt from stdin and returns scenario detection results.
  */
-import type { DetectScenarioInput, DetectScenarioOutput } from "./types.js";
-import { detectScenario } from "./detect-scenario.js";
+import type { DetectScenarioInput, DetectScenarioOutput } from "./types.ts";
+import { detectScenario } from "./detect-scenario.ts";
 
 export async function runDetectScenario(): Promise<void> {
   const chunks: Buffer[] = [];

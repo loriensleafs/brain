@@ -6,7 +6,7 @@
  * Uses Bun.file() and Bun.Glob for all file operations.
  */
 import { join, dirname } from "path";
-import type { LoadSkillsInput, LoadSkillsOutput, SkillInfo } from "./types.js";
+import type { LoadSkillsInput, LoadSkillsOutput, SkillInfo } from "./types.ts";
 
 /** Map of scenarios to relevant skill names. */
 const scenarioSkills: Record<string, string[]> = {

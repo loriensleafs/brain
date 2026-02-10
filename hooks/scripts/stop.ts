@@ -8,11 +8,11 @@
  * Cursor (stop, info-only) via normalization. On Cursor, validation
  * runs but exit code is always 0 (cannot block).
  */
-import type { StopOutput, WorkflowState } from "./types.js";
-import type { NormalizedHookEvent } from "./normalize.js";
-import { normalizeEvent, getBlockingSemantics } from "./normalize.js";
-import { validateStopReadiness } from "./validate.js";
-import { execCommand } from "./exec.js";
+import type { StopOutput, WorkflowState } from "./types.ts";
+import type { NormalizedHookEvent } from "./normalize.ts";
+import { normalizeEvent, getBlockingSemantics } from "./normalize.ts";
+import { validateStopReadiness } from "./validate.ts";
+import { execCommand } from "./exec.ts";
 
 /** Load workflow state from brain session command. */
 function loadWorkflowState(): WorkflowState | null {
