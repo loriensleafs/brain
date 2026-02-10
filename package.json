@@ -14,7 +14,7 @@
     "prepare": "lefthook install",
 
     "build": "turbo run build",
-    "build:tui": "cd apps/tui && go build -o brain ./main.go",
+    "build:cli": "cd apps/tui && go build -ldflags='-s -w' -o brain . && mkdir -p ~/.local/bin && cp brain ~/.local/bin/brain && echo 'Installed brain to ~/.local/bin/brain'",
     "clean": "turbo run clean",
     "dev": "turbo run dev",
     "start": "turbo run start",
