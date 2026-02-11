@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.13](https://github.com/loriensleafs/brain/compare/v0.1.12...v0.1.13) (2026-02-11)
+
+
+### Features
+
+* add worktree-aware project resolution (FEAT-003) ([9e26f39](https://github.com/loriensleafs/brain/commit/9e26f3933966e19fac3a57ae2089245d8c439514))
+* worktree-aware project resolution (FEAT-003) ([73b27bb](https://github.com/loriensleafs/brain/commit/73b27bbd6064af9cebecadb2d43cfb58afaf324c))
+
+
+### Bug Fixes
+
+* resolve CI test failures in worktree tests ([92f743c](https://github.com/loriensleafs/brain/commit/92f743c6b111e5529a323d6485647520b755f994))
+
 ## [0.1.12](https://github.com/loriensleafs/brain/compare/v0.1.11...v0.1.12) (2026-02-10)
 
 
