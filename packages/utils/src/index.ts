@@ -19,10 +19,18 @@ export {
 export {
   type BrainConfig,
   type BrainProjectConfig,
+  type CwdMatchResult,
   getBrainConfigPath,
   getProjectCodePaths,
   loadBrainConfig,
   type ResolveOptions,
   resolveProject,
   resolveProjectFromCwd,
+  resolveProjectWithContext,
 } from "./project-resolver";
+
+// Worktree detection utilities
+export {
+  detectWorktreeMainPath,
+  type WorktreeDetectionResult,
+} from "./worktree-detector";

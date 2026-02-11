@@ -78,6 +78,11 @@
         "memories_mode": {
           "$ref": "#/$defs/MemoriesMode",
           "description": "How to resolve the memories path. Defaults to global memories_mode if not set."
+        },
+        "disableWorktreeDetection": {
+          "type": "boolean",
+          "default": false,
+          "description": "When true, disables git worktree detection for this project."
         }
       },
       "required": ["code_path"],

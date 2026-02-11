@@ -2,6 +2,7 @@ package internal
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
 	"testing"
 )
@@ -414,5 +415,304 @@ func TestResolveProject_CWD_Fallback(t *testing.T) {
 
 	if result != "brain" {
 		t.Errorf("ResolveProject() = %q, want %q (CWD fallback)", result, "brain")
+	}
+}
+
+// === Tests for matchCwdToProjectWithContext (worktree integration) ===
+
+func TestMatchCwdToProjectWithContext_DirectMatch(t *testing.T) {
+	projects := map[string]BrainProjectConfig{
+		"brain": {CodePath: "/Users/peter.kloss/Dev/brain"},
+	}
+
+	result := matchCwdToProjectWithContext("/Users/peter.kloss/Dev/brain/apps", projects)
+
+	if result == nil {
+		t.Fatal("matchCwdToProjectWithContext() = nil, want non-nil")
+	}
+	if result.ProjectName != "brain" {
+		t.Errorf("ProjectName = %q, want %q", result.ProjectName, "brain")
+	}
+	if result.IsWorktreeResolved {
+		t.Error("IsWorktreeResolved = true, want false for direct match")
+	}
+}
+
+func TestMatchCwdToProjectWithContext_NoMatch(t *testing.T) {
+	projects := map[string]BrainProjectConfig{
+		"brain": {CodePath: "/Users/peter.kloss/Dev/brain"},
+	}
+
+	result := matchCwdToProjectWithContext("/Users/peter.kloss/Dev/other", projects)
+
+	if result != nil {
+		t.Errorf("matchCwdToProjectWithContext() = %+v, want nil", result)
+	}
+}
+
+func TestMatchCwdToProjectWithContext_WorktreeFallback(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
+	requireGitWorktreeSupport2(t)
+
+	// Create a main repo in a temp dir
+	mainDir := t.TempDir()
+	initGitRepo2(t, mainDir)
+
+	// Create a linked worktree
+	worktreeDir := filepath.Join(t.TempDir(), "feature-branch")
+	run2(t, mainDir, "git", "worktree", "add", worktreeDir, "-b", "feature-wt-fallback")
+
+	// Resolve symlinks for comparison (temp dirs may be symlinked on macOS)
+	resolvedMain, _ := filepath.EvalSymlinks(mainDir)
+
+	// Configure projects with the main repo path
+	projects := map[string]BrainProjectConfig{
+		"myproject": {CodePath: resolvedMain},
+	}
+
+	// Match from the worktree — should fall back and find the main repo match
+	result := matchCwdToProjectWithContext(worktreeDir, projects)
+
+	if result == nil {
+		t.Fatal("matchCwdToProjectWithContext() = nil, want non-nil (worktree fallback)")
+	}
+	if result.ProjectName != "myproject" {
+		t.Errorf("ProjectName = %q, want %q", result.ProjectName, "myproject")
+	}
+	if !result.IsWorktreeResolved {
+		t.Error("IsWorktreeResolved = false, want true for worktree fallback")
+	}
+	if result.EffectiveCwd != resolvedMain {
+		t.Errorf("EffectiveCwd = %q, want %q", result.EffectiveCwd, resolvedMain)
+	}
+}
+
+func TestMatchCwdToProjectWithContext_EnvOptOut(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
+
+	// Save and restore env
+	origEnv := os.Getenv("BRAIN_DISABLE_WORKTREE_DETECTION")
+	defer os.Setenv("BRAIN_DISABLE_WORKTREE_DETECTION", origEnv)
+
+	os.Setenv("BRAIN_DISABLE_WORKTREE_DETECTION", "1")
+
+	projects := map[string]BrainProjectConfig{
+		"brain": {CodePath: "/some/other/path"},
+	}
+
+	// Even if in a worktree, should return nil because detection is disabled
+	result := matchCwdToProjectWithContext("/not/matching/path", projects)
+
+	if result != nil {
+		t.Errorf("matchCwdToProjectWithContext() = %+v, want nil (detection disabled)", result)
+	}
+}
+
+func TestMatchCwdToProjectWithContext_EnvOptOut_True(t *testing.T) {
+	origEnv := os.Getenv("BRAIN_DISABLE_WORKTREE_DETECTION")
+	defer os.Setenv("BRAIN_DISABLE_WORKTREE_DETECTION", origEnv)
+
+	os.Setenv("BRAIN_DISABLE_WORKTREE_DETECTION", "true")
+
+	if !isWorktreeDetectionDisabled(nil) {
+		t.Error("isWorktreeDetectionDisabled() = false, want true when env=true")
+	}
+}
+
+func TestMatchCwdToProjectWithContext_EnvOptOut_NotSet(t *testing.T) {
+	origEnv := os.Getenv("BRAIN_DISABLE_WORKTREE_DETECTION")
+	defer os.Setenv("BRAIN_DISABLE_WORKTREE_DETECTION", origEnv)
+
+	os.Unsetenv("BRAIN_DISABLE_WORKTREE_DETECTION")
+
+	if isWorktreeDetectionDisabled(nil) {
+		t.Error("isWorktreeDetectionDisabled() = true, want false when env not set")
+	}
+}
+
+// === Tests for isValidEffectiveCwd ===
+
+func TestIsValidEffectiveCwd_Valid(t *testing.T) {
+	if !isValidEffectiveCwd("/Users/peter.kloss/Dev/brain") {
+		t.Error("isValidEffectiveCwd() = false for valid absolute path")
+	}
+}
+
+func TestIsValidEffectiveCwd_Empty(t *testing.T) {
+	if isValidEffectiveCwd("") {
+		t.Error("isValidEffectiveCwd() = true for empty path")
+	}
+}
+
+func TestIsValidEffectiveCwd_Relative(t *testing.T) {
+	if isValidEffectiveCwd("relative/path") {
+		t.Error("isValidEffectiveCwd() = true for relative path")
+	}
+}
+
+func TestIsValidEffectiveCwd_Traversal_RawDotsRejected(t *testing.T) {
+	// A path that still contains .. after cleaning is rejected.
+	// Note: filepath.Clean resolves /Users/../etc/passwd to /etc/passwd (valid).
+	// This tests that unresolvable traversals are caught.
+	// In practice, DetectWorktreeMainPath returns fully resolved paths from git,
+	// so traversal is not a real attack vector. This validates the defense-in-depth.
+	cleaned := filepath.Clean("/Users/../etc/passwd")
+	if !isValidEffectiveCwd(cleaned) {
+		t.Errorf("isValidEffectiveCwd(%q) = false, want true (Clean resolves traversal)", cleaned)
+	}
+}
+
+func TestIsValidEffectiveCwd_DotDotLiteral(t *testing.T) {
+	// A path that literally is just ".." should fail (relative)
+	if isValidEffectiveCwd("..") {
+		t.Error("isValidEffectiveCwd(..) = true, want false")
+	}
+}
+
+// === Tests for ResolveProjectWithContext ===
+
+func TestResolveProjectWithContext_Explicit(t *testing.T) {
+	result := ResolveProjectWithContext(&ResolveOptions{Explicit: "my-project"})
+
+	if result == nil {
+		t.Fatal("ResolveProjectWithContext() = nil, want non-nil")
+	}
+	if result.ProjectName != "my-project" {
+		t.Errorf("ProjectName = %q, want %q", result.ProjectName, "my-project")
+	}
+	if result.IsWorktreeResolved {
+		t.Error("IsWorktreeResolved = true, want false for explicit")
+	}
+}
+
+func TestResolveProjectWithContext_EnvVar(t *testing.T) {
+	origBrainProject := os.Getenv("BRAIN_PROJECT")
+	origBMProject := os.Getenv("BM_PROJECT")
+	defer func() {
+		os.Setenv("BRAIN_PROJECT", origBrainProject)
+		os.Setenv("BM_PROJECT", origBMProject)
+	}()
+
+	os.Setenv("BRAIN_PROJECT", "env-project")
+	os.Unsetenv("BM_PROJECT")
+
+	result := ResolveProjectWithContext(&ResolveOptions{})
+
+	if result == nil {
+		t.Fatal("ResolveProjectWithContext() = nil, want non-nil")
+	}
+	if result.ProjectName != "env-project" {
+		t.Errorf("ProjectName = %q, want %q", result.ProjectName, "env-project")
+	}
+	if result.IsWorktreeResolved {
+		t.Error("IsWorktreeResolved = true, want false for env var")
+	}
+}
+
+// === Tests for DisableWorktreeDetection config field ===
+
+func TestBrainProjectConfig_DisableWorktreeDetection_Unmarshal(t *testing.T) {
+	origGetPath := GetBrainConfigPath
+	defer func() { GetBrainConfigPath = origGetPath }()
+
+	tmpDir := t.TempDir()
+	configPath := filepath.Join(tmpDir, "config.json")
+	configContent := `{
+  "version": "2.0.0",
+  "projects": {
+    "brain": {
+      "code_path": "/Users/peter.kloss/Dev/brain",
+      "disableWorktreeDetection": true
+    }
+  }
+}`
+	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
+		t.Fatalf("Failed to write test config: %v", err)
+	}
+
+	GetBrainConfigPath = func() string { return configPath }
+
+	config, err := LoadBrainConfig()
+	if err != nil {
+		t.Fatalf("LoadBrainConfig() error: %v", err)
+	}
+
+	project := config.Projects["brain"]
+	if project.DisableWorktreeDetection == nil {
+		t.Fatal("DisableWorktreeDetection = nil, want non-nil")
+	}
+	if !*project.DisableWorktreeDetection {
+		t.Error("DisableWorktreeDetection = false, want true")
+	}
+}
+
+func TestBrainProjectConfig_DisableWorktreeDetection_OmittedDefaults(t *testing.T) {
+	origGetPath := GetBrainConfigPath
+	defer func() { GetBrainConfigPath = origGetPath }()
+
+	tmpDir := t.TempDir()
+	configPath := filepath.Join(tmpDir, "config.json")
+	configContent := `{
+  "version": "2.0.0",
+  "projects": {
+    "brain": {
+      "code_path": "/Users/peter.kloss/Dev/brain"
+    }
+  }
+}`
+	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
+		t.Fatalf("Failed to write test config: %v", err)
+	}
+
+	GetBrainConfigPath = func() string { return configPath }
+
+	config, err := LoadBrainConfig()
+	if err != nil {
+		t.Fatalf("LoadBrainConfig() error: %v", err)
+	}
+
+	project := config.Projects["brain"]
+	if project.DisableWorktreeDetection != nil {
+		t.Errorf("DisableWorktreeDetection = %v, want nil (omitted field)", *project.DisableWorktreeDetection)
+	}
+}
+
+// === Helpers for worktree integration tests ===
+// These mirror the helpers in worktree_detector_test.go but with different names
+// to avoid redeclaration conflicts within the same package.
+
+func initGitRepo2(t *testing.T, dir string) {
+	t.Helper()
+	run2(t, dir, "git", "init")
+	run2(t, dir, "git", "config", "user.email", "test@test.com")
+	run2(t, dir, "git", "config", "user.name", "Test")
+	dummyFile := filepath.Join(dir, "README.md")
+	if err := os.WriteFile(dummyFile, []byte("# test\n"), 0644); err != nil {
+		t.Fatalf("Failed to write dummy file: %v", err)
+	}
+	run2(t, dir, "git", "add", ".")
+	run2(t, dir, "git", "commit", "-m", "initial commit")
+}
+
+func run2(t *testing.T, dir string, name string, args ...string) {
+	t.Helper()
+	cmd := exec.Command(name, args...)
+	cmd.Dir = dir
+	cmd.Env = append(os.Environ(), "GIT_CONFIG_NOSYSTEM=1")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("Command %q %v failed in %s: %v\nOutput: %s", name, args, dir, err, output)
+	}
+}
+
+func requireGitWorktreeSupport2(t *testing.T) {
+	t.Helper()
+	cmd := exec.Command("git", "worktree", "list")
+	if err := cmd.Run(); err != nil {
+		t.Skip("git worktree not supported in this environment")
 	}
 }

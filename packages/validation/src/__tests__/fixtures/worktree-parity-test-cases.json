@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Test fixtures for worktree detection cross-language parity. TypeScript (packages/utils), Go (packages/utils/internal), and Bun (templates/hooks/scripts) implementations must produce identical results for all test cases.",
+  "worktree-detection": {
+    "scenarios": [
+      {
+        "name": "linked_worktree_detected",
+        "description": "CWD is in a linked git worktree; detection should return the main worktree path",
+        "setup": {
+          "git_init": true,
+          "create_worktree": true,
+          "cwd_target": "worktree"
+        },
+        "expected": {
+          "result": "non-null",
+          "isLinkedWorktree": true,
+          "mainWorktreePathMatchesMainDir": true
+        }
+      },
+      {
+        "name": "linked_worktree_deep_path",
+        "description": "CWD is deep inside a linked git worktree subdirectory",
+        "setup": {
+          "git_init": true,
+          "create_worktree": true,
+          "cwd_target": "worktree_deep",
+          "deep_subpath": "packages/utils/src"
+        },
+        "expected": {
+          "result": "non-null",
+          "isLinkedWorktree": true,
+          "mainWorktreePathMatchesMainDir": true
+        }
+      },
+      {
+        "name": "main_worktree_returns_null",
+        "description": "CWD is the main worktree (not linked); detection should return null",
+        "setup": {
+          "git_init": true,
+          "create_worktree": false,
+          "cwd_target": "main"
+        },
+        "expected": {
+          "result": "null"
+        }
+      },
+      {
+        "name": "non_git_directory_returns_null",
+        "description": "CWD is not inside any git repository",
+        "setup": {
+          "git_init": false,
+          "create_worktree": false,
+          "cwd_target": "empty_dir"
+        },
+        "expected": {
+          "result": "null"
+        }
+      },
+      {
+        "name": "bare_repository_returns_null",
+        "description": "CWD is inside a bare git repository",
+        "setup": {
+          "git_init": true,
+          "create_bare": true,
+          "cwd_target": "bare"
+        },
+        "expected": {
+          "result": "null"
+        }
+      },
+      {
+        "name": "git_unavailable_returns_null",
+        "description": "Git is not installed or not on PATH (simulated by non-git directory)",
+        "setup": {
+          "git_init": false,
+          "create_worktree": false,
+          "cwd_target": "empty_dir"
+        },
+        "expected": {
+          "result": "null"
+        }
+      },
+      {
+        "name": "opt_out_env_var_disables_detection",
+        "description": "BRAIN_DISABLE_WORKTREE_DETECTION=1 disables worktree detection globally",
+        "setup": {
+          "git_init": true,
+          "create_worktree": true,
+          "cwd_target": "worktree",
+          "env_override": {
+            "BRAIN_DISABLE_WORKTREE_DETECTION": "1"
+          }
+        },
+        "expected": {
+          "detection_disabled": true
+        }
+      },
+      {
+        "name": "opt_out_config_disables_detection",
+        "description": "Per-project disableWorktreeDetection=true disables detection for that project",
+        "setup": {
+          "git_init": true,
+          "create_worktree": true,
+          "cwd_target": "worktree",
+          "project_config_override": {
+            "disableWorktreeDetection": true
+          }
+        },
+        "expected": {
+          "detection_disabled": true
+        }
+      }
+    ]
+  }
+}

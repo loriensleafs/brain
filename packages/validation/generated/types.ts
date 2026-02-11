@@ -7,7 +7,7 @@
  * To regenerate: bun run generate:types
  * Source schemas: packages/validation/schemas/*.schema.json
  *
- * Generated: 2026-02-10T05:30:41.552Z
+ * Generated: 2026-02-11T07:51:48.185Z
  */
 
 // Source: schemas/config/brain-config.schema.json
@@ -63,6 +63,10 @@ export interface ProjectConfig {
    * How to resolve the memories path. Defaults to global memories_mode if not set.
    */
   memories_mode?: "DEFAULT" | "CODE" | "CUSTOM";
+  /**
+   * When true, disables git worktree detection for this project.
+   */
+  disableWorktreeDetection?: boolean;
 }
 /**
  * File synchronization settings.
