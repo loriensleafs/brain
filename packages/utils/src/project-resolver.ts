@@ -263,7 +263,6 @@ export function getProjectCodePaths(): Map<string, string> {
 const BLOCKED_SYSTEM_PATHS = [
   "/etc",
   "/usr",
-  "/var",
   "/bin",
   "/sbin",
   "/lib",
@@ -272,8 +271,6 @@ const BLOCKED_SYSTEM_PATHS = [
   "/dev",
   "/proc",
   "/sys",
-  "/run",
-  "/tmp",
   "/root",
 ];
 

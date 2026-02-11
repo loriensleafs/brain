@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, test } from "bun:test";
+import { afterEach, beforeEach, describe, test } from "vitest";
 import { clearWorktreeProjectCache, ensureWorktreeProject } from "../worktree-project";
 
 describe("worktree-project", () => {

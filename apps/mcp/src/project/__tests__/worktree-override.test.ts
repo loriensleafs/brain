@@ -1,4 +1,36 @@
-import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+
+vi.mock("../../config/brain-config", () => ({
+  loadBrainConfigSync: vi.fn(() => ({
+    version: "2.0.0" as const,
+    defaults: {
+      memories_location: "~/memories",
+      memories_mode: "DEFAULT" as const,
+    },
+    projects: {
+      "test-project": {
+        code_path: "/Users/dev/test-project",
+        memories_mode: "CODE" as const,
+      },
+      "default-project": {
+        code_path: "/Users/dev/default-project",
+        memories_mode: "DEFAULT" as const,
+      },
+      "custom-project": {
+        code_path: "/Users/dev/custom-project",
+        memories_mode: "CUSTOM" as const,
+        memories_path: "/custom/path",
+      },
+      "no-mode-project": {
+        code_path: "/Users/dev/no-mode",
+      },
+    },
+    sync: { enabled: true, delay_ms: 500 },
+    logging: { level: "info" as const },
+    watcher: { enabled: true, debounce_ms: 2000 },
+  })),
+}));
+
 import {
   clearAllWorktreeOverrides,
   clearWorktreeOverride,
@@ -7,40 +39,6 @@ import {
   getWorktreeOverride,
   setWorktreeOverride,
 } from "../worktree-override";
-
-// Mock loadBrainConfigSync to return controlled config
-const mockLoadBrainConfigSync = mock(() => ({
-  version: "2.0.0" as const,
-  defaults: {
-    memories_location: "~/memories",
-    memories_mode: "DEFAULT" as const,
-  },
-  projects: {
-    "test-project": {
-      code_path: "/Users/dev/test-project",
-      memories_mode: "CODE" as const,
-    },
-    "default-project": {
-      code_path: "/Users/dev/default-project",
-      memories_mode: "DEFAULT" as const,
-    },
-    "custom-project": {
-      code_path: "/Users/dev/custom-project",
-      memories_mode: "CUSTOM" as const,
-      memories_path: "/custom/path",
-    },
-    "no-mode-project": {
-      code_path: "/Users/dev/no-mode",
-    },
-  },
-  sync: { enabled: true, delay_ms: 500 },
-  logging: { level: "info" as const },
-  watcher: { enabled: true, debounce_ms: 2000 },
-}));
-
-mock.module("../../config/brain-config", () => ({
-  loadBrainConfigSync: mockLoadBrainConfigSync,
-}));
 
 describe("worktree-override", () => {
   beforeEach(() => {
@@ -107,14 +105,12 @@ describe("worktree-override", () => {
     });
 
     test("falls back to global default mode when project has no mode", () => {
-      // no-mode-project has no memories_mode set, defaults config has DEFAULT
       const result = computeWorktreeOverride(
         "no-mode-project",
         true,
         "/Users/dev/no-mode-wt",
         "/Users/dev/no-mode",
       );
-      // Global default is DEFAULT, so no override
       expect(result).toBeNull();
     });
   });
@@ -160,7 +156,6 @@ describe("worktree-override", () => {
 
     test("clearing non-existent override is a no-op", () => {
       clearWorktreeOverride("nonexistent");
-      // Should not throw
     });
 
     test("overriding same project replaces previous", () => {
