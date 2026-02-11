@@ -88,6 +88,8 @@ tags:
 | SHA | Description | Files |
 |---|---|---|
 | 9e26f39 | feat: add worktree-aware project resolution (FEAT-003) | 53 files |
+| dc913fa | docs(session): finalize SESSION-2026-02-11_01 | 1 file |
+| bdb9fca | docs: commit remaining note updates from alignment and review | 9 files |
 
 ---
 

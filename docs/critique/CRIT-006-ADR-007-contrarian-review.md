@@ -24,11 +24,13 @@ tags:
 ## P0 Issues (Blocking)
 
 ### P0-1: No Opt-Out Mechanism
+
 The ADR provides no way to disable worktree detection. If it causes unexpected behavior (resolving to the wrong project, performance issues with network-mounted repos), users have no escape hatch. Every runtime behavior change should have a corresponding configuration toggle. The ADR's own "graceful degradation" section acknowledges failure modes but offers no user-controlled mitigation.
 
 **Recommendation**: Add a `worktree_detection: boolean` config field (default: true) or a per-project override. This contradicts the "no config changes" design but is necessary for production safety.
 
 ### P0-2: Return Type Breaking Change Underestimated
+
 Changing `matchCwdToProject` from `string | null` to `CwdMatchResult` is a structural change to an internal API shared across three implementations and consumed by the translation layer. The ADR claims backward compatibility by wrapping the new type, but this adds a `resolveProjectWithContext` function that callers must opt into. Any caller that uses `matchCwdToProject` directly (tests, future code) must now understand the enriched return type. This is not "zero breaking changes" as claimed.
 
 **Recommendation**: Acknowledge this as an internal API change and document the migration path for existing callers.
@@ -36,6 +38,7 @@ Changing `matchCwdToProject` from `string | null` to `CwdMatchResult` is a struc
 ## P1 Issues (Significant)
 
 ### P1-1: Subprocess Cost on Every CWD Mismatch
+
 The design states git is "only invoked on CWD mismatch." But CWD mismatch is the COMMON case for non-worktree users who open terminals in directories not under any configured project. Every such case now spawns a git subprocess (with 3-second timeout). For users with many projects on network mounts, this adds measurable latency to every Brain operation.
 
 The "single invocation" optimization is good, but the issue is frequency, not per-call cost.
@@ -43,6 +46,7 @@ The "single invocation" optimization is good, but the issue is frequency, not pe
 **Recommendation**: Add a fast pre-check (e.g., does `.git` file or directory exist in CWD or any parent?) before spawning git. This avoids the subprocess entirely for non-git directories.
 
 ### P1-2: Simpler Alternative Not Rigorously Evaluated
+
 The ADR and ANALYSIS-021 dismiss `code_path` as an array (or `additional_paths`) without quantitative comparison. Consider:
 
 | Criterion | ADR-007 (implicit detection) | Array code_path |
@@ -60,9 +64,11 @@ The only clear win for implicit detection is "auto-discovery." The array approac
 **Recommendation**: Present both alternatives with explicit trade-off analysis. If implicit detection is chosen, document why auto-discovery outweighs the costs listed above.
 
 ### P1-3: Non-Git VCS Excluded by Design
+
 The ADR is titled "Worktree-Aware" but is actually "Git-Worktree-Aware." Mercurial shares, SVN working copies, and Jujutsu colocated repos have analogous multi-checkout patterns. The design is git-specific by construction, creating technical debt if Brain ever needs to support other VCS worktree equivalents. The array approach would handle all VCS neutrally.
 
 ### P1-4: CODE Mode Worktree-Local docs/ Creates Fragmentation
+
 The design says CODE mode will use `{worktree_root}/docs/` instead of `{code_path}/docs/`. This means each worktree gets isolated memories. But worktrees are often temporary (feature branch work). When the worktree is deleted, those memories are lost. There is no merge strategy, no warning, no backup mechanism for worktree-local docs.
 
 DEFAULT mode (shared memories) is arguably the correct behavior for worktrees. The ADR should explicitly address the lifecycle of worktree-local memories.
@@ -70,12 +76,15 @@ DEFAULT mode (shared memories) is arguably the correct behavior for worktrees. T
 ## P2 Issues (Minor)
 
 ### P2-1: Git Version Floor Not Validated
+
 The design requires git >= 2.31.0 for `--path-format=absolute` but does not specify how to communicate this requirement to users. Graceful fallback is good, but silent failure (worktrees stop resolving with no feedback) is a support burden.
 
 ### P2-2: Testing Relies on Real Git Operations
+
 The testing strategy requires creating real git repos and worktrees in CI. This adds CI complexity and fragility. Mock-based testing would be more reliable but requires the git subprocess call to be injectable, which is not shown in the design.
 
 ### P2-3: Naming Inconsistency
+
 The ADR is numbered ADR-007 but found in memory under multiple identifiers (ADR-007, ADR-021). This suggests namespace confusion during creation that should be resolved.
 
 ## Vote

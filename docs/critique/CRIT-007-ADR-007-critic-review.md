@@ -1,7 +1,7 @@
 ---
 title: CRIT-007 ADR-007 Critic Review
 type: note
-permalink: critique/crit-007-adr-007-critic-review-1
+permalink: critique/crit-007-adr-007-critic-review-1-1
 tags:
 - critique
 - adr-007

@@ -27,13 +27,13 @@ Phase 1 (Foundation) builds the detection primitive across all three language ru
 
 ### Phase 2: Integration
 
-5. Add worktree fallback to `matchCwdToProject` in all 3 implementations (TASK-005)
-6. Implement MCP server runtime override for CODE mode (TASK-006)
+1. Add worktree fallback to `matchCwdToProject` in all 3 implementations (TASK-005)
+2. Implement MCP server runtime override for CODE mode (TASK-006)
 
 ### Phase 3: Validation
 
-7. Cross-language parity tests (TASK-007)
-8. Integration tests with real git worktree fixtures (TASK-008)
+1. Cross-language parity tests (TASK-007)
+2. Integration tests with real git worktree fixtures (TASK-008)
 
 ### Resolution Chain (Enhanced)
 

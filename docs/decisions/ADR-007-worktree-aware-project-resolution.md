@@ -24,6 +24,7 @@ Enhance CWD matching (level 5 in the resolution hierarchy) with git worktree det
 The effectiveCwd from worktree detection is applied at the **MCP server layer** as a runtime override for that session's basic-memory API calls. Static basic-memory config stays unchanged (still points to main repo docs/). The translation layer is NOT modified. For CODE mode sessions in worktrees, the MCP server uses `effectiveCwd + "/docs"` when calling basic-memory APIs.
 
 A two-level opt-out mechanism provides escape hatches:
+
 - Per-project config: `disableWorktreeDetection: boolean` (default: false) in ProjectConfig schema
 - Global env var: `BRAIN_DISABLE_WORKTREE_DETECTION=1` always disables, overrides config
 - Priority: env var (if set, always wins) > per-project config > default (enabled)

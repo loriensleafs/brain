@@ -64,6 +64,7 @@ The attacker model: a local user or process that can craft filesystem state (`.g
 #### P1-2: TOCTOU Gap in Worktree Detection to Path Use
 
 **Threat**: Between the time `detectWorktreeMainPath(cwd)` runs and when `effectiveCwd` is used for memories_path derivation, the filesystem state could change. A malicious process could:
+
 1. Present a valid worktree structure when detection runs
 2. Replace the worktree root or its `docs/` directory with a symlink to a sensitive path before Brain writes memories there
 
@@ -80,6 +81,7 @@ The attacker model: a local user or process that can craft filesystem state (`.g
 **Threat**: Could a crafted CWD path inject commands into the `git -C {cwd} rev-parse ...` invocation?
 
 **Analysis**: SAFE. The design uses:
+
 - TypeScript: `execSync` with the CWD as an argument to `git -C`, not interpolated into a shell string
 - Go: `exec.Command("git", "-C", cwd, ...)` which passes arguments as an array, not shell-interpolated
 - Bun: `Bun.spawn(["git", "-C", cwd, ...])` which also uses array arguments

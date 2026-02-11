@@ -28,15 +28,19 @@ tags:
 ## Key Arguments
 
 ### Right Problem, Right Time
+
 AI-assisted development is driving worktree adoption hard. ANALYSIS-021 documents VS Code 1.107+ background agents, ccswarm, ccpm all using worktrees. Delaying means every new worktree user discovers a broken experience.
 
 ### No Conflicts with Existing ADRs
+
 The 6 existing ADRs cover feature workflow, cross-platform architecture, adapter implementation, protocol extraction, config/agents.md, and release workflow. ADR-007 operates entirely within the project resolution subsystem.
 
 ### 3-Language Parity is Architectural, Not Perfectionism
+
 Three identical implementations exist today with cross-language parity tests. Shipping TS-only would mean worktree detection works in MCP server but fails in Bun hooks and Go CLI.
 
 ### Zero-Config is the Winning Pattern
+
 ANALYSIS-021 shows tools requiring worktree configuration see lower adoption than transparent detection (VS Code, IntelliJ). Zero support burden: no new config keys to document, no migration path.
 
 ## Relations

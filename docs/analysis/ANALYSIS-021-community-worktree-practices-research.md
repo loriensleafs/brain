@@ -33,11 +33,13 @@ tags:
 ## Analysis: New GIT Mode vs Enhancing Existing Resolution
 
 ### Arguments FOR a new GIT memories_mode
+
 - Clean semantic separation of "git-aware" behavior
 - Could include git remote URL matching for distributed setups
 - Would not change behavior of existing CODE mode users
 
 ### Arguments AGAINST (recommended approach)
+
 - Community tools treat worktrees as transparent - same project, different checkout
 - Adding a mode creates configuration burden for a common scenario
 - git-common-dir matching can be added to CWD resolution (level 5) without new mode
@@ -45,7 +47,9 @@ tags:
 - The problem is CWD matching fails, not that the mode system is wrong
 
 ### Recommended Approach
+
 Enhance CWD matching (level 5 in resolution hierarchy) to detect worktrees:
+
 1. When CWD does not match any code_path, check if CWD is in a git worktree
 2. If yes, resolve git-common-dir to find the main worktree path
 3. Match that main path against configured code_paths
