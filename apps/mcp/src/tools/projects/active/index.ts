@@ -13,6 +13,7 @@ import {
   resolveProject,
   setActiveProject,
 } from "../../../project/resolve";
+import { getWorktreeOverride } from "../../../project/worktree-override";
 import type { ActiveProjectArgs } from "./schema";
 
 export {
@@ -40,12 +41,24 @@ async function handleGet(): Promise<CallToolResult> {
   const codePaths = getCodePaths();
   const hierarchy = getResolutionHierarchy();
 
-  const response = {
+  // Include worktree override info if active
+  const worktreeOverride = active ? getWorktreeOverride(active) : null;
+
+  const response: Record<string, unknown> = {
     active_project: active,
     resolved_project: resolved,
     resolution_hierarchy: hierarchy,
     code_paths: codePaths,
   };
+
+  if (worktreeOverride) {
+    response.worktree_override = {
+      active: true,
+      actual_cwd: worktreeOverride.actualCwd,
+      effective_cwd: worktreeOverride.effectiveCwd,
+      memories_path: worktreeOverride.memoriesPath,
+    };
+  }
 
   return {
     content: [

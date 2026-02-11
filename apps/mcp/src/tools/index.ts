@@ -5,6 +5,7 @@
  * Each wrapper tool lives in its own folder with schema.ts and index.ts.
  */
 
+import { resolveProjectWithContext } from "@brain/utils";
 import { type PatternType, validateNamingPattern } from "@brain/validation";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import {
@@ -15,6 +16,12 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { config } from "../config";
 import { resolveProject, setActiveProject } from "../project/resolve";
+import {
+  computeWorktreeOverride,
+  getWorktreeOverride,
+  setWorktreeOverride,
+} from "../project/worktree-override";
+import { ensureWorktreeProject } from "../project/worktree-project";
 import { getBasicMemoryClient } from "../proxy/client";
 import { triggerEmbedding } from "../services/embedding/triggerEmbedding";
 import { logger } from "../utils/internal/logger";
@@ -623,23 +630,74 @@ function folderToPatternType(folder: string | undefined): PatternType | undefine
 }
 
 /**
- * Inject resolved project into tool arguments if not already specified
+ * Inject resolved project into tool arguments if not already specified.
+ *
+ * Uses worktree-aware resolution: when a worktree is detected and the project
+ * uses CODE memories mode, the project is overridden to a worktree-specific
+ * project registered in basic-memory at runtime.
  */
 async function injectProject(args: Record<string, unknown>): Promise<Record<string, unknown>> {
   if (args.project) {
+    // Even with explicit project, check for existing worktree override
+    const override = getWorktreeOverride(args.project as string);
+    if (override) {
+      logger.debug(
+        { project: args.project, worktreeProject: override.projectName },
+        "Applying existing worktree override to explicit project",
+      );
+    }
     return args;
   }
 
-  const resolved = resolveProject(undefined);
+  // Try worktree-aware resolution first
+  const actualCwd = process.cwd();
+  const context = await resolveProjectWithContext({ cwd: actualCwd });
 
-  if (!resolved) {
-    logger.debug("No project resolved, passing through to basic-memory");
-    return args;
+  if (!context) {
+    // Fall back to standard resolution
+    const resolved = resolveProject(undefined);
+    if (!resolved) {
+      logger.debug("No project resolved, passing through to basic-memory");
+      return args;
+    }
+    setActiveProject(resolved);
+    logger.debug({ project: resolved }, "Injected and set active project");
+    return { ...args, project: resolved };
   }
+
+  const { projectName, effectiveCwd, isWorktreeResolved } = context;
 
   // Auto-promote resolved project to active for session
-  setActiveProject(resolved);
+  setActiveProject(projectName);
 
-  logger.debug({ project: resolved }, "Injected and set active project");
-  return { ...args, project: resolved };
+  // Check if worktree CODE mode override is needed
+  if (isWorktreeResolved) {
+    const override = computeWorktreeOverride(
+      projectName,
+      isWorktreeResolved,
+      actualCwd,
+      effectiveCwd,
+    );
+
+    if (override) {
+      // Register worktree project in basic-memory (idempotent)
+      setWorktreeOverride(override);
+      const client = await getBasicMemoryClient();
+      await ensureWorktreeProject(client, projectName, override.memoriesPath);
+
+      logger.debug(
+        {
+          project: projectName,
+          memoriesPath: override.memoriesPath,
+          actualCwd,
+        },
+        "Worktree CODE mode override applied",
+      );
+
+      return { ...args, project: projectName };
+    }
+  }
+
+  logger.debug({ project: projectName }, "Injected and set active project");
+  return { ...args, project: projectName };
 }

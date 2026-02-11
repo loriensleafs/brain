@@ -1,6 +1,6 @@
-import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, normalize } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Store original env
@@ -373,5 +373,263 @@ describe("project-resolver", () => {
       expect(result.size).toBe(1);
       expect(result.has("empty")).toBe(false);
     });
+  });
+});
+
+// Worktree integration tests use a separate describe block with its own mock setup
+vi.mock("../worktree-detector", () => ({
+  detectWorktreeMainPath: vi.fn(),
+}));
+
+describe("resolveProjectWithContext (worktree integration)", () => {
+  let testDir: string;
+  let testConfigPath: string;
+  let mockedDetect: ReturnType<typeof vi.fn>;
+
+  beforeEach(async () => {
+    process.env = { ...originalEnv };
+    delete process.env.BRAIN_PROJECT;
+    delete process.env.BM_PROJECT;
+    delete process.env.BRAIN_DISABLE_WORKTREE_DETECTION;
+
+    const rawDir = join(
+      tmpdir(),
+      `brain-wt-int-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    );
+    mkdirSync(join(rawDir, "brain"), { recursive: true });
+    testDir = realpathSync(rawDir);
+    testConfigPath = join(testDir, "brain", "config.json");
+    process.env.XDG_CONFIG_HOME = testDir;
+
+    const { detectWorktreeMainPath } = await import("../worktree-detector");
+    mockedDetect = vi.mocked(detectWorktreeMainPath);
+    mockedDetect.mockReset();
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
+    vi.resetModules();
+
+    if (testDir && existsSync(testDir)) {
+      try {
+        rmSync(testDir, { recursive: true, force: true });
+      } catch {
+        // Ignore cleanup errors
+      }
+    }
+  });
+
+  it("returns direct match with isWorktreeResolved=false", async () => {
+    writeFileSync(
+      testConfigPath,
+      JSON.stringify({
+        version: "2.0.0",
+        projects: {
+          brain: { code_path: "/Users/dev/brain" },
+        },
+      }),
+    );
+
+    const { resolveProjectWithContext } = await import("../project-resolver");
+    const result = await resolveProjectWithContext({ cwd: "/Users/dev/brain/apps/mcp" });
+
+    expect(result).not.toBeNull();
+    expect(result!.projectName).toBe("brain");
+    expect(result!.effectiveCwd).toBe("/Users/dev/brain/apps/mcp");
+    expect(result!.isWorktreeResolved).toBe(false);
+    // Worktree detection should NOT be called on direct match
+    expect(mockedDetect).not.toHaveBeenCalled();
+  });
+
+  it("falls back to worktree detection when direct match fails", async () => {
+    writeFileSync(
+      testConfigPath,
+      JSON.stringify({
+        version: "2.0.0",
+        projects: {
+          brain: { code_path: normalize("/Users/dev/brain") },
+        },
+      }),
+    );
+
+    mockedDetect.mockResolvedValue({
+      mainWorktreePath: "/Users/dev/brain",
+      isLinkedWorktree: true,
+    });
+
+    const { resolveProjectWithContext } = await import("../project-resolver");
+    const result = await resolveProjectWithContext({ cwd: "/Users/dev/brain-feature-1/apps/mcp" });
+
+    expect(result).not.toBeNull();
+    expect(result!.projectName).toBe("brain");
+    expect(result!.isWorktreeResolved).toBe(true);
+    expect(mockedDetect).toHaveBeenCalledWith("/Users/dev/brain-feature-1/apps/mcp");
+  });
+
+  it("returns null when worktree detection returns null", async () => {
+    writeFileSync(
+      testConfigPath,
+      JSON.stringify({
+        version: "2.0.0",
+        projects: {
+          brain: { code_path: "/Users/dev/brain" },
+        },
+      }),
+    );
+
+    mockedDetect.mockResolvedValue(null);
+
+    const { resolveProjectWithContext } = await import("../project-resolver");
+    const result = await resolveProjectWithContext({ cwd: "/Users/dev/other" });
+
+    expect(result).toBeNull();
+  });
+
+  it("skips worktree detection when BRAIN_DISABLE_WORKTREE_DETECTION=1", async () => {
+    process.env.BRAIN_DISABLE_WORKTREE_DETECTION = "1";
+
+    writeFileSync(
+      testConfigPath,
+      JSON.stringify({
+        version: "2.0.0",
+        projects: {
+          brain: { code_path: "/Users/dev/brain" },
+        },
+      }),
+    );
+
+    const { resolveProjectWithContext } = await import("../project-resolver");
+    const result = await resolveProjectWithContext({ cwd: "/Users/dev/other" });
+
+    expect(result).toBeNull();
+    expect(mockedDetect).not.toHaveBeenCalled();
+  });
+
+  it("skips project with disableWorktreeDetection=true", async () => {
+    writeFileSync(
+      testConfigPath,
+      JSON.stringify({
+        version: "2.0.0",
+        projects: {
+          brain: {
+            code_path: normalize("/Users/dev/brain"),
+            disableWorktreeDetection: true,
+          },
+        },
+      }),
+    );
+
+    mockedDetect.mockResolvedValue({
+      mainWorktreePath: "/Users/dev/brain",
+      isLinkedWorktree: true,
+    });
+
+    const { resolveProjectWithContext } = await import("../project-resolver");
+    const result = await resolveProjectWithContext({ cwd: "/Users/dev/brain-feature-1" });
+
+    // Detection runs but the matching project is opted-out
+    expect(result).toBeNull();
+  });
+
+  it("rejects effectiveCwd with path traversal", async () => {
+    writeFileSync(
+      testConfigPath,
+      JSON.stringify({
+        version: "2.0.0",
+        projects: {
+          brain: { code_path: "/Users/dev/brain" },
+        },
+      }),
+    );
+
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    mockedDetect.mockResolvedValue({
+      mainWorktreePath: "/Users/dev/../../etc/passwd",
+      isLinkedWorktree: true,
+    });
+
+    const { resolveProjectWithContext } = await import("../project-resolver");
+    const result = await resolveProjectWithContext({ cwd: "/Users/dev/other" });
+
+    expect(result).toBeNull();
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("traversal"), expect.any(String));
+    warnSpy.mockRestore();
+  });
+
+  it("rejects effectiveCwd pointing to system path", async () => {
+    writeFileSync(
+      testConfigPath,
+      JSON.stringify({
+        version: "2.0.0",
+        projects: {
+          brain: { code_path: "/etc/brain" },
+        },
+      }),
+    );
+
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    mockedDetect.mockResolvedValue({
+      mainWorktreePath: "/etc/brain",
+      isLinkedWorktree: true,
+    });
+
+    const { resolveProjectWithContext } = await import("../project-resolver");
+    const result = await resolveProjectWithContext({ cwd: "/Users/dev/other" });
+
+    expect(result).toBeNull();
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining("blocked system path"),
+      expect.any(String),
+    );
+    warnSpy.mockRestore();
+  });
+
+  it("explicit parameter takes priority over worktree", async () => {
+    const { resolveProjectWithContext } = await import("../project-resolver");
+    const result = await resolveProjectWithContext({ explicit: "my-project" });
+
+    expect(result).not.toBeNull();
+    expect(result!.projectName).toBe("my-project");
+    expect(result!.isWorktreeResolved).toBe(false);
+    expect(mockedDetect).not.toHaveBeenCalled();
+  });
+
+  it("BRAIN_PROJECT env var takes priority over worktree", async () => {
+    process.env.BRAIN_PROJECT = "env-project";
+
+    const { resolveProjectWithContext } = await import("../project-resolver");
+    const result = await resolveProjectWithContext({ cwd: "/Users/dev/other" });
+
+    expect(result).not.toBeNull();
+    expect(result!.projectName).toBe("env-project");
+    expect(result!.isWorktreeResolved).toBe(false);
+    expect(mockedDetect).not.toHaveBeenCalled();
+  });
+
+  it("returns null when effectiveCwd contains null bytes", async () => {
+    writeFileSync(
+      testConfigPath,
+      JSON.stringify({
+        version: "2.0.0",
+        projects: {
+          brain: { code_path: "/Users/dev/brain" },
+        },
+      }),
+    );
+
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    mockedDetect.mockResolvedValue({
+      mainWorktreePath: "/Users/dev/brain\0/evil",
+      isLinkedWorktree: true,
+    });
+
+    const { resolveProjectWithContext } = await import("../project-resolver");
+    const result = await resolveProjectWithContext({ cwd: "/Users/dev/other" });
+
+    expect(result).toBeNull();
+    warnSpy.mockRestore();
   });
 });

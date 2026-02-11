@@ -340,9 +340,25 @@ export interface BrainProjectConfig {
   code_path: string;
   memories_path?: string;
   memories_mode?: string;
+  disableWorktreeDetection?: boolean;
 }
 
 export interface BrainConfig {
   version: string;
   projects: Record<string, BrainProjectConfig>;
+}
+
+// === Worktree Detection Types ===
+
+/** Result from detectWorktreeMainPath. */
+export interface WorktreeDetectionResult {
+  mainWorktreePath: string;
+  isLinkedWorktree: boolean;
+}
+
+/** Extended result from matchCwdToProject with worktree context. */
+export interface CwdMatchResult {
+  projectName: string;
+  effectiveCwd: string;
+  isWorktreeResolved: boolean;
 }

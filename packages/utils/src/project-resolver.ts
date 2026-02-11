@@ -17,7 +17,9 @@
 import { execSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { join, normalize, sep } from "node:path";
+import { join, normalize, resolve, sep } from "node:path";
+
+import { detectWorktreeMainPath } from "./worktree-detector";
 
 /**
  * Brain configuration structure (subset needed for project resolution).
@@ -26,6 +28,16 @@ export interface BrainProjectConfig {
   code_path: string;
   memories_path?: string;
   memories_mode?: "DEFAULT" | "CODE" | "CUSTOM";
+  disableWorktreeDetection?: boolean;
+}
+
+/**
+ * Result of CWD-to-project matching with context about resolution method.
+ */
+export interface CwdMatchResult {
+  projectName: string;
+  effectiveCwd: string;
+  isWorktreeResolved: boolean;
 }
 
 export interface BrainConfig {
@@ -244,4 +256,237 @@ export function getProjectCodePaths(): Map<string, string> {
   }
 
   return result;
+}
+
+// === Worktree Integration ===
+
+const BLOCKED_SYSTEM_PATHS = [
+  "/etc",
+  "/usr",
+  "/var",
+  "/bin",
+  "/sbin",
+  "/lib",
+  "/lib64",
+  "/boot",
+  "/dev",
+  "/proc",
+  "/sys",
+  "/run",
+  "/tmp",
+  "/root",
+];
+
+/**
+ * Check if worktree detection is globally disabled via environment variable.
+ *
+ * @returns true if BRAIN_DISABLE_WORKTREE_DETECTION=1
+ */
+function isWorktreeDetectionGloballyDisabled(): boolean {
+  return process.env.BRAIN_DISABLE_WORKTREE_DETECTION === "1";
+}
+
+/**
+ * Validate an effectiveCwd path for security.
+ * Checks for null bytes, path traversal, and blocked system paths.
+ *
+ * @returns Normalized path if valid, null if rejected
+ */
+function validateEffectiveCwd(effectiveCwd: string): string | null {
+  if (!effectiveCwd || effectiveCwd.trim() === "") {
+    return null;
+  }
+
+  if (effectiveCwd.includes("\0")) {
+    console.warn("[worktree-resolver] effectiveCwd contains null bytes, rejecting:", effectiveCwd);
+    return null;
+  }
+
+  if (
+    effectiveCwd.includes("..") ||
+    effectiveCwd.includes("%2e%2e") ||
+    effectiveCwd.includes("%2E%2E")
+  ) {
+    console.warn(
+      "[worktree-resolver] effectiveCwd contains traversal sequences, rejecting:",
+      effectiveCwd,
+    );
+    return null;
+  }
+
+  let normalizedPath: string;
+  try {
+    normalizedPath = normalize(resolve(effectiveCwd));
+  } catch {
+    console.warn("[worktree-resolver] Failed to normalize effectiveCwd:", effectiveCwd);
+    return null;
+  }
+
+  const lowerPath = normalizedPath.toLowerCase();
+  for (const blocked of BLOCKED_SYSTEM_PATHS) {
+    if (lowerPath === blocked || lowerPath.startsWith(blocked + sep)) {
+      console.warn(
+        "[worktree-resolver] effectiveCwd resolves to blocked system path:",
+        normalizedPath,
+      );
+      return null;
+    }
+  }
+
+  return normalizedPath;
+}
+
+/**
+ * Match CWD against configured code paths with worktree fallback.
+ * Async version that supports worktree detection.
+ *
+ * Algorithm from DESIGN-002:
+ * 1. Try direct path match (existing behavior)
+ * 2. Check global opt-out (env var)
+ * 3. Run worktree detection
+ * 4. Validate effectiveCwd
+ * 5. Match effectiveCwd against code paths (skip per-project opt-out projects)
+ *
+ * @param cwd - Working directory to match
+ * @param config - Brain configuration with projects
+ * @returns Match result with context, or null if no match
+ */
+async function matchCwdToProjectWithContext(
+  cwd: string,
+  config: BrainConfig | null,
+): Promise<CwdMatchResult | null> {
+  if (!config || !config.projects) {
+    return null;
+  }
+
+  // Step 1: Direct path match (existing behavior)
+  const directMatch = matchCwdToProject(cwd, config);
+  if (directMatch) {
+    return {
+      projectName: directMatch,
+      effectiveCwd: cwd,
+      isWorktreeResolved: false,
+    };
+  }
+
+  // Step 2: Check global opt-out
+  if (isWorktreeDetectionGloballyDisabled()) {
+    return null;
+  }
+
+  // Step 3: Worktree detection
+  const worktreeResult = await detectWorktreeMainPath(cwd);
+  if (!worktreeResult) {
+    return null;
+  }
+
+  // Step 4: Validate effectiveCwd
+  const validatedPath = validateEffectiveCwd(worktreeResult.mainWorktreePath);
+  if (!validatedPath) {
+    return null;
+  }
+
+  // Step 5: Match effectiveCwd against code paths
+  let bestMatch: string | null = null;
+  let bestMatchLen = 0;
+
+  for (const [name, project] of Object.entries(config.projects)) {
+    if (!project || !project.code_path) {
+      continue;
+    }
+
+    // Per-project opt-out check
+    if (project.disableWorktreeDetection === true) {
+      continue;
+    }
+
+    const projectPath = normalize(project.code_path);
+
+    if (validatedPath === projectPath || validatedPath.startsWith(projectPath + sep)) {
+      if (projectPath.length > bestMatchLen) {
+        bestMatch = name;
+        bestMatchLen = projectPath.length;
+      }
+    }
+  }
+
+  if (!bestMatch) {
+    return null;
+  }
+
+  return {
+    projectName: bestMatch,
+    effectiveCwd: validatedPath,
+    isWorktreeResolved: true,
+  };
+}
+
+/**
+ * Resolve project with full context including worktree detection.
+ *
+ * Same 6-level hierarchy as resolveProject, but the CWD matching step (level 5)
+ * includes worktree fallback detection. Returns a CwdMatchResult with context
+ * about how the project was resolved.
+ *
+ * @param optionsOrCwd - Resolution options object, or CWD string (backward compat)
+ * @returns Match result with project name and context, or null
+ *
+ * @example
+ * ```typescript
+ * // Direct CWD match
+ * const result = await resolveProjectWithContext({ cwd: "/Users/dev/brain/apps/mcp" });
+ * // => { projectName: "brain", effectiveCwd: "/Users/dev/brain/apps/mcp", isWorktreeResolved: false }
+ *
+ * // Worktree fallback match
+ * const result = await resolveProjectWithContext({ cwd: "/Users/dev/brain-feature-1/apps/mcp" });
+ * // => { projectName: "brain", effectiveCwd: "/Users/dev/brain", isWorktreeResolved: true }
+ * ```
+ */
+export async function resolveProjectWithContext(
+  optionsOrCwd?: ResolveOptions | string,
+): Promise<CwdMatchResult | null> {
+  const options: ResolveOptions | undefined =
+    typeof optionsOrCwd === "string" ? { cwd: optionsOrCwd } : optionsOrCwd;
+
+  // 1. Explicit parameter always wins
+  if (options?.explicit) {
+    return {
+      projectName: options.explicit,
+      effectiveCwd: options.cwd || process.cwd(),
+      isWorktreeResolved: false,
+    };
+  }
+
+  // 2. Brain CLI active project
+  const cliProject = getBrainCliActiveProject();
+  if (cliProject) {
+    return {
+      projectName: cliProject,
+      effectiveCwd: options?.cwd || process.cwd(),
+      isWorktreeResolved: false,
+    };
+  }
+
+  // 3. BRAIN_PROJECT env var
+  if (process.env.BRAIN_PROJECT) {
+    return {
+      projectName: process.env.BRAIN_PROJECT,
+      effectiveCwd: options?.cwd || process.cwd(),
+      isWorktreeResolved: false,
+    };
+  }
+
+  // 4. BM_PROJECT env var
+  if (process.env.BM_PROJECT) {
+    return {
+      projectName: process.env.BM_PROJECT,
+      effectiveCwd: options?.cwd || process.cwd(),
+      isWorktreeResolved: false,
+    };
+  }
+
+  // 5. CWD matching with worktree fallback
+  const config = loadBrainConfig();
+  const cwd = options?.cwd || process.cwd();
+  return matchCwdToProjectWithContext(cwd, config);
 }
