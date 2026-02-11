@@ -1,7 +1,7 @@
 ---
 title: CRIT-003 ADR-007 Contrarian Review
 type: note
-permalink: critique/crit-006-adr-007-contrarian-review
+permalink: critique/crit-006-adr-007-contrarian-review-1
 tags:
 - critique
 - contrarian
