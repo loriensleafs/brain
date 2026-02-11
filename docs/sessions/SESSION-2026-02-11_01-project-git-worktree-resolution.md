@@ -161,4 +161,3 @@ tags:
 | MUST | Run markdownlint fix | [PASS] | npx markdownlint-cli2 |
 | MUST | Commit all changes | [PASS] | fc0133b |
 | MUST | Run session validation | [PASS] | validate-session.ts: valid=true |
-| SHOULD | Update PROJECT-PLAN.md | [PASS] | No PROJECT-PLAN.md exists in this project |
