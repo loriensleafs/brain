@@ -1,7 +1,7 @@
 ---
 title: CRIT-013 ADR-007 Architect Review
 type: note
-permalink: critique/crit-008-adr-007-architect-review-1-1-1
+permalink: critique/crit-008-adr-007-architect-review-1-1-1-1
 tags:
 - critique
 - adr-review

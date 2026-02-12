@@ -1,0 +1,41 @@
+{
+  "version": "1.0.0",
+  "targets": {
+    "claude-code": {},
+    "cursor": {
+      "prefix": true
+    }
+  },
+  "agents": {
+    "test-agent": {
+      "source": "agents/test-agent.md",
+      "claude-code": {
+        "model": "opus",
+        "description": "Test agent for golden-file validation",
+        "tools": ["Read", "Grep"]
+      },
+      "cursor": {
+        "description": "Test agent for golden-file validation"
+      }
+    }
+  },
+  "hooks": {
+    "claude-code": {
+      "source": "hooks/claude-code.json",
+      "scripts": "hooks/scripts/"
+    },
+    "cursor": {
+      "source": "hooks/cursor.json",
+      "scripts": "hooks/scripts/"
+    }
+  },
+  "skills": {
+    "test-skill": { "source": "skills/test-skill/" }
+  },
+  "commands": {
+    "test-cmd": { "source": "commands/test-cmd.md" }
+  },
+  "protocols": {
+    "TEST-PROTOCOL": { "source": "protocols/TEST-PROTOCOL.md" }
+  }
+}

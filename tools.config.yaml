@@ -1,0 +1,79 @@
+# tools.config.yaml — Declarative tool definitions for the Brain transform engine.
+# Each entry captures all per-tool differences that were previously hardcoded in
+# Go adapter files (claude.go, cursor.go). Adding a new tool here requires zero
+# Go code changes.
+
+tools:
+  claude-code:
+    display_name: "Claude Code"
+    prefix: false
+    config_dir: ~/.claude
+    scopes:
+      global: ~/.claude/
+      plugin: ~/.claude/plugins/marketplaces/brain/
+      project: .claude/
+    default_scope: plugin
+    agents:
+      frontmatter:
+        - name
+        - model
+        - description
+        - memory
+        - color
+        - argument-hint
+        - tools
+        - skills
+    rules:
+      extension: .md
+      extra_frontmatter: {}
+      routing: {}
+      instructions_path: instructions/AGENTS.md
+    hooks:
+      strategy: direct
+      target: hooks/hooks.json
+    mcp:
+      strategy: direct
+      target: .mcp.json
+    manifest:
+      type: marketplace
+    detection:
+      brain_installed:
+        type: json_key
+        file: plugins/known_marketplaces.json
+        key: brain
+    placement: marketplace
+
+  cursor:
+    display_name: "Cursor"
+    prefix: true
+    config_dir: ~/.cursor
+    scopes:
+      global: ~/.cursor/
+      project: .cursor/
+    default_scope: global
+    agents:
+      frontmatter:
+        - description
+    rules:
+      extension: .mdc
+      extra_frontmatter:
+        alwaysApply: true
+      routing:
+        AGENT-SYSTEM.md: .agents/
+        SESSION-PROTOCOL.md: .agents/
+      instructions_path: AGENTS.md
+    hooks:
+      strategy: merge
+      target: hooks.json
+    mcp:
+      strategy: merge
+      target: mcp.json
+    manifest:
+      type: file_list
+    detection:
+      brain_installed:
+        type: prefix_scan
+        dirs:
+          - agents
+          - rules
+    placement: copy_and_merge

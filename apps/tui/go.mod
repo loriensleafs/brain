@@ -3,14 +3,21 @@ module github.com/peterkloss/brain-tui
 go 1.24.11
 
 require (
+	github.com/adrg/frontmatter v0.2.0
+	github.com/adrg/xdg v0.5.3
 	github.com/charmbracelet/bubbles v0.21.1-0.20250623103423-23b8fd6302d7
 	github.com/charmbracelet/bubbletea v1.3.6
 	github.com/charmbracelet/glamour v0.8.0
 	github.com/charmbracelet/huh v0.8.0
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/creativeprojects/go-selfupdate v1.5.2
+	github.com/evanphx/json-patch/v5 v5.9.11
 	github.com/peterkloss/brain/packages/validation v0.0.0
 	github.com/spf13/cobra v1.8.1
+	github.com/tidwall/gjson v1.18.0
+	github.com/tidwall/sjson v1.2.5
+	golang.org/x/sync v0.19.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 replace (
@@ -21,6 +28,7 @@ replace (
 require (
 	code.gitea.io/sdk/gitea v0.22.1 // indirect
 	github.com/42wim/httpsig v1.2.3 // indirect
+	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/Masterminds/semver/v3 v3.4.0 // indirect
 	github.com/alecthomas/chroma/v2 v2.14.0 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
@@ -59,6 +67,8 @@ require (
 	github.com/sahilm/fuzzy v0.1.1 // indirect
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/tidwall/match v1.1.1 // indirect
+	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/ulikunitz/xz v0.5.15 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	github.com/yuin/goldmark v1.7.4 // indirect
@@ -67,10 +77,9 @@ require (
 	golang.org/x/crypto v0.46.0 // indirect
 	golang.org/x/net v0.47.0 // indirect
 	golang.org/x/oauth2 v0.34.0 // indirect
-	golang.org/x/sync v0.19.0 // indirect
 	golang.org/x/sys v0.39.0 // indirect
 	golang.org/x/term v0.38.0 // indirect
 	golang.org/x/text v0.32.0 // indirect
 	golang.org/x/time v0.14.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
+	gopkg.in/yaml.v2 v2.3.0 // indirect
 )

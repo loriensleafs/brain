@@ -1,0 +1,13 @@
+{
+  "name": "brain",
+  "owner": {
+    "name": "Peter Kloss"
+  },
+  "plugins": [
+    {
+      "description": "Brain knowledge graph + workflow mode management",
+      "name": "🧠",
+      "source": "./"
+    }
+  ]
+}

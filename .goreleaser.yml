@@ -2,10 +2,6 @@ version: 2
 
 project_name: brain
 
-before:
-  hooks:
-    - make embed
-
 builds:
   - main: .
     dir: apps/tui

@@ -48,9 +48,6 @@ jobs:
           cd packages/validation && go mod download &
           wait
 
-      - name: Copy templates for embedding
-        run: make embed
-
       - name: Build
         run: |
           cd apps/tui && go build ./... &
