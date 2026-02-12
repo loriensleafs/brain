@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "brain": {
+      "args": [
+        "run",
+        "/Users/peter.kloss/Dev/brain/apps/tui/internal/installer/tests/testdata/fixture-source/apps/mcp/src/index.ts"
+      ],
+      "command": "bun",
+      "env": {
+        "BRAIN_TRANSPORT": "stdio"
+      }
+    }
+  }
+}
