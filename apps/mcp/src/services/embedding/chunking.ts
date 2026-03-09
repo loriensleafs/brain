@@ -59,12 +59,10 @@ export function chunkText(text: string): ChunkMetadata[] {
   // Calculate overlap in characters
   const chunkOverlap = Math.floor(CHUNK_SIZE_CHARS * OVERLAP_PERCENT);
 
-  // Use character-based splitting with word boundaries
+  // Use default character-based splitting with paragraph awareness
   const chunks = split(text, {
     chunkSize: CHUNK_SIZE_CHARS,
     chunkOverlap,
-    // Split on whitespace to preserve word boundaries
-    splitter: (input: string) => input.split(/\s+/),
     chunkStrategy: "paragraph",
   });
 
