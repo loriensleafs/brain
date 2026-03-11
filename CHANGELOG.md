@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.1.16](https://github.com/loriensleafs/brain/compare/v0.1.15...v0.1.16) (2026-03-11)
+
+
+### Features
+
+* integrate ai-agents v3.0 port into Brain templates ([b3ca3c6](https://github.com/loriensleafs/brain/commit/b3ca3c662f041c8e4a149dadb0a7bd9618a82ba8))
+* port ai-agents v3.0 to Brain plugin + fix initialization pipeline ([#36](https://github.com/loriensleafs/brain/issues/36)) ([7e0881c](https://github.com/loriensleafs/brain/commit/7e0881ccf565935ee0b91521ec3ca15812139635))
+
+
+### Bug Fixes
+
+* add version field to .claude-plugin/plugin.json ([26aa224](https://github.com/loriensleafs/brain/commit/26aa22469681515567dee7fffa2bd26a4353e80e))
+* match plugin name in marketplace.json plugins array with plugin.json ([c241ea8](https://github.com/loriensleafs/brain/commit/c241ea8c85847eb7760d7c0d1e86bbb9135593d8))
+* repair plugin initialization pipeline end-to-end ([d20e825](https://github.com/loriensleafs/brain/commit/d20e8258761bb4b1682c7aa11ded4d47134c997d))
+* revert marketplace name to 'brain' (identifier), keep 🧠 only in display metadata ([b6913c0](https://github.com/loriensleafs/brain/commit/b6913c0a559fd57094152a1a9f00403d8c3dd7a7))
+* revert plugin name to ASCII 'brain' for filesystem compatibility ([739226e](https://github.com/loriensleafs/brain/commit/739226e11f479621eb3bb42c419b0fc4806ad33f))
+* use 🧠 emoji consistently as plugin name in marketplace ([9c5663e](https://github.com/loriensleafs/brain/commit/9c5663e9b3560d42028147ad88086ac9fccd2dd6))
+
 ## [0.1.15](https://github.com/loriensleafs/brain/compare/v0.1.14...v0.1.15) (2026-03-11)
 
 
