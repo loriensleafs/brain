@@ -72,7 +72,7 @@ Port ai-agents v3.0 agents, skills, hooks, and commands to Brain, replacing half
 - 5A: Workflow commands (6): 0-init, 1-plan, 2-impl, 3-qa, 4-security, 9-sync
 - 5B: Other commands (8+): context-gather, push-pr, pr-review, pr-quality/*, memory-*, research
 
-### Phase 6: AGENTS.md Redesign [PENDING]
+### Phase 6: AGENTS.md Redesign (277 lines, compact navigation hub) [COMPLETE]
 - Complete rewrite as compact navigation hub (200-300 lines)
 - @import detail sections
 - Agent catalog, skill catalog, hook behavior summary
