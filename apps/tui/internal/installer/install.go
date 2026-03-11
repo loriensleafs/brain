@@ -585,7 +585,7 @@ func (m *MarketplacePlacement) writePluginJSON(marketplaceDir string) error {
 	}
 
 	plugin := map[string]any{
-		"name":    BrainEmoji,
+		"name":    "brain",
 		"version": "1.0.0",
 		"files":   files,
 	}

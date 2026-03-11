@@ -150,8 +150,8 @@ func TestIntegrationGeneric_ClaudeCodeFullInstall(t *testing.T) {
 	if err := json.Unmarshal(data, &pluginMeta); err != nil {
 		t.Fatalf("plugin.json is invalid JSON: %v", err)
 	}
-	if pluginMeta["name"] != installer.BrainEmoji {
-		t.Errorf("plugin.json name = %v, want %q", pluginMeta["name"], installer.BrainEmoji)
+	if pluginMeta["name"] != "brain" {
+		t.Errorf("plugin.json name = %v, want %q", pluginMeta["name"], "brain")
 	}
 
 	// 7. Verify marketplace.json was generated.
