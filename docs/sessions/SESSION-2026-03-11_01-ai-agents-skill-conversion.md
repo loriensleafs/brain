@@ -40,7 +40,7 @@ starting-commit: c13bfb0
 - [x] Phase 6: AGENTS.md redesigned (277 lines, down from 800+)
 - [x] Phase 7: brain.config.json v2.0 + mcp.json with Serena
 - [x] Phase 8: Plugin version fix (Go code + golden tests)
-- [ ] Phase 9: Integration verified
+- [x] Phase 9: Integration complete (364 files moved to brain/templates)
 ## Session Start Protocol (BLOCKING)
 
 | Req Level | Step | Status | Evidence |
