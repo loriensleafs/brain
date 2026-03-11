@@ -66,48 +66,41 @@ Returns progress and counts of processed/failed notes.`,
  *
  * @param chunks - Array of text chunks
  * @param ollamaClient - OllamaClient instance for batch API calls
- * @returns Array of chunk inputs with embeddings, or null if any batch fails
+ * @returns Array of chunk inputs with embeddings
+ * @throws OllamaError on API errors
  */
 async function generateChunkEmbeddings(
   chunks: ChunkMetadata[],
   ollamaClient: OllamaClient,
-): Promise<ChunkEmbeddingInput[] | null> {
+): Promise<ChunkEmbeddingInput[]> {
   if (chunks.length === 0) {
     return [];
   }
 
-  try {
-    const results: ChunkEmbeddingInput[] = [];
+  const results: ChunkEmbeddingInput[] = [];
 
-    // Split large notes into multiple batch requests
-    for (let i = 0; i < chunks.length; i += MAX_CHUNKS_PER_BATCH) {
-      const chunkBatch = chunks.slice(i, i + MAX_CHUNKS_PER_BATCH);
-      const texts = chunkBatch.map((c) => c.text);
+  // Split large notes into multiple batch requests
+  for (let i = 0; i < chunks.length; i += MAX_CHUNKS_PER_BATCH) {
+    const chunkBatch = chunks.slice(i, i + MAX_CHUNKS_PER_BATCH);
+    const texts = chunkBatch.map((c) => c.text);
 
-      // Call batch API
-      const embeddings = await ollamaClient.generateBatchEmbeddings(texts, "search_document");
+    // Call batch API
+    const embeddings = await ollamaClient.generateBatchEmbeddings(texts, "search_document");
 
-      // Map embeddings back to chunk metadata
-      for (let j = 0; j < chunkBatch.length; j++) {
-        results.push({
-          chunkIndex: chunkBatch[j].chunkIndex,
-          totalChunks: chunkBatch[j].totalChunks,
-          chunkStart: chunkBatch[j].start,
-          chunkEnd: chunkBatch[j].end,
-          chunkText: chunkBatch[j].text,
-          embedding: embeddings[j],
-        });
-      }
+    // Map embeddings back to chunk metadata
+    for (let j = 0; j < chunkBatch.length; j++) {
+      results.push({
+        chunkIndex: chunkBatch[j].chunkIndex,
+        totalChunks: chunkBatch[j].totalChunks,
+        chunkStart: chunkBatch[j].start,
+        chunkEnd: chunkBatch[j].end,
+        chunkText: chunkBatch[j].text,
+        embedding: embeddings[j],
+      });
     }
-
-    return results;
-  } catch (error) {
-    logger.warn(
-      { error: error instanceof Error ? error.message : String(error) },
-      "Batch embedding generation failed",
-    );
-    return null;
   }
+
+  return results;
 }
 
 export async function handler(args: Record<string, unknown>): Promise<CallToolResult> {
@@ -315,11 +308,13 @@ export async function handler(args: Record<string, unknown>): Promise<CallToolRe
             );
 
             // Generate embeddings for all chunks using batch API
-            const chunkEmbeddings = await generateChunkEmbeddings(chunks, ollamaClient);
-
-            if (!chunkEmbeddings) {
-              logger.warn({ notePath }, "Failed to generate embeddings for one or more chunks");
-              errors.push(`${notePath}: embedding generation failed`);
+            let chunkEmbeddings: ChunkEmbeddingInput[];
+            try {
+              chunkEmbeddings = await generateChunkEmbeddings(chunks, ollamaClient);
+            } catch (error) {
+              const msg = error instanceof Error ? error.message : String(error);
+              logger.warn({ notePath, error: msg }, "Failed to generate embeddings");
+              errors.push(`${notePath}: ${msg}`);
               return { success: false, chunks: 0 };
             }
 

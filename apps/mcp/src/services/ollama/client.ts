@@ -73,7 +73,17 @@ export class OllamaClient {
     });
 
     if (!response.ok) {
-      throw new OllamaError(`Ollama API error: ${response.status}`, response.status);
+      let detail = "";
+      try {
+        const body = (await response.json()) as { error?: string };
+        detail = body.error ?? "";
+      } catch {
+        // response may not be JSON
+      }
+      const message = detail
+        ? `Ollama API error ${response.status}: ${detail}`
+        : `Ollama API error: ${response.status}`;
+      throw new OllamaError(message, response.status);
     }
 
     const data = (await response.json()) as BatchEmbedResponse;
