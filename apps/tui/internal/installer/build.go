@@ -652,7 +652,7 @@ func BuildPlugin(tool *ToolConfig) []GeneratedFile {
 		},
 		"plugins": []map[string]any{
 			{
-				"name":        "brain",
+				"name":        BrainEmoji,
 				"source":      "./",
 				"description": "Brain knowledge graph + workflow mode management",
 			},
