@@ -115,3 +115,5 @@ Converting agents and skills from the ai-agents codebase to Brain-compatible for
 
 - [decision] taste-lints: include and ENHANCE during conversion -- make it project-config-aware. Read from biome.json, eslint.config, .editorconfig, tsconfig.json, .prettierrc, etc. when available, fall back to sensible defaults when not. Agent-readable remediation is the core value. #skill-scope
 - [decision] 8 additional skills added to scope: git-advanced-workflows, github-url-intercept, merge-resolver, security-scan, taste-lints, analysis-provenance, pipeline-validator, validation-authority #skill-scope
+
+- [decision] Fix plugin installation: name consistency (🧠 stays), version "unknown" bug, installer Go code fix, update mechanism for directory-sourced plugins. Added as phase in execution plan. #plugin-install
