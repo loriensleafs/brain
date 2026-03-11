@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.15](https://github.com/loriensleafs/brain/compare/v0.1.14...v0.1.15) (2026-03-11)
+
+
+### Features
+
+* replace hand-rolled install logic with registry-based installer ([0fc5021](https://github.com/loriensleafs/brain/commit/0fc5021fdf2a103e137c62aec7bf836aca0dfae0))
+
+
+### Bug Fixes
+
+* embedding generation failing for 86% of notes ([ce55464](https://github.com/loriensleafs/brain/commit/ce5546425c795653689d23c19a5cbbb74f05e28d))
+
 ## [0.1.14](https://github.com/loriensleafs/brain/compare/v0.1.13...v0.1.14) (2026-02-12)
 
 
