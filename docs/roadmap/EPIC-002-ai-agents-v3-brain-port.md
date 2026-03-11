@@ -52,7 +52,7 @@ Port ai-agents v3.0 agents, skills, hooks, and commands to Brain, replacing half
 - 2D: spec-generator, task-generator, orchestrator (Agent Teams conditional)
 - 2E: memory agent enhancements (4 features), memory skill enhancements (5 features)
 
-### Phase 3: Skills (32 remaining) [PENDING]
+### Phase 3: Skills (46 total, all converted) [COMPLETE]
 - 3A: Replacements with scripts (7): decision-critic, planner, slashcommandcreator, steering-matcher, session, session-log-fixer, security-detection
 - 3B: Replacements without scripts (7): doc-sync, exploring-knowledge-graph, incoherence, curating-memories, memory-documentary, research-and-incorporate, pr-comment-responder
 - 3C: New HIGH value (7): buy-vs-build-framework, chestertons-fence, threat-modeling, pre-mortem, reflect, session-init, session-end

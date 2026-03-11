@@ -31,10 +31,10 @@ starting-commit: c13bfb0
 - [x] All conversion decisions documented in [[ADR-025-ai-agents-skill-conversion-decisions]]
 - [x] Comprehensive analysis of ai-agents v3.0 complete (22 agents, 59 skills, 25 hooks, 24 commands)
 - [x] Full execution plan created as [[EPIC-002-ai-agents-v3-brain-port]]
-- [ ] Phase 0: Staging setup
-- [ ] Phase 1: Hook utilities converted
-- [ ] Phase 2: All 18 agents converted/enhanced
-- [ ] Phase 3: All 32 skills converted
+- [x] Phase 0: Staging setup
+- [x] Phase 1: Hook utilities converted (2 files)
+- [x] Phase 2: All 21 agents converted (zero frontmatter, zero remnants)
+- [x] Phase 3: All 46 skills converted (~51 Python scripts to TypeScript)
 - [ ] Phase 4: All 25 hooks converted
 - [ ] Phase 5: All commands converted
 - [ ] Phase 6: AGENTS.md redesigned
