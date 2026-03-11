@@ -77,7 +77,7 @@ Port ai-agents v3.0 agents, skills, hooks, and commands to Brain, replacing half
 - @import detail sections
 - Agent catalog, skill catalog, hook behavior summary
 
-### Phase 7: Configuration Updates [PENDING]
+### Phase 7: Configuration Updates (brain.config.json v2.0 + mcp.json with Serena) [COMPLETE]
 - brain.config.json: all agent entries + new skills
 - mcp.json: add Serena MCP server
 - tools.config.yaml: verify frontmatter fields

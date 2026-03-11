@@ -38,7 +38,7 @@ starting-commit: c13bfb0
 - [x] Phase 4: All 25 hooks converted to Bun TypeScript + settings.json
 - [x] Phase 5: All 23 commands converted
 - [x] Phase 6: AGENTS.md redesigned (277 lines, down from 800+)
-- [ ] Phase 7: Configuration files updated
+- [x] Phase 7: brain.config.json v2.0 + mcp.json with Serena
 - [ ] Phase 8: Plugin installation fixed
 - [ ] Phase 9: Integration verified
 ## Session Start Protocol (BLOCKING)
