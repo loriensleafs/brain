@@ -13,7 +13,7 @@ Before searching, re-read the topic and answer:
 3. **Scope Boundaries**: What is explicitly IN scope? What is OUT of scope?
 4. **Success Criteria**: What would make this analysis valuable?
 
-**Confidence Note**: Assume Brain MCP server is available. Tool errors are rare and system will notify if unavailable.
+**Confidence Note**: Brain MCP tools are the primary data source. Use semantic search with folder scoping and depth traversal for comprehensive coverage.
 
 ---
 
@@ -21,31 +21,61 @@ Before searching, re-read the topic and answer:
 
 Create an explicit search plan BEFORE executing queries:
 
-### Memory Systems Queries
+### Brain Memory Queries
 
-**Brain MCP** (semantic knowledge graph):
+Search across multiple folders and with different query variants:
 
 ```python
-# Step 1: Search for relevant notes
-mcp__plugin_brain_brain__search_notes(query="[topic]")
+# Semantic search across all notes
+mcp__plugin_brain_brain__search({
+  "query": "[topic]",
+  "mode": "semantic",
+  "limit": 10
+})
 
-# Step 2: Read specific notes for full content
-mcp__plugin_brain_brain__read_note(identifier="[note-title-or-permalink]")
+# Search with depth for related notes
+mcp__plugin_brain_brain__search({
+  "query": "[topic]",
+  "mode": "semantic",
+  "depth": 2,
+  "limit": 10
+})
 
-# Step 3: Search with category filter if needed
-mcp__plugin_brain_brain__search_notes(query="[topic]", category="research")
+# Folder-scoped searches for specific domains
+mcp__plugin_brain_brain__search({
+  "query": "[topic]",
+  "folder": "decisions",
+  "limit": 10
+})
+
+mcp__plugin_brain_brain__search({
+  "query": "[topic]",
+  "folder": "sessions",
+  "limit": 10
+})
+
+# Read specific notes for full content
+mcp__plugin_brain_brain__read_note({
+  "identifier": "<note title or permalink>"
+})
+
+# Browse folders for discovery
+mcp__plugin_brain_brain__list_directory({
+  "dir_name": "analysis",
+  "depth": 2
+})
 ```
 
 ### Project Artifacts
 
 List specific grep patterns and file paths:
 
-| Directory | Pattern | Purpose |
-|-----------|---------|---------|
-| `.agents/retrospective/` | `grep -r "[topic]"` | Learning extractions |
-| `.agents/sessions/` | `grep -l "[topic]"` | Session logs |
-| `.agents/analysis/` | List files | Research reports |
-| `.agents/architecture/` | ADR keywords | Decisions |
+| Folder | Pattern | Purpose |
+|--------|---------|---------|
+| `retrospective/` | Search for topic keywords | Learning extractions |
+| `sessions/` | Search for topic keywords | Session logs |
+| `analysis/` | List directory contents | Research reports |
+| `decisions/` | Search for ADR keywords | Decisions |
 
 ### GitHub Issues
 
@@ -61,18 +91,18 @@ gh issue list --state closed --search "[topic]" --json number,title,body,comment
 
 ## Phase 3: Data Collection
 
-### Thread 1: Memory Systems
+### Thread 1: Brain Memory Notes
 
 Execute queries from Phase 2 plan. For each result, capture:
 
 | Field | Required |
 |-------|----------|
-| Memory/Observation ID | Yes |
-| Source system | Yes |
-| Timestamp | Yes |
-| Importance score | If available |
+| Note title/permalink | Yes |
+| Source folder | Yes |
+| Creation date | Yes |
+| Entity type | Yes |
 | Direct quote | Yes |
-| Related IDs | If available |
+| Related notes (via relations) | If available |
 
 ### Thread 2: Project Artifacts
 
@@ -116,8 +146,7 @@ For each relevant issue:
 **Timeline**: [Earliest date] to [Most recent date]
 
 **Evidence Count**:
-- Memories: N
-- Observations: N
+- Brain notes: N
 - Issues: N
 - Files: N
 
@@ -131,15 +160,16 @@ For each major finding:
 ```markdown
 ### Finding: [Title]
 
-**Memory Evidence**:
-- **ID**: Brain Note: [note-title]
-- **Retrieval**: `mcp__plugin_brain_brain__read_note(identifier="[note-title]")`
-- **Created**: 2025-12-15
+**Brain Memory Evidence**:
+- **Note**: [Title or permalink]
+- **Retrieval**: `mcp__plugin_brain_brain__read_note({ "identifier": "[permalink]" })`
+- **Folder**: decisions/ (or sessions/, analysis/, etc.)
+- **Type**: decision (or session, analysis, etc.)
 - **Quote**: "Direct quote from note content"
-- **Relations**: Links to [[related-note-1]], [[related-note-2]]
+- **Relations**: Related to [[Note A]], [[Note B]]
 
 **Document Evidence**:
-- **Path**: `.agents/retrospective/2025-12-15-session-review.md`
+- **Path**: `analysis/topic-documentary.md`
 - **Lines**: 45-52
 - **Quote**: "Direct quote from document"
 - **Git Date**: 2025-12-15 14:32:00
@@ -160,10 +190,10 @@ For each major finding:
 **Timeline Format**:
 
 ```text
-2025-11-01: [Observation #101] - Initial belief: "[quote]"
-2025-11-15: [Memory #202] - First iteration: "[quote]"
+2025-11-01: [Note: ADR-010] - Initial belief: "[quote]"
+2025-11-15: [Note: SESSION-2025-11-15] - First iteration: "[quote]"
 2025-12-01: [Issue #303] - Technical response
-2025-12-15: [Session log] - Current state: "[quote]"
+2025-12-15: [Note: SESSION-2025-12-15] - Current state: "[quote]"
 ```
 
 **Before/After Table**:
@@ -218,30 +248,47 @@ Analyze across categories with boundaries:
 
 ## Phase 5: Memory Updates
 
-After report completion, update systems:
+After report completion, store the meta-pattern as a Brain memory note:
 
-### Brain Update
+### Brain Memory Update
 
 ```python
-mcp__plugin_brain_brain__write_note(
-    title="[Topic] Meta-Pattern Analysis",
-    category="analysis",
-    content="""[Summary of discovered meta-pattern]
+mcp__plugin_brain_brain__write_note({
+  "title": "ANALYSIS-NNN [Topic] Meta-Pattern Analysis",
+  "folder": "analysis",
+  "content": """---
+title: ANALYSIS-NNN [Topic] Meta-Pattern Analysis
+type: analysis
+tags: [documentary, meta-pattern, [topic-keywords]]
+---
+
+# ANALYSIS-NNN [Topic] Meta-Pattern Analysis
 
 ## Observations
-- [Key observation 1]
-- [Key observation 2]
+
+- [insight] Key meta-pattern discovered from documentary analysis #meta-analysis
+- [fact] Evidence spans [date range] across [N] sources #evidence
+- [decision] Recommended action based on pattern analysis #recommendation
 
 ## Relations
-- [[related-note-1]]
-- [[related-note-2]]
+
+- relates_to [[Related Note A]]
+- relates_to [[Related Note B]]
+
+## Summary
+
+[Summary of discovered meta-pattern and key findings]
+
+## Recommendations
+
+[Actionable recommendations with evidence backing]
 """
-)
+})
 ```
 
 ### Output File
 
-Save complete report to: `analysis/[topic]-documentary/overview.md`
+Save complete report as a Brain memory note in the `analysis/` folder.
 
 ---
 
@@ -256,6 +303,6 @@ Save complete report to: `analysis/[topic]-documentary/overview.md`
 **Report Characteristics**:
 
 - Documentary feel with full evidence chain
-- Patterns synthesized across 4+ data sources
+- Patterns synthesized across multiple data sources
 - Timeline showing evolution over weeks/months
 - Specific recommendations with evidence backing

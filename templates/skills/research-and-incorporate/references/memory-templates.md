@@ -1,6 +1,6 @@
 # Memory Templates
 
-Templates for creating atomic Brain notes from research.
+Templates for creating atomic Brain memory notes from research.
 
 ---
 
@@ -14,13 +14,11 @@ Each note must pass the atomicity test:
 
 ### Constraints
 
-| Field | Guidance |
-|-------|----------|
-| Title | Short, searchable phrase |
-| Content | Single concept with observations and relations |
-| Category | research, analysis, decisions, features, etc. |
-| Observations | Key facts and insights |
-| Relations | Links to related notes via `[[note-title]]` |
+| Element | Min | Max | Guidance |
+|---------|-----|-----|----------|
+| Observations | 3 | 10 | Categorized facts with tags |
+| Relations | 2 | 8 | Wikilinks to related notes |
+| Tags | 2 | 5 | For categorization |
 
 ---
 
@@ -31,31 +29,40 @@ Each note must pass the atomicity test:
 For foundational concepts that define the topic.
 
 ```python
-mcp__plugin_brain_brain__write_note(
-    title="{Topic}: Core Principle",
-    category="research",
-    content="""{Topic} is [definition in 1-2 sentences].
+mcp__plugin_brain_brain__write_note({
+  "title": "{Topic}: Core Principle",
+  "folder": "analysis",
+  "content": """---
+title: {Topic}: Core Principle
+type: analysis
+tags: [research, principles, {topic}]
+---
 
-## Origin
-[Where it comes from, who coined it]
+# {Topic}: Core Principle
 
-## Core Insight
-[The fundamental idea in plain language]
+## Observations
 
-## Decision Rule
+- [fact] {Topic} is {definition in 1-2 sentences} #{topic}
+- [insight] Core insight: {the fundamental idea in plain language} #principle
+- [technique] Decision rule: {how to apply this principle} #application
+
+## Relations
+
+- relates_to [[ANALYSIS-NNN {Topic Name}]]
+- relates_to [[Related Concept]]
+
+## Details
+
+**Origin**: [Where it comes from, who coined it]
+
+**Decision Rule**:
 1. [Step 1]
 2. [Step 2]
 3. [Step 3]
 
-## Observations
-- Core principle: [key insight]
-- Heuristic: [One-line test for correct application]
-
-## Relations
-- [[{domain}-concepts]]
-- [[decision-frameworks]]
+**Key Heuristic**: [One-line test for correct application]
 """
-)
+})
 ```
 
 ### 2. Framework Note
@@ -63,32 +70,40 @@ mcp__plugin_brain_brain__write_note(
 For decision frameworks, models, or structured approaches.
 
 ```python
-mcp__plugin_brain_brain__write_note(
-    title="{Topic}: {Framework Name} Framework",
-    category="research",
-    content="""The {Framework Name} provides a structured approach to [purpose].
+mcp__plugin_brain_brain__write_note({
+  "title": "{Topic}: {Framework Name} Framework",
+  "folder": "analysis",
+  "content": """---
+title: {Topic}: {Framework Name} Framework
+type: analysis
+tags: [research, frameworks, {topic}]
+---
 
-## Phases/Steps
+# {Topic}: {Framework Name} Framework
+
+## Observations
+
+- [fact] The {Framework Name} provides a structured approach to {purpose} #{topic}
+- [technique] Apply when {conditions that trigger this framework} #application
+- [insight] Output: {what applying this framework produces} #outcome
+
+## Relations
+
+- relates_to [[ANALYSIS-NNN {Topic Name}]]
+- relates_to [[{Topic}: Core Principle]]
+
+## Phases
+
 1. **[Phase 1]**: [Description] - [Key question to answer]
 2. **[Phase 2]**: [Description] - [Key question to answer]
 3. **[Phase 3]**: [Description] - [Key question to answer]
 4. **[Phase 4]**: [Description] - [Key question to answer]
 
-## When to Use
-[Conditions that trigger this framework]
+## Integration
 
-## Output
-[What applying this framework produces]
-
-## Observations
-- Framework type: decision-making
-- Applicable when: [conditions]
-
-## Relations
-- [[decision-frameworks]]
-- [[{topic}-core-principle]]
+[How this connects to project workflows]
 """
-)
+})
 ```
 
 ### 3. Application Pattern Note
@@ -96,32 +111,40 @@ mcp__plugin_brain_brain__write_note(
 For concrete ways to apply the concept.
 
 ```python
-mcp__plugin_brain_brain__write_note(
-    title="{Topic}: {Application Area} Application",
-    category="research",
-    content="""Applying {Topic} to {Application Area}.
+mcp__plugin_brain_brain__write_note({
+  "title": "{Topic}: {Application Area} Application",
+  "folder": "analysis",
+  "content": """---
+title: {Topic}: {Application Area} Application
+type: analysis
+tags: [research, patterns, {topic}]
+---
 
-## Context
-[When this pattern applies]
+# {Topic}: {Application Area} Application
+
+## Observations
+
+- [technique] Apply {Topic} to {Application Area} by {brief method} #{topic}
+- [fact] Pattern recognition: {how to identify the situation} #recognition
+- [risk] Pitfall to avoid: {common mistake in this application} #anti-pattern
+
+## Relations
+
+- relates_to [[ANALYSIS-NNN {Topic Name}]]
+- relates_to [[{Topic}: Core Principle]]
 
 ## Pattern
+
 1. [Recognition step - how to identify the situation]
 2. [Investigation step - what to examine]
 3. [Evaluation step - how to assess findings]
 4. [Action step - what to do based on evaluation]
 
-## Example
-[Concrete instance from software engineering]
+**Example**: [Concrete instance]
 
-## Observations
-- Application area: {area}
-- Pitfall to avoid: [Common mistake in this application]
-
-## Relations
-- [[{topic}-core-principle]]
-- [[{area}-patterns]]
+**Connection**: [How this relates to existing project patterns]
 """
-)
+})
 ```
 
 ### 4. Failure Mode Note
@@ -129,36 +152,37 @@ mcp__plugin_brain_brain__write_note(
 For anti-patterns and what to avoid.
 
 ```python
-mcp__plugin_brain_brain__write_note(
-    title="{Topic}: {Failure Name} Anti-Pattern",
-    category="research",
-    content="""Anti-pattern: {Failure Name}
+mcp__plugin_brain_brain__write_note({
+  "title": "{Topic}: {Failure Name} Anti-Pattern",
+  "folder": "analysis",
+  "content": """---
+title: {Topic}: {Failure Name} Anti-Pattern
+type: analysis
+tags: [research, anti-patterns, {topic}]
+---
 
-## Description
-[What this failure looks like in practice]
-
-## Why It Happens
-[Root cause of this failure]
-
-## Consequences
-[What goes wrong when this occurs]
-
-## Detection
-[How to recognize this failure mode]
-
-## Correction
-[How to fix or prevent it]
+# {Topic}: {Failure Name} Anti-Pattern
 
 ## Observations
-- Type: anti-pattern
-- Severity: [high/medium/low]
-- Example: [Concrete instance where this occurred]
+
+- [problem] {What this failure looks like in practice} #{topic}
+- [insight] Root cause: {why it happens} #root-cause
+- [solution] Correction: {how to fix or prevent it} #correction
 
 ## Relations
-- [[{topic}-core-principle]]
-- [[anti-patterns]]
+
+- relates_to [[ANALYSIS-NNN {Topic Name}]]
+- relates_to [[{Topic}: Core Principle]]
+
+## Details
+
+**Detection**: [How to recognize this failure mode]
+
+**Consequences**: [What goes wrong when this occurs]
+
+**Example**: [Concrete instance where this occurred]
 """
-)
+})
 ```
 
 ### 5. Project Integration Note
@@ -166,34 +190,42 @@ mcp__plugin_brain_brain__write_note(
 For specific connections to the project.
 
 ```python
-mcp__plugin_brain_brain__write_note(
-    title="{Topic}: Project Integration Pattern",
-    category="research",
-    content="""{Topic} integrates with the project through [mechanism].
+mcp__plugin_brain_brain__write_note({
+  "title": "{Topic}: Project Integration Pattern",
+  "folder": "analysis",
+  "content": """---
+title: {Topic}: Project Integration Pattern
+type: analysis
+tags: [research, integration, {topic}]
+---
+
+# {Topic}: Project Integration Pattern
+
+## Observations
+
+- [fact] {Topic} integrates with project through {mechanism} #{topic}
+- [technique] Implementation approach: {brief steps} #integration
+- [constraint] Verification: {how to confirm correct integration} #verification
+
+## Relations
+
+- relates_to [[ANALYSIS-NNN {Topic Name}]]
+- implements [[Related ADR or Decision]]
 
 ## Integration Points
+
 - **Agent**: [Which agent, specific application]
 - **Protocol**: [Which protocol, enhancement opportunity]
 - **Skill**: [Which skill, improvement area]
 - **Memory**: [How this informs memory operations]
 
 ## Implementation Approach
+
 1. [Step 1 with file/component reference]
 2. [Step 2 with file/component reference]
 3. [Step 3 with file/component reference]
-
-## Verification
-[How to confirm correct integration]
-
-## Observations
-- Integration type: [type]
-- Priority: [high/medium/low]
-
-## Relations
-- [[{topic}-core-principle]]
-- [[project-patterns]]
 """
-)
+})
 ```
 
 ### 6. Relationship Note
@@ -201,34 +233,40 @@ mcp__plugin_brain_brain__write_note(
 For connections between concepts.
 
 ```python
-mcp__plugin_brain_brain__write_note(
-    title="{Topic}: Relationship to {Other Concept}",
-    category="research",
-    content="""{Topic} relates to {Other Concept} through [relationship type].
+mcp__plugin_brain_brain__write_note({
+  "title": "{Topic}: Relationship to {Other Concept}",
+  "folder": "analysis",
+  "content": """---
+title: {Topic}: Relationship to {Other Concept}
+type: analysis
+tags: [research, relationships, {topic}]
+---
 
-## Similarity
-[What they have in common]
+# {Topic}: Relationship to {Other Concept}
 
-## Difference
-[Where they diverge]
+## Observations
 
-## Synergy
-[How they work together]
+- [fact] {Topic} relates to {Other Concept} through {relationship type} #{topic}
+- [insight] Synergy: {how they work together} #synergy
+- [technique] When to use each: {selection criteria} #decision
 
-## When to Use Each
+## Relations
+
+- relates_to [[ANALYSIS-NNN {Topic Name}]]
+- relates_to [[{Other Concept}]]
+
+## Comparison
+
+**Similarity**: [What they have in common]
+
+**Difference**: [Where they diverge]
+
+**When to use each**:
 - Use {Topic} when: [conditions]
 - Use {Other Concept} when: [conditions]
 - Use both when: [conditions]
-
-## Observations
-- Relationship type: [complementary/alternative/prerequisite]
-- Practical guidance: [How to decide between them]
-
-## Relations
-- [[{topic}-core-principle]]
-- [[{other-concept}]]
 """
-)
+})
 ```
 
 ### 7. Decision Heuristic Note
@@ -236,71 +274,75 @@ mcp__plugin_brain_brain__write_note(
 For quick decision rules derived from the topic.
 
 ```python
-mcp__plugin_brain_brain__write_note(
-    title="{Topic}: Decision Heuristic for {Situation}",
-    category="decisions",
-    content="""When facing {Situation}, apply this heuristic.
+mcp__plugin_brain_brain__write_note({
+  "title": "{Topic}: Decision Heuristic for {Situation}",
+  "folder": "analysis",
+  "content": """---
+title: {Topic}: Decision Heuristic for {Situation}
+type: analysis
+tags: [research, heuristics, {topic}]
+---
 
-## Key Question
-[The key question to ask]
+# {Topic}: Decision Heuristic for {Situation}
+
+## Observations
+
+- [technique] When facing {Situation}, ask: {key question} #{topic}
+- [fact] Default action when uncertain: {what to do} #heuristic
+- [insight] Rationale traced to {Topic} principle #rationale
+
+## Relations
+
+- relates_to [[ANALYSIS-NNN {Topic Name}]]
+- relates_to [[{Topic}: Core Principle]]
 
 ## Decision Matrix
+
 | Condition | Action |
 |-----------|--------|
 | [Condition 1] | [Action 1] |
 | [Condition 2] | [Action 2] |
 | [Condition 3] | [Action 3] |
 
-## Default Action
-[What to do if uncertain]
-
-## Rationale
-[Why this heuristic works, traced to {Topic}]
-
-## Observations
-- Heuristic type: decision-making
-- Example: [Concrete application of this heuristic]
-
-## Relations
-- [[{topic}-core-principle]]
-- [[decision-heuristics]]
+**Example**: [Concrete application of this heuristic]
 """
-)
+})
 ```
 
 ---
 
-## Category Guide
+## Quality Thresholds
 
-| Category | Use For | Example |
-|----------|---------|---------|
-| research | Foundational principles, frameworks, patterns | Core concepts from external research |
-| analysis | Investigation results, deep dives | Analysis of codebase patterns |
-| decisions | Decision records, heuristics | Architecture decisions, trade-offs |
-| features | Feature planning and implementation | Feature specifications |
+| Element | Min | Max | Example |
+|---------|-----|-----|---------|
+| Observations | 3 | 10 | `- [decision] Using JWT #auth` |
+| Relations | 2 | 8 | `- implements [[ADR-015]]` |
+| Tags | 2 | 5 | `tags: [auth, security]` |
 
 ---
 
 ## Linking Strategy
 
-After creating notes, link them via the Relations section:
+After creating notes:
 
-1. **Wiki-style links**: Use `[[note-title]]` syntax in Relations section
-2. **Search for related**: Find existing notes to link
+1. **Search for related notes**: Find existing notes that connect to new knowledge
+2. **Add forward relations**: New notes reference existing knowledge via wikilinks
+3. **Add backward relations**: Edit existing notes to reference new knowledge
 
 ```python
-# Search for related notes
-mcp__plugin_brain_brain__search_notes(query="{related-concept}")
+# Search for related existing notes
+mcp__plugin_brain_brain__search({
+  "query": "{related-concept}",
+  "mode": "semantic",
+  "limit": 5
+})
 
-# Edit existing note to add relation
-mcp__plugin_brain_brain__edit_note(
-    identifier="{note-title}",
-    operation="append",
-    content="""
-## Relations
-- [[{new-related-note}]]
-"""
-)
+# Add relation to existing note
+mcp__plugin_brain_brain__edit_note({
+  "identifier": "<existing note title>",
+  "operation": "append",
+  "content": "\n- relates_to [[New Note Title]]"
+})
 ```
 
 **Link when:**

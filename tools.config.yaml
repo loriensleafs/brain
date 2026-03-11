@@ -6,7 +6,7 @@
 tools:
   claude-code:
     display_name: "Claude Code"
-    prefix: false
+    prefix: true
     config_dir: ~/.claude
     scopes:
       global: ~/.claude/

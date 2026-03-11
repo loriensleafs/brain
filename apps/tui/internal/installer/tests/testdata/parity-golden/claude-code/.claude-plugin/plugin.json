@@ -2,6 +2,7 @@
   "author": {
     "name": "Peter Kloss"
   },
-  "description": "Brain knowledge graph + workflow mode management",
-  "name": "🧠"
+  "description": "🧠 Brain knowledge graph + workflow mode management",
+  "name": "brain",
+  "version": "1.0.0"
 }

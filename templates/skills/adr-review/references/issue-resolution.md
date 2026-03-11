@@ -21,7 +21,7 @@ When a P1 issue is deferred (not fully resolved), it MUST:
 1. **Have documented justification** in the ADR or debate log explaining why deferral is acceptable
 2. **Be filed as a GitHub issue** with `priority:P1`, `backlog`, and `adr-followup` labels
 3. **Be linked to related issues/ADRs** that will trigger its surfacing
-4. **Have keywords in title** that match memory-index routing patterns
+4. **Have keywords in title** that match Brain MCP search patterns
 
 ### Surfacing Mechanism (How Amnesiac Agents Find Deferred Items)
 
@@ -31,7 +31,7 @@ Deferred P1 items surface through THREE mechanisms:
 |-----------|--------------|------------------|
 | **GitHub Issue Linking** | Link deferred issue to parent ADR, related epics, or blocking issues | When agent works on linked item, `gh issue view` shows linked issues |
 | **Phase 0 Search** | ADR review Phase 0 searches `label:adr-followup` for related work | Every ADR review includes this search |
-| **Memory-Index Keywords** | Issue title contains keywords that match memory-index patterns | Session Start context retrieval surfaces related issues |
+| **Brain MCP Search** | Issue title contains keywords that match Brain memory search | Session Start context retrieval surfaces related issues |
 
 **Critical**: The trigger is NOT a calendar reminder. It's **keyword-based surfacing** during normal agent workflows.
 
@@ -43,25 +43,25 @@ Deferred item: "ADR-007 needs reversibility assessment"
 
 ```bash
 # 1. Link to parent ADR issue (if one exists)
-gh issue edit [deferred-issue] --add-label "adr-followup" --repo rjmurillo/ai-agents
-
-# 2. Create Brain note for cross-session context
+gh issue edit [deferred-issue] --add-label "adr-followup" 
+# 2. Create Brain memory note for cross-session context
 mcp__plugin_brain_brain__write_note(
-  title="adr-007-deferred-p1",
+  title="ADR-007-deferred-p1",
+  folder="decisions",
   content="P1 DEFERRED: ADR-007 needs reversibility assessment. Trigger: When any ADR-007 revision occurs or when reversibility patterns are discussed. Issue #[number]."
 )
 
-# 3. Add to memory-index routing (keywords -> memory)
-# In memory-index, add row:
-# | adr-007 reversibility rollback | adr-007-deferred-p1 |
+# 3. Brain MCP search will surface this via semantic search
+# Keywords in the note content enable discovery via:
+# mcp__plugin_brain_brain__search({ query: "adr-007 reversibility" })
 ```
 
 **How it surfaces**:
 
 1. Agent starts session working on "ADR-007 revision"
-2. Session Start reads `memory-index`
-3. Keywords "adr-007" match -> reads `adr-007-deferred-p1` memory
-4. Memory contains: "P1 DEFERRED: needs reversibility assessment. Issue #[number]"
+2. Session Start searches Brain memory via `mcp__plugin_brain_brain__search`
+3. Keywords "adr-007" match -> reads `adr-007-deferred-p1` note
+4. Note contains: "P1 DEFERRED: needs reversibility assessment. Issue #[number]"
 5. Agent is now aware and can address or acknowledge
 
 ### P1 Deferral Issue Template
@@ -90,12 +90,12 @@ This P1 issue was identified during ADR review and deferred with justification.
 
 **Keywords for memory-index**: [list keywords that should trigger this]
 **Linked Issues**: #[parent-issue], #[related-epic]
-**Note Created**: `[note-name]` in Brain
+**Memory Created**: Brain memory note `[note-title]` in `decisions/` folder
 
 **Trigger scenarios**:
 - [ ] When working on [specific ADR/feature]
 - [ ] When [keyword] appears in session objective
-- [ ] When Phase 0 search finds this issue
+- [ ] When Phase 0 search or Brain MCP search finds this issue
 
 ## Acceptance Criteria
 
@@ -103,17 +103,16 @@ This P1 issue was identified during ADR review and deferred with justification.
 
 ---
 
-*P1 deferred during ADR review - surfaces via memory-index keywords*
+*P1 deferred during ADR review - surfaces via Brain MCP search*
 EOF
 )" \
   --label "priority:P1,backlog,adr-followup" \
-  --repo rjmurillo/ai-agents
-```
+  ```
 
 **Post-creation steps** (REQUIRED):
 
-1. Create Brain note with issue reference and trigger keywords
-2. Update `memory-index` with routing entry for trigger keywords
+1. Create Brain memory note with issue reference and trigger keywords
+2. Brain MCP search will surface the note via semantic search on trigger keywords
 3. Link issue to parent ADR issue or related epics
 
 ## P2: Plan and Backlog
@@ -156,8 +155,7 @@ This issue was identified during ADR review but classified as P2 (nice-to-have).
 EOF
 )" \
   --label "backlog,adr-followup" \
-  --repo rjmurillo/ai-agents
-```
+  ```
 
 ## Debate Log Update
 

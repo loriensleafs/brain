@@ -1,10 +1,10 @@
 # Artifact Storage
 
-Save debate artifacts to `.agents/critique/`.
+Save debate artifacts as Brain memory notes in the `critique/` folder.
 
 ## Debate Log
 
-Save to: `.agents/critique/ADR-NNN-debate-log.md`
+Save as Brain memory note `CRIT-{NNN}-debate-log` in `critique/` folder.
 
 ```markdown
 # ADR Debate Log: [ADR Title]
@@ -35,7 +35,7 @@ Save to: `.agents/critique/ADR-NNN-debate-log.md`
 
 ## Updated ADR
 
-Save to: `.agents/architecture/ADR-NNN-[title].md` (or update in place)
+Save as Brain memory note `ADR-NNN-[title]` in `decisions/` folder (or update in place).
 
 ## Recommendations
 
@@ -71,8 +71,7 @@ Return to orchestrator with structured recommendations:
 
 Check these locations for existing ADRs and patterns:
 
-- `.agents/architecture/ADR-*.md`
-- `docs/architecture/ADR-*.md`
+- `decisions/ADR-*.md`
 
 ### ADR Template Reference
 
@@ -99,15 +98,15 @@ Every ADR must include reversibility assessment per architect.md:
 **User triggers:**
 
 ```text
-Review this ADR: .agents/architecture/ADR-005-api-versioning.md
+Review this ADR: decisions/ADR-005-api-versioning.md
 ```
 
 **Orchestrator triggers:**
 
 ```python
 # When architect creates/updates ADR
-Task(subagent_type="orchestrator", prompt="""
-Trigger adr-review skill for: .agents/architecture/ADR-005-api-versioning.md
+Agent(subagent_type="orchestrator", prompt="""
+Trigger adr-review skill for: decisions/ADR-005-api-versioning.md
 
 Follow debate protocol in .claude/skills/adr-review/SKILL.md
 """)

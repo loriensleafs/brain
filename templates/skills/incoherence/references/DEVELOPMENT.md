@@ -9,7 +9,7 @@ Incoherence detection skill using parallel agents for exploration and confirmati
 | File/Directory           | Contents                                       | Read When                                   |
 | ------------------------ | ---------------------------------------------- | ------------------------------------------- |
 | `SKILL.md`               | Workflow overview, step guide, quick reference | Using the incoherence skill                 |
-| `scripts/incoherence.py` | Step orchestration with guidance output        | Debugging skill behavior, modifying prompts |
+| `scripts/incoherence.ts` | Step orchestration with guidance output        | Debugging skill behavior, modifying prompts |
 
 ## Workflow Summary
 

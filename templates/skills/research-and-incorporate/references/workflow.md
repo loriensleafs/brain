@@ -10,7 +10,7 @@ Complete the workflow systematically. Focus on:
 
 - **Depth over breadth**: Thorough analysis of core concepts, not surface coverage
 - **Concrete examples over abstract theory**: Every principle needs real-world demonstration
-- **Integration with ai-agents project**: Every insight must show applicability
+- **Integration with project**: Every insight must show applicability
 
 Do what is required for each phase; nothing more, nothing less.
 
@@ -23,17 +23,30 @@ Do what is required for each phase; nothing more, nothing less.
 **Before external research, analyze existing project context:**
 
 ```python
-# Search Brain for related concepts
-mcp__plugin_brain_brain__search_notes(query="{TOPIC} related concepts principles")
+# Search Brain memory for related concepts
+mcp__plugin_brain_brain__search({
+  "query": "{TOPIC} related concepts principles",
+  "mode": "semantic",
+  "limit": 10
+})
 
-# Read specific notes for full context
-mcp__plugin_brain_brain__read_note(identifier="{relevant-note-title}")
+# Search within specific folders
+mcp__plugin_brain_brain__search({
+  "query": "{TOPIC}",
+  "folder": "decisions",
+  "limit": 5
+})
+
+# Browse relevant folders
+mcp__plugin_brain_brain__list_directory({
+  "dir_name": "analysis"
+})
 ```
 
 **Questions to answer:**
 
-- What does ai-agents already know about this topic?
-- What related patterns exist in the codebase? (ADRs, protocols, skills)
+- What does the project already know about this topic?
+- What related patterns exist in the knowledge base? (ADRs, session logs, skills)
 - How does this topic connect to current work?
 
 This prevents duplication and ensures new knowledge integrates with existing understanding.
@@ -101,16 +114,31 @@ These are expected research conditions, not errors requiring user notification.
 
 ### File Location
 
-`.agents/analysis/{topic-slug}.md`
+Create as a Brain memory note in the `analysis/` folder.
 
 ### Document Structure
 
 Create sections as needed for the topic, but MUST include:
 
 ```markdown
-# {Topic Name}: Analysis
+---
+title: ANALYSIS-NNN {Topic Name}
+type: analysis
+tags: [research, {topic-keywords}]
+---
 
-**Date**: YYYY-MM-DD | **Context**: {CONTEXT} | **Sources**: [URLs]
+# ANALYSIS-NNN {Topic Name}
+
+## Observations
+
+- [fact] Research completed on {date} from {N} sources #research
+- [insight] Core principle: {one sentence summary} #principle
+- [decision] Integration approach: {brief description} #integration
+
+## Relations
+
+- relates_to [[Related Concept A]]
+- relates_to [[Related Concept B]]
 
 ## Executive Summary
 
@@ -165,7 +193,7 @@ Create sections as needed for the topic, but MUST include:
 ### Connection to [Concept B]
 [How they relate, complement, or contrast]
 
-## Applicability to ai-agents Project
+## Applicability to Project
 
 [Integration points, proposed applications, priority assessment]
 
@@ -174,7 +202,7 @@ Create sections as needed for the topic, but MUST include:
 [Sources with URLs]
 ```
 
-**Note**: Organize for clarity, not template compliance. If the topic doesn't have "historical context," don't force it. Focus on what matters.
+**Note**: Organize for clarity, not template compliance. If the topic does not have "historical context," do not force it. Focus on what matters.
 
 ### Quality Gates (BLOCKING)
 
@@ -237,10 +265,10 @@ Create sections as needed for the topic, but MUST include:
 
 ### Document in Analysis
 
-Add section to analysis document:
+Add section to analysis note:
 
 ```markdown
-## Applicability to ai-agents Project
+## Applicability to Project
 
 ### Integration Points
 
@@ -251,7 +279,7 @@ Add section to analysis document:
 [Session protocol, handoff protocol enhancements]
 
 #### Memory Architecture
-[How this informs Brain note usage]
+[How this informs Brain memory usage]
 
 #### Skills and Automation
 [Concrete skill enhancement opportunities]
@@ -290,126 +318,75 @@ Add section to analysis document:
 
 ## Phase 4: Memory Integration (BLOCKING)
 
-### 4A: Brain Project Note
+### 4A: Brain Memory Notes
 
-Create comprehensive project note:
+Create atomic notes for key concepts, each with proper Brain memory structure:
 
 ```python
-mcp__plugin_brain_brain__write_note(
-    title="{Topic Name} Integration",
-    category="research",
-    content="""# {Topic Name} Integration
+mcp__plugin_brain_brain__write_note({
+  "title": "{Specific Concept from Topic}",
+  "folder": "analysis",
+  "content": """---
+title: {Specific Concept from Topic}
+type: analysis
+tags: [research, {topic}, {domain}]
+---
 
-## Core Insight
-[1-2 sentences: the essence]
-
-## Key Principles
-1. [Principle 1 with brief explanation]
-2. [Principle 2 with brief explanation]
-3. [Principle 3 with brief explanation]
-
-## Application to Project
-[How this applies to our project specifically]
-
-## Integration Points
-- **Agent**: [Which agent, how it applies]
-- **Protocol**: [Which protocol, enhancement]
-- **Skill**: [Which skill, improvement]
-- **Memory**: [How this informs memory usage]
-
-## Practical Guidance
-[Step-by-step application for team members]
+# {Specific Concept from Topic}
 
 ## Observations
-- Topic: {topic-slug}
-- Integration priority: [high/medium/low]
+
+- [fact] {Atomic explanation of ONE concept} #{topic}
+- [technique] {How to apply this concept} #application
+- [risk] {What to avoid when applying} #anti-pattern
 
 ## Relations
-- [[analysis/{topic-slug}]]
-- [[{related-concept-1}]]
-- [[{related-concept-2}]]
 
-## Next Steps
-[Action items or implementation tasks]
+- relates_to [[ANALYSIS-NNN {Topic Name}]]
+- relates_to [[Related Concept]]
+
+## Details
+
+**Context**: [When this applies]
+**Pattern**: [How to recognize/apply]
+**Example**: [Concrete instance]
+**Pitfall**: [What to avoid]
 """
-)
+})
 ```
 
-### 4B: Brain Atomic Notes
+**CRITICAL REQUIREMENT**: Create 5-10 atomic notes.
 
-**CRITICAL REQUIREMENT**: Create 5-10 atomic notes
-
-**Each note MUST satisfy (RULE 0)**:
+**Each note MUST satisfy**:
 
 | Constraint | Requirement |
 |------------|-------------|
-| **Atomic** | ONE concept per note (not a grab-bag of loosely related ideas) |
-| **Actionable** | Include pattern/example/pitfall, not just theory |
-| **Linked** | Connect to related existing notes via Relations section |
+| **Atomic** | ONE concept per note |
+| **Structured** | 3+ observations with categories and tags |
+| **Connected** | 2+ relations via wikilinks |
+| **Typed** | Proper entity type (analysis, decision, etc.) |
 
-Violating these constraints creates unusable notes that pollute the knowledge graph.
+### 4B: Link Related Notes
 
-**Note Categories** (create 1-2 from each relevant category):
-
-1. Core definition and principle
-2. Primary framework or model
-3. Key application pattern
-4. Critical failure mode
-5. Relationship to existing concept
-6. Implementation guidance
-7. Concrete example with lesson
-8. Anti-pattern with correction
-9. Decision-making heuristic
-10. Integration with project patterns
-
-**Template for Each:**
-
-```python
-mcp__plugin_brain_brain__write_note(
-    title="{Specific Concept from Topic}",
-    category="research",
-    content="""[Atomic explanation of ONE concept]
-
-## Context
-[When this applies]
-
-## Pattern
-[How to recognize/apply]
-
-## Example
-[Concrete instance]
-
-## Observations
-- Concept type: [principle/framework/pattern/anti-pattern]
-- Pitfall: [What to avoid]
-
-## Relations
-- [[{topic}-integration]]
-- [[{related-concept}]]
-"""
-)
-```
-
-### 4C: Link Related Notes
-
-After creating all notes:
+After creating all notes, connect them to existing knowledge:
 
 ```python
 # Search for related existing notes
-mcp__plugin_brain_brain__search_notes(query="{related-concept}")
+mcp__plugin_brain_brain__search({
+  "query": "{related-concept}",
+  "mode": "semantic",
+  "limit": 5
+})
 
-# Edit notes to add cross-references via Relations section
-mcp__plugin_brain_brain__edit_note(
-    identifier="{note-title}",
-    operation="append",
-    content="""
-## Relations
-- [[{new-related-note}]]
-"""
-)
+# Add relations to existing notes
+mcp__plugin_brain_brain__edit_note({
+  "identifier": "<existing note title>",
+  "operation": "append",
+  "content": "\n- relates_to [[New Note Title]]"
+})
 ```
 
-### 4D: Skill Enhancement (if applicable)
+### 4C: Skill Enhancement (if applicable)
 
 If topic enhances an existing skill:
 
@@ -436,7 +413,7 @@ gh issue create \
     --title "[Enhancement] Apply {TOPIC} to {integration-area}" \
     --body "## Context
 
-Research completed: .agents/analysis/{topic-slug}.md
+Research completed: analysis note in Brain memory
 
 ## Proposal
 
@@ -452,9 +429,8 @@ Research completed: .agents/analysis/{topic-slug}.md
 
 ## References
 
-- Analysis: .agents/analysis/{topic-slug}.md
-- Brain Project Note: {topic-slug}-integration
-- Brain Note IDs: [list]
+- Analysis Note: ANALYSIS-NNN {topic-slug}
+- Related Notes: [list titles]
 
 ## Tasks
 
@@ -476,9 +452,8 @@ Research completed: .agents/analysis/{topic-slug}.md
 ## Action Items Created
 
 - GitHub Issue #{number}: {title}
-- Brain Project Note: {topic-slug}-integration
-- Brain Notes: {count} atomic notes created
-- Analysis Document: .agents/analysis/{topic-slug}.md
+- Brain Memory Notes: {count} notes created
+- Analysis Note: ANALYSIS-NNN {topic-slug}
 
 ## Next Steps
 
@@ -491,18 +466,19 @@ Research completed: .agents/analysis/{topic-slug}.md
 
 **Reuse Over Recreation:**
 
-- Reference analysis document in memories (don't duplicate content)
-- Link memories instead of repeating explanations
-- Create atomic memories that combine in queries (not monolithic dumps)
+- Reference analysis note in other notes (do not duplicate content)
+- Use wikilink relations instead of repeating explanations
+- Create atomic notes that combine in search queries (not monolithic dumps)
 
-**Strategic Importance Scoring:**
+**Strategic Importance:**
 
-| Score | Use For |
-|-------|---------|
-| 10 | Foundational principles that inform multiple systems |
-| 9 | Critical frameworks that guide major decisions |
-| 8 | Practical patterns with broad applicability |
-| 7 | Specific applications with clear value |
+Notes created from research should use appropriate entity types:
+
+| Entity Type | Use For |
+|-------------|---------|
+| analysis | Comprehensive research analysis documents |
+| decision | If research leads to an architectural decision |
+| skill | If research produces a reusable skill pattern |
 
 ---
 

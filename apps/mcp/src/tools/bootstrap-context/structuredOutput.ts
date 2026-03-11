@@ -24,6 +24,8 @@ export interface StructuredNote {
   permalink: string;
   type: NoteType;
   status: NoteStatus;
+  /** Full note content, included when available */
+  content?: string;
 }
 
 /**
@@ -97,6 +99,8 @@ export interface StructuredContent {
   open_sessions: OpenSession[];
   /** Currently active session (IN_PROGRESS only), or null if none */
   active_session: ActiveSession | null;
+  /** Active session note with full content */
+  active_session_note?: StructuredNote | null;
   active_features: StructuredFeature[];
   recent_decisions: StructuredDecision[];
   open_bugs: StructuredBug[];
@@ -120,6 +124,8 @@ export interface StructuredOutputInput {
   recentActivity: ContextNote[];
   referencedNotes: ContextNote[];
   sessionEnrichment?: SessionEnrichment;
+  /** Active session note with full content */
+  activeSessionNote?: ContextNote | null;
 }
 
 /**
@@ -137,6 +143,7 @@ export function buildStructuredOutput(input: StructuredOutputInput): StructuredC
     recentActivity,
     referencedNotes,
     sessionEnrichment,
+    activeSessionNote,
   } = input;
 
   // Calculate total note count
@@ -146,7 +153,8 @@ export function buildStructuredOutput(input: StructuredOutputInput): StructuredC
     recentDecisions.length +
     openBugs.length +
     recentActivity.length +
-    referencedNotes.length;
+    referencedNotes.length +
+    (activeSessionNote ? 1 : 0);
 
   // Build session context if enrichment available
   const sessionContext = sessionEnrichment ? buildSessionContext(sessionEnrichment) : undefined;
@@ -161,11 +169,12 @@ export function buildStructuredOutput(input: StructuredOutputInput): StructuredC
     session_context: sessionContext,
     open_sessions: openSessions,
     active_session: activeSession,
+    active_session_note: activeSessionNote ? toStructuredNoteWithContent(activeSessionNote) : null,
     active_features: activeFeatures.map(toStructuredFeature),
     recent_decisions: recentDecisions.map(toStructuredDecision),
     open_bugs: openBugs.map(toStructuredBug),
     recent_activity: recentActivity.map(toStructuredActivity),
-    referenced_notes: referencedNotes.map(toStructuredNote),
+    referenced_notes: referencedNotes.map(toStructuredNoteWithContent),
   };
 }
 
@@ -192,7 +201,7 @@ function buildSessionContext(enrichment: SessionEnrichment): StructuredSessionCo
 }
 
 /**
- * Convert ContextNote to StructuredNote
+ * Convert ContextNote to StructuredNote (without content)
  */
 function toStructuredNote(note: ContextNote): StructuredNote {
   return {
@@ -200,6 +209,19 @@ function toStructuredNote(note: ContextNote): StructuredNote {
     permalink: note.permalink,
     type: note.type,
     status: note.status,
+  };
+}
+
+/**
+ * Convert ContextNote to StructuredNote with full content included
+ */
+function toStructuredNoteWithContent(note: ContextNote): StructuredNote {
+  return {
+    title: note.title,
+    permalink: note.permalink,
+    type: note.type,
+    status: note.status,
+    content: note.content,
   };
 }
 

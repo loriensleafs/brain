@@ -33,7 +33,7 @@
    • Templates for skill outputs
 
 5. Create scripts (if needed)
-   • Use script-template.py as base
+   • Use script-template.ts as base
    • Include Result dataclass pattern
    • Add self-verification
    • Document exit codes
@@ -52,5 +52,5 @@
 | Verification | Concrete, measurable |
 | Tables over prose | Structured information in tables |
 | No placeholder text | Every section fully written |
-| Scripts (if present) | Shebang, docstring, argparse, exit codes, Result pattern |
+| Scripts (if present) | TypeScript with Bun, argv parsing, exit codes, Result pattern |
 | Script docs | Scripts section in SKILL.md with usage examples |

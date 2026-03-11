@@ -73,7 +73,7 @@ Does this operation require...?
 | Category | Purpose | When to Use | Key Patterns |
 |----------|---------|-------------|--------------|
 | **Validation** | Verify artifacts meet standards | Output verification, quality gates | `ValidationResult`, exit codes 0/1 |
-| **State Management** | Track progress, persist data | Multi-session workflows, progress tracking | JSON files, argparse subcommands |
+| **State Management** | Track progress, persist data | Multi-session workflows, progress tracking | JSON files, subcommand parsing |
 | **Generation** | Create artifacts from templates | Scaffolding, boilerplate creation | Template substitution, file I/O |
 | **Transformation** | Convert or process data | Format conversion, data cleaning | Input parsing, output formatting |
 | **Integration** | Interface with external tools | API calls, tool orchestration | Graceful fallbacks, error handling |
@@ -115,30 +115,28 @@ What does the script primarily do?
 
 | Language | Best For | Pros | Cons | Use When |
 |----------|----------|------|------|----------|
-| **Python** | Most scripts | Readable, rich stdlib, portable | Slower startup | Default choice |
+| **TypeScript (Bun)** | Most scripts | Type-safe, fast startup, rich stdlib | Bun required | Default choice |
 | **Bash** | Simple glue | No dependencies, native | Limited logic | <30 lines, Unix-only |
 | **Go** | Performance | Fast, single binary | Compile step | Performance-critical |
-| **Node.js** | Web/async | npm ecosystem, async | Heavier | Web APIs, npm tools |
 
-### Default: Python
+### Default: TypeScript (Bun)
 
-Python is the default language for skill scripts because:
+TypeScript with Bun is the default language for skill scripts because:
 
-1. **Readability** - Easy for any developer to understand
-2. **Standard Library** - `argparse`, `json`, `pathlib` cover most needs
-3. **Portability** - Works on macOS, Linux, Windows
-4. **No Dependencies** - Standard library is sufficient for most scripts
+1. **Type Safety** - Catches errors at write-time, not runtime
+2. **Fast Startup** - Bun runs TypeScript natively with no compile step
+3. **Rich Standard Library** - `fs`, `path`, `Bun.file()`, `Bun.Glob` cover most needs
+4. **No Dependencies** - Bun and Node stdlib are sufficient for most scripts
 5. **Ecosystem Alignment** - Matches existing skill scripts
 
-**Rule:** Use Python unless you have a specific reason not to.
+**Rule:** Use TypeScript with Bun unless you have a specific reason not to.
 
 ### When to Consider Alternatives
 
 | Scenario | Consider |
 |----------|----------|
 | Wrapping 2-3 CLI commands | Bash |
-| Need <10ms startup time | Go |
-| Heavy npm tool integration | Node.js |
+| Need single static binary | Go |
 | System-level operations | Go or Bash |
 
 ---
@@ -151,21 +149,22 @@ These patterns make scripts capable of autonomous operation.
 
 Scripts should verify their own outputs:
 
-```python
-def execute_and_verify(input_data):
-    """Execute operation and verify the result."""
-    result = perform_operation(input_data)
+```typescript
+function executeAndVerify(inputData: unknown): Result {
+  const result = performOperation(inputData);
 
-    # Self-verification - the script checks itself
-    is_valid, reason = verify_output(result)
-    if not is_valid:
-        return Result(
-            success=False,
-            message=f"Verification failed: {reason}",
-            errors=[reason]
-        )
+  // Self-verification - the script checks itself
+  const { valid, reason } = verifyOutput(result);
+  if (!valid) {
+    return {
+      success: false,
+      message: `Verification failed: ${reason}`,
+      errors: [reason],
+    };
+  }
 
-    return Result(success=True, message="Operation verified", data=result)
+  return { success: true, message: "Operation verified", data: result };
+}
 ```
 
 **Why:** Enables autonomous operation - Claude can trust the script's exit code.
@@ -174,21 +173,20 @@ def execute_and_verify(input_data):
 
 Scripts should attempt recovery before failing:
 
-```python
-def resilient_operation(max_retries=3):
-    """Operation with automatic retry on recoverable errors."""
-    for attempt in range(max_retries):
-        try:
-            result = perform_operation()
-            if verify_result(result):
-                return result
-        except RecoverableError as e:
-            if attempt == max_retries - 1:
-                raise  # Final attempt, propagate error
-            log(f"Attempt {attempt + 1} failed: {e}, retrying...")
-            time.sleep(1)  # Brief delay before retry
-
-    return fallback_result()
+```typescript
+async function resilientOperation(maxRetries: number = 3): Promise<Result> {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const result = performOperation();
+      if (verifyResult(result)) return result;
+    } catch (e) {
+      if (attempt === maxRetries - 1) throw e;
+      console.error(`Attempt ${attempt + 1} failed: ${e}, retrying...`);
+      await Bun.sleep(1000);
+    }
+  }
+  return fallbackResult();
+}
 ```
 
 **Why:** Reduces need for human intervention on transient failures.
@@ -197,27 +195,30 @@ def resilient_operation(max_retries=3):
 
 Scripts should maintain state across sessions:
 
-```python
-from pathlib import Path
-import json
+```typescript
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from "fs";
+import { join } from "path";
 
-STATE_DIR = Path.home() / ".cache" / "skill-name"
-STATE_FILE = STATE_DIR / "state.json"
+const HOME = process.env.HOME ?? "";
+const STATE_DIR = join(HOME, ".cache", "skill-name");
+const STATE_FILE = join(STATE_DIR, "state.json");
 
-def load_state() -> dict:
-    """Load persisted state with graceful fallback."""
-    if STATE_FILE.exists():
-        try:
-            return json.loads(STATE_FILE.read_text())
-        except json.JSONDecodeError:
-            return {"error": "corrupted", "data": {}}
-    return {"version": "1.0", "created_at": datetime.now().isoformat()}
+function loadState(): Record<string, unknown> {
+  if (existsSync(STATE_FILE)) {
+    try {
+      return JSON.parse(readFileSync(STATE_FILE, "utf-8"));
+    } catch {
+      return { error: "corrupted", data: {} };
+    }
+  }
+  return { version: "1.0", created_at: new Date().toISOString() };
+}
 
-def save_state(state: dict) -> None:
-    """Save state to disk."""
-    STATE_DIR.mkdir(parents=True, exist_ok=True)
-    state["updated_at"] = datetime.now().isoformat()
-    STATE_FILE.write_text(json.dumps(state, indent=2))
+function saveState(state: Record<string, unknown>): void {
+  mkdirSync(STATE_DIR, { recursive: true });
+  state["updated_at"] = new Date().toISOString();
+  writeFileSync(STATE_FILE, JSON.stringify(state, null, 2));
+}
 ```
 
 **Why:** Enables multi-session workflows and progress tracking.
@@ -226,23 +227,25 @@ def save_state(state: dict) -> None:
 
 Scripts should output structured data for automation:
 
-```python
-def main():
-    result = process()
+```typescript
+function main(): void {
+  const result = processInput();
 
-    # Structured output for automation
-    if args.json:
-        print(json.dumps({
-            "success": result.success,
-            "message": result.message,
-            "data": result.data,
-            "errors": result.errors
-        }))
-    else:
-        # Human-readable output
-        print(f"{'Success' if result.success else 'Failed'}: {result.message}")
+  // Structured output for automation
+  if (jsonMode) {
+    console.log(JSON.stringify({
+      success: result.success,
+      message: result.message,
+      data: result.data,
+      errors: result.errors,
+    }));
+  } else {
+    // Human-readable output
+    console.log(`${result.success ? "Success" : "Failed"}: ${result.message}`);
+  }
 
-    sys.exit(0 if result.success else 1)
+  process.exit(result.success ? 0 : 1);
+}
 ```
 
 **Why:** Enables script composition and programmatic processing.
@@ -251,20 +254,18 @@ def main():
 
 Scripts should work with optional dependencies:
 
-```python
-def parse_yaml(text: str) -> dict:
-    """Parse YAML with graceful fallback."""
-    try:
-        import yaml
-        return yaml.safe_load(text)
-    except ImportError:
-        # Fallback: basic key-value parsing
-        result = {}
-        for line in text.split('\n'):
-            if ':' in line and not line.strip().startswith('#'):
-                key, value = line.split(':', 1)
-                result[key.strip()] = value.strip()
-        return result
+```typescript
+function parseYaml(text: string): Record<string, string> {
+  // Basic key-value parsing (no external YAML dependency)
+  const result: Record<string, string> = {};
+  for (const line of text.split("\n")) {
+    if (line.includes(":") && !line.trim().startsWith("#")) {
+      const colonIdx = line.indexOf(":");
+      result[line.slice(0, colonIdx).trim()] = line.slice(colonIdx + 1).trim();
+    }
+  }
+  return result;
+}
 ```
 
 **Why:** Reduces dependency requirements and improves portability.
@@ -294,14 +295,14 @@ Before creating new scripts, search for reusable patterns:
 
 ```bash
 # Find relevant scripts in the skills ecosystem
-find ~/.claude/skills -name "*.py" -path "*/scripts/*" | xargs grep -l "<keyword>"
+find ~/.claude/skills -name "*.ts" -path "*/scripts/*" | xargs grep -l "<keyword>"
 
 # List all skill scripts for reference
 ls ~/.claude/skills/*/scripts/
 
 # Check specific patterns
 grep -r "ValidationResult" ~/.claude/skills/*/scripts/
-grep -r "argparse" ~/.claude/skills/*/scripts/
+grep -r "process.argv" ~/.claude/skills/*/scripts/
 ```
 
 ### Script Decision Documentation
@@ -310,11 +311,11 @@ For each identified script, document in the specification:
 
 ```xml
 <script id="S1">
-  <name>validate_output.py</name>
+  <name>validate_output.ts</name>
   <category>validation</category>
   <purpose>Verify generated artifacts meet quality standards</purpose>
   <rationale>Manual verification is error-prone and inconsistent</rationale>
-  <reused_from>~/.claude/skills/skillforge/scripts/validate-skill.py</reused_from>
+  <reused_from>~/.claude/skills/skillforge/scripts/validate_skill.ts</reused_from>
 </script>
 ```
 
@@ -332,7 +333,7 @@ For each identified script, document in the specification:
 Run the validation script:
 
 \`\`\`bash
-python ~/.claude/skills/my-skill/scripts/validate_output.py <input-file>
+bun ~/.claude/skills/my-skill/scripts/validate_output.ts <input-file>
 \`\`\`
 
 Expected output:
@@ -346,13 +347,13 @@ Expected output:
 If generating multiple files:
 
 \`\`\`bash
-python scripts/batch_validate.py --directory output/
+bun scripts/batch_validate.ts --directory output/
 \`\`\`
 
 For single file:
 
 \`\`\`bash
-python scripts/validate_single.py output/result.json
+bun scripts/validate_single.ts output/result.json
 \`\`\`
 ```
 
@@ -360,7 +361,7 @@ python scripts/validate_single.py output/result.json
 
 ```markdown
 \`\`\`bash
-cat result.json | python scripts/transform.py --format yaml > result.yaml
+cat result.json | bun scripts/transform.ts --format yaml > result.yaml
 \`\`\`
 ```
 
@@ -369,13 +370,13 @@ cat result.json | python scripts/transform.py --format yaml > result.yaml
 ```markdown
 \`\`\`bash
 # Initialize project
-python scripts/tracker.py init "My Project"
+bun scripts/tracker.ts init "My Project"
 
 # Add a step
-python scripts/tracker.py add-step "First milestone" --project my-project.json
+bun scripts/tracker.ts add-step "First milestone" --project my-project.json
 
 # Update status
-python scripts/tracker.py update step-001 --status verified
+bun scripts/tracker.ts update step-001 --status verified
 \`\`\`
 ```
 
@@ -400,9 +401,9 @@ Every script must be documented in SKILL.md:
 
 | Script | Purpose | Usage |
 |--------|---------|-------|
-| `validate_output.py` | Verify generated artifacts | `python scripts/validate_output.py <path>` |
-| `generate_report.py` | Create summary report | `python scripts/generate_report.py --project <name>` |
-| `tracker.py` | Track progress across sessions | `python scripts/tracker.py <command> [args]` |
+| `validate_output.ts` | Verify generated artifacts | `bun scripts/validate_output.ts <path>` |
+| `generate_report.ts` | Create summary report | `bun scripts/generate_report.ts --project <name>` |
+| `tracker.ts` | Track progress across sessions | `bun scripts/tracker.ts <command> [args]` |
 
 ### Exit Codes
 
@@ -428,6 +429,112 @@ Before finalizing a skill with scripts, verify:
 - [ ] **Documentation:** Are all scripts documented in SKILL.md?
 - [ ] **Exit Codes:** Do scripts use consistent exit codes?
 - [ ] **Graceful Degradation:** Do scripts handle optional dependencies?
+
+---
+
+## Hooks Integration
+
+Skills can leverage hooks for automatic script invocation during tool use.
+
+### When to Use Hooks with Scripts
+
+| Scenario | Hook | Script Pattern |
+|----------|------|----------------|
+| Validate before generation | PreToolUse on Write | `validation/validate_input.ts` |
+| Verify after generation | PostToolUse on Write | `validation/verify_output.ts` |
+| Log all tool activity | PostToolUse (all) | `logging/activity_log.ts` |
+| Cleanup on completion | Stop | `state/cleanup.ts` |
+
+### Hook + Script Integration Pattern
+
+**Skill frontmatter:**
+```yaml
+---
+name: validated-generator
+hooks:
+  PreToolUse:
+    - matcher: "Bash(bun:scripts/generate*)"
+      hooks:
+        - type: command
+          command: "bun scripts/validate_params.ts"
+  PostToolUse:
+    - matcher: "Write"
+      hooks:
+        - type: command
+          command: "bun scripts/verify_artifact.ts"
+---
+```
+
+Read `$TOOL_INPUT` and `$TOOL_OUTPUT` from environment variables inside the script.
+Avoid interpolating these values directly in shell command strings.
+
+**Script requirements for hook integration:**
+1. Accept input via `$TOOL_INPUT` or `$TOOL_OUTPUT` environment variables
+2. Exit code 0 allows tool execution to proceed
+3. Exit code non-0 blocks tool execution (PreToolUse) or flags error (PostToolUse)
+4. Output to stderr for error messages (stdout may be captured)
+
+### Hook Script Template
+
+```typescript
+/**
+ * hook_validator.ts - Validate tool input before execution
+ *
+ * Called by PreToolUse hook with $TOOL_INPUT containing the tool parameters.
+ * Exit 0 to allow, exit 1 to block.
+ */
+
+function validateInput(toolInput: string): { valid: boolean; reason: string } {
+  try {
+    JSON.parse(toolInput);
+    // Add validation logic here
+    return { valid: true, reason: "Input valid" };
+  } catch {
+    return { valid: false, reason: "Invalid JSON input" };
+  }
+}
+
+function main(): void {
+  const toolInput = process.env["TOOL_INPUT"] ?? "";
+
+  if (!toolInput) {
+    console.error("Warning: No TOOL_INPUT provided");
+    process.exit(0); // Allow by default if no input
+  }
+
+  const { valid, reason } = validateInput(toolInput);
+
+  if (!valid) {
+    console.error(`Blocked: ${reason}`);
+    process.exit(1);
+  }
+
+  process.exit(0);
+}
+
+main();
+```
+
+### Agentic Capability Enhancement
+
+Hooks enable fully autonomous skill execution:
+
+```
+WITHOUT HOOKS:
+  Claude runs script → Script fails → Claude notices → Claude retries
+  (Multiple tool calls, potential for missed errors)
+
+WITH HOOKS:
+  PreToolUse validates → Only valid calls proceed → PostToolUse verifies
+  (Single tool call, guaranteed validation)
+```
+
+| Capability | Without Hooks | With Hooks |
+|------------|---------------|------------|
+| Input validation | Manual check in script | Automatic gate |
+| Output verification | Separate tool call | Inline verification |
+| Error handling | After-the-fact | Preventive |
+| Audit trail | Custom logging | Built-in hook logging |
 
 ---
 

@@ -1,72 +1,62 @@
-# skills/analyze/
+# skills/analyze/ Development Guide
 
 ## Overview
 
-Systematic codebase analysis skill. IMMEDIATELY invoke the command - do NOT explore first.
+Systematic codebase analysis skill. The script (`scripts/analyze.ts`) IS the workflow. It outputs REQUIRED ACTIONS at each step. Follow them exactly. Do NOT explore the codebase before invoking the script.
 
-## Index
+## File Index
 
-| File/Directory                    | Contents                       | Read When               |
-| --------------------------------- | ------------------------------ | ----------------------- |
-| `SKILL.md`                        | Invocation instructions        | Using the analyze skill |
-| `../../hooks/scripts/brain-hooks` | Go binary with analyze command | Implementation details  |
+| File/Directory | Contents | Read When |
+|----------------|----------|-----------|
+| `SKILL.md` | Triggers, process phases, invocation instructions | Using the analyze skill |
+| `scripts/analyze.ts` | Six-phase workflow engine with prompt generation | Debugging analyzer behavior or extending phases |
+| `references/DEVELOPMENT.md` | This file: contributor guide | Modifying the skill |
 
-## Key Point
+## Architecture
 
-The command IS the workflow. It outputs structured JSON with REQUIRED ACTIONS at each step. Follow them exactly. Do NOT try to follow any workflow manually - run the command and obey its output.
+The skill uses a **script-driven workflow** pattern. The TypeScript script acts as a state machine that generates phase-appropriate prompts. The agent follows the prompts, collects evidence, and feeds accumulated state back via `--thoughts`.
 
-## Invocation
+```text
+Agent invokes script -> Script emits REQUIRED ACTIONS -> Agent executes actions
+  -> Agent re-invokes script with accumulated state -> Repeat until synthesis
+```
+
+### Phase Map
+
+| Phase | Step | Function in analyze.ts |
+|-------|------|------------------------|
+| Exploration | 1 | `get_step_guidance` (step == 1) |
+| Focus Selection | 2 | `get_step_guidance` (step == 2) |
+| Investigation Planning | 3 | `get_step_guidance` (step == 3) |
+| Deep Analysis | 4 to N-2 | `get_step_guidance` (else branch) |
+| Verification | N-1 | `get_step_guidance` (step == total_steps - 1) |
+| Synthesis | N | `get_step_guidance` (is_final) |
+
+### Exit Codes
+
+| Code | Meaning |
+|------|---------|
+| 0 | Success |
+| 1 | Invalid arguments (e.g., missing required flags, bad step-number, total-steps < 6) |
+
+## Extending
+
+To add a new investigation dimension (e.g., accessibility):
+
+1. Add checklist items to the `FOCUS SELECTION` phase (step 2) in `get_step_guidance`
+2. No changes needed to other phases; they operate on the focus areas selected in step 2
+3. Update SKILL.md trigger list if the new dimension warrants a dedicated trigger phrase
+
+## Testing
 
 ```bash
-echo '{"stepNumber": 1, "totalSteps": 6, "thoughts": "Starting analysis..."}' | \
-  ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/brain-hooks analyze
+# Validate step 1 output
+bun run scripts/analyze.ts --step-number 1 --total-steps 6 --thoughts "test"
+
+# Validate final step output
+bun run scripts/analyze.ts --step-number 6 --total-steps 6 --thoughts "test synthesis"
+
+# Verify minimum step validation
+bun run scripts/analyze.ts --step-number 1 --total-steps 3 --thoughts "should fail"
+# Expected: exit code 1
 ```
-
-State is persisted to `/tmp/brain-analyze/analyze-state-YYYY-MM-DD.json`.
-
-## Building
-
-From the brain repo root:
-
-```bash
-make build-plugin-hooks
-```
-
-This builds the Go binary and places it in `hooks/scripts/brain-hooks`.
-
-## Output Format
-
-```json
-{
-  "phase": "EXPLORATION",
-  "stepTitle": "Process Exploration Results",
-  "status": "in_progress",
-  "actions": ["Required actions..."],
-  "next": "Instructions for next step",
-  "stateFile": "/tmp/brain-analyze/analyze-state-2026-01-14.json",
-  "stateSummary": "2 focus areas, 5 findings"
-}
-```
-
-## State File
-
-State is persisted to a JSON file:
-
-```json
-{
-  "stepNumber": 4,
-  "totalSteps": 7,
-  "phase": "DEEP ANALYSIS",
-  "focusAreas": [{ "name": "Security", "priority": "P1", "reason": "..." }],
-  "findings": [
-    { "severity": "CRITICAL", "description": "...", "file": "...", "line": 45 }
-  ],
-  "openQuestions": ["How is X handled?"]
-}
-```
-
-This prevents memory issues by not accumulating everything in CLI arguments.
-
-## Source Code
-
-The implementation is in `cmd/hooks/analyze.go`.

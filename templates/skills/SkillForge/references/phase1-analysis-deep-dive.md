@@ -29,7 +29,6 @@ USER INPUT: "Create a skill for X"
 ```
 
 **Check for overlap with existing skills:**
-
 ```bash
 ls ~/.claude/skills/
 # Grep for similar triggers in existing SKILL.md files
@@ -84,7 +83,6 @@ ROUND N:
 ```
 
 **Termination Criteria:**
-
 - Three consecutive rounds produce no new insights
 - All 11 thinking models have been applied
 - At least 3 simulated expert perspectives considered

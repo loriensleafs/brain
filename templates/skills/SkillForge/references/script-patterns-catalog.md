@@ -1,6 +1,6 @@
 # Script Patterns Catalog
 
-Standard Python patterns for skill scripts, derived from successful implementations across the ecosystem. These patterns ensure consistency, reliability, and agentic capability.
+Standard TypeScript/Bun patterns for skill scripts, derived from successful implementations across the ecosystem. These patterns ensure consistency, reliability, and agentic capability.
 
 ---
 
@@ -628,13 +628,13 @@ def verify_non_empty(output):
 ### Validation Script Template
 
 ```python
-#!/usr/bin/env python3
+#!/usr/bin/env bun
 """
-validate_<target>.py - Validates <target> against <standard>
+validate_<target>.ts - Validates <target> against <standard>
 
 Usage:
-    python validate_<target>.py <path>
-    python validate_<target>.py <path> --strict
+    bun run validate_<target>.ts <path>
+    bun run validate_<target>.ts <path> --strict
 """
 
 import argparse
@@ -677,15 +677,15 @@ if __name__ == "__main__":
 ### State Management Script Template
 
 ```python
-#!/usr/bin/env python3
+#!/usr/bin/env bun
 """
-<name>_tracker.py - Track progress for <purpose>
+<name>_tracker.ts - Track progress for <purpose>
 
 Usage:
-    python <name>_tracker.py init "Project Name"
-    python <name>_tracker.py add-item "Item description"
-    python <name>_tracker.py update <id> --status completed
-    python <name>_tracker.py status
+    bun run <name>_tracker.ts init "Project Name"
+    bun run <name>_tracker.ts add-item "Item description"
+    bun run <name>_tracker.ts update <id> --status completed
+    bun run <name>_tracker.ts status
 """
 
 import argparse
@@ -738,12 +738,12 @@ if __name__ == "__main__":
 ### Generation Script Template
 
 ```python
-#!/usr/bin/env python3
+#!/usr/bin/env bun
 """
-generate_<artifact>.py - Generate <artifact> from <input>
+generate_<artifact>.ts - Generate <artifact> from <input>
 
 Usage:
-    python generate_<artifact>.py <input> --output <output>
+    bun run generate_<artifact>.ts <input> --output <output>
 """
 
 import argparse
@@ -828,4 +828,4 @@ if __name__ == "__main__":
 ## Related References
 
 - [Script Integration Framework](script-integration-framework.md) - When to use scripts
-- [Script Template](../assets/templates/script-template.py) - Full starter template
+- [Script Template](../assets/templates/script-template.ts) - Full TypeScript starter template

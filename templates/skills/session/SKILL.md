@@ -1,17 +1,73 @@
 ---
 name: session
-description: Skills for session management and protocol compliance including investigation eligibility checking per ADR-034 to determine when QA validation can be skipped.
+description: Session management and protocol compliance skills. Use Test-InvestigationEligibility to check if staged files qualify for investigation-only QA skip before committing with 'SKIPPED investigation-only' verdict.
 license: MIT
-agents:
-  - orchestrator
-metadata:
-version: 1.0.0
+agents: [qa]
 model: claude-sonnet-4-5
+metadata:
+  version: 1.0.0
+  timelessness: high
+  domains:
+    - session-protocol
+    - qa-validation
+    - investigation-eligibility
+  type: utility
+  complexity: low
+  related_skills:
+    - github
+    - qa
 ---
 
 # Session Skills
 
 Skills for session management and protocol compliance.
+
+## Triggers
+
+| Phrase | Action |
+|--------|--------|
+| `Check if I can skip QA` | Run test_investigation_eligibility.ts |
+| `Am I eligible for investigation-only?` | Verify staged files against investigation allowlist allowlist |
+| `Verify investigation session eligibility` | Check QA skip eligibility before commit |
+| `Can I use SKIPPED: investigation-only?` | Validate investigation-only exemption |
+| `Test eligibility for QA skip` | Execute eligibility check script |
+
+## When to Use
+
+Use this skill when:
+
+- About to commit investigation-only work and need to verify QA skip eligibility
+- Session log uses "SKIPPED: investigation-only" verdict
+- Staged files should be checked against investigation allowlist allowlist
+
+Use [session-init](../session-init/SKILL.md) instead when:
+
+- Starting a new session and creating the session log
+- Need protocol-compliant session initialization
+
+Use the qa agent instead when:
+
+- Feature implementation work was done (not investigation-only)
+- Eligibility check returns Eligible: false
+
+---
+
+## Process
+
+### Phase 1: Eligibility Check
+
+| Step | Action | Tool | Output |
+|------|--------|------|--------|
+| 1.1 | Stage files for commit | `git add` | Files added to staging area |
+| 1.2 | Run eligibility check | `test_investigation_eligibility.ts` | JSON with Eligible, StagedFiles, Violations |
+| 1.3 | Verify Eligible=true | Parse JSON output | Boolean result |
+
+### Phase 2: Commit Decision
+
+| Step | Action | Condition | Next Step |
+|------|--------|-----------|-----------|
+| 2.1 | Proceed with investigation-only skip | Eligible=true, Violations=[] | Use "SKIPPED: investigation-only" |
+| 2.2 | Address violations or invoke qa agent | Eligible=false | Fix violations or start new session |
 
 ---
 
@@ -25,9 +81,9 @@ Skills for session management and protocol compliance.
 
 ## Test Investigation Eligibility
 
-Check if staged files qualify for investigation-only QA skip per ADR-034.
+Check if staged files qualify for investigation-only QA skip per investigation allowlist.
 
-### Triggers
+### Trigger Phrases
 
 - "Check if I can skip QA"
 - "Am I eligible for investigation-only?"
@@ -36,8 +92,8 @@ Check if staged files qualify for investigation-only QA skip per ADR-034.
 
 ### Usage
 
-```powershell
-pwsh .claude/skills/session/scripts/Test-InvestigationEligibility.ps1
+```bash
+bun run ${CLAUDE_SKILL_DIR}/scripts/test_investigation_eligibility.ts
 ```
 
 ### Output
@@ -82,7 +138,7 @@ Returns JSON with:
     ".agents/sessions/",
     ".agents/analysis/",
     ".agents/retrospective/",
-    "notes/",
+    ".agents/memory/",
     ".agents/security/"
   ]
 }
@@ -102,7 +158,7 @@ Returns JSON with:
     ".agents/sessions/",
     ".agents/analysis/",
     ".agents/retrospective/",
-    "notes/",
+    ".agents/memory/",
     ".agents/security/"
   ]
 }
@@ -119,7 +175,7 @@ Returns JSON with:
     ".agents/sessions/",
     ".agents/analysis/",
     ".agents/retrospective/",
-    "notes/",
+    ".agents/memory/",
     ".agents/security/"
   ],
   "Error": "Not in a git repository or git command failed"
@@ -141,7 +197,7 @@ SESSION-PROTOCOL.md (Phase 2.5: QA Validation)
                 │
                 └── Investigation session → MAY skip QA
                         │
-                        └── Test-InvestigationEligibility.ps1
+                        └── test_investigation_eligibility.ts
                                 │
                                 ├── Eligible: true → Use "SKIPPED: investigation-only"
                                 │
@@ -153,11 +209,11 @@ SESSION-PROTOCOL.md (Phase 2.5: QA Validation)
 ```text
 1. Stage your files
    │
-   └── git add .agents/sessions/... notes/...
+   └── git add .agents/sessions/... .agents/memory/...
 
 2. Run eligibility check
    │
-   └── pwsh .claude/skills/session/scripts/Test-InvestigationEligibility.ps1
+   └── bun run ${CLAUDE_SKILL_DIR}/scripts/test_investigation_eligibility.ts
 
 3. Check output
    │
@@ -182,7 +238,7 @@ Use this skill to validate the QA skip condition:
 
 | Req | Step | Status | Evidence |
 |-----|------|--------|----------|
-| MUST | Route to qa agent (feature implementation) | [x] | `SKIPPED: investigation-only` - Verified via Test-InvestigationEligibility.ps1 |
+| MUST | Route to qa agent (feature implementation) | [x] | `SKIPPED: investigation-only` - Verified via test_investigation_eligibility.ts |
 ```
 
 ---
@@ -196,10 +252,10 @@ These paths qualify for investigation-only QA exemption:
 | `.agents/sessions/` | Session logs documenting work |
 | `.agents/analysis/` | Investigation outputs and findings |
 | `.agents/retrospective/` | Learnings and retrospective documents |
-| `notes/` | Cross-session context storage (Brain) |
+| `Brain memory` | Cross-session context storage |
 | `.agents/security/` | Security assessments and reviews |
 
-**Important**: This allowlist MUST match exactly with `scripts/Validate-Session.ps1 $InvestigationAllowlist`. The patterns are validated by Pester tests to ensure consistency.
+**Important**: The patterns in `test_investigation_eligibility.ts` are validated by tests to ensure they match the allowlist specification.
 
 ---
 
@@ -210,7 +266,7 @@ These paths qualify for investigation-only QA exemption:
 | Skipping eligibility check | May commit ineligible files with investigation-only skip | Always run the skill before using the skip |
 | Ignoring violations | QA exemption won't be valid | Address violations or invoke qa agent |
 | Using for code changes | Investigation-only is for analysis, not implementation | Start a new session for code work |
-| Hardcoding path checks | Patterns may drift from Validate-Session.ps1 | Use this skill which shares the same patterns |
+| Hardcoding path checks | Patterns may drift from investigation allowlist specification | Use this skill which implements the ADR patterns |
 
 ---
 
@@ -225,12 +281,20 @@ After using this skill:
 
 ---
 
+## Scripts
+
+### test_investigation_eligibility.ts
+
+Checks if staged files qualify for investigation-only QA skip.
+
+```bash
+bun run ${CLAUDE_SKILL_DIR}/scripts/test_investigation_eligibility.ts
+```
+
+---
+
 ## Related
 
 | Reference | Description |
 |-----------|-------------|
-| [ADR-034](../../.agents/architecture/decisions/adr-034-investigation-session-qa-exemption.md) | Investigation Session QA Exemption architecture decision |
-| [SESSION-PROTOCOL.md](../../.agents/SESSION-PROTOCOL.md) | Session start/end requirements (Phase 2.5) |
-| [Issue #662](https://github.com/rjmurillo/ai-agents/issues/662) | Create QA skip eligibility check skill |
-| [Validate-Session.ps1](../../scripts/Validate-Session.ps1) | Uses same allowlist for CI validation |
-| [Test-InvestigationEligibility.Tests.ps1](../../tests/Test-InvestigationEligibility.Tests.ps1) | Pester tests ensuring pattern consistency |
+| [test_investigation_eligibility.ts](tests/test_session_eligibility.ts) | Tests ensuring pattern consistency |

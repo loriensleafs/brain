@@ -2,12 +2,11 @@
 name: planner
 description: Interactive planning and execution for complex tasks. Use when breaking down multi-step projects (planning) or executing approved plans through delegation (execution). Planning creates milestones with specifications; execution delegates to specialized agents.
 license: MIT
-agents:
-  - planner
-  - orchestrator
-metadata:
-version: 1.0.0
+agents: [planner, architect, implementer]
 model: claude-opus-4-5
+metadata:
+  version: 1.0.0
+  timelessness: high
 ---
 
 # Planner Skill
@@ -16,18 +15,18 @@ model: claude-opus-4-5
 
 Two workflows for complex tasks:
 
-1. **Planning workflow** (planner.py): Create and review implementation plans
-2. **Execution workflow** (executor.py): Execute approved plans through delegation
+1. **Planning workflow** (planner.ts): Create and review implementation plans
+2. **Execution workflow** (executor.ts): Execute approved plans through delegation
 
 ## Invocation Routing
 
-**Invoke planner.py** when user asks to:
+**Invoke planner.ts** when user asks to:
 
 - "plan", "design", "architect" a feature
 - "review" an existing plan
 - Break down a complex task into milestones
 
-**Invoke executor.py** when user asks to:
+**Invoke executor.ts** when user asks to:
 
 - "execute", "implement", "run" a plan
 - "resume" or "continue" execution
@@ -54,11 +53,59 @@ Skip the planner skill when the task is:
 
 ---
 
-# PLANNING WORKFLOW (planner.py)
+## Scripts
 
-## Workflow Overview
+| Script | Purpose |
+|--------|---------|
+| `scripts/planner.ts` | Planning and review workflow with step-based state management |
+| `scripts/executor.ts` | Execution workflow for approved plans with milestone delegation |
 
-```
+## Triggers
+
+| Trigger Phrase | Operation |
+|----------------|-----------|
+| `plan this feature` | planner.ts (planning phase) |
+| `create implementation plan` | planner.ts (planning phase) |
+| `review the plan and pick up next item` | executor.ts (execution phase) |
+| `execute the plan at plans/X.md` | executor.ts (execution phase) |
+| `resume execution` | executor.ts (continue from last step) |
+
+---
+
+## Anti-Patterns
+
+| Avoid | Why | Instead |
+|-------|-----|---------|
+| Skipping review phase after planning | Misses quality/temporal issues | Always run review steps 1-2 before execution |
+| Starting execution without /clear | Context pollution from planning | User should /clear before execution workflow |
+| Manually following workflow steps | Script manages state and transitions | Run the script and follow its output |
+| Planning single-step tasks | Overhead exceeds benefit | Implement directly without planner |
+| Editing plan during execution | Creates drift between plan and actions | Return to planning phase for changes |
+
+---
+
+## Verification
+
+After planning:
+
+- [ ] Plan file written to specified path
+- [ ] Review phase completed (both TW and QR steps)
+- [ ] Review verdict is PASS or PASS_WITH_CONCERNS
+
+After execution:
+
+- [ ] All milestones marked complete
+- [ ] Post-implementation QR passed
+- [ ] Documentation step completed
+- [ ] Retrospective generated
+
+---
+
+## Process
+
+### Planning Overview
+
+```text
 PLANNING PHASE (steps 1-N)
     |
     v
@@ -72,23 +119,23 @@ REVIEW PHASE (steps 1-2)
 APPROVED --> Execution workflow
 ```
 
-## Preconditions
+### Planning Preconditions
 
 Before invoking step 1, you MUST have:
 
 1. **Plan file path** - If user did not specify, ASK before proceeding
 2. **Clear problem statement** - What needs to be accomplished
 
-## Invocation
+### Planning Invocation
 
 ```bash
-python3 scripts/planner.py \
+bun run ${CLAUDE_SKILL_DIR}/scripts/planner.ts \
   --step-number 1 \
   --total-steps <estimated_steps> \
   --thoughts "<your thinking about the problem>"
 ```
 
-### Arguments
+### Planning Arguments
 
 | Argument        | Description                                      |
 | --------------- | ------------------------------------------------ |
@@ -97,7 +144,7 @@ python3 scripts/planner.py \
 | `--total-steps` | Estimated total steps for this phase             |
 | `--thoughts`    | Your thinking, findings, and progress            |
 
-## Planning Workflow
+### Planning Steps
 
 1. Confirm preconditions (plan file path, problem statement)
 2. Invoke step 1 immediately
@@ -111,7 +158,7 @@ python3 scripts/planner.py \
 When planning phase completes, the script outputs an explicit `ACTION REQUIRED`
 marker:
 
-```
+```text
 ============================================
 >>> ACTION REQUIRED: INVOKE REVIEW PHASE <<<
 ============================================
@@ -131,7 +178,7 @@ The review phase ensures:
 After writing the plan file, transition to review phase:
 
 ```bash
-python3 scripts/planner.py \
+bun run ${CLAUDE_SKILL_DIR}/scripts/planner.ts \
   --phase review \
   --step-number 1 \
   --total-steps 2 \
@@ -153,11 +200,11 @@ Delegate to @agent-quality-reviewer with mode: `plan-review`
 
 ---
 
-# EXECUTION WORKFLOW (executor.py)
+## Execution Workflow (executor.ts)
 
-## Workflow Overview
+### Execution Overview
 
-```
+```text
 Step 1: Execution Planning
     |
     v
@@ -180,24 +227,24 @@ Step 6: Documentation
 Step 7: Retrospective
 ```
 
-## Preconditions
+### Execution Preconditions
 
 Before invoking step 1, you MUST have:
 
 1. **Approved plan file** - Plan that passed review phase
 2. **Clear context window** - User should /clear before execution
 
-## Invocation
+### Execution Invocation
 
 ```bash
-python3 scripts/executor.py \
+bun run ${CLAUDE_SKILL_DIR}/scripts/executor.ts \
   --plan-file PATH \
   --step-number 1 \
   --total-steps 7 \
   --thoughts "<user's request and context>"
 ```
 
-### Arguments
+### Execution Arguments
 
 | Argument        | Description                      |
 | --------------- | -------------------------------- |
@@ -232,7 +279,7 @@ Step 4 may loop back through step 5 until QR passes.
 | `resources/temporal-contamination.md` | Detecting/fixing temporally contaminated comments  |
 | `resources/default-conventions.md`    | Default conventions when project docs are silent   |
 
-Note: Execution guidance is embedded directly in `scripts/executor.py` (not in
+Note: Execution guidance is embedded directly in `scripts/executor.ts` (not in
 separate resource files) since it's only used by that script.
 
 ---
@@ -243,34 +290,34 @@ separate resource files) since it's only used by that script.
 # === PLANNING WORKFLOW ===
 
 # Start planning
-python3 scripts/planner.py --step-number 1 --total-steps 4 --thoughts "..."
+bun run ${CLAUDE_SKILL_DIR}/scripts/planner.ts --step-number 1 --total-steps 4 --thoughts "..."
 
 # Continue planning
-python3 scripts/planner.py --step-number 2 --total-steps 4 --thoughts "..."
+bun run ${CLAUDE_SKILL_DIR}/scripts/planner.ts --step-number 2 --total-steps 4 --thoughts "..."
 
 # Start review (after plan written)
-python3 scripts/planner.py --phase review --step-number 1 --total-steps 2 \
+bun run ${CLAUDE_SKILL_DIR}/scripts/planner.ts --phase review --step-number 1 --total-steps 2 \
   --thoughts "Plan at plans/feature.md"
 
 # Continue review
-python3 scripts/planner.py --phase review --step-number 2 --total-steps 2 \
+bun run ${CLAUDE_SKILL_DIR}/scripts/planner.ts --phase review --step-number 2 --total-steps 2 \
   --thoughts "TW done, ready for QR"
 
 # === EXECUTION WORKFLOW ===
 
 # Start execution
-python3 scripts/executor.py --plan-file plans/feature.md --step-number 1 \
+bun run ${CLAUDE_SKILL_DIR}/scripts/executor.ts --plan-file plans/feature.md --step-number 1 \
   --total-steps 7 --thoughts "Execute the feature plan"
 
 # Continue milestone execution
-python3 scripts/executor.py --plan-file plans/feature.md --step-number 3 \
+bun run ${CLAUDE_SKILL_DIR}/scripts/executor.ts --plan-file plans/feature.md --step-number 3 \
   --total-steps 7 --thoughts "Completed M1, M2. Executing M3..."
 
 # After QR passes
-python3 scripts/executor.py --plan-file plans/feature.md --step-number 6 \
+bun run ${CLAUDE_SKILL_DIR}/scripts/executor.ts --plan-file plans/feature.md --step-number 6 \
   --total-steps 7 --thoughts "QR passed. Running documentation."
 
 # Generate retrospective
-python3 scripts/executor.py --plan-file plans/feature.md --step-number 7 \
+bun run ${CLAUDE_SKILL_DIR}/scripts/executor.ts --plan-file plans/feature.md --step-number 7 \
   --total-steps 7 --thoughts "Execution complete. Generating retrospective."
 ```

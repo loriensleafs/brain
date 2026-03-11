@@ -7,7 +7,7 @@ Detailed phases for multi-agent ADR validation.
 Before launching independent reviews, use analyst agent to search for related work:
 
 ```text
-Task(subagent_type="analyst", prompt="""
+Agent(subagent_type="analyst", prompt="""
 ADR Related Work Research
 
 ## ADR Being Reviewed
@@ -21,13 +21,13 @@ Key topics: [Extract 3-5 keywords from ADR]
    gh issue list --state open --search "[keywords]" --json number,title,labels
    ```
 
-1. **Search open PRs** for in-progress work:
+2. **Search open PRs** for in-progress work:
 
    ```bash
    gh pr list --state open --search "[keywords]" --json number,title,headRefName
    ```
 
-2. **Search closed Issues** for prior decisions:
+3. **Search closed Issues** for prior decisions:
 
    ```bash
    gh issue list --state closed --search "[keywords]" --limit 10 --json number,title,labels
@@ -89,7 +89,7 @@ P0 = blocking, P1 = important, P2 = nice-to-have
 **Agent Invocation Pattern:**
 
 ```python
-Task(subagent_type="architect", prompt="""
+Agent(subagent_type="architect", prompt="""
 ADR Review Request (Phase 1: Independent Review)
 
 ## ADR Content
@@ -97,7 +97,7 @@ ADR Review Request (Phase 1: Independent Review)
 
 ## Instructions
 1. Review for structural compliance with MADR 4.0
-2. Check alignment with existing ADRs in .agents/architecture/ and docs/architecture/
+2. Check alignment with existing ADRs in decisions/
 3. Identify scope concerns (should this be split?)
 4. Classify all issues as P0/P1/P2
 5. Return structured review per Phase 1 format
@@ -119,7 +119,7 @@ After all 6 reviews complete:
 **Conflict Resolution Pattern:**
 
 ```python
-Task(subagent_type="high-level-advisor", prompt="""
+Agent(subagent_type="high-level-advisor", prompt="""
 ADR Conflict Resolution Required
 
 ## Conflict 1: [Description]
@@ -167,7 +167,7 @@ If 2+ agents flag scope concerns, recommend splitting:
 Re-invoke each agent to review proposed updates:
 
 ```python
-Task(subagent_type="[agent]", prompt="""
+Agent(subagent_type="[agent]", prompt="""
 ADR Convergence Check (Round [N])
 
 ## Updated ADR

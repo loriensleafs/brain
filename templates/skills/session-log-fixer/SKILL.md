@@ -1,26 +1,18 @@
 ---
 name: session-log-fixer
-version: 3.0.0
-description: Fix session protocol validation failures in GitHub Actions. Use when
-  a PR fails with "Session protocol validation failed", "MUST requirement(s) not met",
-  "NON_COMPLIANT" verdict, or "Aggregate Results" job failure in the Session Protocol
-  Validation workflow. With deterministic validation, failures show exact missing
-  requirements directly in Job Summary - no artifact downloads needed.
+description: Fix session protocol validation failures in GitHub Actions. Use when a PR fails with "Session protocol validation failed", "MUST requirement(s) not met", "NON_COMPLIANT" verdict, or "Aggregate Results" job failure in the Session Protocol Validation workflow. With deterministic validation, failures show exact missing requirements directly in Job Summary.
 license: MIT
-model: claude-opus-4-5
+agents: [implementer]
+model: claude-sonnet-4-5
 metadata:
+  version: 3.0.0
+  timelessness: high
   domains:
-  - ci
-  - session-protocol
-  - compliance
-  - github-actions
+    - ci
+    - session-protocol
+    - compliance
+    - github-actions
   type: diagnostic-fixer
-  inputs:
-  - run-id
-  - pr-number
-  outputs:
-  - fixed-session-file
-  - commit
 ---
 # Session Log Fixer
 
@@ -48,17 +40,32 @@ The skill will read the Job Summary from the failed run, identify the non-compli
 
 ## Triggers
 
-- `session-log-fixer: {run-id}` - Fix specific workflow run
-- `fix session validation for {PR/run}` - Natural language activation
-- `session protocol failed` - When user reports a failure
-- `NON_COMPLIANT session` - Direct from CI output
-- `MUST requirement not met` - Direct from validation error
+| Trigger Phrase | Operation |
+|----------------|-----------|
+| `fix session validation failure` | Detect and fix session log issues |
+| `session protocol failed in CI` | Read Job Summary and apply fixes |
+| `fix the failing session check` | Context-aware CI failure resolution |
+| `NON_COMPLIANT session log` | Direct from CI validation output |
+| `my PR failed session validation` | Natural language activation |
 
 | Input | Output | Quality Gate |
 |-------|--------|--------------|
 | Run ID or PR number | Fixed session file with commit | CI re-run passes |
 
 ---
+
+## When to Use
+
+Use this skill when:
+
+- A PR fails the "Session Protocol Validation" GitHub Actions workflow
+- Job Summary shows NON_COMPLIANT verdict or MUST requirement failures
+- You need to fix session log structure to pass CI validation
+
+Use `session-init` instead when:
+
+- Starting a new session (prevents needing this skill at all)
+- Creating a session log from scratch rather than fixing an existing one
 
 ## Process Overview
 
@@ -84,7 +91,7 @@ GitHub Actions Failure
 │ • Apply fixes based on Job Summary details        │
 │ • Copy template sections exactly                  │
 │ • Add evidence to verification steps              │
-│ • Validate fix locally with Validate-SessionProtocol.ps1 │
+│ • Validate fix locally with validate_session_json.ts │
 ├───────────────────────────────────────────────────┤
 │ Phase 4: VERIFY                                   │
 │ • Commit and push changes                         │
@@ -101,6 +108,18 @@ GitHub Actions Failure
 ## Workflow
 
 ### Step 1: Read Job Summary
+
+#### Option A: Use the script (recommended)
+
+```bash
+# By run ID
+bun run ${CLAUDE_SKILL_DIR}/scripts/get_validation_errors.ts --run-id 20548622722
+
+# By PR number
+bun run ${CLAUDE_SKILL_DIR}/scripts/get_validation_errors.ts --pull-request 799
+```
+
+#### Option B: Manual (web UI)
 
 Navigate to the failed GitHub Actions run and click the **Summary** tab. The Session Protocol Compliance Report shows:
 
@@ -147,8 +166,8 @@ The detailed results tell you **exactly** which MUST requirements failed.
 
 Validate locally before pushing:
 
-```powershell
-pwsh scripts/Validate-SessionProtocol.ps1 -SessionPath ".agents/sessions/<session-file>.md" -Format markdown
+```bash
+bun run scripts/validate_session_json.ts ".agents/sessions/<session-file>.json"
 ```
 
 This uses the **same script** as CI, so results match exactly.
@@ -186,7 +205,7 @@ Common fixes by failure type:
 
 ### Step 6: Commit
 
-```powershell
+```bash
 git add ".agents/sessions/<session-file>.md"
 git commit -m "docs: fix session protocol compliance for <session-name>
 
@@ -196,8 +215,8 @@ git push
 
 ### Step 7: Verify
 
-```powershell
-gh run list --branch (git branch --show-current) --limit 3
+```bash
+gh run list --branch "$(git branch --show-current)" --limit 3
 gh run view <new-run-id> --json conclusion
 ```
 
@@ -245,11 +264,29 @@ After applying fixes:
 
 ---
 
+## Scripts
+
+| Script | Purpose | Exit Codes |
+|--------|---------|------------|
+| [get_validation_errors.ts](scripts/get_validation_errors.ts) | Extract validation errors from GitHub Actions Job Summary | 0=success, 1=run not found, 2=no errors found |
+
+### Example Usage
+
+```bash
+# Get errors by run ID
+bun run ${CLAUDE_SKILL_DIR}/scripts/get_validation_errors.ts --run-id 20548622722
+
+# Get errors by PR number
+bun run ${CLAUDE_SKILL_DIR}/scripts/get_validation_errors.ts --pull-request 799
+```
+
+---
+
 ## Related Skills
 
 | Skill | Relationship |
 |-------|--------------|
-| session-init | Prevents need for this skill by correct initialization |
+| [session-init](../session-init/) | Prevents need for this skill by correct initialization |
 | analyze | Deep investigation when fixes aren't obvious |
 
 ---
@@ -259,4 +296,4 @@ After applying fixes:
 - [Common Fixes](references/common-fixes.md) - Fix patterns for common failures
 - [Template Sections](references/template-sections.md) - Copy-paste ready templates
 - [CI Debugging Patterns](references/ci-debugging-patterns.md) - Advanced job-level diagnostics
-- [`Validate-SessionProtocol.ps1`](../../../scripts/Validate-SessionProtocol.ps1) - Deterministic validation script
+- [`validate_session_json.ts`](../../../scripts/validate_session_json.ts) - Deterministic validation script

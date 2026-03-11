@@ -19,7 +19,7 @@ Detailed prompt templates for each phase of ADR review.
 ### Architect
 
 ```python
-Task(subagent_type="architect", prompt="""
+Agent(subagent_type="architect", prompt="""
 ADR Review Request (Phase 1: Independent Review)
 
 **Role**: Technical authority on ADR structure and architectural coherence.
@@ -33,8 +33,7 @@ ADR Review Request (Phase 1: Independent Review)
 
 Check alignment with existing decisions in:
 
-- .agents/architecture/ADR-*.md
-- docs/architecture/ADR-*.md
+- decisions/ADR-*.md
 
 ## Review Checklist
 
@@ -89,7 +88,7 @@ Does this ADR conflate multiple distinct decisions? Consider:
 ### Critic
 
 ```python
-Task(subagent_type="critic", prompt="""
+Agent(subagent_type="critic", prompt="""
 ADR Review Request (Phase 1: Independent Review)
 
 **Role**: Stress-test the ADR for completeness, gaps, and alignment.
@@ -146,7 +145,7 @@ Does this ADR try to address too many decisions at once?
 ### Independent-Thinker
 
 ```python
-Task(subagent_type="independent-thinker", prompt="""
+Agent(subagent_type="independent-thinker", prompt="""
 ADR Review Request (Phase 1: Independent Review)
 
 **Role**: Challenge assumptions and prevent groupthink.
@@ -203,7 +202,7 @@ ADR Review Request (Phase 1: Independent Review)
 ### Security
 
 ```python
-Task(subagent_type="security", prompt="""
+Agent(subagent_type="security", prompt="""
 ADR Review Request (Phase 1: Independent Review)
 
 **Role**: Analyze security implications and threat models.
@@ -262,7 +261,7 @@ ADR Review Request (Phase 1: Independent Review)
 ### Analyst
 
 ```python
-Task(subagent_type="analyst", prompt="""
+Agent(subagent_type="analyst", prompt="""
 ADR Review Request (Phase 1: Independent Review)
 
 **Role**: Validate claims with evidence and assess feasibility.
@@ -319,7 +318,7 @@ ADR Review Request (Phase 1: Independent Review)
 ### High-Level-Advisor
 
 ```python
-Task(subagent_type="high-level-advisor", prompt="""
+Agent(subagent_type="high-level-advisor", prompt="""
 ADR Review Request (Phase 1: Independent Review)
 
 **Role**: Strategic assessment and priority validation.
@@ -380,7 +379,7 @@ ADR Review Request (Phase 1: Independent Review)
 ### Conflict Resolution
 
 ```python
-Task(subagent_type="high-level-advisor", prompt="""
+Agent(subagent_type="high-level-advisor", prompt="""
 ADR Conflict Resolution Required
 
 ## ADR Under Review
@@ -457,7 +456,7 @@ If 2+ agents flagged scope concerns:
 ### Convergence Template (All Agents)
 
 ```python
-Task(subagent_type="{agent}", prompt="""
+Agent(subagent_type="{agent}", prompt="""
 ADR Convergence Check (Round {round_number})
 
 ## Updated ADR
