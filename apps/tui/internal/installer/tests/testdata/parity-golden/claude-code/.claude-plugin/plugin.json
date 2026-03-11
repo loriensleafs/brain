@@ -3,5 +3,6 @@
     "name": "Peter Kloss"
   },
   "description": "Brain knowledge graph + workflow mode management",
-  "name": "🧠"
+  "name": "🧠",
+  "version": "1.0.0"
 }

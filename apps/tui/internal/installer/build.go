@@ -638,6 +638,7 @@ func BuildPlugin(tool *ToolConfig) []GeneratedFile {
 
 	plugin := map[string]any{
 		"name":        BrainEmoji,
+		"version":     "1.0.0",
 		"description": "Brain knowledge graph + workflow mode management",
 		"author": map[string]any{
 			"name": "Peter Kloss",
