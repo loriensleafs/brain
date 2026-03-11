@@ -82,7 +82,7 @@ Port ai-agents v3.0 agents, skills, hooks, and commands to Brain, replacing half
 - mcp.json: add Serena MCP server
 - tools.config.yaml: verify frontmatter fields
 
-### Phase 8: Plugin Installation Fix [PENDING]
+### Phase 8: Plugin Installation Fix (version field added, tests pass) [COMPLETE]
 - Fix version "unknown" bug in Go installer
 - Fix name consistency (🧠)
 - Fix directory-source update mechanism
