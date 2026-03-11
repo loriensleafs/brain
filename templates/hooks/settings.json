@@ -6,13 +6,13 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run hooks/scripts/invoke_routing_gates.ts",
+            "command": "bun run ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/invoke_routing_gates.ts",
             "timeout": 5,
             "statusMessage": "Checking routing-level gates"
           },
           {
             "type": "command",
-            "command": "bun run hooks/scripts/PreToolUse/invoke_skill_first_guard.ts",
+            "command": "bun run ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/PreToolUse/invoke_skill_first_guard.ts",
             "statusMessage": "Enforcing skills-first policy for GitHub operations (BLOCKING)"
           }
         ]
@@ -22,27 +22,27 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run hooks/scripts/PreToolUse/invoke_session_log_guard.ts",
+            "command": "bun run ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/PreToolUse/invoke_session_log_guard.ts",
             "statusMessage": "Verifying session log exists before commit (BLOCKING)"
           },
           {
             "type": "command",
-            "command": "bun run hooks/scripts/PreToolUse/invoke_branch_context_guard.ts",
+            "command": "bun run ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/PreToolUse/invoke_branch_context_guard.ts",
             "statusMessage": "Verifying branch matches session context (BLOCKING)"
           },
           {
             "type": "command",
-            "command": "bun run hooks/scripts/PreToolUse/invoke_adr_review_guard.ts",
+            "command": "bun run ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/PreToolUse/invoke_adr_review_guard.ts",
             "statusMessage": "Verifying ADR review completed"
           },
           {
             "type": "command",
-            "command": "bun run hooks/scripts/PreToolUse/invoke_branch_protection_guard.ts",
+            "command": "bun run ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/PreToolUse/invoke_branch_protection_guard.ts",
             "statusMessage": "Verifying branch protection"
           },
           {
             "type": "command",
-            "command": "bun run hooks/scripts/PreToolUse/invoke_security_commit_gate.ts",
+            "command": "bun run ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/PreToolUse/invoke_security_commit_gate.ts",
             "timeout": 10,
             "statusMessage": "Checking security gate for staged auth files"
           }
@@ -53,7 +53,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run hooks/scripts/PreToolUse/invoke_session_log_guard.ts",
+            "command": "bun run ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/PreToolUse/invoke_session_log_guard.ts",
             "statusMessage": "Verifying session log exists before PR creation (BLOCKING)"
           }
         ]
@@ -63,7 +63,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run hooks/scripts/PreToolUse/invoke_security_gate.ts",
+            "command": "bun run ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/PreToolUse/invoke_security_gate.ts",
             "statusMessage": "Checking security gate for auth files"
           }
         ]
@@ -73,17 +73,17 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run hooks/scripts/PreToolUse/invoke_branch_context_guard.ts",
+            "command": "bun run ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/PreToolUse/invoke_branch_context_guard.ts",
             "statusMessage": "Verifying branch matches session context (BLOCKING)"
           },
           {
             "type": "command",
-            "command": "bun run hooks/scripts/PreToolUse/invoke_branch_protection_guard.ts",
+            "command": "bun run ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/PreToolUse/invoke_branch_protection_guard.ts",
             "statusMessage": "Verifying branch protection"
           },
           {
             "type": "command",
-            "command": "bun run hooks/scripts/PreToolUse/invoke_retrospective_gate.ts",
+            "command": "bun run ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/PreToolUse/invoke_retrospective_gate.ts",
             "statusMessage": "Verifying retrospective evidence"
           }
         ]
@@ -93,7 +93,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run hooks/scripts/PreToolUse/invoke_adr_architect_gate.ts",
+            "command": "bun run ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/PreToolUse/invoke_adr_architect_gate.ts",
             "statusMessage": "Verifying architect review for ADR files (BLOCKING)"
           }
         ]
@@ -104,22 +104,22 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run hooks/scripts/SessionStart/invoke_session_initialization_enforcer.ts",
+            "command": "bun run ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/SessionStart/invoke_session_initialization_enforcer.ts",
             "statusMessage": "Enforcing session protocol initialization"
           },
           {
             "type": "command",
-            "command": "bun run hooks/scripts/SessionStart/invoke_memory_first_enforcer.ts",
+            "command": "bun run ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/SessionStart/invoke_memory_first_enforcer.ts",
             "statusMessage": "Enforcing memory-first evidence"
           },
           {
             "type": "command",
-            "command": "bun run hooks/scripts/invoke_session_start_memory_first.ts",
+            "command": "bun run ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/invoke_session_start_memory_first.ts",
             "statusMessage": "Enforcing memory-first requirements"
           },
           {
             "type": "command",
-            "command": "bun run hooks/scripts/invoke_adr_change_detection.ts",
+            "command": "bun run ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/invoke_adr_change_detection.ts",
             "statusMessage": "Checking for ADR changes"
           }
         ]
@@ -130,12 +130,12 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run hooks/scripts/UserPromptSubmit/invoke_autonomous_execution_detector.ts",
+            "command": "bun run ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/UserPromptSubmit/invoke_autonomous_execution_detector.ts",
             "statusMessage": "Detecting autonomous execution patterns"
           },
           {
             "type": "command",
-            "command": "bun run hooks/scripts/invoke_user_prompt_memory_check.ts",
+            "command": "bun run ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/invoke_user_prompt_memory_check.ts",
             "statusMessage": "Checking memory-first compliance"
           }
         ]
@@ -147,12 +147,12 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run hooks/scripts/PostToolUse/invoke_markdown_auto_lint.ts",
+            "command": "bun run ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/PostToolUse/invoke_markdown_auto_lint.ts",
             "statusMessage": "Auto-linting markdown files"
           },
           {
             "type": "command",
-            "command": "bun run hooks/scripts/PostToolUse/invoke_adr_lifecycle_hook.ts",
+            "command": "bun run ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/PostToolUse/invoke_adr_lifecycle_hook.ts",
             "statusMessage": "Checking for ADR changes"
           }
         ]
@@ -162,7 +162,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run hooks/scripts/PostToolUse/invoke_adr_lifecycle_hook.ts",
+            "command": "bun run ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/PostToolUse/invoke_adr_lifecycle_hook.ts",
             "statusMessage": "Checking for ADR changes"
           }
         ]
@@ -173,12 +173,12 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run hooks/scripts/Stop/invoke_skill_learning.ts",
+            "command": "bun run ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/Stop/invoke_skill_learning.ts",
             "statusMessage": "Extracting skill learnings from session"
           },
           {
             "type": "command",
-            "command": "bun run hooks/scripts/Stop/invoke_session_validator.ts",
+            "command": "bun run ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/Stop/invoke_session_validator.ts",
             "statusMessage": "Validating session completeness"
           }
         ]
@@ -189,7 +189,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run hooks/scripts/SubagentStop/invoke_qa_agent_validator.ts",
+            "command": "bun run ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/SubagentStop/invoke_qa_agent_validator.ts",
             "statusMessage": "Validating QA agent output"
           }
         ]
@@ -201,7 +201,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bun run hooks/scripts/PermissionRequest/invoke_test_auto_approval.ts",
+            "command": "bun run ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/PermissionRequest/invoke_test_auto_approval.ts",
             "statusMessage": "Auto-approving test execution"
           }
         ]

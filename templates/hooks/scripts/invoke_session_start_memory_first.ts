@@ -14,7 +14,9 @@ import { join, resolve } from "path";
 import { skipIfConsumerRepo } from "../lib/guards.ts";
 
 async function main(): Promise<number> {
-  if (await skipIfConsumerRepo("session-start-memory-first")) {
+  const input = await Bun.file("/dev/stdin").json().catch(() => ({}));
+
+  if (await skipIfConsumerRepo("session-start-memory-first", input?.cwd)) {
     return 0;
   }
 

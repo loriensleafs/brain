@@ -122,11 +122,28 @@ function checkGhCliPatterns(prompt: string): string | null {
 }
 
 async function main(): Promise<number> {
-  if (await skipIfConsumerRepo("user-prompt-memory-check")) {
+  let inputJson: string;
+  let inputData: Record<string, unknown> = {};
+  try {
+    inputJson = await Bun.stdin.text();
+    if (!inputJson.trim()) {
+      return 0;
+    }
+    inputData = JSON.parse(inputJson);
+  } catch (exc) {
+    console.error(
+      `WARNING: User prompt memory check: stdin read/parse error: ${exc}`,
+    );
     return 0;
   }
 
-  const cwd = process.cwd();
+  const stdinCwd = typeof inputData?.cwd === "string" ? inputData.cwd : undefined;
+
+  if (await skipIfConsumerRepo("user-prompt-memory-check", stdinCwd)) {
+    return 0;
+  }
+
+  const cwd = stdinCwd?.trim() || process.cwd();
   if (!(await isValidProjectRoot(cwd))) {
     console.error(
       `WARNING: user_prompt_memory_check: CWD '${cwd}' does not appear ` +
@@ -136,31 +153,10 @@ async function main(): Promise<number> {
     return 0;
   }
 
-  let inputJson: string;
-  try {
-    inputJson = await Bun.stdin.text();
-    if (!inputJson.trim()) {
-      return 0;
-    }
-  } catch (exc) {
-    console.error(
-      `WARNING: User prompt memory check: stdin read error: ${exc}`,
-    );
-    return 0;
-  }
-
   let promptText = "";
-  try {
-    const inputData = JSON.parse(inputJson);
-    const promptValue = inputData?.prompt;
-    if (typeof promptValue === "string") {
-      promptText = promptValue;
-    }
-  } catch (exc) {
-    console.error(
-      `user_prompt_memory_check: JSON parse failed: ${exc}`,
-    );
-    return 0;
+  const promptValue = inputData?.prompt;
+  if (typeof promptValue === "string") {
+    promptText = promptValue;
   }
 
   if (!promptText.trim()) {

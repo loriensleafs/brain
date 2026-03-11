@@ -15,6 +15,7 @@
 import { join } from "path";
 import {
   getProjectDirectory,
+  getMemoriesDir,
   getTodaySessionLog,
   isGitCommitOrPushCommand,
 } from "../../lib/utilities.ts";
@@ -78,10 +79,13 @@ async function main(): Promise<number> {
       return 0;
     }
 
-    const projectDir = await getProjectDirectory();
-    const sessionsDir = join(projectDir, ".agents", "sessions");
+    const projectDir = await getProjectDirectory(hookInput?.cwd);
+    const memoriesDir = await getMemoriesDir(hookInput?.cwd);
+    if (!memoriesDir) return 0;
 
-    // Skip if no sessions directory (consumer repo)
+    const sessionsDir = join(memoriesDir, "sessions");
+
+    // Skip if no sessions directory
     const sessionsDirCheck =
       await Bun.spawn(["test", "-d", sessionsDir], {
         stdout: "pipe",

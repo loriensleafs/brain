@@ -21,6 +21,7 @@ import { join } from "path";
 import { Glob } from "bun";
 import {
   getProjectDirectory,
+  getMemoriesDir,
   getTodaySessionLog,
 } from "../../lib/utilities.ts";
 import { skipIfConsumerRepo } from "../../lib/guards.ts";
@@ -51,8 +52,9 @@ function isProtectedBranch(branch: string | null): boolean {
   return PROTECTED_BRANCHES.includes(branch);
 }
 
-async function getSessionStatus(projectDir: string): Promise<string> {
-  const sessionsDir = join(projectDir, ".agents", "sessions");
+async function getSessionStatus(memoriesDir: string | null): Promise<string> {
+  if (!memoriesDir) return "none (Brain memories not configured)";
+  const sessionsDir = join(memoriesDir, "sessions");
   const sessionLog = await getTodaySessionLog(sessionsDir);
   if (sessionLog === null) {
     return "none (run /session-init)";
@@ -63,12 +65,16 @@ async function getSessionStatus(projectDir: string): Promise<string> {
 }
 
 async function main(): Promise<number> {
-  if (await skipIfConsumerRepo("session-init-enforcer")) {
+  const input = await Bun.file("/dev/stdin").json().catch(() => ({}));
+  const cwd: string | undefined = input?.cwd;
+
+  if (await skipIfConsumerRepo("session-init-enforcer", cwd)) {
     return 0;
   }
 
   try {
-    const projectDir = await getProjectDirectory();
+    const projectDir = await getProjectDirectory(cwd);
+    const memoriesDir = await getMemoriesDir(cwd);
     const currentBranch = await getCurrentBranch();
 
     if (isProtectedBranch(currentBranch)) {
@@ -81,7 +87,28 @@ async function main(): Promise<number> {
       return 0;
     }
 
-    const sessionStatus = await getSessionStatus(projectDir);
+    const sessionStatus = await getSessionStatus(memoriesDir);
+
+    // Run brain bootstrap to inject full context into the conversation
+    try {
+      const bootstrap = Bun.spawn(["brain", "bootstrap"], {
+        cwd: projectDir,
+        stdout: "pipe",
+        stderr: "pipe",
+      });
+      const exitCode = await bootstrap.exited;
+      if (exitCode === 0) {
+        const output = await new Response(bootstrap.stdout).text();
+        if (output.trim()) {
+          console.log(output.trim());
+          return 0;
+        }
+      }
+    } catch {
+      // brain CLI not available, fall back to status line
+    }
+
+    // Fallback if bootstrap fails
     console.log(
       `Branch: \`${currentBranch}\` | Session: ${sessionStatus} | Status: ready`,
     );
@@ -89,7 +116,7 @@ async function main(): Promise<number> {
   } catch (exc) {
     const excType =
       exc instanceof Error ? exc.constructor.name : typeof exc;
-    console.error(
+    console.log(
       `Session initialization enforcer error: ${excType} - ${exc}`,
     );
     return 0;

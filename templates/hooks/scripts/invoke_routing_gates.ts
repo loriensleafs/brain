@@ -17,6 +17,7 @@
 import { join, resolve } from "path";
 import { Glob } from "bun";
 import { skipIfConsumerRepo } from "../lib/guards.ts";
+import { getMemoriesDir } from "../lib/utilities.ts";
 
 const QA_EVIDENCE_PATTERN =
   /(?:## QA|qa agent|Test Results|QA Validation|Test Strategy)/i;
@@ -72,8 +73,10 @@ async function writeAuditLog(
   }
 }
 
-async function getTodaySessionLogLocal(): Promise<string | null> {
-  const sessionDir = ".agents/sessions";
+async function getTodaySessionLogLocal(
+  memoriesDir: string,
+): Promise<string | null> {
+  const sessionDir = join(memoriesDir, "sessions");
   const today = new Date().toISOString().slice(0, 10);
 
   const dirCheck =
@@ -121,9 +124,9 @@ async function readSessionLogContent(
   }
 }
 
-async function checkQaEvidence(): Promise<boolean> {
-  // Option 1: QA report in .agents/qa/ from last 24 hours
-  const qaDir = ".agents/qa";
+async function checkQaEvidence(memoriesDir: string): Promise<boolean> {
+  // Option 1: QA report in qa/ from last 24 hours
+  const qaDir = join(memoriesDir, "qa");
   const qaDirCheck =
     await Bun.spawn(["test", "-d", qaDir], {
       stdout: "pipe",
@@ -142,7 +145,7 @@ async function checkQaEvidence(): Promise<boolean> {
   }
 
   // Option 2: QA section in session log
-  const sessionLog = await getTodaySessionLogLocal();
+  const sessionLog = await getTodaySessionLogLocal(memoriesDir);
   if (sessionLog !== null) {
     const content = await readSessionLogContent(sessionLog);
     if (content && QA_EVIDENCE_PATTERN.test(content)) {
@@ -153,9 +156,9 @@ async function checkQaEvidence(): Promise<boolean> {
   return false;
 }
 
-async function checkCriticEvidence(): Promise<boolean> {
-  // Option 1: Critique file in .agents/critique/ from last 24 hours
-  const critiqueDir = ".agents/critique";
+async function checkCriticEvidence(memoriesDir: string): Promise<boolean> {
+  // Option 1: Critique file in critique/ from last 24 hours
+  const critiqueDir = join(memoriesDir, "critique");
   const critDirCheck =
     await Bun.spawn(["test", "-d", critiqueDir], {
       stdout: "pipe",
@@ -174,7 +177,7 @@ async function checkCriticEvidence(): Promise<boolean> {
   }
 
   // Option 2: Critic verdict in session log
-  const sessionLog = await getTodaySessionLogLocal();
+  const sessionLog = await getTodaySessionLogLocal(memoriesDir);
   if (sessionLog !== null) {
     const content = await readSessionLogContent(sessionLog);
     if (content && CRITIC_EVIDENCE_PATTERN.test(content)) {
@@ -212,9 +215,9 @@ function isFeatureBranch(branch: string): boolean {
   return FEATURE_BRANCH_PATTERN.test(branch);
 }
 
-async function checkAdrEvidence(): Promise<boolean> {
-  // Option 1: ADR file in .agents/architecture/ modified within last 7 days
-  const adrDir = ".agents/architecture";
+async function checkAdrEvidence(memoriesDir: string): Promise<boolean> {
+  // Option 1: ADR file in decisions/ modified within last 7 days
+  const adrDir = join(memoriesDir, "decisions");
   const adrDirCheck =
     await Bun.spawn(["test", "-d", adrDir], {
       stdout: "pipe",
@@ -237,7 +240,7 @@ async function checkAdrEvidence(): Promise<boolean> {
   }
 
   // Option 2: Architect agent section in session log
-  const sessionLog = await getTodaySessionLogLocal();
+  const sessionLog = await getTodaySessionLogLocal(memoriesDir);
   if (sessionLog !== null) {
     const content = await readSessionLogContent(sessionLog);
     if (content && ADR_EVIDENCE_PATTERN.test(content)) {
@@ -303,11 +306,10 @@ async function checkDocumentationOnly(): Promise<boolean> {
   }
 }
 
-async function isValidProjectRoot(): Promise<boolean> {
+async function isValidProjectRoot(effectiveCwd: string): Promise<boolean> {
   const indicators = [".claude/settings.json", ".git"];
-  const cwd = process.cwd();
   for (const indicator of indicators) {
-    const checkPath = join(cwd, indicator);
+    const checkPath = join(effectiveCwd, indicator);
     const check =
       await Bun.spawn(["test", "-e", checkPath], {
         stdout: "pipe",
@@ -321,19 +323,7 @@ async function isValidProjectRoot(): Promise<boolean> {
 }
 
 async function main(): Promise<number> {
-  if (await skipIfConsumerRepo("routing-gates")) {
-    return 0;
-  }
-
-  if (!(await isValidProjectRoot())) {
-    const cwd = process.cwd();
-    console.error(
-      `routing_gates: CWD '${cwd}' does not appear to be a project root ` +
-        "(missing .claude/settings.json or .git). Failing open.",
-    );
-    return 0;
-  }
-
+  let inputData: Record<string, unknown> = {};
   let command = "";
   try {
     const inputJson = await Bun.stdin.text();
@@ -341,10 +331,10 @@ async function main(): Promise<number> {
       return 0;
     }
 
-    const inputData = JSON.parse(inputJson);
+    inputData = JSON.parse(inputJson);
     const toolInput = inputData?.tool_input;
     if (typeof toolInput === "object" && toolInput !== null) {
-      const cmd = toolInput.command;
+      const cmd = (toolInput as Record<string, unknown>).command;
       if (typeof cmd === "string") {
         command = cmd;
       }
@@ -357,16 +347,41 @@ async function main(): Promise<number> {
     command = "";
   }
 
+  const stdinCwd = typeof inputData?.cwd === "string" ? inputData.cwd : undefined;
+
+  if (await skipIfConsumerRepo("routing-gates", stdinCwd)) {
+    return 0;
+  }
+
+  const effectiveCwd = stdinCwd?.trim() || process.cwd();
+  if (!(await isValidProjectRoot(effectiveCwd))) {
+    console.error(
+      `routing_gates: CWD '${effectiveCwd}' does not appear to be a project root ` +
+        "(missing .claude/settings.json or .git). Failing open.",
+    );
+    return 0;
+  }
+
+  // Resolve Brain memories directory
+  const memoriesDir = await getMemoriesDir(stdinCwd);
+  if (!memoriesDir) {
+    console.error(
+      "[SKIP] routing-gates: Could not resolve Brain memories directory",
+    );
+    return 0;
+  }
+
   // Pre-check: graceful degradation when sessions directory is absent
+  const sessionsDir = join(memoriesDir, "sessions");
   const sessionsDirCheck =
-    await Bun.spawn(["test", "-d", ".agents/sessions"], {
+    await Bun.spawn(["test", "-d", sessionsDir], {
       stdout: "pipe",
       stderr: "pipe",
     }).exited;
 
   if (sessionsDirCheck !== 0) {
     console.error(
-      "[SKIP] routing-gates: .agents/sessions/ not found " +
+      `[SKIP] routing-gates: ${sessionsDir} not found ` +
         "(sessions directory missing)",
     );
     return 0;
@@ -391,14 +406,14 @@ async function main(): Promise<number> {
     }
 
     // Main check: QA evidence required
-    if (!qaBypassed && !(await checkQaEvidence())) {
+    if (!qaBypassed && !(await checkQaEvidence(memoriesDir))) {
       const output = {
         decision: "deny",
         reason:
           "QA VALIDATION GATE: QA evidence required before PR creation.\n\n" +
           "Invoke the QA agent to verify changes:\n" +
           "  #runSubagent with subagentType=qa prompt='Verify changes for PR'\n\n" +
-          "Or create a QA report file in .agents/qa/\n\n" +
+          "Or create a QA report file in the qa/ memories folder\n\n" +
           "Bypass conditions:\n" +
           "- Documentation-only PRs (auto-detected based on file extensions)\n" +
           "- Set SKIP_QA_GATE=true environment variable (requires justification)",
@@ -425,7 +440,7 @@ async function main(): Promise<number> {
     }
 
     // Main check: Critic evidence required
-    if (!(await checkCriticEvidence())) {
+    if (!(await checkCriticEvidence(memoriesDir))) {
       const output = {
         decision: "deny",
         reason:
@@ -433,7 +448,7 @@ async function main(): Promise<number> {
           "Run: Task(subagent_type='critic', prompt='Validate this PR " +
           "for merge readiness')\n\n" +
           "Expected verdict: APPROVED / REJECTED / NEEDS WORK\n\n" +
-          "Or create a critique file in .agents/critique/\n\n" +
+          "Or create a critique file in the critique/ memories folder\n\n" +
           "Bypass conditions:\n" +
           "- Documentation-only PRs (auto-detected based on file extensions)\n" +
           "- Set SKIP_CRITIC_GATE=true environment variable " +
@@ -483,7 +498,7 @@ async function main(): Promise<number> {
     }
 
     // Main check: ADR evidence required for feature branches
-    if (!(await checkAdrEvidence())) {
+    if (!(await checkAdrEvidence(memoriesDir))) {
       const output = {
         decision: "deny",
         reason:
@@ -493,7 +508,7 @@ async function main(): Promise<number> {
           "Invoke the architect agent to create an ADR:\n" +
           "  Task(subagent_type='architect', prompt='Create ADR for " +
           "this feature')\n\n" +
-          "Or create an ADR file in .agents/architecture/ADR-NNN-*.md\n\n" +
+          "Or create an ADR file in the decisions/ memories folder (ADR-NNN-*.md)\n\n" +
           "Bypass conditions:\n" +
           "- Non-feature branches (fix/*, docs/*, chore/*, etc.)\n" +
           "- Documentation-only PRs (auto-detected)\n" +

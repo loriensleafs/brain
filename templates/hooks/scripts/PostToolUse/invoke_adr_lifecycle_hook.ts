@@ -23,6 +23,7 @@
 import { skipIfConsumerRepo } from "../../lib/guards.ts";
 
 interface HookInput {
+  readonly cwd?: string;
   readonly tool_name?: string;
   readonly tool_input?: {
     readonly file_path?: string;
@@ -77,14 +78,14 @@ function detectWriteOrEdit(
 }
 
 async function main(): Promise<number> {
-  if (await skipIfConsumerRepo("adr-lifecycle-hook")) return 0;
-
   let raw = "";
   try {
     raw = await Bun.stdin.text();
     if (!raw.trim()) return 0;
 
     const hookInput = JSON.parse(raw) as HookInput;
+
+    if (await skipIfConsumerRepo("adr-lifecycle-hook", hookInput.cwd)) return 0;
     const toolName = hookInput.tool_name ?? "";
     const toolInput = hookInput.tool_input;
 

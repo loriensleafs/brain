@@ -10,7 +10,7 @@
  * 1. Command is git commit
  * 2. Staged changes include ADR files (ADR-*.md)
  * 3. Session log contains adr-review evidence
- * 4. Debate log artifact exists in .agents/analysis/
+ * 4. Debate log artifact exists in analysis/ (Brain memories)
  *
  * Hook Type: PreToolUse
  * Exit Codes:
@@ -21,7 +21,7 @@
 import { join, resolve } from "path";
 import { Glob } from "bun";
 import {
-  getProjectDirectory,
+  getMemoriesDir,
   getTodaySessionLog,
   isGitCommitCommand,
 } from "../../lib/utilities.ts";
@@ -37,7 +37,7 @@ const REVIEW_PATTERNS = [
   /\barchitect\b.{0,80}\bplanner\b.{0,80}\bqa\b/s,
 ];
 
-const AGENTS_DEBATE = ".agents/analysis/";
+const ANALYSIS_FOLDER = "analysis";
 
 const NO_SESSION_LOG_TEMPLATE = `
 ## BLOCKED: ADR Changes Without Review
@@ -134,7 +134,7 @@ interface EvidenceResult {
 
 async function checkAdrReviewEvidence(
   sessionLogPath: string,
-  projectDir: string,
+  memoriesDir: string,
 ): Promise<EvidenceResult> {
   try {
     const file = Bun.file(sessionLogPath);
@@ -155,7 +155,7 @@ async function checkAdrReviewEvidence(
       };
     }
 
-    const analysisDir = join(projectDir, ".agents", "analysis");
+    const analysisDir = join(memoriesDir, ANALYSIS_FOLDER);
     const analysisDirCheck =
       await Bun.spawn(["test", "-d", analysisDir], {
         stdout: "pipe",
@@ -165,7 +165,7 @@ async function checkAdrReviewEvidence(
     if (analysisDirCheck !== 0) {
       return {
         complete: false,
-        reason: `Session log mentions adr-review, but ${AGENTS_DEBATE} directory does not exist`,
+        reason: `Session log mentions adr-review, but ${ANALYSIS_FOLDER}/ directory does not exist`,
       };
     }
 
@@ -179,7 +179,7 @@ async function checkAdrReviewEvidence(
     if (!hasDebateLog) {
       return {
         complete: false,
-        reason: `Session log mentions adr-review, but no debate log artifact found in ${AGENTS_DEBATE}`,
+        reason: `Session log mentions adr-review, but no debate log artifact found in ${ANALYSIS_FOLDER}/`,
       };
     }
 
@@ -197,10 +197,6 @@ async function checkAdrReviewEvidence(
 }
 
 async function main(): Promise<number> {
-  if (await skipIfConsumerRepo("adr-review-guard")) {
-    return 0;
-  }
-
   try {
     const today = new Date().toISOString().slice(0, 10);
 
@@ -210,6 +206,11 @@ async function main(): Promise<number> {
     }
 
     const hookInput = JSON.parse(inputJson);
+    const stdinCwd: string | undefined = hookInput?.cwd;
+
+    if (await skipIfConsumerRepo("adr-review-guard", stdinCwd)) {
+      return 0;
+    }
 
     const toolInput = hookInput?.tool_input;
     if (typeof toolInput !== "object" || toolInput === null) {
@@ -240,8 +241,15 @@ async function main(): Promise<number> {
     }
 
     // ADR changes detected, verify review was done
-    const projectDir = await getProjectDirectory();
-    const sessionsDir = join(projectDir, ".agents", "sessions");
+    const memoriesDir = await getMemoriesDir(stdinCwd);
+    if (!memoriesDir) {
+      console.error(
+        "[SKIP] adr-review-guard: Could not resolve Brain memories directory",
+      );
+      return 0;
+    }
+
+    const sessionsDir = join(memoriesDir, "sessions");
     const sessionLog = await getTodaySessionLog(sessionsDir, today);
 
     const changesList = adrChanges.join("\n");
@@ -256,7 +264,7 @@ async function main(): Promise<number> {
       return 2;
     }
 
-    const evidence = await checkAdrReviewEvidence(sessionLog, projectDir);
+    const evidence = await checkAdrReviewEvidence(sessionLog, memoriesDir);
 
     if (!evidence.complete) {
       const sessionName = sessionLog.split("/").pop() ?? "";

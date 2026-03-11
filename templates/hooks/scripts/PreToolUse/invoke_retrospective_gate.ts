@@ -10,7 +10,7 @@
  *
  * Evidence requirements (any one satisfies):
  * 1. Retrospective section in session log (## Retrospective)
- * 2. Retrospective file in .agents/retrospective/ for today
+ * 2. Retrospective file in retrospective/ (Brain memories) for today
  * 3. Reference to retrospective file in session log
  *
  * Bypass conditions:
@@ -27,12 +27,13 @@
 import { join } from "path";
 import { Glob, $ } from "bun";
 import {
-  getProjectDirectory,
+  getMemoriesDir,
   isGitPushCommand,
   getTodaySessionLog,
 } from "../../lib/utilities.ts";
 
 interface HookInput {
+  readonly cwd?: string;
   readonly tool_input?: {
     readonly command?: string;
   };
@@ -41,7 +42,7 @@ interface HookInput {
 const RETROSPECTIVE_SECTION_PATTERN =
   /(?:##\s*retrospective|retrospective\s*section|learnings?\s*captured)/i;
 const RETROSPECTIVE_FILE_REF_PATTERN =
-  /(?:\.agents\/retrospective\/|retrospective[-_]?file|retro[-_]?\d{4})/i;
+  /(?:retrospective\/|retrospective[-_]?file|retro[-_]?\d{4})/i;
 
 /** Documentation-only file patterns. */
 const DOC_PATTERNS: ReadonlyArray<RegExp> = [
@@ -70,9 +71,9 @@ async function checkRetrospectiveInSessionLog(
 }
 
 async function checkRetrospectiveFileExists(
-  projectDir: string,
+  memoriesDir: string,
 ): Promise<boolean> {
-  const retroDir = join(projectDir, ".agents", "retrospective");
+  const retroDir = join(memoriesDir, "retrospective");
   const dirExists =
     (await Bun.spawn(["test", "-d", retroDir]).exited) === 0;
   if (!dirExists) return false;
@@ -159,15 +160,23 @@ async function main(): Promise<number> {
 
     if (!isGitPushCommand(command)) return 0;
 
-    const projectDir = await getProjectDirectory();
-    const sessionsDir = join(projectDir, ".agents", "sessions");
+    const memoriesDir = await getMemoriesDir(hookInput.cwd);
+    if (!memoriesDir) {
+      console.error(
+        "[SKIP] Could not resolve Brain memories directory. " +
+          "Retrospective enforcement skipped.",
+      );
+      return 0;
+    }
 
-    // Skip if .agents infrastructure is absent (consumer repo)
+    const sessionsDir = join(memoriesDir, "sessions");
+
+    // Skip if sessions infrastructure is absent
     const dirExists =
       (await Bun.spawn(["test", "-d", sessionsDir]).exited) === 0;
     if (!dirExists) {
       console.error(
-        "[SKIP] .agents/sessions/ not found (consumer repo). " +
+        `[SKIP] ${sessionsDir} not found. ` +
           "Retrospective enforcement skipped.",
       );
       return 0;
@@ -194,7 +203,7 @@ async function main(): Promise<number> {
     let hasRetrospective = false;
 
     // Check 1: Retrospective file exists for today
-    if (await checkRetrospectiveFileExists(projectDir)) {
+    if (await checkRetrospectiveFileExists(memoriesDir)) {
       hasRetrospective = true;
     }
 
@@ -238,7 +247,7 @@ Add a \`## Retrospective\` section to today's session log with:
 - Key learnings
 
 **Option 3: Create retrospective file**
-Create \`.agents/retrospective/${today}-*.md\` with session analysis.
+Create \`retrospective/${today}-*.md\` in the memories folder with session analysis.
 
 ### Bypass Conditions
 - Documentation-only changes (auto-detected)

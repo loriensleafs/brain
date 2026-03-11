@@ -15,7 +15,7 @@
 
 import { join } from "path";
 import { Glob } from "bun";
-import { getProjectDirectory } from "../../lib/utilities.ts";
+import { getMemoriesDir } from "../../lib/utilities.ts";
 
 // File path patterns that indicate auth-related code
 const AUTH_PATH_PATTERNS = [
@@ -64,10 +64,10 @@ The security agent will assess:
 
 ### Alternative: Create Security Report
 
-Place a security review report in \`.agents/security/\` with today's date:
+Place a security review report in the security/ memories folder with today's date:
 
 \`\`\`
-.agents/security/YYYY-MM-DD-security-review.md
+security/YYYY-MM-DD-security-review.md
 \`\`\`
 `;
 
@@ -84,12 +84,12 @@ function isAuthPath(filePath: string): boolean {
 }
 
 async function findSecurityEvidence(
-  projectDir: string,
+  memoriesDir: string,
 ): Promise<boolean> {
   const today = new Date().toISOString().slice(0, 10);
 
   // Check 1: Security report exists for today
-  const securityDir = join(projectDir, ".agents", "security");
+  const securityDir = join(memoriesDir, "security");
   const secDirCheck =
     await Bun.spawn(["test", "-d", securityDir], {
       stdout: "pipe",
@@ -108,7 +108,7 @@ async function findSecurityEvidence(
   }
 
   // Check 2: Session log contains security review evidence
-  const sessionsDir = join(projectDir, ".agents", "sessions");
+  const sessionsDir = join(memoriesDir, "sessions");
   const sessDirCheck =
     await Bun.spawn(["test", "-d", sessionsDir], {
       stdout: "pipe",
@@ -167,9 +167,13 @@ async function main(): Promise<number> {
       return 0;
     }
 
-    const projectDir = await getProjectDirectory();
+    const memoriesDir = await getMemoriesDir(hookInput?.cwd);
+    if (!memoriesDir) {
+      // Can't check evidence, fail-open
+      return 0;
+    }
 
-    if (await findSecurityEvidence(projectDir)) {
+    if (await findSecurityEvidence(memoriesDir)) {
       return 0;
     }
 

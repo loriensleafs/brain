@@ -25,6 +25,7 @@ import { join } from "path";
 import { Glob } from "bun";
 import {
   getProjectDirectory,
+  getMemoriesDir,
   getTodaySessionLogs,
 } from "../../lib/utilities.ts";
 import { skipIfConsumerRepo } from "../../lib/guards.ts";
@@ -139,15 +140,25 @@ async function incrementInvocationCount(
 }
 
 async function main(): Promise<number> {
-  if (await skipIfConsumerRepo("memory-first-enforcer")) {
+  const input = await Bun.file("/dev/stdin").json().catch(() => ({}));
+  const cwd: string | undefined = input?.cwd;
+
+  if (await skipIfConsumerRepo("memory-first-enforcer", cwd)) {
     return 0;
   }
 
   try {
     const today = new Date().toISOString().slice(0, 10);
-    const projectDir = await getProjectDirectory();
-    const sessionsDir = join(projectDir, ".agents", "sessions");
-    const stateDir = join(projectDir, ".agents", ".hook-state");
+    const projectDir = await getProjectDirectory(cwd);
+    const memoriesDir = await getMemoriesDir(cwd);
+    if (!memoriesDir) {
+      console.log(
+        "\nMemory-First: Could not resolve Brain memories directory.\n",
+      );
+      return 0;
+    }
+    const sessionsDir = join(memoriesDir, "sessions");
+    const stateDir = join(memoriesDir, ".hook-state");
 
     const todayLogs = await getTodaySessionLogs(sessionsDir);
 
@@ -203,7 +214,7 @@ async function main(): Promise<number> {
   } catch (exc) {
     const excType =
       exc instanceof Error ? exc.constructor.name : typeof exc;
-    console.error(`Memory-first enforcer error: ${excType} - ${exc}`);
+    console.log(`Memory-first enforcer error: ${excType} - ${exc}`);
     return 0;
   }
 }

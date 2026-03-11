@@ -6,12 +6,12 @@
  * modifying ADR files. This is a routing-level gate.
  *
  * Blocks Edit/Write operations on:
- * - .agents/architecture/ADR-*.md
+ * - decisions/ADR-*.md (Brain memories)
  * - docs/architecture/ADR-*.md
  * - ** /ADR-*.md (any location)
  *
  * Evidence sources (any satisfies the gate):
- * 1. Debate log artifact in .agents/analysis/ or .agents/critique/
+ * 1. Debate log artifact in analysis/ or critique/ (Brain memories)
  * 2. Session log contains architect agent routing evidence
  * 3. adr-review skill was invoked
  *
@@ -24,7 +24,7 @@
 import { join, resolve } from "path";
 import { Glob } from "bun";
 import {
-  getProjectDirectory,
+  getMemoriesDir,
   getTodaySessionLog,
 } from "../../lib/utilities.ts";
 
@@ -99,14 +99,14 @@ interface EvidenceResult {
 }
 
 async function checkArchitectEvidence(
-  projectDir: string,
+  memoriesDir: string,
 ): Promise<EvidenceResult> {
   const today = new Date().toISOString().slice(0, 10);
   const cutoffMs = Date.now() - 86_400_000; // 24 hours ago
 
-  // Check 1: Debate log artifacts in .agents/analysis/ or .agents/critique/
-  for (const artifactDir of [".agents/analysis", ".agents/critique"]) {
-    const analysisDir = join(projectDir, artifactDir);
+  // Check 1: Debate log artifacts in analysis/ or critique/
+  for (const artifactFolder of ["analysis", "critique"]) {
+    const analysisDir = join(memoriesDir, artifactFolder);
     const dirCheck =
       await Bun.spawn(["test", "-d", analysisDir], {
         stdout: "pipe",
@@ -129,7 +129,7 @@ async function checkArchitectEvidence(
   }
 
   // Check 2: Session log evidence
-  const sessionsDir = join(projectDir, ".agents", "sessions");
+  const sessionsDir = join(memoriesDir, "sessions");
   const sessionLog = await getTodaySessionLog(sessionsDir, today);
 
   if (sessionLog !== null) {
@@ -184,8 +184,12 @@ async function main(): Promise<number> {
     }
 
     // ADR file edit/write detected, check for architect evidence
-    const projectDir = await getProjectDirectory();
-    const evidence = await checkArchitectEvidence(projectDir);
+    const memoriesDir = await getMemoriesDir(hookInput?.cwd);
+    if (!memoriesDir) {
+      // Can't check evidence, fail-open
+      return 0;
+    }
+    const evidence = await checkArchitectEvidence(memoriesDir);
 
     if (evidence.complete) {
       return 0;

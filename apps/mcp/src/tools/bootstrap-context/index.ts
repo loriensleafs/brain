@@ -101,11 +101,66 @@ export async function handler(args: BootstrapContextArgs): Promise<CallToolResul
       buildSessionEnrichment({ project, sessionState }),
     ]);
 
-    // Follow relations if requested
+    // Read active session note content for relation following
+    let activeSessionNote: Awaited<ReturnType<typeof followRelations>>[number] | null = null;
+    if (activeSession && includeReferenced) {
+      try {
+        const client = await import("../../proxy/client").then((m) => m.getBasicMemoryClient());
+        const result = await client.callTool({
+          name: "read_note",
+          arguments: { project, identifier: activeSession.sessionId },
+        });
+        // Handle both response formats: { result: string } and { content: [{ text: string }] }
+        const typedResult = result as {
+          result?: string;
+          content?: Array<{ type: string; text: string }>;
+        };
+        const noteContent =
+          typeof typedResult.result === "string"
+            ? typedResult.result
+            : typedResult.content?.[0]?.text;
+
+        if (noteContent) {
+          activeSessionNote = {
+            title: activeSession.sessionId,
+            permalink: `sessions/${activeSession.sessionId.toLowerCase().replace(/_/g, "-")}`,
+            type: "note" as const,
+            status: "active" as const,
+            content: noteContent,
+          };
+          logger.info(
+            { sessionId: activeSession.sessionId, contentLength: noteContent.length },
+            "Active session note loaded for relation following",
+          );
+        } else {
+          logger.warn(
+            { sessionId: activeSession.sessionId },
+            "Active session note read returned empty result",
+          );
+        }
+      } catch (error) {
+        logger.warn(
+          { error, sessionId: activeSession.sessionId },
+          "Failed to read active session note for relation following",
+        );
+      }
+    }
+
+    // Follow relations if requested - include active session note for wikilink resolution
     let referencedNotes: Awaited<ReturnType<typeof followRelations>> = [];
     if (includeReferenced) {
-      const allNotes = [...activeFeatures, ...recentDecisions, ...openBugs];
+      const allNotes = [
+        ...activeFeatures,
+        ...recentDecisions,
+        ...openBugs,
+        ...(activeSessionNote ? [activeSessionNote] : []),
+      ];
+      logger.info(
+        { allNotesCount: allNotes.length, hasSessionNote: !!activeSessionNote },
+        "Following relations from notes",
+      );
       referencedNotes = await followRelations(allNotes, { project });
+      logger.info({ referencedCount: referencedNotes.length }, "Relation following complete");
     }
 
     // Build structured output with session enrichment
@@ -120,6 +175,7 @@ export async function handler(args: BootstrapContextArgs): Promise<CallToolResul
       recentActivity,
       referencedNotes,
       sessionEnrichment,
+      activeSessionNote,
     });
 
     // Cache the result
@@ -138,6 +194,7 @@ export async function handler(args: BootstrapContextArgs): Promise<CallToolResul
         recentActivity,
         referencedNotes,
         sessionEnrichment,
+        activeSessionNote,
       },
       {}, // default limits
       true, // Always include full content

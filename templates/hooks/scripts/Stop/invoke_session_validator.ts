@@ -17,6 +17,7 @@
 import { join, basename } from "path";
 import { Glob } from "bun";
 import { skipIfConsumerRepo } from "../../lib/guards.ts";
+import { getMemoriesDir } from "../../lib/utilities.ts";
 
 interface HookInput {
   readonly cwd?: string;
@@ -48,18 +49,9 @@ function writeContinueResponse(reason: string): void {
   console.log(response);
 }
 
-function getProjectDirectory(hookInput: HookInput): string {
-  const envDir = (process.env["CLAUDE_PROJECT_DIR"] ?? "").trim();
-  if (envDir) return envDir;
-  const cwd = hookInput.cwd;
-  if (typeof cwd === "string" && cwd.trim()) return cwd.trim();
-  return process.cwd();
-}
-
 async function getTodaySessionLogs(
   sessionsDir: string,
 ): Promise<SessionLogResult> {
-  const dirCheck = Bun.file(sessionsDir);
   // Check directory existence via shell since Bun.file can't check dirs
   const dirExists =
     (await Bun.spawn(["test", "-d", sessionsDir]).exited) === 0;
@@ -137,34 +129,27 @@ function getMissingKeys(logContent: string): string[] {
 }
 
 async function main(): Promise<number> {
-  if (await skipIfConsumerRepo("session-validator")) return 0;
-
   try {
     const inputJson = await Bun.stdin.text();
     if (!inputJson.trim()) return 0;
 
     const hookInput = JSON.parse(inputJson) as HookInput;
-    const projectDir = getProjectDirectory(hookInput);
-    const sessionsDir = join(projectDir, ".agents", "sessions");
+
+    if (await skipIfConsumerRepo("session-validator", hookInput.cwd)) return 0;
+
+    const memoriesDir = await getMemoriesDir(hookInput.cwd);
+    if (!memoriesDir) return 0;
+
+    const sessionsDir = join(memoriesDir, "sessions");
 
     const result = await getTodaySessionLogs(sessionsDir);
 
     if (result.kind === "directory_missing") return 0;
 
     if (result.kind === "log_missing") {
-      const protocolPath = join(
-        projectDir,
-        ".agents",
-        "SESSION-PROTOCOL.md",
-      );
-      const protocolFile = Bun.file(protocolPath);
-      const protocolRef = (await protocolFile.exists())
-        ? " per SESSION-PROTOCOL.md"
-        : "";
-
       writeContinueResponse(
         `Session log missing. MUST create session log at ` +
-          `.agents/sessions/${result.today}-session-NN.json${protocolRef}`,
+          `sessions/${result.today}-session-NN.json per session protocol`,
       );
       return 0;
     }
@@ -175,20 +160,11 @@ async function main(): Promise<number> {
 
     if (missingKeys.length > 0) {
       const missingList = missingKeys.join(", ");
-      const protocolPath = join(
-        projectDir,
-        ".agents",
-        "SESSION-PROTOCOL.md",
-      );
-      const protocolFile = Bun.file(protocolPath);
-      const protocolRef = (await protocolFile.exists())
-        ? " per SESSION-PROTOCOL.md"
-        : "";
 
       writeContinueResponse(
         `Session log incomplete in ${result.name}. ` +
           `Missing or incomplete keys: ${missingList}. ` +
-          `MUST complete${protocolRef}`,
+          `MUST complete per session protocol`,
       );
     }
 
@@ -200,7 +176,7 @@ async function main(): Promise<number> {
         error.message.includes("ENOENT") ||
         error.message.includes("Permission"))
     ) {
-      console.error(`Session validator file error: ${error}`);
+      console.log(`Session validator file error: ${error}`);
       writeContinueResponse(
         `Session validation failed: Cannot read session log. ` +
           `MUST investigate file system issue. Error: ${error}`,
@@ -210,7 +186,7 @@ async function main(): Promise<number> {
 
     const errorName =
       error instanceof Error ? error.constructor.name : "Unknown";
-    console.error(
+    console.log(
       `Session validator unexpected error: ${errorName} - ${error}`,
     );
     writeContinueResponse(

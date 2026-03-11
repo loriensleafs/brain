@@ -1,30 +1,37 @@
 /**
  * Repository type guards for hook scripts.
  *
- * Determines whether the current repo is a Brain project (has .agents/ or
- * docs/ directory) versus a consumer repo that just uses Brain as a dependency.
+ * Determines whether the current repo is a Brain project (has docs/ directory
+ * for Brain memory storage) versus a consumer repo that just uses Brain as
+ * a dependency.
  *
  * Migrated from guards.py. Pure Bun runtime -- no Node fs imports.
  */
 
 import { join } from "path";
-import { $ } from "bun";
+import { existsSync, statSync } from "fs";
 import { getProjectDirectory } from "./utilities.ts";
 
 /**
- * Check whether a path is an existing directory using Bun shell.
+ * Check whether a path is an existing directory.
  */
-async function isDirectory(path: string): Promise<boolean> {
-  const result = await $`test -d ${path}`.nothrow().quiet();
-  return result.exitCode === 0;
+function isDirectory(path: string): boolean {
+  try {
+    return existsSync(path) && statSync(path).isDirectory();
+  } catch {
+    return false;
+  }
 }
 
 /**
  * Check whether a path exists as a regular file (not a directory).
  */
-async function isFile(path: string): Promise<boolean> {
-  const result = await $`test -f ${path}`.nothrow().quiet();
-  return result.exitCode === 0;
+function isFile(path: string): boolean {
+  try {
+    return existsSync(path) && statSync(path).isFile();
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -34,34 +41,14 @@ async function isFile(path: string): Promise<boolean> {
  * or a `docs/` directory (Brain memory storage). Uses getProjectDirectory()
  * to find the repo root, so this works from any subdirectory.
  */
-async function isProjectRepo(): Promise<boolean> {
-  const projectRoot = await getProjectDirectory();
+async function isProjectRepo(stdinCwd?: string): Promise<boolean> {
+  const projectRoot = await getProjectDirectory(stdinCwd);
 
   const agentsPath = join(projectRoot, ".agents");
   const docsPath = join(projectRoot, "docs");
 
-  const [agentsIsDir, docsIsDir, agentsIsFile, docsIsFile] = await Promise.all(
-    [
-      isDirectory(agentsPath),
-      isDirectory(docsPath),
-      isFile(agentsPath),
-      isFile(docsPath),
-    ],
-  );
-
-  if (agentsIsFile) {
-    console.warn(
-      "[WARNING] .agents exists but is not a directory. " +
-        "Guards will treat this as a consumer repo.",
-    );
-  }
-
-  if (docsIsFile) {
-    console.warn(
-      "[WARNING] docs exists but is not a directory. " +
-        "Guards will treat this as a consumer repo.",
-    );
-  }
+  const agentsIsDir = isDirectory(agentsPath);
+  const docsIsDir = isDirectory(docsPath);
 
   return agentsIsDir || docsIsDir;
 }
@@ -74,9 +61,9 @@ async function isProjectRepo(): Promise<boolean> {
  * if (await skipIfConsumerRepo("pre-commit")) process.exit(0);
  * ```
  */
-async function skipIfConsumerRepo(hookName: string): Promise<boolean> {
-  if (!(await isProjectRepo())) {
-    console.error(
+async function skipIfConsumerRepo(hookName: string, stdinCwd?: string): Promise<boolean> {
+  if (!(await isProjectRepo(stdinCwd))) {
+    console.log(
       `[SKIP] ${hookName}: .agents/ and docs/ not found (consumer repo)`,
     );
     return true;

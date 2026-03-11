@@ -14,7 +14,7 @@
 
 import { join } from "path";
 import { Glob } from "bun";
-import { getProjectDirectory } from "../../lib/utilities.ts";
+import { getMemoriesDir } from "../../lib/utilities.ts";
 import { skipIfConsumerRepo } from "../../lib/guards.ts";
 
 // Security-sensitive file path patterns
@@ -24,7 +24,7 @@ const SECURITY_PATH_PATTERNS = [
   /\.env($|\.)/,
   /(^|[/\\])\.githooks[/\\]/,
   /(^|[/\\])secrets[/\\]/,
-  /(?i)password/i,
+  /password/i,
   /(^|[/\\])token/,
   /(^|[/\\])[Oo]auth[/\\]/,
   /(^|[/\\])[Jj]wt[/\\]/,
@@ -72,12 +72,12 @@ function matchSecurityPaths(files: string[]): string[] {
 }
 
 async function findSecurityEvidence(
-  projectDir: string,
+  memoriesDir: string,
 ): Promise<boolean> {
   const today = new Date().toISOString().slice(0, 10);
 
   // Check 1: Security report exists for today
-  const securityDir = join(projectDir, ".agents", "security");
+  const securityDir = join(memoriesDir, "security");
   const secDirCheck =
     await Bun.spawn(["test", "-d", securityDir], {
       stdout: "pipe",
@@ -96,7 +96,7 @@ async function findSecurityEvidence(
   }
 
   // Check 2: Session log contains security review evidence
-  const sessionsDir = join(projectDir, ".agents", "sessions");
+  const sessionsDir = join(memoriesDir, "sessions");
   const sessDirCheck =
     await Bun.spawn(["test", "-d", sessionsDir], {
       stdout: "pipe",
@@ -133,10 +133,6 @@ async function findSecurityEvidence(
 }
 
 async function main(): Promise<number> {
-  if (await skipIfConsumerRepo("security-commit-gate")) {
-    return 0;
-  }
-
   // Bypass: environment variable
   if (process.env["SKIP_SECURITY_GATE"] === "true") {
     return 0;
@@ -149,6 +145,12 @@ async function main(): Promise<number> {
     }
 
     const inputData = JSON.parse(inputJson);
+    const stdinCwd: string | undefined = inputData?.cwd;
+
+    if (await skipIfConsumerRepo("security-commit-gate", stdinCwd)) {
+      return 0;
+    }
+
     const toolInput = inputData?.tool_input;
     if (typeof toolInput !== "object" || toolInput === null) {
       return 0;
@@ -169,8 +171,13 @@ async function main(): Promise<number> {
       return 0;
     }
 
-    const projectDir = await getProjectDirectory();
-    if (await findSecurityEvidence(projectDir)) {
+    const memoriesDir = await getMemoriesDir(stdinCwd);
+    if (!memoriesDir) {
+      // Can't check evidence, fail-open
+      return 0;
+    }
+
+    if (await findSecurityEvidence(memoriesDir)) {
       return 0;
     }
 
@@ -185,7 +192,7 @@ async function main(): Promise<number> {
         "Invoke the security agent:\n" +
         "  Task(subagent_type='security', prompt='Review security-sensitive " +
         "changes')\n\n" +
-        "Or create a security report in .agents/security/\n\n" +
+        "Or create a security report in the security/ memories folder\n\n" +
         "Bypass: Set SKIP_SECURITY_GATE=true (requires justification)",
     };
     console.log(JSON.stringify(output));

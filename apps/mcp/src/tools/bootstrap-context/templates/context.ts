@@ -24,6 +24,8 @@ export interface ContextData {
   recentActivity: ContextNote[];
   referencedNotes: ContextNote[];
   sessionEnrichment?: SessionEnrichment;
+  /** Active session note with full content for display */
+  activeSessionNote?: ContextNote | null;
   /**
    * When true, includes full note content for features, decisions, and activity.
    * Default (false) returns compact wikilink references only.
@@ -52,6 +54,11 @@ export function renderContext(data: ContextData): string {
     sections.push(renderSessionStateBlock(data.activeSession, data.openSessions));
   }
 
+  // Active Session Note Content (full content when available)
+  if (data.activeSessionNote?.content && fullContent) {
+    sections.push(renderActiveSessionNoteBlock(data.activeSessionNote));
+  }
+
   // Active Features (if any) - expanded with full content
   if (data.activeFeatures.length > 0) {
     sections.push(renderFeaturesBlock(data.activeFeatures, fullContent));
@@ -72,9 +79,9 @@ export function renderContext(data: ContextData): string {
     sections.push(renderActivityBlock(data.recentActivity, fullContent));
   }
 
-  // Referenced Notes (if any) - always compact (wikilinks only)
+  // Referenced Notes (if any) - full content when fullContent is true
   if (data.referencedNotes.length > 0) {
-    sections.push(renderReferencedBlock(data.referencedNotes));
+    sections.push(renderReferencedBlock(data.referencedNotes, fullContent));
   }
 
   return sections.join("\n\n");
@@ -271,7 +278,31 @@ ${sections.join("\n\n")}`;
 ${lines.join("\n")}`;
 }
 
-function renderReferencedBlock(notes: ContextNote[]): string {
+function renderActiveSessionNoteBlock(note: ContextNote): string {
+  const content = note.content?.trim() || "(No content available)";
+
+  return `### Active Session Note
+
+#### ${note.title}
+
+${content}`;
+}
+
+function renderReferencedBlock(notes: ContextNote[], fullContent = false): string {
+  if (fullContent) {
+    const sections = notes.map((n) => {
+      const content = n.content?.trim() || "(No content available)";
+      return `#### ${n.title} (${n.type})
+
+${content}`;
+    });
+
+    return `### Referenced Notes
+
+${sections.join("\n\n")}`;
+  }
+
+  // Compact mode: wikilinks only
   const lines = notes.map((n) => `- [[${n.title}]] (${n.type})`);
 
   return `### Referenced Notes

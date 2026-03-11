@@ -28,6 +28,8 @@ export interface FormattedOutputInput {
   recentActivity: ContextNote[];
   referencedNotes: ContextNote[];
   sessionEnrichment?: SessionEnrichment;
+  /** Active session note with full content */
+  activeSessionNote?: ContextNote | null;
 }
 
 /**
@@ -49,6 +51,7 @@ export function buildFormattedOutput(input: FormattedOutputInput, fullContent = 
     recentActivity,
     referencedNotes,
     sessionEnrichment,
+    activeSessionNote,
   } = input;
 
   // Build context data for template
@@ -63,6 +66,7 @@ export function buildFormattedOutput(input: FormattedOutputInput, fullContent = 
     recentActivity,
     referencedNotes,
     sessionEnrichment,
+    activeSessionNote,
     fullContent,
   };
 
@@ -103,6 +107,7 @@ export function buildFormattedOutputWithLimits(
       recentActivity: input.recentActivity.slice(0, activity),
       referencedNotes: input.referencedNotes.slice(0, referenced),
       sessionEnrichment: input.sessionEnrichment,
+      activeSessionNote: input.activeSessionNote,
     },
     fullContent,
   );

@@ -12,7 +12,6 @@
  *     0 = Always (educational injection, not blocking)
  */
 
-import { join } from "path";
 import { skipIfConsumerRepo } from "../../lib/guards.ts";
 
 interface HookInput {
@@ -36,26 +35,12 @@ const AUTONOMY_PATTERNS: ReadonlyArray<RegExp> = [
   /\bblindly\b/i,
 ];
 
-function buildStricterProtocolMessage(projectDir: string): string {
-  const protocolPath = join(projectDir, ".agents", "SESSION-PROTOCOL.md");
-  const protocolFile = Bun.file(protocolPath);
-  // Use sync-style check: Bun.file().size will throw if not found,
-  // but we use a simpler approach
-  let protocolRef = "";
-  try {
-    // We rely on the file existing check done synchronously via stat
-    if (protocolFile.size > 0) {
-      protocolRef = " See SESSION-PROTOCOL.md.";
-    }
-  } catch {
-    // File doesn't exist, no ref
-  }
-
+function buildStricterProtocolMessage(): string {
   return (
     "\nAutonomous mode: Stricter protocol active. " +
     "Session log with evidence required. " +
     "High-risk ops (merge, force-push, branch delete) need consensus gates " +
-    `via /orchestrator. Blocked on main.${protocolRef}\n`
+    "via /orchestrator. Blocked on main. See session protocol.\n"
   );
 }
 
@@ -73,8 +58,6 @@ function extractPrompt(hookInput: HookInput): string | null {
 }
 
 async function main(): Promise<number> {
-  if (await skipIfConsumerRepo("autonomous-execution-detector")) return 0;
-
   let hookInput: HookInput;
   try {
     const inputJson = await Bun.stdin.text();
@@ -87,15 +70,13 @@ async function main(): Promise<number> {
     return 0;
   }
 
+  if (await skipIfConsumerRepo("autonomous-execution-detector", hookInput.cwd)) return 0;
+
   const userPrompt = extractPrompt(hookInput);
   if (!userPrompt) return 0;
 
   if (hasAutonomyKeywords(userPrompt)) {
-    const projectDir = (
-      process.env["CLAUDE_PROJECT_DIR"] ?? ""
-    ).trim();
-    const effectiveDir = projectDir || hookInput.cwd || process.cwd();
-    console.log(buildStricterProtocolMessage(effectiveDir));
+    console.log(buildStricterProtocolMessage());
   }
 
   return 0;

@@ -351,7 +351,7 @@ async function writeCache(
     const { rename } = await import("fs/promises");
     await rename(tmpPath, cachePath);
   } catch (error) {
-    console.error(`Warning: Failed to write skill cache: ${error}`);
+    console.log(`Warning: Failed to write skill cache: ${error}`);
     // Clean up temp file if rename failed
     try {
       const { unlink } = await import("fs/promises");
@@ -405,7 +405,7 @@ async function loadSkillPatterns(
 
     return [skillPatterns, commandToSkill];
   } catch (error) {
-    console.error(`Skill pattern loading error: ${error}`);
+    console.log(`Skill pattern loading error: ${error}`);
     return [{}, {}];
   }
 }

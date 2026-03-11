@@ -11,7 +11,6 @@
  *     0 = Always (non-blocking hook, all errors are warnings)
  */
 
-import { join } from "path";
 import { skipIfConsumerRepo } from "../../lib/guards.ts";
 
 interface HookInput {
@@ -64,13 +63,13 @@ function getMissingQaSections(transcript: string): string[] {
 }
 
 async function main(): Promise<number> {
-  if (await skipIfConsumerRepo("qa-agent-validator")) return 0;
-
   try {
     const inputJson = await Bun.stdin.text();
     if (!inputJson.trim()) return 0;
 
     const hookInput = JSON.parse(inputJson) as HookInput;
+
+    if (await skipIfConsumerRepo("qa-agent-validator", hookInput.cwd)) return 0;
 
     if (!isQaAgent(hookInput)) return 0;
 
@@ -104,19 +103,13 @@ async function main(): Promise<number> {
 
     if (missingSections.length > 0) {
       const missingList = missingSections.join(", ");
-      const cwd = hookInput.cwd ?? ".";
-      const protocolPath = join(cwd, ".agents", "SESSION-PROTOCOL.md");
-      const protocolFile = Bun.file(protocolPath);
-      const protocolRef = (await protocolFile.exists())
-        ? " per .agents/SESSION-PROTOCOL.md"
-        : "";
 
       console.log(
         `\n**QA VALIDATION FAILURE**: QA agent report is incomplete ` +
-          `and does NOT meet SESSION-PROTOCOL requirements.\n\n` +
+          `and does NOT meet session protocol requirements.\n\n` +
           `Missing required sections: ${missingList}\n\n` +
           `ACTION REQUIRED: Re-run QA agent with complete report ` +
-          `including all required sections${protocolRef}\n`,
+          `including all required sections per session protocol\n`,
       );
       console.error(
         `QA validation failed: Missing sections - ${missingList}`,

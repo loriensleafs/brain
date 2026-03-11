@@ -7,7 +7,7 @@
  *
  * Checks:
  * 1. Command is git commit
- * 2. Session log exists for today in .agents/sessions/
+ * 2. Session log exists for today in Brain memories sessions/
  * 3. Session log has >= 100 characters and, if JSON, has >= 2 properties
  *
  * Hook Type: PreToolUse
@@ -18,7 +18,7 @@
 
 import { join } from "path";
 import {
-  getProjectDirectory,
+  getMemoriesDir,
   getTodaySessionLog,
   isGitCommitCommand,
 } from "../../lib/utilities.ts";
@@ -73,10 +73,6 @@ async function checkSessionLogEvidence(
 }
 
 async function main(): Promise<number> {
-  if (await skipIfConsumerRepo("session-log-guard")) {
-    return 0;
-  }
-
   try {
     const today = new Date().toISOString().slice(0, 10);
 
@@ -86,6 +82,11 @@ async function main(): Promise<number> {
     }
 
     const hookInput = JSON.parse(inputJson);
+    const stdinCwd: string | undefined = hookInput?.cwd;
+
+    if (await skipIfConsumerRepo("session-log-guard", stdinCwd)) {
+      return 0;
+    }
 
     const toolInput = hookInput?.tool_input;
     if (typeof toolInput !== "object" || toolInput === null) {
@@ -100,8 +101,15 @@ async function main(): Promise<number> {
       return 0;
     }
 
-    const projectDir = await getProjectDirectory();
-    const sessionsDir = join(projectDir, ".agents", "sessions");
+    const memoriesDir = await getMemoriesDir(stdinCwd);
+    if (!memoriesDir) {
+      console.error(
+        "[SKIP] session-log-guard: Could not resolve Brain memories directory",
+      );
+      return 0;
+    }
+
+    const sessionsDir = join(memoriesDir, "sessions");
 
     const sessionsDirCheck =
       await Bun.spawn(["test", "-d", sessionsDir], {
@@ -110,7 +118,7 @@ async function main(): Promise<number> {
       }).exited;
     if (sessionsDirCheck !== 0) {
       console.error(
-        "[SKIP] session-log-guard: .agents/sessions/ not found " +
+        `[SKIP] session-log-guard: ${sessionsDir} not found ` +
           "(sessions directory missing)",
       );
       return 0;
@@ -119,15 +127,6 @@ async function main(): Promise<number> {
     const sessionLog = await getTodaySessionLog(sessionsDir, today);
 
     if (sessionLog === null) {
-      let protocolRef = "";
-      const protocolFile = Bun.file(
-        join(projectDir, ".agents", "SESSION-PROTOCOL.md"),
-      );
-      if (await protocolFile.exists()) {
-        protocolRef =
-          "\nSee: `.agents/SESSION-PROTOCOL.md` for full details.\n";
-      }
-
       const output = `
 ## BLOCKED: No Session Log Found
 
@@ -147,11 +146,11 @@ async function main(): Promise<number> {
 \`\`\`
 
 **Option 2: Create manually**
-Session logs go in: \`.agents/sessions/${today}-session-NN.json\`
+Session logs go in: \`sessions/${today}-session-NN.json\`
 
 **Current Date**: ${today}
 **Sessions Directory**: ${sessionsDir}
-${protocolRef}`;
+`;
       console.log(output);
       console.error(
         "Session blocked: No session log found for today",

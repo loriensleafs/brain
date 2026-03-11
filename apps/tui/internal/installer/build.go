@@ -578,24 +578,28 @@ func ResolveMCPPaths(mcpConfig map[string]any, projectRoot string) {
 
 // ---- Shared Helpers ---------------------------------------------------------
 
-// collectHookScripts reads all files from hooks/scripts/ and returns them as GeneratedFiles.
+// collectHookScripts recursively reads all files from hooks/scripts/ and hooks/lib/ and returns them as GeneratedFiles.
 func collectHookScripts(src *TemplateSource) []GeneratedFile {
-	files, err := ListFiles(src, HooksDir+"/scripts")
-	if err != nil {
-		return nil
-	}
-
 	var results []GeneratedFile
-	for _, name := range files {
-		content, err := src.ReadFile(HooksDir + "/scripts/" + name)
+
+	for _, subdir := range []string{"scripts", "lib"} {
+		files, err := WalkFiles(src, HooksDir+"/"+subdir)
 		if err != nil {
 			continue
 		}
-		results = append(results, GeneratedFile{
-			RelativePath: HooksDir + "/scripts/" + name,
-			Content:      string(content),
-		})
+
+		for _, name := range files {
+			content, err := src.ReadFile(HooksDir + "/" + subdir + "/" + name)
+			if err != nil {
+				continue
+			}
+			results = append(results, GeneratedFile{
+				RelativePath: HooksDir + "/" + subdir + "/" + name,
+				Content:      string(content),
+			})
+		}
 	}
+
 	return results
 }
 

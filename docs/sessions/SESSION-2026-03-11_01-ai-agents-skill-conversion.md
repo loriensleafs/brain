@@ -19,7 +19,7 @@ starting-commit: c13bfb0
 
 # SESSION-2026-03-11_01 AI Agents Skill Conversion
 
-**Status:** IN_PROGRESS
+**Status:** COMPLETE
 **Branch:** feat/ai-agents-skill-conversion
 **Starting Commit:** c13bfb0 Merge pull request #35
 **Objective:** Convert agents and skills from ai-agents codebase to Brain-compatible format: Python to Bun TypeScript, Serena/Memory Router to Brain MCP, .NET to TypeScript, ai-agents paths to Brain memory note paths. Decisions tracked in [[ADR-025-ai-agents-skill-conversion-decisions]].
@@ -27,6 +27,7 @@ starting-commit: c13bfb0
 ---
 
 ## Acceptance Criteria
+
 - [x] Batches 1-2: 3 agents, 8 skills, 14 TypeScript scripts converted
 - [x] All conversion decisions documented in [[ADR-025-ai-agents-skill-conversion-decisions]]
 - [x] Comprehensive analysis of ai-agents v3.0 complete (22 agents, 59 skills, 25 hooks, 24 commands)
@@ -41,6 +42,8 @@ starting-commit: c13bfb0
 - [x] Phase 7: brain.config.json v2.0 + mcp.json with Serena
 - [x] Phase 8: Plugin version fix (Go code + golden tests)
 - [x] Phase 9: Integration complete (364 files moved to brain/templates)
+- [x] Plugin rebuilt and installed: 27 agents, 50 skills, 26 hooks verified in Claude Code
+
 ## Session Start Protocol (BLOCKING)
 
 | Req Level | Step | Status | Evidence |
@@ -85,7 +88,7 @@ See [[ADR-025-ai-agents-skill-conversion-decisions]] for full decision record.
 - [x] [setup] tsconfig.json + @types/bun + js-tiktoken #tooling
 - [x] [fix] js-tiktoken API corrections #bugfix
 - [x] [merged] PR #34 feat/registry-based-installer into main #git
-- [x] [config] Repo git email set to pkloss@gmail.com #git
+- [x] [config] Repo git email set to <pkloss@gmail.com> #git
 
 ---
 
@@ -114,15 +117,31 @@ See [[ADR-025-ai-agents-skill-conversion-decisions]] for full decision record.
 - [decision] noUncheckedIndexedAccess disabled in tsconfig for CLI scripts #tooling
 
 ## Relations
+
 - implements [[EPIC-002-ai-agents-v3-brain-port]]
 - implements [[ADR-025-ai-agents-skill-conversion-decisions]]
 - relates_to [[ai-agents codebase]]
 - relates_to [[Brain MCP tools]]
+
+### Phase 10: Plugin Initialization Pipeline Fixes (COMPLETE)
+
+- [x] [fix] `apps/tui/internal/installer/build.go`: collectHookScripts() changed from ListFiles (non-recursive) to WalkFiles + lib/ directory — was missing 21 of 26 scripts #bugfix
+- [x] [fix] `apps/mcp/src/tools/bootstrap-context/index.ts`: Active session note reading + wikilink following; fixed callTool response format (content[0].text vs result) #bugfix
+- [x] [fix] `apps/mcp/src/tools/bootstrap-context/templates/context.ts`: Added renderActiveSessionNoteBlock() for full session note content in output #feature
+- [x] [fix] `apps/mcp/src/tools/bootstrap-context/formattedOutput.ts` + `structuredOutput.ts`: Added activeSessionNote to interfaces #feature
+- [x] [fix] `templates/hooks/lib/utilities.ts`: getProjectDirectory() reads cwd from stdin JSON; replaced Bun shell with existsSync (fixed "Shell cwd was reset" stderr); added getMemoriesDir() reading Brain config #bugfix
+- [x] [fix] `templates/hooks/lib/guards.ts`: Replaced Bun shell with existsSync/statSync; added stdinCwd threading; console.error → console.log #bugfix
+- [x] [fix] `templates/hooks/settings.json`: All 26 hook commands use `${CLAUDE_PLUGIN_ROOT}/hooks/scripts/...`; removed `2>/dev/null` #bugfix
+- [x] [fix] 14 hook scripts: Replaced hardcoded `.agents/` paths with `getMemoriesDir()` calls #bugfix
+- [x] [fix] `invoke_session_initialization_enforcer.ts`: Added `brain bootstrap` for automatic context injection on SessionStart #feature
+- [x] [fix] `templates/configs/mcp.json` + plugin cache: Added `--open-web-dashboard False` to Serena args #fix
+- [x] [fix] `invoke_security_commit_gate.ts`: Fixed invalid regex `/(?i)password/i` → `/password/i` #bugfix
+
 ## Session End Protocol (BLOCKING)
 
 | Req Level | Step | Status | Evidence |
-|-----------|------|--------|----------|
-| MUST | Update session status to COMPLETE | [ ] | |
-| MUST | Update Brain memory with learnings | [ ] | |
-| MUST | Run markdownlint | [ ] | |
-| MUST | Commit all changes | [ ] | |
+| --------- | ---- | ------ | -------- |
+| MUST | Update session status to COMPLETE | [x] | Status updated in Brain memory |
+| MUST | Update Brain memory with learnings | [x] | Phase 10 work log added to session note |
+| MUST | Run markdownlint | [x] | markdownlint-cli2 run on changed files |
+| MUST | Commit all changes | [x] | Committed and pushed |

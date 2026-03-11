@@ -5,7 +5,9 @@
  */
 
 import { resolve, join } from "path";
-import { $, Glob } from "bun";
+import { Glob } from "bun";
+import { existsSync, readFileSync } from "fs";
+import { homedir } from "os";
 
 const GIT_COMMIT_PATTERN = /(?:^|\s)git\s+(commit|ci)/;
 const GIT_PUSH_PATTERN = /(?:^|\s)git\s+push(?:\s|$)/;
@@ -15,41 +17,35 @@ const DATE_FORMAT = /^\d{4}-\d{2}-\d{2}$/;
  * Resolve the project root directory. Never returns undefined.
  *
  * Checks CLAUDE_PROJECT_DIR env var first, then walks up from cwd
- * looking for a .git directory. Falls back to cwd with a warning.
+ * looking for a .git directory. Falls back to cwd.
  */
-async function getProjectDirectory(): Promise<string> {
+async function getProjectDirectory(stdinCwd?: string): Promise<string> {
+  // Check explicit env var first (set by Claude Code for hooks)
   const envDir = (process.env["CLAUDE_PROJECT_DIR"] ?? "").trim();
   if (envDir) {
     return resolve(envDir);
   }
 
-  try {
-    let current = resolve(process.cwd());
-    for (;;) {
-      const gitPath = join(current, ".git");
-      // .git can be a file (worktree) or directory. `test -e` handles both.
-      const check = await $`test -e ${gitPath}`.nothrow().quiet();
-      if (check.exitCode === 0) {
-        return current;
-      }
+  // Use stdin cwd from Claude Code hook JSON, fall back to process.cwd()
+  const effectiveCwd = stdinCwd?.trim() || process.cwd();
 
-      const parent = resolve(current, "..");
-      if (parent === current) {
-        break;
-      }
-      current = parent;
+  // Walk up from effective CWD looking for .git
+  // Use existsSync instead of Bun shell to avoid stderr noise
+  let current = resolve(effectiveCwd);
+  for (;;) {
+    const gitPath = join(current, ".git");
+    if (existsSync(gitPath)) {
+      return current;
     }
-  } catch (error) {
-    console.warn(
-      `Failed to locate project directory: ${error}. Using current directory as fallback.`,
-    );
-    return resolve(process.cwd());
+
+    const parent = resolve(current, "..");
+    if (parent === current) {
+      break;
+    }
+    current = parent;
   }
 
-  console.warn(
-    "Project root (.git directory) not found. Using current directory as fallback.",
-  );
-  return resolve(process.cwd());
+  return resolve(effectiveCwd);
 }
 
 /**
@@ -119,10 +115,10 @@ async function getTodaySessionLog(
       (error.message.includes("No such file") ||
         error.message.includes("ENOENT"))
     ) {
-      console.warn(`Session directory not found: ${sessionsDir}`);
+      console.log(`Session directory not found: ${sessionsDir}`);
       return null;
     }
-    console.warn(
+    console.log(
       `Failed to read session logs from ${sessionsDir}: ${error}`,
     );
     return null;
@@ -154,18 +150,85 @@ async function getTodaySessionLogs(
       (error.message.includes("No such file") ||
         error.message.includes("ENOENT"))
     ) {
-      console.warn(`Session directory not found: ${sessionsDir}`);
+      console.log(`Session directory not found: ${sessionsDir}`);
       return [];
     }
-    console.warn(
+    console.log(
       `Failed to read session logs from ${sessionsDir}: ${error}`,
     );
     return [];
   }
 }
 
+/**
+ * Resolve the Brain memories directory for the current project.
+ *
+ * Reads Brain config (~/.config/brain/config.json) to find the memories
+ * path based on project mode (CODE, DEFAULT, CUSTOM). Falls back to
+ * checking for a docs/ directory in the project root.
+ *
+ * Returns null if no memories directory can be resolved.
+ */
+async function getMemoriesDir(stdinCwd?: string): Promise<string | null> {
+  const projectDir = await getProjectDirectory(stdinCwd);
+
+  const configHome =
+    (process.env["XDG_CONFIG_HOME"] ?? "").trim() ||
+    join(homedir(), ".config");
+  const configPath = join(configHome, "brain", "config.json");
+
+  try {
+    if (!existsSync(configPath)) {
+      // No Brain config, fall back to docs/ check
+      const docsPath = join(projectDir, "docs");
+      if (existsSync(docsPath)) return docsPath;
+      return null;
+    }
+
+    const config = JSON.parse(readFileSync(configPath, "utf-8"));
+    const projects = config?.projects;
+    if (typeof projects !== "object" || projects === null) {
+      const docsPath = join(projectDir, "docs");
+      if (existsSync(docsPath)) return docsPath;
+      return null;
+    }
+
+    for (const [name, project] of Object.entries(projects)) {
+      const proj = project as Record<string, unknown>;
+      if (!proj?.code_path || typeof proj.code_path !== "string") continue;
+
+      const codePath = resolve(proj.code_path);
+      if (projectDir !== codePath && !projectDir.startsWith(codePath + "/")) {
+        continue;
+      }
+
+      const mode = String(proj.memories_mode ?? "DEFAULT");
+      if (mode === "CODE") return join(codePath, "docs");
+      if (mode === "CUSTOM" && typeof proj.memories_path === "string") {
+        return resolve(proj.memories_path);
+      }
+
+      // DEFAULT mode
+      const defaultLocation =
+        typeof config.defaults?.memories_location === "string"
+          ? config.defaults.memories_location
+          : join(homedir(), ".local", "share", "brain", "memories");
+      return join(defaultLocation, name);
+    }
+  } catch {
+    // Config not available or malformed
+  }
+
+  // Fallback: check if docs/ exists in project dir
+  const docsPath = join(projectDir, "docs");
+  if (existsSync(docsPath)) return docsPath;
+
+  return null;
+}
+
 export {
   getProjectDirectory,
+  getMemoriesDir,
   isGitCommitCommand,
   isGitPushCommand,
   isGitCommitOrPushCommand,

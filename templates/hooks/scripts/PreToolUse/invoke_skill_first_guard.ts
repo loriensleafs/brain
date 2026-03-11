@@ -213,10 +213,6 @@ function writeBlockResponse(
 }
 
 async function main(): Promise<number> {
-  if (await skipIfConsumerRepo("skill-first-guard")) {
-    return 0;
-  }
-
   try {
     const inputJson = await Bun.stdin.text();
     if (!inputJson.trim()) {
@@ -224,6 +220,11 @@ async function main(): Promise<number> {
     }
 
     const hookInput = JSON.parse(inputJson);
+    const stdinCwd: string | undefined = hookInput?.cwd;
+
+    if (await skipIfConsumerRepo("skill-first-guard", stdinCwd)) {
+      return 0;
+    }
 
     const toolInput = hookInput?.tool_input;
     if (typeof toolInput !== "object" || toolInput === null) {
@@ -239,7 +240,7 @@ async function main(): Promise<number> {
       return 0;
     }
 
-    const projectDir = await getProjectDirectory();
+    const projectDir = await getProjectDirectory(stdinCwd);
     const skill = await findSkillScript(
       ghCommand.operation,
       ghCommand.action,

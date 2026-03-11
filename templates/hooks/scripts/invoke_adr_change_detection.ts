@@ -40,7 +40,9 @@ function getProjectRoot(): string | null {
 }
 
 async function main(): Promise<number> {
-  if (await skipIfConsumerRepo("adr-change-detection")) {
+  const input = await Bun.file("/dev/stdin").json().catch(() => ({}));
+
+  if (await skipIfConsumerRepo("adr-change-detection", input?.cwd)) {
     return 0;
   }
 

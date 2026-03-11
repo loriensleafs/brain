@@ -24,6 +24,7 @@
 import { join, resolve, sep, basename } from "path";
 import { Glob } from "bun";
 import { skipIfConsumerRepo } from "../../lib/guards.ts";
+import { getMemoriesDir } from "../../lib/utilities.ts";
 import { loadSkillPatterns } from "./skill_pattern_loader.ts";
 
 // ---------------------------------------------------------------------------
@@ -185,7 +186,7 @@ async function ensurePatternsLoaded(projectDir: string): Promise<void> {
     if (Object.keys(patterns).length > 0) SKILL_PATTERNS = patterns;
     if (Object.keys(commands).length > 0) COMMAND_TO_SKILL = commands;
   } catch (error) {
-    console.error(`Warning: Failed to load skill patterns: ${error}`);
+    console.log(`Warning: Failed to load skill patterns: ${error}`);
   }
   patternsLoaded = true;
 }
@@ -374,7 +375,7 @@ Respond in JSON format:
 
     const confidence = Number(result.confidence);
     if (isNaN(confidence) || confidence < 0 || confidence > 1) {
-      console.error(`LLM confidence out of range: ${confidence}`);
+      console.log(`LLM confidence out of range: ${confidence}`);
       return null;
     }
 
@@ -387,7 +388,7 @@ Respond in JSON format:
       method: "haiku-llm",
     };
   } catch (error) {
-    console.error(`LLM classification error: ${error}`);
+    console.log(`LLM classification error: ${error}`);
     return null;
   }
 }
@@ -697,19 +698,19 @@ async function updateSkillMemory(
   try {
     const allowedDir = resolve(projectDir);
     if (!isRelativeTo(allowedDir, SAFE_BASE_DIR)) {
-      console.error(
+      console.log(
         `Path traversal attempt detected: '${allowedDir}' is outside safe base directory`,
       );
       return false;
     }
   } catch (error) {
-    console.error(`Path validation error for project_dir: ${error}`);
+    console.log(`Path validation error for project_dir: ${error}`);
     return false;
   }
 
   // Validate skill_name
   if (!/^[A-Za-z0-9_-]+$/.test(skillName)) {
-    console.error(
+    console.log(
       `Invalid skill name: '${skillName}' contains unsupported characters`,
     );
     return false;
@@ -722,7 +723,7 @@ async function updateSkillMemory(
   // Validate resolved path is within project directory
   const resolvedPath = resolve(memoryPath);
   if (!resolvedPath.startsWith(resolve(projectDir) + sep)) {
-    console.error(
+    console.log(
       `Path traversal attempt detected: '${resolvedPath}' is outside project directory`,
     );
     return false;
@@ -908,13 +909,13 @@ function writeLearningNotification(
 // ---------------------------------------------------------------------------
 
 async function main(): Promise<number> {
-  if (await skipIfConsumerRepo("skill-learning")) return 0;
-
   try {
     const inputJson = await Bun.stdin.text();
     if (!inputJson.trim()) return 0;
 
     const hookInput = JSON.parse(inputJson) as HookInput;
+
+    if (await skipIfConsumerRepo("skill-learning", hookInput.cwd)) return 0;
     const projectDir = getProjectDirectory(hookInput);
     const safeProjectPath = getSafeProjectPath(projectDir);
     if (safeProjectPath === null) return 0;
@@ -930,7 +931,10 @@ async function main(): Promise<number> {
     if (Object.keys(detectedSkills).length === 0) return 0;
 
     // Get session ID from today's session log
-    const sessionsDir = join(safeProjectPath, ".agents", "sessions");
+    const memoriesDir = await getMemoriesDir(hookInput.cwd);
+    const sessionsDir = memoriesDir
+      ? join(memoriesDir, "sessions")
+      : join(safeProjectPath, "docs", "sessions");
     const today = new Date().toISOString().slice(0, 10);
 
     let sessionId = `${today}-session-unknown`;
@@ -985,7 +989,7 @@ async function main(): Promise<number> {
 
     return 0;
   } catch (error) {
-    console.error(`Skill learning hook error: ${error}`);
+    console.log(`Skill learning hook error: ${error}`);
     return 0;
   }
 }
