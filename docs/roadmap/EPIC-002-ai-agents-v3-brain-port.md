@@ -39,13 +39,13 @@ Port ai-agents v3.0 agents, skills, hooks, and commands to Brain, replacing half
 
 ## Phases
 
-### Phase 0: Setup [PENDING]
+### Phase 0: Setup [COMPLETE]
 - Clear/populate staging area with all ai-agents files
 
-### Phase 1: Hook Utilities [PENDING]
+### Phase 1: Hook Utilities [COMPLETE]
 - Convert guards.py and utilities.py to Bun TypeScript
 
-### Phase 2: Agents (16 remaining + 2 enhancements) [PENDING]
+### Phase 2: Agents (21 total, all converted) [COMPLETE]
 - 2A: adr-generator, context-retrieval, critic, devops, explainer
 - 2B: high-level-advisor, independent-thinker, backlog-generator, issue-feature-review, skillbook
 - 2C: planner, qa, retrospective, roadmap, security
