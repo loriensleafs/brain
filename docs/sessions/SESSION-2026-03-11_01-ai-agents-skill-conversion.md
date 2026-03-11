@@ -35,7 +35,7 @@ starting-commit: c13bfb0
 - [x] Phase 1: Hook utilities converted (2 files)
 - [x] Phase 2: All 21 agents converted (zero frontmatter, zero remnants)
 - [x] Phase 3: All 46 skills converted (~51 Python scripts to TypeScript)
-- [ ] Phase 4: All 25 hooks converted
+- [x] Phase 4: All 25 hooks converted to Bun TypeScript + settings.json
 - [ ] Phase 5: All commands converted
 - [ ] Phase 6: AGENTS.md redesigned
 - [ ] Phase 7: Configuration files updated

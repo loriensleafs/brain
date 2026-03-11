@@ -61,7 +61,7 @@ Port ai-agents v3.0 agents, skills, hooks, and commands to Brain, replacing half
 - 3F: Serena skills (3): code-architecture, repo-encoder, code-symbols (rename, swap memory only)
 - 3G: SkillForge (1): 5 scripts
 
-### Phase 4: Hooks (25 scripts) [PENDING]
+### Phase 4: Hooks (25 scripts converted + settings.json) [COMPLETE]
 - 4A: SessionStart (4 scripts)
 - 4B: PreToolUse (10 scripts)
 - 4C: Other lifecycle (6 scripts)
