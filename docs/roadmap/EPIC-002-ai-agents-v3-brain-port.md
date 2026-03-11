@@ -68,7 +68,7 @@ Port ai-agents v3.0 agents, skills, hooks, and commands to Brain, replacing half
 - 4D: New lifecycle events + settings.json (2 scripts + config)
 - 4E: Context initialization redesign (bootstrap_context integration)
 
-### Phase 5: Commands (~20) [PENDING]
+### Phase 5: Commands (23 files converted) [COMPLETE]
 - 5A: Workflow commands (6): 0-init, 1-plan, 2-impl, 3-qa, 4-security, 9-sync
 - 5B: Other commands (8+): context-gather, push-pr, pr-review, pr-quality/*, memory-*, research
 
