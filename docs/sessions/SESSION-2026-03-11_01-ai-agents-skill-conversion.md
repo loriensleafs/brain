@@ -27,22 +27,20 @@ starting-commit: c13bfb0
 ---
 
 ## Acceptance Criteria
-
-- [x] All Python scripts converted to pure Bun TypeScript (no Node)
-- [x] All Serena/Memory Router references replaced with Brain MCP tools
-- [x] All .NET/C#/PowerShell code examples converted to TypeScript
-- [x] All agent/skill frontmatter aligned to Brain/Claude Code canonical format
-- [x] All save paths updated from `.agents/` to Brain memory note folders
-- [x] All dead references removed or fixed
-- [x] Zero TypeScript errors, zero Python files remaining
-- [x] ADR capturing all conversion decisions written to Brain memory
-- [ ] Agent frontmatter stripped, brain.config.json updated with descriptions/argument_hint/skills
-- [ ] Memory skill mandate language added to all 3 agent markdown bodies
-- [ ] Converted files moved into brain repo and committed
-- [ ] Session note kept current
-
----
-
+- [x] Batches 1-2: 3 agents, 8 skills, 14 TypeScript scripts converted
+- [x] All conversion decisions documented in [[ADR-025-ai-agents-skill-conversion-decisions]]
+- [x] Comprehensive analysis of ai-agents v3.0 complete (22 agents, 59 skills, 25 hooks, 24 commands)
+- [x] Full execution plan created as [[EPIC-002-ai-agents-v3-brain-port]]
+- [ ] Phase 0: Staging setup
+- [ ] Phase 1: Hook utilities converted
+- [ ] Phase 2: All 18 agents converted/enhanced
+- [ ] Phase 3: All 32 skills converted
+- [ ] Phase 4: All 25 hooks converted
+- [ ] Phase 5: All commands converted
+- [ ] Phase 6: AGENTS.md redesigned
+- [ ] Phase 7: Configuration files updated
+- [ ] Phase 8: Plugin installation fixed
+- [ ] Phase 9: Integration verified
 ## Session Start Protocol (BLOCKING)
 
 | Req Level | Step | Status | Evidence |
@@ -116,11 +114,10 @@ See [[ADR-025-ai-agents-skill-conversion-decisions]] for full decision record.
 - [decision] noUncheckedIndexedAccess disabled in tsconfig for CLI scripts #tooling
 
 ## Relations
-
-- relates_to [[ADR-025-ai-agents-skill-conversion-decisions]]
-
----
-
+- implements [[EPIC-002-ai-agents-v3-brain-port]]
+- implements [[ADR-025-ai-agents-skill-conversion-decisions]]
+- relates_to [[ai-agents codebase]]
+- relates_to [[Brain MCP tools]]
 ## Session End Protocol (BLOCKING)
 
 | Req Level | Step | Status | Evidence |
