@@ -11,9 +11,8 @@ Copy these templates exactly when fixing session files. Do not recreate from mem
 
 | Req | Step | Status | Evidence |
 |-----|------|--------|----------|
-| MUST | Initialize Serena: `mcp__serena__activate_project` | [x] | Tool output present |
-| MUST | Initialize Serena: `mcp__serena__initial_instructions` | [x] | Tool output present |
-| MUST | Search Brain for cross-session context | [x] | Search results in context |
+| MUST | Initialize Brain MCP: `mcp__plugin____brain__bootstrap_context` | [x] | Tool output present |
+| MUST | Read `.agents/HANDOFF.md` | [x] | Content in context |
 | MUST | Create this session log | [x] | This file exists |
 | MUST | List skill scripts in `.claude/skills/github/scripts/` | [x] | Output documented below |
 | MUST | Read usage-mandatory memory | [x] | Content in context |
@@ -33,11 +32,11 @@ Copy these templates exactly when fixing session files. Do not recreate from mem
 | Req | Step | Status | Evidence |
 |-----|------|--------|----------|
 | MUST | Complete session log (all sections filled) | [x] | File complete |
-| MUST | Update Serena memory (cross-session context) | [x] | Memory write confirmed |
+| MUST | Update Brain memory (cross-session context) | [x] | Memory write confirmed |
 | MUST | Run markdown lint | [x] | Output below |
 | MUST | Route to qa agent (feature implementation) | [x] | QA report: `.agents/qa/[report].md` |
-| MUST | Commit all changes (including .serena/memories) | [x] | Commit SHA: abc1234 |
-| MUST | Update Brain note (cross-session context) | [x] | Note write confirmed |
+| MUST | Commit all changes (including Brain memory notes) | [x] | Commit SHA: abc1234 |
+| MUST NOT | Update `.agents/HANDOFF.md` directly | [x] | HANDOFF.md unchanged |
 | SHOULD | Update PROJECT-PLAN.md | [x] | Tasks checked off |
 | SHOULD | Invoke retrospective (significant sessions) | [x] | Doc: _______ |
 | SHOULD | Verify clean git status | [x] | Output below |
@@ -84,11 +83,18 @@ Available GitHub skills:
 
 - Add-CommentReaction.ps1
 - Get-IssueContext.ps1
-- Get-PRContext.ps1
-- Get-PRReviewComments.ps1
-- Get-PRReviewers.ps1
+- get_pr_context.py
+- get_pr_checks.py
+- get_pr_review_threads.py
+- get_unaddressed_comments.py
+- get_unresolved_review_threads.py
+- test_pr_merged.py
+- post_pr_comment_reply.py
+- add_pr_review_thread_reply.py
+- resolve_pr_review_thread.py
+- get_pr_review_comments.py
+- get_pr_reviewers.py
 - Post-IssueComment.ps1
-- Post-PRCommentReply.ps1
 - Set-IssueLabels.ps1
 - Set-IssueMilestone.ps1
 ```
@@ -106,9 +112,8 @@ Complete section for new session logs:
 
 | Req | Step | Status | Evidence |
 |-----|------|--------|----------|
-| MUST | Initialize Serena: `mcp__serena__activate_project` | [x] | Tool output present |
-| MUST | Initialize Serena: `mcp__serena__initial_instructions` | [x] | Tool output present |
-| MUST | Search Brain for cross-session context | [x] | Search results in context |
+| MUST | Initialize Brain MCP: `mcp__plugin____brain__bootstrap_context` | [x] | Tool output present |
+| MUST | Read `.agents/HANDOFF.md` | [x] | Content in context |
 | MUST | Create this session log | [x] | This file exists |
 | MUST | List skill scripts in `.claude/skills/github/scripts/` | [x] | Output documented below |
 | MUST | Read usage-mandatory memory | [x] | Content in context |
@@ -140,11 +145,11 @@ All MUST requirements above are marked complete.
 | Req | Step | Status | Evidence |
 |-----|------|--------|----------|
 | MUST | Complete session log (all sections filled) | [x] | File complete |
-| MUST | Update Serena memory (cross-session context) | [x] | Memory write confirmed |
+| MUST | Update Brain memory (cross-session context) | [x] | Memory write confirmed |
 | MUST | Run markdown lint | [x] | Output below |
 | MUST | Route to qa agent (feature implementation) | [x] | QA report: `.agents/qa/[report].md` |
-| MUST | Commit all changes (including .serena/memories) | [x] | Commit SHA: _______ |
-| MUST | Update Brain note (cross-session context) | [x] | Note write confirmed |
+| MUST | Commit all changes (including Brain memory notes) | [x] | Commit SHA: _______ |
+| MUST NOT | Update `.agents/HANDOFF.md` directly | [x] | HANDOFF.md unchanged |
 | SHOULD | Update PROJECT-PLAN.md | [x] | Tasks checked off |
 | SHOULD | Invoke retrospective (significant sessions) | [x] | Doc: _______ |
 | SHOULD | Verify clean git status | [x] | Output below |

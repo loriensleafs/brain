@@ -1,17 +1,16 @@
 ---
 name: research-and-incorporate
-version: 1.0.0
-description: Research external topics, create comprehensive analysis, determine project
-  applicability, and incorporate learnings into Brain memory system. Transforms
-  knowledge into searchable, actionable project context.
+description: Research external topics, create comprehensive analysis, determine project applicability, and incorporate learnings into Brain memory notes. Transforms knowledge into searchable, actionable project context.
 license: MIT
-model: claude-opus-4-5
 agents:
   - analyst
+  - memory
+model: claude-opus-4-5
 metadata:
+  version: 2.0.0
   timelessness: 8/10
-  source: Chesterton's Fence research workflow (Session 203)
 ---
+
 # Research and Incorporate
 
 Transform external knowledge into actionable, searchable project context through structured research, analysis, and memory integration.
@@ -28,15 +27,28 @@ URLs: https://fs.blog/chestertons-fence/, https://en.wikipedia.org/wiki/G._K._Ch
 
 | Input | Output | Duration |
 |-------|--------|----------|
-| Topic + Context + URLs | Analysis doc + Brain notes (5-10 atomic notes) | 20-40 min |
+| Topic + Context + URLs | Analysis note + Brain memory notes | 20-40 min |
 
 ## Triggers
 
 - `/research-and-incorporate` - Main invocation
-- "research and incorporate {topic}" - Natural language
-- "study {topic} and add to memory" - Alternative phrasing
-- "deep dive on {topic}" - Research focus
-- "learn about {topic} for the project" - Project integration focus
+- `research and incorporate {topic}` - Natural language
+- `study {topic} and add to memory` - Alternative phrasing
+- `deep dive on {topic}` - Research focus
+- `learn about {topic} for the project` - Project integration focus
+
+## When to Use
+
+Use this skill when:
+
+- Researching an external concept, framework, or principle for project integration
+- You need structured analysis with memory persistence (not just a web search)
+- Building actionable knowledge from external sources
+
+Use `memory-documentary` instead when:
+
+- Investigating patterns already in existing memory systems
+- You need cross-system evidence synthesis, not new external research
 
 ## Parameters
 
@@ -46,35 +58,33 @@ URLs: https://fs.blog/chestertons-fence/, https://en.wikipedia.org/wiki/G._K._Ch
 | `CONTEXT` | Yes | Why this matters to the project |
 | `URLS` | No | Comma-separated source URLs |
 
-## Workflow Overview
+## Process
 
 ```text
-┌─────────────────────────────────────────────────────────────────┐
-│ Phase 1: RESEARCH (BLOCKING)                                    │
-│ • Check existing knowledge (Brain)                              │
-│ • Fetch URLs with quote extraction                              │
-│ • Web search for additional context                             │
-│ • Synthesize: principles, frameworks, examples, failure modes   │
-├─────────────────────────────────────────────────────────────────┤
-│ Phase 2: ANALYSIS DOCUMENT (BLOCKING)                           │
-│ • Write 3000-5000 word analysis to .agents/analysis/            │
-│ • Include: concepts, frameworks, applications, failure modes    │
-│ • Verify: 3+ examples, 3+ failure modes, 2+ relationships       │
-├─────────────────────────────────────────────────────────────────┤
-│ Phase 3: APPLICABILITY (BLOCKING)                               │
-│ • Map integration points: agents, protocols, memory, skills     │
-│ • Propose applications with effort estimates                    │
-│ • Prioritize: High/Medium/Low based on project goals            │
-├─────────────────────────────────────────────────────────────────┤
-│ Phase 4: MEMORY INTEGRATION (BLOCKING)                          │
-│ • Create Brain project note with cross-references               │
-│ • Create 5-10 atomic Brain notes with observations/relations    │
-│ • Link notes to related concepts via relations                  │
-├─────────────────────────────────────────────────────────────────┤
-│ Phase 5: ACTION ITEMS                                           │
-│ • Create GitHub issue if implementation work identified         │
-│ • Document in session log                                       │
-└─────────────────────────────────────────────────────────────────┘
+Phase 1: RESEARCH (BLOCKING)
+  - Check existing knowledge (Brain MCP search)
+  - Fetch URLs with quote extraction
+  - Web search for additional context
+  - Synthesize: principles, frameworks, examples, failure modes
+
+Phase 2: ANALYSIS DOCUMENT (BLOCKING)
+  - Write 3000-5000 word analysis as Brain memory note in analysis/
+  - Include: concepts, frameworks, applications, failure modes
+  - Verify: 3+ examples, 3+ failure modes, 2+ relationships
+
+Phase 3: APPLICABILITY (BLOCKING)
+  - Map integration points: agents, protocols, memory, skills
+  - Propose applications with effort estimates
+  - Prioritize: High/Medium/Low based on project goals
+
+Phase 4: MEMORY INTEGRATION (BLOCKING)
+  - Create Brain memory notes for key atomic concepts
+  - Add relations via wikilinks to connect knowledge
+  - Each note: one concept, proper entity type, observations, relations
+
+Phase 5: ACTION ITEMS
+  - Create GitHub issue if implementation work identified
+  - Document in session log
 ```
 
 ## Quality Gates (BLOCKING)
@@ -86,20 +96,20 @@ URLs: https://fs.blog/chestertons-fence/, https://en.wikipedia.org/wiki/G._K._Ch
 | Concrete examples | 3+ with context and outcomes | 2 |
 | Failure modes | 3+ anti-patterns with corrections | 2 |
 | Relationships | 2+ connections to existing concepts | 2 |
-| Note atomicity | Each note covers ONE concept | 4 |
-| Note count | 5-10 Brain notes created | 4 |
+| Note quality | Each note has 3+ observations, 2+ relations | 4 |
+| Note count | 5-10 Brain memory notes created | 4 |
 
 ## Verification Checklist
 
 After completion, verify:
 
-- [ ] Analysis document exists at `.agents/analysis/{topic-slug}.md`
+- [ ] Analysis note exists in Brain memory `analysis/` folder
 - [ ] Analysis is 3000-5000 words with concrete examples
 - [ ] Applicability section documents integration opportunities
-- [ ] Brain project note created with cross-references
-- [ ] 5-10 Brain notes created with observations/relations
-- [ ] Notes linked to related concepts via relations
-- [ ] Each note is atomic (one concept)
+- [ ] 5-10 Brain memory notes created with proper entity types
+- [ ] Notes have observations (3+) and relations (2+)
+- [ ] Notes linked to related concepts via wikilinks
+- [ ] Each note is atomic (one concept per note)
 - [ ] Action items documented (issue or next steps)
 
 ## Anti-Patterns
@@ -108,8 +118,8 @@ After completion, verify:
 |-------|-----|---------|
 | Superficial research | Surface definitions miss actionable insights | Dig into frameworks, examples, failure modes |
 | Missing applicability | Research without integration is wasted | Every insight must show HOW it applies |
-| Non-atomic notes | Multiple concepts pollutes graph | ONE concept per note |
-| Disconnected knowledge | Orphaned artifacts aren't discoverable | Link notes via relations |
+| Notes without observations | Missing categorized facts makes notes hard to query | Add 3+ observations with categories and tags |
+| Disconnected knowledge | Orphaned notes are not discoverable | Add relations via wikilinks to connect knowledge |
 | Template over-compliance | Forcing irrelevant sections wastes tokens | Organize for the topic, not the template |
 | Skipping verification | Quality gates exist for a reason | Verify each phase before proceeding |
 
@@ -117,20 +127,20 @@ After completion, verify:
 
 | Skill | Relationship |
 |-------|--------------|
-| `brain:writing-notes` | Note creation best practices |
-| `brain:research-agent` | Deep research with progressive note building |
 | `exploring-knowledge-graph` | Navigate created knowledge |
+| `curating-memories` | Update and maintain created notes |
+| `memory` | Search and retrieve incorporated knowledge |
 
 ## References
 
 | Document | Content |
 |----------|---------|
 | [workflow.md](references/workflow.md) | Detailed phase workflows with templates |
-| [memory-templates.md](references/memory-templates.md) | Brain note structure templates |
+| [memory-templates.md](references/memory-templates.md) | Brain memory note structure templates |
 
 ## Extension Points
 
 1. **Additional research sources**: Add MCP tools for specialized domains
 2. **Custom analysis templates**: Topic-specific document structures
-3. **Automated validation**: Scripts to verify memory atomicity
+3. **Automated validation**: Scripts to verify note quality
 4. **Integration hooks**: Connect to ADR review for architecture topics

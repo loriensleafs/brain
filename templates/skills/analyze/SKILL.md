@@ -1,98 +1,162 @@
 ---
 name: analyze
-description: Invoke IMMEDIATELY via brain-hooks when user requests codebase analysis, architecture review, security assessment, or quality evaluation. Do NOT explore first - the command orchestrates exploration.
+description: Systematic multi-step codebase analysis producing prioritized findings with file-line evidence. Covers architecture reviews, security assessments, and code quality evaluations through guided exploration, investigation planning, and synthesis.
 license: MIT
 agents:
   - analyst
   - orchestrator
+user-invocable: true
+allowed-tools:
+  - Read
+  - Grep
+  - Glob
+  - Bash
+  - Agent
+model: claude-opus-4-6[1m]
 metadata:
+  version: 1.1.0
+  timelessness: 8/10
 ---
 
 # Analyze Skill
 
-When this skill activates, IMMEDIATELY invoke the command. The command IS the workflow.
+When this skill activates, IMMEDIATELY invoke the script. The script IS the workflow. Do NOT explore the codebase first.
 
-## Invocation
+## Triggers
+
+- `analyze this codebase` - architecture and quality focus
+- `review code quality` - quality focus
+- `run security assessment` - security focus
+- `architecture review of this system` - architecture focus
+- `find code smells` - quality focus
+
+## Quick Reference
+
+| Input               | Focus                                 | Minimum Steps |
+| ------------------- | ------------------------------------- | ------------- |
+| Architecture review | Structure, dependencies, layering     | 6             |
+| Security assessment | Input validation, auth, data handling | 7-9           |
+| Code quality        | Duplication, complexity, test gaps    | 6-7           |
+| Broad investigation | All dimensions                        | 9-12          |
+
+---
+
+## Security
+
+When using the `Bash` tool, all arguments containing variable or user-provided input **MUST** be quoted to prevent command injection vulnerabilities. Refer to the repository style guide on Command Injection Prevention (CWE-78).
+
+**WRONG**: `grep $PATTERN /some/path`
+**CORRECT**: `grep -- "$PATTERN" /some/path`
+
+---
+
+## When to Use
+
+Use this skill when:
+
+- Investigation spans multiple files or components
+- Analysis requires structured multi-step exploration
+- Findings need prioritization by severity with file:line evidence
+
+Use direct code reading instead when:
+
+- Checking a single file or function
+- The question has a known, specific location
+- A quick grep or symbol search answers the question
+
+---
+
+## Scripts
+
+| Script               | Purpose                                                                   | Exit Codes                 |
+| -------------------- | ------------------------------------------------------------------------- | -------------------------- |
+| `scripts/analyze.ts` | Multi-step guided analysis with exploration, investigation, and synthesis | 0=success, 1=invalid input |
+
+### Invocation
 
 ```bash
-echo '{"stepNumber": 1, "totalSteps": 6, "thoughts": "Starting analysis. User request: <describe what user asked>"}' | \
-  ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/brain-hooks analyze
+bun run ${CLAUDE_SKILL_DIR}/scripts/analyze.ts \
+  --step-number 1 \
+  --total-steps 6 \
+  --thoughts "Starting analysis. User request: <describe what user asked to analyze>"
 ```
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| `stepNumber` | Yes | Current step (starts at 1) |
-| `totalSteps` | Yes | Minimum 6; adjust as workflow instructs |
-| `thoughts` | No | Summary of current progress |
-| `stateFile` | No | Path to state file (auto-created if not specified) |
+| Argument        | Required | Description                               |
+| --------------- | -------- | ----------------------------------------- |
+| `--step-number` | Yes      | Current step (starts at 1)                |
+| `--total-steps` | Yes      | Minimum 6; adjust as script instructs     |
+| `--thoughts`    | Yes      | Accumulated state from all previous steps |
 
-## File-Based State
+---
 
-State is automatically persisted to: `/tmp/brain-analyze/analyze-state-YYYY-MM-DD.json`
+## Process
 
-The state file tracks:
+The script outputs REQUIRED ACTIONS at each step. Follow them exactly.
 
-- Focus areas and priorities
-- Investigation plans
-- Findings by severity
-- Open questions
-- Patterns discovered
+### Phase 1: Exploration (Step 1)
 
-## Workflow
+Delegate to Explore agent(s). The script determines scope and parallelism. Wait for all agents, then re-invoke `${CLAUDE_SKILL_DIR}/scripts/analyze.ts` with `--step-number 1`, including the Explore results in `--thoughts`.
 
-The command outputs structured JSON at each step. Follow the `actions` array exactly.
+### Phase 2: Focus Selection (Step 2)
 
-```
-Step 1: EXPLORATION         - Delegate to Explore agent(s)
-Step 2: FOCUS SELECTION     - Classify areas, assign priorities
-Step 3: INVESTIGATION PLAN  - Commit to specific files and questions
-Step 4+: DEEP ANALYSIS      - Progressive investigation with evidence
-Step N-1: VERIFICATION      - Validate completeness
-Step N: SYNTHESIS           - Consolidate findings
-```
+Classify investigation areas by dimension (architecture, performance, security, quality). Assign priorities P1-P3. Estimate total steps.
+
+### Phase 3: Investigation Planning (Step 3)
+
+Commit to specific files, questions, and hypotheses per focus area. This creates a contract verified in the verification phase.
+
+### Phase 4: Deep Analysis (Steps 4 to N-2)
+
+Execute the investigation plan. Read files, collect evidence with file:line references and quoted code. Trace root causes across files.
+
+### Phase 5: Verification (Step N-1)
+
+Audit completeness against step 3 commitments. Identify gaps. If gaps exist, increase total-steps and return to deep analysis.
+
+### Phase 6: Synthesis (Step N)
+
+Consolidate verified findings by severity (critical, high, medium, low). Identify systemic patterns. Produce prioritized action plan.
+
+---
 
 ## Example Sequence
 
 ```bash
-# Step 1: Start analysis
-echo '{"stepNumber": 1, "totalSteps": 6, "thoughts": "Starting analysis of auth system"}' | \
-  ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/brain-hooks analyze
+# Step 1: Start, script instructs you to explore first
+bun run ${CLAUDE_SKILL_DIR}/scripts/analyze.ts --step-number 1 --total-steps 6 \
+  --thoughts "Starting analysis of auth system"
 
-# Output will instruct you to delegate to Explore agent(s)
-# After exploration completes, invoke step 2
+# [Follow REQUIRED ACTIONS: delegate to Explore agent, wait for results]
 
-# Step 2+: Continue following output instructions
-echo '{"stepNumber": 2, "totalSteps": 7, "thoughts": "Explore found: Flask app, SQLAlchemy..."}' | \
-  ${CLAUDE_PLUGIN_ROOT}/hooks/scripts/brain-hooks analyze
+# Step 1 again with explore results
+bun run ${CLAUDE_SKILL_DIR}/scripts/analyze.ts --step-number 1 --total-steps 6 \
+  --thoughts "Explore found: Flask app, SQLAlchemy, auth/ dir..."
+
+# Step 2+: Continue following script output
+bun run ${CLAUDE_SKILL_DIR}/scripts/analyze.ts --step-number 2 --total-steps 7 \
+  --thoughts "[accumulated state from step 1] Focus: security P1, quality P2"
 ```
 
-## Output Format
+---
 
-```json
-{
-  "phase": "EXPLORATION",
-  "stepTitle": "Process Exploration Results",
-  "status": "in_progress",
-  "actions": ["Array of required actions..."],
-  "next": "Instructions for next step",
-  "stateFile": "/tmp/brain-analyze/analyze-state-2026-01-14.json",
-  "stateSummary": "2 focus areas, 5 findings (1 critical, 2 high)"
-}
-```
+## Anti-Patterns
 
-## State File Structure
+| Avoid                                             | Why                                   | Instead                                       |
+| ------------------------------------------------- | ------------------------------------- | --------------------------------------------- |
+| Exploring the codebase before invoking the script | Script orchestrates exploration order | Run step 1 immediately, let script direct you |
+| Skipping the Explore agent delegation             | Misses broad codebase context         | Follow step 1 REQUIRED ACTIONS to delegate    |
+| Passing empty thoughts to later steps             | Loses accumulated context             | Include all findings from previous steps      |
+| Reducing total-steps below 6                      | Skips verification and synthesis      | Keep minimum 6, increase as script directs    |
+| Reporting findings without file:line evidence     | Unverifiable claims                   | Always cite specific locations                |
 
-```json
-{
-  "stepNumber": 4,
-  "totalSteps": 7,
-  "phase": "DEEP ANALYSIS",
-  "focusAreas": [
-    {"name": "Security", "priority": "P1", "reason": "Auth vulnerabilities"}
-  ],
-  "findings": [
-    {"severity": "CRITICAL", "description": "SQL injection", "file": "auth.py", "line": 45}
-  ],
-  "openQuestions": ["How is session management handled?"]
-}
-```
+---
+
+## Verification
+
+After execution:
+
+- [ ] All priority areas investigated with file-level evidence
+- [ ] Findings include severity classification (critical/high/medium/low)
+- [ ] Each finding has specific file:line references
+- [ ] Synthesis step completed with prioritized recommendations
+- [ ] No investigation areas left unexplored from the plan

@@ -108,10 +108,12 @@ cursor[bot] has 100% actionability (9/9 comments) - every comment identified a r
 
 ## Memory References
 
-| Reviewer | Memory Name |
-|----------|-------------|
-| cursor[bot] | `cursor-bot-review-patterns` |
-| Copilot | `copilot-pr-review-patterns` |
-| coderabbitai[bot] | (Use pr-comment-responder-skills) |
+Search Brain memory for reviewer-specific patterns:
 
-Statistics are sourced from `pr-comment-responder-skills` memory and should be updated after each PR review session.
+| Reviewer | Search Query |
+|----------|-------------|
+| cursor[bot] | `mcp__plugin_brain_brain__search({ "query": "cursor bot review patterns" })` |
+| Copilot | `mcp__plugin_brain_brain__search({ "query": "copilot PR review patterns" })` |
+| coderabbitai[bot] | `mcp__plugin_brain_brain__search({ "query": "pr-comment-responder patterns" })` |
+
+Statistics are sourced from Brain memory notes and should be updated after each PR review session via `mcp__plugin_brain_brain__edit_note`.

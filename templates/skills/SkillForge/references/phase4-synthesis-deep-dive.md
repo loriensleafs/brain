@@ -18,7 +18,7 @@ The Script Agent is activated when the skill includes a `scripts/` directory. Fo
 
 | Criterion | Checks |
 |-----------|--------|
-| **Pattern Compliance** | Result dataclass, argparse, exit codes |
+| **Pattern Compliance** | Result type, argv parsing, exit codes |
 | **Self-Verification** | Scripts can verify their own output |
 | **Error Handling** | Graceful failures, actionable messages |
 | **Documentation** | Usage examples in SKILL.md |
@@ -61,7 +61,7 @@ Each agent produces:
 ```
 IF all agents APPROVED (3/3 or 4/4):
     → Finalize skill
-    → Run validate-skill.py
+    → Run validate_skill.ts
     → Update registry
     → Complete
 

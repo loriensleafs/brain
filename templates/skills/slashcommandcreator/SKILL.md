@@ -2,10 +2,11 @@
 name: slashcommandcreator
 description: Autonomous meta-skill for creating high-quality custom slash commands using 5-phase workflow with multi-agent validation and quality gates. Use when user requests new slash command, reusable prompt automation, or wants to convert repetitive workflows into documented commands.
 license: MIT
-agents:
-  - analyst
-  - implementer
-trigger: SlashCommandCreator
+agents: [architect, security, critic, independent-thinker, implementer]
+model: claude-opus-4-5
+metadata:
+  version: 1.0.0
+  timelessness: high
 ---
 
 # SlashCommandCreator Skill
@@ -13,6 +14,12 @@ trigger: SlashCommandCreator
 ## Purpose
 
 Create production-ready custom slash commands following ai-agents quality standards.
+
+## Triggers
+
+- `create slash command for [purpose]`
+- `SlashCommandCreator: [description]`
+- `design slash command that [does something]`
 
 ## When to Use
 
@@ -50,7 +57,7 @@ Create production-ready custom slash commands following ai-agents quality standa
 3. Frontmatter schema:
    - `description` (trigger-based per creator-001)
    - `argument-hint` (if using arguments)
-   - `allowed-tools` (if using bash `!` or file `@`)
+   - `allowed-tools` (if using bash commands with `!` or file references with `@`)
    - `model` (opus for complex reasoning)
    - `disable-model-invocation` (if pure prompt template)
 4. Dynamic context evaluation:
@@ -96,18 +103,18 @@ Create production-ready custom slash commands following ai-agents quality standa
 
 **Invocation Pattern**:
 
-```python
-# Security review
-Task(subagent_type="security", prompt="Review allowed-tools for command: [spec]")
+```typescript
+// Security review
+Agent(subagent_type="security", prompt="Review allowed-tools for command: [spec]")
 
-# Architecture review
-Task(subagent_type="architect", prompt="Check for duplication: [spec]")
+// Architecture review
+Agent(subagent_type="architect", prompt="Check for duplication: [spec]")
 
-# Challenge necessity
-Task(subagent_type="independent-thinker", prompt="Is this command truly needed? [spec]")
+// Challenge necessity
+Agent(subagent_type="independent-thinker", prompt="Is this command truly needed? [spec]")
 
-# Frontmatter completeness
-Task(subagent_type="critic", prompt="Validate frontmatter completeness: [spec]")
+// Frontmatter completeness
+Agent(subagent_type="critic", prompt="Validate frontmatter completeness: [spec]")
 ```
 
 **Deliverable**: Validation report with approvals or revision requests
@@ -118,7 +125,7 @@ Task(subagent_type="critic", prompt="Validate frontmatter completeness: [spec]")
 
 **Tasks**:
 
-1. Run `pwsh .claude/skills/slashcommandcreator/scripts/New-SlashCommand.ps1`
+1. Run `bun run ${CLAUDE_SKILL_DIR}/scripts/new_slash_command.ts`
 2. Create `.claude/commands/[namespace]/[command].md`
 3. Write frontmatter + prompt body
 4. Test invocation with sample arguments
@@ -132,7 +139,7 @@ Task(subagent_type="critic", prompt="Validate frontmatter completeness: [spec]")
 
 **Tasks**:
 
-1. Run `pwsh .claude/skills/slashcommandcreator/scripts/Validate-SlashCommand.ps1 -Path [file]`
+1. Run `bun run ${CLAUDE_SKILL_DIR}/scripts/validate_slash_command.ts --path [file]`
 2. Fix violations if any
 3. Re-run validation until exit code 0
 4. Commit with conventional commit message
@@ -142,7 +149,7 @@ Task(subagent_type="critic", prompt="Validate frontmatter completeness: [spec]")
 ## Invocation Examples
 
 ```text
-SlashCommandCreator: create command for exporting Forgetful memories to JSON
+SlashCommandCreator: create command for exporting Brain memories to JSON
 
 SlashCommandCreator: design slash command for running security audit
 
@@ -162,10 +169,10 @@ create slash command that summarizes recent PR comments
 
 - Prompt is >200 lines
 - Multi-agent coordination required
-- Complex PowerShell logic
-- Requires Pester tests
+- Complex scripting logic
+- Requires dedicated tests
 
-## Quality Gates Checklist
+## Verification/Success Criteria
 
 Before marking complete:
 
@@ -176,12 +183,56 @@ Before marking complete:
 - [ ] Description follows trigger-based pattern (creator-001)
 - [ ] File is <200 lines (or converted to skill)
 - [ ] Passes `markdownlint-cli2` validation
-- [ ] Passes `Validate-SlashCommand.ps1` validation
+- [ ] Passes `validate_slash_command.ts` validation
 - [ ] Tested with sample arguments
 - [ ] Committed with conventional commit message
 
+**Success Criteria:**
+
+| Metric | Target |
+|--------|--------|
+| Validation | Exit code 0 from validate_slash_command.ts |
+| Testing | Command runs without errors with sample arguments |
+| Documentation | Description clearly explains when to use command |
+| Security | All bash/file refs have explicit allowed-tools entries |
+
+## Anti-Patterns
+
+| Avoid | Why | Instead |
+|-------|-----|---------|
+| Creating commands > 200 lines | Too complex for slash command format | Convert to a skill instead |
+| Overly permissive `allowed-tools` wildcards | Security risk | List specific tools needed |
+| Skipping multi-agent validation | Miss security, scope, or necessity issues | Run all 4 validation agents |
+| Duplicate commands for similar purposes | Confusing discoverability | Check existing commands first |
+| Generic description without trigger keywords | Model cannot find the command | Include specific "Use when" phrases |
+
+## Quality Gates Checklist
+
+All checks from Verification section plus:
+
+- [ ] Multi-agent approval (security, architect, independent-thinker, critic)
+- [ ] No duplication with existing commands
+- [ ] Appropriate scope (not too broad/narrow)
+- [ ] Frontmatter completeness validated
+
+## Scripts
+
+### new_slash_command.ts
+
+Creates a new slash command from a template.
+
+```bash
+bun run ${CLAUDE_SKILL_DIR}/scripts/new_slash_command.ts --name <name>
+```
+
+### validate_slash_command.ts
+
+Validates slash command structure and frontmatter.
+
+```bash
+bun run ${CLAUDE_SKILL_DIR}/scripts/validate_slash_command.ts --path <file>
+```
+
 ## References
 
-- `.agents/analysis/custom-slash-commands-research.md`
-- `.agents/planning/slashcommandcreator-skill-spec.md`
-- `notes/slashcommand-best-practices.md`
+- Search Brain memory for `slashcommand-best-practices`

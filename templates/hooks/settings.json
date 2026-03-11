@@ -1,0 +1,211 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run hooks/scripts/invoke_routing_gates.ts",
+            "timeout": 5,
+            "statusMessage": "Checking routing-level gates"
+          },
+          {
+            "type": "command",
+            "command": "bun run hooks/scripts/PreToolUse/invoke_skill_first_guard.ts",
+            "statusMessage": "Enforcing skills-first policy for GitHub operations (BLOCKING)"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash(git commit*)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run hooks/scripts/PreToolUse/invoke_session_log_guard.ts",
+            "statusMessage": "Verifying session log exists before commit (BLOCKING)"
+          },
+          {
+            "type": "command",
+            "command": "bun run hooks/scripts/PreToolUse/invoke_branch_context_guard.ts",
+            "statusMessage": "Verifying branch matches session context (BLOCKING)"
+          },
+          {
+            "type": "command",
+            "command": "bun run hooks/scripts/PreToolUse/invoke_adr_review_guard.ts",
+            "statusMessage": "Verifying ADR review completed"
+          },
+          {
+            "type": "command",
+            "command": "bun run hooks/scripts/PreToolUse/invoke_branch_protection_guard.ts",
+            "statusMessage": "Verifying branch protection"
+          },
+          {
+            "type": "command",
+            "command": "bun run hooks/scripts/PreToolUse/invoke_security_commit_gate.ts",
+            "timeout": 10,
+            "statusMessage": "Checking security gate for staged auth files"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash(gh pr create*)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run hooks/scripts/PreToolUse/invoke_session_log_guard.ts",
+            "statusMessage": "Verifying session log exists before PR creation (BLOCKING)"
+          }
+        ]
+      },
+      {
+        "matcher": "^(Write|Edit)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run hooks/scripts/PreToolUse/invoke_security_gate.ts",
+            "statusMessage": "Checking security gate for auth files"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash(git push*)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run hooks/scripts/PreToolUse/invoke_branch_context_guard.ts",
+            "statusMessage": "Verifying branch matches session context (BLOCKING)"
+          },
+          {
+            "type": "command",
+            "command": "bun run hooks/scripts/PreToolUse/invoke_branch_protection_guard.ts",
+            "statusMessage": "Verifying branch protection"
+          },
+          {
+            "type": "command",
+            "command": "bun run hooks/scripts/PreToolUse/invoke_retrospective_gate.ts",
+            "statusMessage": "Verifying retrospective evidence"
+          }
+        ]
+      },
+      {
+        "matcher": "^(Edit|Write)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run hooks/scripts/PreToolUse/invoke_adr_architect_gate.ts",
+            "statusMessage": "Verifying architect review for ADR files (BLOCKING)"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run hooks/scripts/SessionStart/invoke_session_initialization_enforcer.ts",
+            "statusMessage": "Enforcing session protocol initialization"
+          },
+          {
+            "type": "command",
+            "command": "bun run hooks/scripts/SessionStart/invoke_memory_first_enforcer.ts",
+            "statusMessage": "Enforcing memory-first evidence"
+          },
+          {
+            "type": "command",
+            "command": "bun run hooks/scripts/invoke_session_start_memory_first.ts",
+            "statusMessage": "Enforcing memory-first requirements"
+          },
+          {
+            "type": "command",
+            "command": "bun run hooks/scripts/invoke_adr_change_detection.ts",
+            "statusMessage": "Checking for ADR changes"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run hooks/scripts/UserPromptSubmit/invoke_autonomous_execution_detector.ts",
+            "statusMessage": "Detecting autonomous execution patterns"
+          },
+          {
+            "type": "command",
+            "command": "bun run hooks/scripts/invoke_user_prompt_memory_check.ts",
+            "statusMessage": "Checking memory-first compliance"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "^(Write|Edit)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run hooks/scripts/PostToolUse/invoke_markdown_auto_lint.ts",
+            "statusMessage": "Auto-linting markdown files"
+          },
+          {
+            "type": "command",
+            "command": "bun run hooks/scripts/PostToolUse/invoke_adr_lifecycle_hook.ts",
+            "statusMessage": "Checking for ADR changes"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run hooks/scripts/PostToolUse/invoke_adr_lifecycle_hook.ts",
+            "statusMessage": "Checking for ADR changes"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run hooks/scripts/Stop/invoke_skill_learning.ts",
+            "statusMessage": "Extracting skill learnings from session"
+          },
+          {
+            "type": "command",
+            "command": "bun run hooks/scripts/Stop/invoke_session_validator.ts",
+            "statusMessage": "Validating session completeness"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run hooks/scripts/SubagentStop/invoke_qa_agent_validator.ts",
+            "statusMessage": "Validating QA agent output"
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "matcher": "Bash(bun test*|bun run test*|npm test*|npm run test*|pnpm test*|yarn test*|pytest*|python*pytest*|dotnet test*|mvn test*|gradle test*|go test*|cargo test*)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run hooks/scripts/PermissionRequest/invoke_test_auto_approval.ts",
+            "statusMessage": "Auto-approving test execution"
+          }
+        ]
+      }
+    ]
+  }
+}

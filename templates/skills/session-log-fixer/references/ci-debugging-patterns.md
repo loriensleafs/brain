@@ -10,20 +10,20 @@ Patterns extracted from real CI debugging sessions.
 
 ### Check All Jobs in a Run
 
-```powershell
+```bash
 $Repo = "owner/repo"  # Set to your repository (e.g., rjmurillo/ai-agents)
 gh api /repos/$Repo/actions/runs/$RunId/jobs --jq '.jobs[] | {name: .name, status: .status, conclusion: .conclusion}'
 ```
 
 ### Find Stuck or Incomplete Jobs
 
-```powershell
+```bash
 gh run view $RunId --json jobs --jq '.jobs[] | select(.status != "completed") | {name: .name, status: .status}'
 ```
 
 ### Check Runner Assignment
 
-```powershell
+```bash
 gh api /repos/$Repo/actions/runs/$RunId/jobs --jq '.jobs[] | {name: .name, status: .status, runner: .runner_name}'
 ```
 
@@ -43,7 +43,7 @@ A `null` runner_name indicates the job hasn't been assigned to a runner yet.
 
 **Diagnosis:**
 
-```powershell
+```bash
 gh api /repos/$Repo/actions/runs/$RunId/jobs --jq '.jobs[] | select(.status == "queued") | {name: .name, runner: .runner_name}'
 ```
 
@@ -60,7 +60,7 @@ Wait for runners to become available. If persistent, check GitHub Status.
 
 **Diagnosis:**
 
-```powershell
+```bash
 gh api /repos/$Repo/actions/runs/$RunId/jobs --jq '.jobs[] | select(.name | contains("Aggregate")) | {name: .name, status: .status, conclusion: .conclusion}'
 ```
 
@@ -102,7 +102,7 @@ Use artifacts instead of outputs for reliable handoff between jobs.
 
 ### Check Aggregate Results Status
 
-```powershell
+```bash
 $runId = "20608909597"  # Example run ID
 gh api /repos/$Repo/actions/runs/$runId/jobs --jq '.jobs[] | select(.name | contains("Aggregate")) | {name: .name, status: .status, conclusion: .conclusion}'
 ```
@@ -111,12 +111,10 @@ gh api /repos/$Repo/actions/runs/$runId/jobs --jq '.jobs[] | select(.name | cont
 
 The `Aggregate Results` job aggregates verdicts from validation jobs. Check artifacts:
 
-```powershell
-gh run download $RunId --dir $env:TEMP/session-artifacts-$RunId
-Get-ChildItem -Path "$env:TEMP/session-artifacts-$RunId" -Filter "*-verdict.txt" -Recurse | ForEach-Object {
-    Write-Host "--- $($_.Name) ---"
-    Get-Content $_.FullName
-}
+```bash
+TMPDIR=$(mktemp -d)
+gh run download $RunId --dir "$TMPDIR/session-artifacts-$RunId"
+find "$TMPDIR/session-artifacts-$RunId" -name "*-verdict.txt" -exec sh -c 'echo "--- $(basename {}) ---"; cat {}' \;
 ```
 
 ---

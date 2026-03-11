@@ -4,9 +4,9 @@ When an ADR file is deleted, this skill triggers a special workflow.
 
 ## Phase D1: Deletion Detection
 
-```powershell
+```bash
 # Script detects deleted ADR files
-& .claude/skills/adr-review/scripts/Detect-ADRChanges.ps1
+bun run ${CLAUDE_SKILL_DIR}/scripts/detect_adr_changes.ts
 
 # Output includes:
 # - Deleted file path
@@ -19,7 +19,7 @@ When an ADR file is deleted, this skill triggers a special workflow.
 Invoke analyst to assess deletion impact:
 
 ```python
-Task(subagent_type="analyst", prompt="""
+Agent(subagent_type="analyst", prompt="""
 ADR Deletion Impact Assessment
 
 ## Deleted ADR
@@ -41,7 +41,7 @@ Status: {last_known_status}
 | [path] | [code/adr/doc] | [high/medium/low] |
 
 ### Recommendation
-- **Archive**: Keep copy in `.agents/architecture/archive/`
+- **Archive**: Archive as Brain memory note with `archived` tag
 - **Delete**: No dependencies, safe to remove
 - **Block**: Active dependencies require resolution first
 """)
@@ -76,7 +76,7 @@ If archiving is required:
 [Original ADR content preserved below]
 ```
 
-Save to: `.agents/architecture/archive/ADR-NNN-title.md`
+Save as Brain memory note with `archived` tag in `decisions/` folder.
 
 ## Phase D4: Cleanup
 

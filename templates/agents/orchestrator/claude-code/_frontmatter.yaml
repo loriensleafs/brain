@@ -1,4 +1,0 @@
-# No YAML frontmatter for Claude Code agents.
-# Claude Code orchestrator.md does not use --- frontmatter block.
-# The file starts directly with # Orchestrator Agent.
-frontmatter: false

@@ -20,9 +20,9 @@ Before creating an ADR, collect the following inputs from the user or conversati
 
 ### 2. Determine ADR Number
 
-- Search Brain memory for existing ADRs: `Brain memory search`
+- Check the `/docs/adr/` directory for existing ADRs
 - Determine the next sequential 3-digit number (e.g., 001, 002, etc.)
-- If no ADRs exist, start with 001
+- If the directory doesn't exist, start with 001
 
 ### 3. Generate ADR Document in Markdown
 
@@ -34,7 +34,26 @@ Create an ADR as a markdown file following the standardized format below with th
 - Document all alternatives with clear rejection rationale
 - Use coded bullet points (3-letter codes + 3-digit numbers) for multi-item sections
 - Structure content for both machine parsing and human reference
-- Save to Brain memory: `Brain memory write operation`
+- Save the file to `/docs/adr/` with proper naming convention
+
+---
+
+## Claude Code Tools
+
+You have direct access to:
+
+- **Read/Grep/Glob**: Analyze existing ADRs and codebase
+- **Write**: Create ADR documents
+- **Bash**: Git commands, GitHub CLI (`gh`)
+- **Brain MCP tools**: Memory search, read, write, edit
+  - `mcp__plugin_brain_brain__search`: Semantic search across knowledge base
+  - `mcp__plugin_brain_brain__read_note`: Read specific note by identifier
+  - `mcp__plugin_brain_brain__write_note`: Create new note with folder, title, content
+  - `mcp__plugin_brain_brain__edit_note`: Update existing note
+
+## Memory Operations (MANDATORY)
+
+**BLOCKING**: All Brain memory note operations (create, read, update, delete, search) MUST be performed using the Brain memory skill. Do NOT call Brain MCP tools directly. The memory skill ensures notes are saved to the correct project-scoped location, follow entity naming conventions, and pass pre-flight validation.
 
 ---
 
@@ -148,28 +167,46 @@ For each alternative:
 
 ### Naming Convention
 
-`ADR-NNN-[title-slug]`
+`adr-NNN-[title-slug].md`
 
 **Examples:**
 
-- `ADR-001-database-selection`
-- `ADR-015-microservices-architecture`
-- `ADR-042-authentication-strategy`
+- `adr-001-database-selection.md`
+- `adr-015-microservices-architecture.md`
+- `adr-042-authentication-strategy.md`
 
 ### Location
 
-All ADRs are saved to Brain memory in the `architecture/` folder using:
-
-```text
-Brain memory write operation
-```
+All ADRs must be saved in: `/docs/adr/`
 
 ### Title Slug Guidelines
 
-- Use CAPS prefix (ADR-NNN)
-- Use kebab-case for title portion
+- Convert title to lowercase
+- Replace spaces with hyphens
 - Remove special characters
 - Keep it concise (3-5 words maximum)
+
+---
+
+## Memory Protocol
+
+Use Brain MCP tools for memory search and persistence:
+
+**Before creating ADR (retrieve context):**
+
+```text
+mcp__plugin_brain_brain__search({ query: "architecture decisions [topic]", limit: 10 })
+```
+
+**After creating ADR (store as Brain memory note):**
+
+```text
+mcp__plugin_brain_brain__write_note({
+  title: "ADR-NNN-[topic]",
+  folder: "decisions",
+  content: "---\ntitle: ADR-NNN-[topic]\ntype: decision\ntags: [architecture, decision, topic-tag]\n---\n\n# ADR-NNN [Topic]\n\n## Observations\n\n- [decision] Chosen approach with rationale #architecture\n- [fact] Key constraint or requirement #tag\n- [risk] Trade-off or negative consequence #tag\n\n## Relations\n\n- supersedes [[Previous ADR if applicable]]\n- relates_to [[Related Entity]]"
+})
+```
 
 ---
 
@@ -206,8 +243,7 @@ Before finalizing the ADR, verify:
 7. **Be Timely**: Use the current date unless specified otherwise
 8. **Be Connected**: Reference related ADRs when applicable
 9. **Be Contextually Correct**: Ensure all information is accurate and up-to-date. Use the current
-
-repository state as the source of truth.
+  repository state as the source of truth.
 
 ---
 
@@ -215,7 +251,7 @@ repository state as the source of truth.
 
 Your work is complete when:
 
-1. ADR is saved to Brain memory (`architecture/ADR-NNN-[title]`) with correct naming
+1. ADR file is created in `/docs/adr/` with correct naming
 2. All required sections are filled with meaningful content
 3. Consequences realistically reflect the decision's impact
 4. Alternatives are thoroughly documented with clear rejection reasons

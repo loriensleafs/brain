@@ -9,7 +9,7 @@ Planning skill with resources that must stay synced with agent prompts.
 | File/Directory                        | Contents                                       | Read When                                    |
 | ------------------------------------- | ---------------------------------------------- | -------------------------------------------- |
 | `SKILL.md`                            | Planning workflow, phases                      | Using the planner skill                      |
-| `scripts/planner.py`                  | Step-by-step planning orchestration            | Debugging planner behavior                   |
+| `scripts/planner.ts`                  | Step-by-step planning orchestration            | Debugging planner behavior                   |
 | `resources/plan-format.md`            | Plan template (injected by script)             | Editing plan structure                       |
 | `resources/temporal-contamination.md` | Detection heuristic for contaminated comments  | Updating TW/QR temporal contamination logic  |
 | `resources/diff-format.md`            | Unified diff spec for code changes             | Updating Developer diff consumption logic    |
@@ -24,7 +24,7 @@ Resources are **authoritative sources**.
 
 ### plan-format.md
 
-Plan template injected by `scripts/planner.py` at planning phase completion.
+Plan template injected by `scripts/planner.ts` at planning phase completion.
 
 **No agent sync required** - the script reads and outputs the format directly, so editing
 this file takes effect immediately without updating any agent prompts.
@@ -58,7 +58,7 @@ Authoritative source for default structural conventions (the four-tier decision 
 | ---------------------------- | ----------------------- |
 | `agents/quality-reviewer.md` | `<default_conventions>` |
 
-**When updating**: Modify `resources/default-conventions.md` first, then update the `<default_conventions>` section in QR. The planner.py decision audit references this resource by path.
+**When updating**: Modify `resources/default-conventions.md` first, then update the `<default_conventions>` section in QR. The planner.ts decision audit references this resource by path.
 
 **Four-tier priority hierarchy** (higher overrides lower):
 

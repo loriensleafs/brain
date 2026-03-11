@@ -1,19 +1,17 @@
 ---
 name: memory-documentary
-version: 1.0.0
-description: Generate evidence-based documentary reports by searching across Brain
-  memory system, .agents/ artifacts, and GitHub issues. Produces investigative
-  journalism-style analysis with full citation chains.
+description: Generate evidence-based documentary reports by searching across Brain memory notes, project artifacts, and GitHub issues. Produces investigative journalism-style analysis with full citation chains.
 license: MIT
-model: claude-sonnet-4-5
 agents:
   - analyst
-  - retrospective
   - memory
+model: claude-sonnet-4-5
 metadata:
+  version: 2.0.0
   timelessness: 8/10
   category: analysis
 ---
+
 # Memory Documentary Skill
 
 Generate comprehensive documentary-style reports from your memory systems with full evidence chains.
@@ -40,42 +38,56 @@ Example topics:
 
 Use this skill when:
 
-- "Search my memories for patterns about..."
-- "What does my history say about..."
-- "Generate a documentary on my [topic]"
-- "Cross-reference all systems for..."
-- "Evidence-based analysis of my [topic]"
+- `Search my memories for patterns about...`
+- `What does my history say about...`
+- `Generate a documentary on my [topic]`
+- `Cross-reference all systems for...`
+- `Evidence-based analysis of my [topic]`
 
 ---
+
+## When to Use
+
+Use this skill when:
+
+- You need cross-system evidence for a pattern or recurring theme
+- Investigating historical decisions and their evolution over time
+- Building a cited, verifiable narrative from memory data
+
+Use `memory` skill instead when:
+
+- You need a simple search for a known fact or pattern
+- The query targets a single topic, not cross-system synthesis
 
 ## Quick Reference
 
 | Phase | Action | Output |
 |-------|--------|--------|
 | 1 | Topic Comprehension | Search variants, scope boundaries |
-| 2 | Investigation Planning | Explicit queries per system |
-| 3 | Data Collection | Evidence with IDs, timestamps |
+| 2 | Investigation Planning | Explicit queries per source |
+| 3 | Data Collection | Evidence with identifiers, timestamps |
 | 4 | Report Generation | Documentary with citations |
 | 5 | Memory Updates | Store meta-pattern discovered |
 
 ---
 
-## How It Works
+## Process
 
 The skill searches ALL available data sources systematically:
 
-**Memory Systems (Brain MCP)**:
+**Brain Memory Notes**:
 
-- Brain: Semantic knowledge graph with observations and relations
-- Supports search, read, write, and edit operations on notes
+- Semantic search across all note types (decisions, sessions, analysis, etc.)
+- Depth-based graph traversal for related notes
+- Folder-scoped searches for domain-specific findings
 
 **Project Artifacts**:
 
-- `.agents/retrospective/` - Learning extractions
-- `.agents/sessions/` - Session logs
-- `.agents/analysis/` - Research reports
-- `.agents/architecture/` - ADRs
-- `.agents/planning/` - Plans and PRDs
+- `sessions/` - Session logs (via Brain notes or file system)
+- `analysis/` - Research reports
+- `decisions/` - ADRs
+- `planning/` - Plans and PRDs
+- `retrospective/` - Learning extractions
 
 **GitHub Issues**:
 
@@ -102,16 +114,16 @@ The skill searches ALL available data sources systematically:
 
 - Key finding in one sentence
 - Timeline span (earliest to most recent)
-- Evidence count (memories + observations + issues + files)
+- Evidence count (notes + issues + files)
 - Major pattern categories
 
 ### Evidence Trail
 
 Full citation for each finding:
 
-- Memory ID/Observation ID with retrieval command
-- Source system (Brain)
-- Timestamp/Creation date
+- Note title/permalink with retrieval command
+- Source folder (decisions/, sessions/, analysis/, etc.)
+- Creation date
 - Direct quote from source
 - Links to related evidence
 
@@ -120,8 +132,8 @@ Full citation for each finding:
 Timeline showing how thinking changed:
 
 ```text
-YYYY-MM-DD: [Observation #ID] - Initial state
-YYYY-MM-DD: [Memory #ID] - First iteration
+YYYY-MM-DD: [Note: ADR-015] - Initial state
+YYYY-MM-DD: [Note: SESSION-2025-01-15] - First iteration
 YYYY-MM-DD: [Issue #NNN] - Technical response
 ```
 
@@ -138,8 +150,8 @@ Cross-system synthesis revealing:
 
 ### Synthesis
 
-- What all systems agree on
-- What's recent vs crystallized knowledge
+- What all sources agree on
+- What is recent vs crystallized knowledge
 - Actionable recommendations
 
 ---
@@ -148,7 +160,7 @@ Cross-system synthesis revealing:
 
 | Standard | Requirement |
 |----------|-------------|
-| Citation | Every claim has ID, timestamp, quote |
+| Citation | Every claim has note identifier, timestamp, quote |
 | Quotes | Direct quotes, not paraphrases |
 | Verification | Retrieval commands for all evidence |
 | Cross-links | Related evidence connected |
@@ -159,16 +171,25 @@ Cross-system synthesis revealing:
 
 | Avoid | Why | Instead |
 |-------|-----|---------|
-| Partial searches | Miss critical evidence | Search ALL systems |
+| Partial searches | Miss critical evidence | Search across all folders and sources |
 | Paraphrasing | Loses verifiability | Direct quotes only |
-| Single query | Miss variations | 3+ query variants per system |
-| Skipping systems | Incomplete picture | Check all 4 MCP servers |
+| Single query | Miss variations | 3+ query variants |
+| Skipping folder scopes | Incomplete picture | Search decisions/, sessions/, analysis/, planning/ |
 
 ---
 
+## Verification
+
+After execution:
+
+- [ ] Report saved to analysis/ folder in Brain memory
+- [ ] Every claim has a citation with source, identifier, and direct quote
+- [ ] Brain memory was searched across relevant folders
+- [ ] Meta-pattern stored as new Brain memory note (Phase 5)
+
 ## Output Location
 
-Reports saved to: `.agents/analysis/[topic]-documentary-[date].md`
+Reports saved as Brain memory notes in the `analysis/` folder.
 
 ---
 
@@ -176,10 +197,10 @@ Reports saved to: `.agents/analysis/[topic]-documentary-[date].md`
 
 | Skill | Relationship |
 |-------|--------------|
-| memory | Operations (search, update) |
+| memory | Operations (search, read, write) |
 | exploring-knowledge-graph | Brain graph traversal |
 | retrospective | Learning extraction |
-| skillbook | Pattern → skill conversion |
+| skillbook | Pattern to skill conversion |
 
 ---
 

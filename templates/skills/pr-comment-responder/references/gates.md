@@ -99,15 +99,30 @@ fi
 
 ### Phase 8.2: Conversation Resolution
 
-```powershell
-pwsh .claude/skills/github/scripts/pr/Resolve-PRReviewThread.ps1 -PullRequest [number] -All
+```bash
+# Resolve all threads for a PR
+# Get unresolved review threads and resolve them via GraphQL
+gh api graphql -f query='
+  query($owner: String!, $repo: String!, $number: Int!) {
+    repository(owner: $owner, name: $repo) {
+      pullRequest(number: $number) {
+        reviewThreads(first: 100) {
+          nodes { id isResolved }
+        }
+      }
+    }
+  }' -f owner="$owner" -f repo="$repo" -F number="$number" \
+  --jq '.data.repository.pullRequest.reviewThreads.nodes[] | select(.isResolved == false) | .id' | \
+  while read tid; do
+    gh api graphql -f query='mutation($id: ID!) { resolveReviewThread(input: {threadId: $id}) { thread { isResolved } } }' -f id="$tid"
+  done
 ```
 
 ### Phase 8.3: Re-check for New Comments
 
 ```bash
 sleep 45
-NEW_COMMENTS=$(pwsh .claude/skills/github/scripts/pr/Get-PRReviewComments.ps1 -PullRequest [number] -IncludeIssueComments | jq '.TotalComments')
+NEW_COMMENTS=$(gh api repos/{owner}/{repo}/pulls/[number]/comments --jq 'length')
 
 if [ "$NEW_COMMENTS" -gt "$TOTAL_COMMENTS" ]; then
   echo "[NEW COMMENTS] $((NEW_COMMENTS - TOTAL_COMMENTS)) new comments detected"
@@ -116,13 +131,13 @@ fi
 
 ### Phase 8.4: CI Check Verification
 
-```powershell
-$checks = pwsh -NoProfile .claude/skills/github/scripts/pr/Get-PRChecks.ps1 -PullRequest [number] -Wait -TimeoutSeconds 300 | ConvertFrom-Json
+```bash
+failed_count=$(gh pr checks [number] --json state --jq '[.[] | select(.state != "SUCCESS")] | length')
 
-if ($checks.FailedCount -gt 0) {
-    Write-Host "[BLOCKED] $($checks.FailedCount) CI check(s) not passing"
+if [ "$failed_count" -gt 0 ]; then
+    echo "[BLOCKED] $failed_count CI check(s) not passing"
     exit 1
-}
+fi
 ```
 
 Exit codes:

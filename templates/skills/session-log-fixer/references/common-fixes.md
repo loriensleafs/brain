@@ -118,22 +118,22 @@ Add evidence text based on requirement type:
 
 ---
 
-### 6. Missing Brain Note Update
+### 6. HANDOFF.md Modified
 
 **CI Output:**
 
 ```text
-Cross-session context not persisted to Brain notes
+HANDOFF.md was modified in this session (MUST NOT)
 ```
 
 **Fix:**
 
-1. Use Brain MCP to persist session context: `mcp__plugin_brain_brain__write_note`
-2. Include key decisions and next steps
-3. Update Session End table with confirmation
+1. Revert HANDOFF.md changes: `git checkout origin/main -- .agents/HANDOFF.md`
+2. Move content to session log instead
+3. Use Brain memory for cross-session context
 
 **Why:**
-Brain notes provide cross-session context per ADR-016.
+HANDOFF.md is read-only per ADR-014. Session context goes to session logs.
 
 ---
 
@@ -147,7 +147,7 @@ QA validation required but no report found
 
 **Fix:**
 
-1. Invoke QA agent: `Task(subagent_type="qa", prompt="Validate [feature]")`
+1. Invoke QA agent: `Agent(subagent_type="qa", prompt="Validate [feature]")`
 2. Ensure report is created at `.agents/qa/`
 3. Update Session End table with report path
 
@@ -162,25 +162,25 @@ QA validation required but no report found
 
 ### Get Run Details
 
-```powershell
-& .claude/skills/session-log-fixer/scripts/diagnose.ps1 -RunId <run-id>
+```bash
+bun run ${CLAUDE_SKILL_DIR}/scripts/get_validation_errors.ts --run-id <run-id>
 ```
 
 ### Find Session Files for Branch
 
-```powershell
-git log --oneline --name-only -- ".agents/sessions/*.md" | Select-Object -First 20
+```bash
+git log --oneline --name-only -- ".agents/sessions/*.md" | head -20
 ```
 
 ### Check Current Session Protocol Structure
 
-```powershell
-Select-String -Path ".agents/sessions/*.md" -Pattern "MUST|SHOULD" | Group-Object Path
+```bash
+grep -rn "MUST\|SHOULD" .agents/sessions/*.md | sort -t: -k1,1
 ```
 
 ### Get Commit SHA for Evidence
 
-```powershell
+```bash
 git log --oneline -1
 # Returns: abc1234 commit message
 ```
@@ -191,13 +191,13 @@ git log --oneline -1
 
 After applying fixes, validate locally:
 
-```powershell
+```bash
 # Quick check for MUST requirements
-Select-String -Path ".agents/sessions/<file>.md" -Pattern "\| MUST.*\[ \]"
+grep -P "\| MUST.*\[ \]" ".agents/sessions/<file>.md"
 # Should return nothing if all MUST are checked
 
 # Check for placeholders
-Select-String -Path ".agents/sessions/<file>.md" -Pattern "pending|TBD|_____"
+grep -P "pending|TBD|_____" ".agents/sessions/<file>.md"
 # Should return nothing if no placeholders
 ```
 
