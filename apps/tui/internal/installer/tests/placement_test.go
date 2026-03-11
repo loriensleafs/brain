@@ -145,8 +145,8 @@ func TestMarketplacePlacement_Place(t *testing.T) {
 	if err := json.Unmarshal(data, &pluginJSON); err != nil {
 		t.Fatalf("plugin.json invalid JSON: %v", err)
 	}
-	if pluginJSON["name"] != "brain" {
-		t.Errorf("plugin.json name = %v, want %q", pluginJSON["name"], "brain")
+	if pluginJSON["name"] != installer.BrainEmoji {
+		t.Errorf("plugin.json name = %v, want %q", pluginJSON["name"], installer.BrainEmoji)
 	}
 
 	// Verify marketplace.json was generated.
