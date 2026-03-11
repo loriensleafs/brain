@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.14](https://github.com/loriensleafs/brain/compare/v0.1.13...v0.1.14) (2026-02-12)
+
+
+### Features
+
+* registry-based installer architecture ([aa22130](https://github.com/loriensleafs/brain/commit/aa22130d900f042bfcff3e12e71b582cd0dcc591))
+* replace hand-rolled install logic with registry-based installer ([a4138ba](https://github.com/loriensleafs/brain/commit/a4138bab245de9ff6ee457a2fc9a1fff3a99ef54))
+
+
+### Bug Fixes
+
+* remove make embed step from CodeQL workflow ([dba53b1](https://github.com/loriensleafs/brain/commit/dba53b14333f2740cc556b506e31886096ed39e5))
+
 ## [0.1.13](https://github.com/loriensleafs/brain/compare/v0.1.12...v0.1.13) (2026-02-11)
 
 
